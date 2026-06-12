@@ -974,6 +974,11 @@ function processFile(file){
   reader.readAsArrayBuffer(file);
 }
 function showSheetSel(wb,fname){
+  // 원천1 자동저장 흐름 중 다중 시트라 선택이 필요하면 pjtpl 탭을 보여줌
+  if(window._pendingSrc1){
+    var pjTab=document.getElementById('tab-pjtpl');
+    if(pjTab && !pjTab.classList.contains('on')) switchTab('pjtpl');
+  }
   var wrap=document.getElementById('sheet-sel'); wrap.style.display='block';
   document.getElementById('sheet-btns').innerHTML=wb.SheetNames.map(function(sn){
     var hl=sn.indexOf('원본')>=0||sn.toLowerCase().indexOf('raw')>=0;
@@ -1252,16 +1257,68 @@ function doRender(dm,month,fname,acctCnt,vResult){
 
   renderTable();
 
-  // 원천1 업로드 모드일 때 저장 버튼 표시
+  // 원천1 업로드 모드일 때 — DB관리 화면에서 자동 저장 (탭 이동/수동 버튼 없음)
   if(window._pendingSrc1 && window._pendingSrc1.dm){
-    showSrc1SaveBtn();
+    saveSrc1ToDB();
   }
 
   // pjtpl 모드 해제
   window._pjtplMode = false;
 }
 
+// 저장된 dm(조회 시)에서 동적 계정을 ACCTS det로 복원 — 검증4 dynamic 누락 방지
+// 업로드 때 parseAndBuild가 ACCTS에 끼워넣는 추가 계정(영업외 등)을, 조회 경로에서도 동일하게 복원한다. (멱등)
+function augmentAcctsFromDm(dm){
+  if(!dm) return;
+  // 영구 등록된 커스텀 계정을 마스터에 먼저 로드
+  try{
+    var saved=localStorage.getItem('customAcctMaster');
+    if(saved){ var c=JSON.parse(saved); Object.keys(c).forEach(function(k){ ACCT_MASTER[k]=c[k]; }); }
+  }catch(e){}
+  var ROMAN=['Ⅰ','Ⅱ','Ⅲ','Ⅳ','Ⅴ','Ⅵ','Ⅶ','Ⅷ','Ⅸ','Ⅹ'];
+  var acctKeys=ACCTS.map(function(a){return a.k;});
+  Object.keys(dm).forEach(function(rk){
+    if(!rk) return;
+    if(acctKeys.indexOf(rk)>=0) return;                            // 이미 ACCTS에 존재
+    if(ROMAN.some(function(x){return rk.indexOf(x)>=0;})) return;  // 소계행 제외
+    var m=ACCT_MASTER[rk.replace(/\s+/g,'')];
+    if(!m||!m.sec) return;                                         // 마스터에 없으면 스킵
+    var parentIdx=ACCTS.findIndex(function(a){return a.k===m.sec;});
+    if(parentIdx<0) return;
+    var insertIdx=parentIdx+1;
+    for(var ai=parentIdx+1; ai<ACCTS.length; ai++){
+      if(ACCTS[ai].t!=='det') break;
+      insertIdx=ai+1;
+    }
+    ACCTS.splice(insertIdx,0,{k:rk,l:'  '+(m.name||rk),t:'det'});
+    acctKeys=ACCTS.map(function(a){return a.k;});
+  });
+}
+
+// 조회 시 그 달의 PJT 부문 배열을 업로드 스냅샷(...-src1-pjts)에서 복원 — 검증3(법인=4부문합) 불일치 방지
+// 부문 분류(customPjtMap)는 PJT관리 탭 방문 시에만 메모리에 반영되므로, 조회 경로에서는 월별 스냅샷으로 직접 복원한다.
+function restorePjtsFromSnapshot(key){
+  try{
+    var praw = localStorage.getItem(key+'-pjts');
+    if(!praw) return false;
+    var pj = JSON.parse(praw);
+    function fill(arr, src){ if(!Array.isArray(src)) return; arr.length=0; src.forEach(function(x){ arr.push(x); }); }
+    fill(IT_PJTS, pj.it);
+    fill(CD_PJTS, pj.cd);
+    fill(NR_PJTS, pj.nr);
+    fill(RN_PJTS, pj.rn);
+    if(Array.isArray(pj.all)){
+      fill(ALL_PJTS, pj.all);
+    } else {
+      ALL_PJTS.length=0;
+      IT_PJTS.concat(CD_PJTS).concat(NR_PJTS).concat(RN_PJTS).forEach(function(x){ ALL_PJTS.push(x); });
+    }
+    return true;
+  }catch(e){ return false; }
+}
+
 function runValidation(dm){
+  augmentAcctsFromDm(dm);  // 조회 경로에서도 동적 계정 복원 후 검증
   var checks=[],hasError=false,EPS=2;
 
   // 검증1: 합산 = 직접비 + 간접비
@@ -2205,21 +2262,20 @@ function doReplace(){
 function processUpload(file, id, year, month, key){
   var statusEl = document.getElementById(id+'-status');
 
-  // ── 원천1: 파싱 후 저장 버튼으로 확정 ──
+  // ── 원천1: 파싱 후 DB관리 화면에서 자동 저장 ──
   if(id === 'src1'){
     if(statusEl) statusEl.innerHTML = '<span style="color:var(--blue);font-size:11px">⏳ 파싱 중...</span>';
     window._pjtplMode = true;
-    // 파싱 대기 정보 임시 저장 (저장 버튼 클릭 시 사용)
+    // 파싱 대기 정보 임시 저장 (파싱 완료 후 자동 저장)
     window._pendingSrc1 = {file:file, key:key, id:id, fname:file.name};
-    setUploadComplete(id, file.name);
     // datamgr에서 선택한 연/월을 pjtpl 조회 기준으로 동기화
     window._pjtplSyncYear = year;
     window._pjtplSyncMonth = month;
-    switchTab('pjtpl');
+    // 탭 전환 없이 DB관리 화면에 머무른 채 파싱 → 완료 시 자동 DB 저장
+    // (다중 시트라 시트 선택이 필요할 때만 showSheetSel에서 pjtpl 탭으로 전환)
     setTimeout(function(){
       processFile(file);
-      // 저장 버튼은 parseAndBuild 완료 후 자동 호출됨
-    }, 300);
+    }, 50);
     return;
   }
 
@@ -2407,6 +2463,21 @@ function renderDevLogTab(tab){
         '누적보고 엑셀 다운로드 양식을 화면과 똑같이 \'법인 → SP사업부 → 이통사 → 카드사 → 신규 → 라운드\' 순서로 위→아래 세로 배치로 변경했습니다 (비고 열은 엑셀에서 제외)',
         '원장 업로드 박스 아래에 ※ 안내 두 줄을 추가했습니다 — 어디서 파일을 받는지(아이큐브 경로) 및 다중 첨부 안내',
         '디버그용 임시 버튼(R2비교, 디버그비교)을 화면에서 제거했습니다',
+      ]
+    },
+    {
+      date:'2026-06-12', dev:'Jiho Kim',
+      title:'원천1 업로드 흐름 개선 & 합산검증 전면 강화',
+      color:'#4338ca',
+      items:[
+        'DB관리에서 원천1(손익원본)을 업로드하면 PJT 손익안분 화면으로 튕겨 보내고 다시 DB관리로 되돌리던 무한반복 문제를 해결했습니다 — 이제 업로드하면 그 자리에서 바로 DB에 저장됩니다 (원천2~5와 동일)',
+        'PJT 손익안분 조회 시 영업외수익/비용 등 추가 계정이 빠져 검증4(K-IFRS 소계)에 차액이 나던 문제를 수정했습니다 — 저장된 데이터에서도 계정과목을 자동으로 복원해 검증합니다',
+        'PJT 손익안분 조회 시 부문(이통사/카드사/신규/라운드) 분류가 복원되지 않아 검증3(부문합=법인)에 차액이 나던 문제를 수정했습니다 — 업로드 당시의 그 달 분류를 그대로 복원합니다',
+        '보고자료 > 월별 보고 / 누적 보고에 \'🔍 합산검증 내역보기\' 메뉴를 신설했습니다 (각 화면 헤더 우측, 엑셀 다운로드 옆)',
+        '보고서 검증 항목을 12종으로 구성했습니다 — 매출·비용·영업손익 소계, 광고판촉비·기타·보험료(직접/배부) 세부합, 부문합=법인, SP사업부=이통+카드+신규, 그리고 SP사업부/카드사/신규/라운드 4개 부문의 원천1 PJT 개별값 대사',
+        '누적 보고 검증은 달마다 달라지는 부문 분류를 그대로 반영해 정확히 대사합니다 (월별 누적 일치)',
+        '오류가 있으면 PJT 손익안분과 동일하게 해당 검증 바로 아래에 계정·차액 세부내역을 함께 표시합니다',
+        '세 화면(PJT 손익안분 / 월별 보고 / 누적 보고) 모두 조회만 하면 자동으로 사전검증이 실행됩니다 — 통과 시 상태줄에 표시, 불일치 시 팝업으로 즉시 알려줘 매번 검증 버튼을 누를 필요가 없습니다',
       ]
     },
   ];
@@ -2871,7 +2942,8 @@ function renderReport1(){
       +'<select id="r1-year" style="padding:6px 12px;border-radius:6px;border:1px solid var(--border);font-size:12px;background:var(--bg);color:var(--txt)">'+yOpts+'</select>'
       +'<select id="r1-month" style="padding:6px 12px;border-radius:6px;border:1px solid var(--border);font-size:12px;background:var(--bg);color:var(--txt)">'+mOpts+'</select>'
       +'<button class="btn btn-green" onclick="renderReport1Data()" style="font-size:12px;padding:7px 20px">🔍 조회</button>'
-      +'<button class="btn" onclick="downloadReport1Excel()" style="font-size:12px;padding:7px 18px;background:#1e3a5f;color:white;border:none;border-radius:6px;margin-left:8px">📥 엑셀 다운로드</button>'
+      +'<button class="btn btn-outline" onclick="showReport1Checks()" style="font-size:12px;padding:7px 16px;margin-left:8px">🔍 합산검증 내역보기</button>'
+      +'<button class="btn" onclick="downloadReport1Excel()" style="font-size:12px;padding:7px 18px;background:#1e3a5f;color:white;border:none;border-radius:6px;margin-left:6px">📥 엑셀 다운로드</button>'
       +'<span id="r1-status" style="font-size:11px;color:var(--txt3)"></span>'
       +'</div>'
       +'<div id="r1-table-wrap"></div>';
@@ -2895,7 +2967,8 @@ function renderReport2(){
       +'<select id="r2-year" style="padding:6px 12px;border-radius:6px;border:1px solid var(--border);font-size:12px;background:var(--bg);color:var(--txt)">'+yOpts+'</select>'
       +'<select id="r2-month" style="padding:6px 12px;border-radius:6px;border:1px solid var(--border);font-size:12px;background:var(--bg);color:var(--txt)">'+mOpts+'</select>'
       +'<button class="btn btn-green" onclick="renderReport2Data()" style="font-size:12px;padding:7px 20px">🔍 조회</button>'
-      +'<button class="btn" onclick="downloadReport2Excel()" style="font-size:12px;padding:7px 18px;background:#1e3a5f;color:white;border:none;border-radius:6px;margin-left:8px">📥 엑셀 다운로드</button>'
+      +'<button class="btn btn-outline" onclick="showReport2Checks()" style="font-size:12px;padding:7px 16px;margin-left:8px">🔍 합산검증 내역보기</button>'
+      +'<button class="btn" onclick="downloadReport2Excel()" style="font-size:12px;padding:7px 18px;background:#1e3a5f;color:white;border:none;border-radius:6px;margin-left:6px">📥 엑셀 다운로드</button>'
       +'<span id="r2-status" style="font-size:11px;color:var(--txt3)"></span>'
       +'</div>'
       +'<div style="display:flex;align-items:center;gap:12px;padding:14px 20px;background:#f0f9ff;border:1px solid #bfdbfe;border-radius:8px;margin-bottom:8px;flex-wrap:wrap">'
@@ -3238,6 +3311,20 @@ function renderReport1Data(){
   tableWrap.innerHTML = h;
   if(status) status.innerHTML='<span style="color:#065f46;font-weight:600">✓ '+year+'년 '+mm+'월 로드 완료</span>';
 
+  // ── 합산검증용 컨텍스트 저장 (기존 렌더에 영향 없음) ──
+  window._r1ctx = {
+    kind:'월별', year:year, month:month, rows:ROWS, src1:src1,
+    base:['이통사','카드사','신규','라운드'], spTok:'sp', lawTok:'법인',
+    segPjts:{이통사:IT_PJTS.slice(), 카드사:CD_PJTS.slice(), 신규:NR_PJTS.slice(), 라운드:RN_PJTS.slice()},
+    rowVal:function(row,seg,isPlan){
+      var fn=isPlan?'plan':'real';
+      if(seg==='법인') return lawVal(fn,row);
+      if(seg==='sp')  return spVal(fn,'',row);
+      if(row.type==='sub'||row.type==='tot') return calcSub(row.id,seg,isPlan);
+      return row[fn]?row[fn](seg):0;
+    }
+  };
+  reportAutoCheck(1);  // 조회 시 자동 합산검증 (불일치 시 팝업)
 }
 
 
@@ -3646,6 +3733,16 @@ function renderReport2Data(){
     });
   })();
 
+  // ── 합산검증용 컨텍스트 저장 (기존 렌더에 영향 없음) ──
+  window._r2ctx = {
+    kind:'누적', year:year, month:month, rows:ITEMS,
+    base:['이통사','카드사','신규','라운드'], spTok:'SP사업부', lawTok:'법인',
+    segPjts:{이통사:IT_PJTS.slice(), 카드사:CD_PJTS.slice(), 신규:NR_PJTS.slice(), 라운드:RN_PJTS.slice()},
+    monthlyS1:monthlyS1,   // 월별 {s:src1 dm, o:그 달 부문분류} — s1agg와 동일 기준으로 검증
+    rowVal:function(row,seg,isPlan){ return getVal(seg,row,isPlan); }
+  };
+  reportAutoCheck(2);  // 조회 시 자동 합산검증 (불일치 시 팝업)
+
   // 내역삭제 버튼
   if(!document.getElementById('r2-cmt-del-btn')){
     var delBtn=document.createElement('button');
@@ -3791,6 +3888,8 @@ function pjtplLoadFromDb(){
     var meta = null;
     try{ var m2=localStorage.getItem(key+'-meta'); if(m2) meta=JSON.parse(m2); }catch(e){}
     S.parsed = {dataMap:dm, month:year+'년 '+( month<10?'0':'')+month+'월', fname: meta?meta.fname:'(저장된 파일)'};
+    restorePjtsFromSnapshot(key);  // 그 달 PJT 부문 분류 복원 (검증3 일치 + 테이블 그룹 정확)
+    S.unregisteredAccts = [];      // 조회 시점엔 미등록계정 탐지 불가 → 검증5 오탐 방지
     var vRes = runValidation(dm);
     S.lastValidation = {vResult:vRes, month:year+'년 '+(month<10?'0':'')+month+'월'};
     var acctCnt = Object.keys(dm).filter(function(k){
@@ -3809,6 +3908,16 @@ function pjtplLoadFromDb(){
     renderTable();
     window._pjtplMode = false;
     if(ls) ls.innerHTML = '<span style="color:#065f46;font-weight:600">✓ '+year+'년 '+(month<10?'0':'')+month+'월 데이터 로드 완료</span>';
+    // 조회 시 자동 합산검증 — 불일치가 있으면 팝업으로 즉시 경고, 통과 시 상태줄 표시만
+    try{
+      var failN = vRes.checks.filter(function(c){ return !c.pass; }).length;
+      if(failN>0){
+        if(ls) ls.innerHTML += ' <span style="color:#b91c1c;font-weight:700;cursor:pointer;text-decoration:underline" onclick="pjtplDebugCheck()">· ⚠ 합산검증 불일치 '+failN+'건 — 클릭하여 상세보기</span>';
+        pjtplDebugCheck();
+      } else {
+        if(ls) ls.innerHTML += ' <span style="color:#065f46;font-weight:600">· ✓ 합산검증 통과</span>';
+      }
+    }catch(e){ console.warn('pjtpl autocheck:', e); }
   } catch(e){
     if(ls) ls.innerHTML = '<span style="color:red">데이터 파싱 오류: '+e.message+'</span>';
   }
@@ -3889,18 +3998,23 @@ function saveSrc1ToDB(){
       localStorage.setItem(pending.key+'-pjts', JSON.stringify(pending.pjts));
     }
 
-    // 버튼 영역 제거
+    // 잔여 수동 저장 버튼 영역이 있으면 제거
     var btnWrap = document.getElementById('src1-save-btn-wrap');
     if(btnWrap) btnWrap.remove();
 
-    // DB관리 탭 배지 갱신
+    // DB관리 탭 배지/상태 갱신
     setUploadComplete('src1', pending.fname);
     var dmStatus = document.getElementById('src1-status');
-    if(dmStatus) dmStatus.innerHTML = '<span style="color:#065f46;font-size:11px">✓ DB 저장 완료</span>';
+    if(dmStatus) dmStatus.innerHTML = '<span style="color:#065f46;font-size:11px">✓ 파싱 완료 — DB 저장됨</span>';
 
     window._pendingSrc1 = null;
+    window._pjtplMode = false;
 
-    alert('✓ 원천1 데이터가 DB에 저장되었습니다. | 파일명: ' + pending.fname + ' | 저장일시: ' + ds);
+    // 시트 선택 때문에 pjtpl 탭으로 이동했던 경우 DB관리로 복귀
+    var pjTab = document.getElementById('tab-pjtpl');
+    if(pjTab && pjTab.classList.contains('on')) switchTab('datamgr');
+
+    alert('✓ 원천1(손익원본) 데이터가 DB에 저장되었습니다.\n파일: ' + pending.fname + ' | 저장일시: ' + ds + '\n\n조회는 [개별자료 > PJT 손익안분 > 🔍 조회]에서 가능합니다.');
 
   } catch(err){
     if(statusEl) statusEl.innerHTML = '<span style="color:red">저장 오류: '+err.message+'</span>';
@@ -3908,6 +4022,230 @@ function saveSrc1ToDB(){
 }
 
 function closeDebugModal(){ var m=document.getElementById('debug-modal-overlay'); if(m) m.remove(); }
+// ════════════════════════════════════════
+// 보고자료(월별/누적) 합산검증 — PJT 손익안분과 동일 UX
+// ════════════════════════════════════════
+function _rvFmt(v){ return Math.round(v||0).toLocaleString(); }
+
+// 검증 결과 모달 (오류 시 해당 검증 바로 아래 세부내역+차액 표시)
+function showReportChecksModal(title, checks){
+  var passN = checks.filter(function(c){return c.pass;}).length;
+  var rows = checks.map(function(c){
+    var icon = c.pass
+      ? '<span style="color:#16a34a;font-size:15px">&#10003;</span>'
+      : '<span style="color:#c00;font-size:15px">&#10007;</span>';
+    var badge = c.pass
+      ? '<span style="background:#d1fae5;color:#065f46;font-size:10px;padding:2px 8px;border-radius:10px">통과</span>'
+      : '<span style="background:#fee2e2;color:#b91c1c;font-size:10px;padding:2px 8px;border-radius:10px">오류 '+c.errors.length+'건</span>';
+    var detail='';
+    if(!c.pass && c.errors && c.errors.length){
+      detail = '<div style="margin-top:8px;padding:8px;background:#fff5f5;border-radius:6px;font-size:11px;color:#7f1d1d">'
+        + c.errors.slice(0,15).map(function(e){
+            return '<div style="margin-bottom:3px">'+e.label
+              +' | '+(e.leftLabel||'기준')+':'+_rvFmt(e.left)
+              +' '+(e.rightLabel||'비교')+':'+_rvFmt(e.right)
+              +' 차이:'+_rvFmt(e.diff)+'</div>';
+          }).join('')
+        + (c.errors.length>15?'<div>... 외 '+(c.errors.length-15)+'건</div>':'')
+        + '</div>';
+    }
+    return '<div style="padding:12px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:8px;background:#fafafa">'
+      +'<div style="display:flex;align-items:center;gap:8px">'+icon
+      +'<div style="font-size:12px;font-weight:600;color:#1a1d23;flex:1">'+c.name+'</div>'+badge+'</div>'
+      +'<div style="font-size:11px;color:#6b7280;margin-top:4px;padding-left:22px">'+c.desc+'</div>'
+      +detail+'</div>';
+  }).join('');
+
+  var existing=document.getElementById('report-check-overlay');
+  if(existing) existing.remove();
+  var modal=document.createElement('div');
+  modal.id='report-check-overlay';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;display:flex;align-items:center;justify-content:center';
+  modal.innerHTML='<div style="background:#fff;border-radius:12px;padding:24px 28px;max-width:700px;width:95%;max-height:82vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.2)">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+    +'<div style="font-size:15px;font-weight:700;color:#1a1d23">'+title+'</div>'
+    +'<button onclick="var m=document.getElementById(\'report-check-overlay\');if(m)m.remove();" style="background:none;border:none;font-size:20px;cursor:pointer;color:#9ca3af">&times;</button>'
+    +'</div>'
+    +'<div style="font-size:11px;color:'+(passN===checks.length?'#065f46':'#b91c1c')+';margin-bottom:14px;font-weight:600">통과 '+passN+' / '+checks.length+' 항목</div>'
+    +rows+'</div>';
+  document.body.appendChild(modal);
+}
+
+// 보고서 체크리스트 빌더 (월별/누적 공통). ctx.rowVal / ctx.rows 사용
+// opts.src1Get(k)=원천1 계정 객체, opts.segPjts={부문:[PJT]} 있으면 부문별 원천 대사 추가
+function buildReportChecks(ctx, opts){
+  var EPS=2;
+  var rows=ctx.rows;
+  var V=ctx.rowVal;
+  function find(id){ for(var i=0;i<rows.length;i++){ if(rows[i].id===id) return rows[i]; } return null; }
+  var segDefs=[
+    {key:'법인', label:'법인'},
+    {key:ctx.spTok, label:'SP사업부'},
+    {key:'이통사', label:'이통사'},
+    {key:'카드사', label:'카드사'},
+    {key:'신규',  label:'신규'},
+    {key:'라운드', label:'라운드'}
+  ];
+  var checks=[];
+
+  // 소계 = 세부합 항등식 (모든 부문 × 계획/실적)
+  function identity(name, desc, targetId, partIds, realOnly){
+    var tgt=find(targetId); if(!tgt) return;
+    var errs=[];
+    var modes = realOnly ? [false] : [true,false];
+    segDefs.forEach(function(sd){
+      modes.forEach(function(isPlan){
+        var left=V(tgt,sd.key,isPlan);
+        var right=partIds.reduce(function(s,pid){ var r=find(pid); return s+(r?V(r,sd.key,isPlan):0); },0);
+        var diff=left-right;
+        if(Math.abs(diff)>EPS) errs.push({label:(isPlan?'[계획] ':'[실적] ')+sd.label, leftLabel:'소계', left:left, rightLabel:'세부합', right:right, diff:diff});
+      });
+    });
+    checks.push({name:name, desc:desc, pass:errs.length===0, errors:errs});
+  }
+
+  identity('① 매출 = 총매출 + 매출차감', '매출 소계가 총매출+매출차감과 일치', '매출', ['총매출','매출차감']);
+  identity('② 비용 = 매출원가+인건비+광고판촉비+지급수수료+보험료+기타', '비용 소계가 6개 비용 항목 합과 일치', '비용', ['매출원가','인건비','광고판촉비','지급수수료','보험료','기타']);
+
+  // ③ 영업손익 = 매출 − 비용
+  (function(){
+    var so=find('영업손익'), ms=find('매출'), bs=find('비용');
+    if(!(so&&ms&&bs)) return;
+    var errs=[];
+    segDefs.forEach(function(sd){ [true,false].forEach(function(isPlan){
+      var left=V(so,sd.key,isPlan), right=V(ms,sd.key,isPlan)-V(bs,sd.key,isPlan);
+      var diff=left-right;
+      if(Math.abs(diff)>EPS) errs.push({label:(isPlan?'[계획] ':'[실적] ')+sd.label, leftLabel:'영업손익', left:left, rightLabel:'매출-비용', right:right, diff:diff});
+    });});
+    checks.push({name:'③ 영업손익 = 매출 − 비용', desc:'영업손익이 매출 소계 − 비용 소계와 일치 (각 부문·계획/실적)', pass:errs.length===0, errors:errs});
+  })();
+
+  identity('④ 광고판촉비 = CPA/CPM + GDN + 일반', '광고판촉비가 3개 세부 합과 일치', '광고판촉비', ['CPA/CPM','GDN','일반']);
+  identity('⑤ 기타 = 세부항목 합', '기타가 감가상각비~회의비 세부 합과 일치', '기타',
+    ['감가상각비','건물관리비','교육훈련비','대손상각비','도급비','도서인쇄비','무형자산상각비','복리후생비','세금과공과','소모품비','여비교통비','접대비','지급임차료','차량유지비','통신비','회의비']);
+  identity('⑥ 보험료(실적) = 서비스구성품 + 기타(4대보험)', '보험료 실적이 직접비(서비스구성품)+배부액(4대보험 등) 합과 일치 — 직/배 분리 검증', '보험료', ['보험료_서비스구성','보험료_기타'], true);
+
+  // ⑦ 부문 합 = 법인 (모든 행)
+  (function(){
+    var errs=[];
+    rows.forEach(function(row){
+      if(row.type==='sec') return;
+      [true,false].forEach(function(isPlan){
+        var law=V(row,'법인',isPlan);
+        var sum=ctx.base.reduce(function(s,b){return s+V(row,b,isPlan);},0);
+        var diff=law-sum;
+        if(Math.abs(diff)>EPS) errs.push({label:(isPlan?'[계획] ':'[실적] ')+row.label, leftLabel:'법인', left:law, rightLabel:'4부문합', right:sum, diff:diff});
+      });
+    });
+    checks.push({name:'⑦ 부문 합 = 법인', desc:'이통사+카드사+신규+라운드 합이 법인과 일치 (모든 행·계획/실적)', pass:errs.length===0, errors:errs});
+  })();
+
+  // ⑧ SP사업부 = 이통사+카드사+신규 (모든 행)
+  (function(){
+    var errs=[];
+    rows.forEach(function(row){
+      if(row.type==='sec') return;
+      [true,false].forEach(function(isPlan){
+        var sp=V(row,ctx.spTok,isPlan);
+        var sum=['이통사','카드사','신규'].reduce(function(s,b){return s+V(row,b,isPlan);},0);
+        var diff=sp-sum;
+        if(Math.abs(diff)>EPS) errs.push({label:(isPlan?'[계획] ':'[실적] ')+row.label, leftLabel:'SP사업부', left:sp, rightLabel:'이통+카드+신규', right:sum, diff:diff});
+      });
+    });
+    checks.push({name:'⑧ SP사업부 = 이통사+카드사+신규', desc:'SP사업부 값이 이통사+카드사+신규 합과 일치 (모든 행·계획/실적)', pass:errs.length===0, errors:errs});
+  })();
+
+  // ⑨~⑫ 부문별 원천1 대사: 보고서 부문 실적(원천1 비용항목) = 원천1 손익원본의 해당 부문 PJT 개별값 합
+  // opts.monthlyS1 = [{s:원천1 dm, o:그 달 부문분류}] — report2의 s1agg와 동일하게 월별 분류로 합산
+  if(opts && opts.monthlyS1){
+    var SRC1_ROWS={
+      매출원가:['제휴사도급비','제휴수수료'],
+      인건비:['직원급여','상여금(일반)','제수당','퇴직급여','주식보상비용'],
+      지급수수료:['지급수수료'],
+      보험료:['보험료'],
+      감가상각비:['감가상각비','감가상각비(사용권자산_차량운반구)','감가상각비(사용권자산_건물)','감가상각비(사용권자산_기계장치)','감가상각비(사용권자산_임차보증금현할차)','감가상각비(복구충당)'],
+      건물관리비:['건물관리비'], 교육훈련비:['교육훈련비'], 대손상각비:['대손상각비'], 도급비:['도급비'],
+      도서인쇄비:['도서인쇄비'], 무형자산상각비:['무형자산상각비'], 복리후생비:['복리후생비'], 세금과공과:['세금과공과금'],
+      소모품비:['소모품비'], 여비교통비:['여비교통비'], 접대비:['접대비'], 지급임차료:['지급임차료'],
+      차량유지비:['차량유지비'], 통신비:['통신비'], 회의비:['회의비']
+    };
+    var fb=opts.fallbackSeg||{};
+    // s1agg와 동일: 월별로 그 달의 분류(it.o[base])로 t값 누적
+    function aggSrc(keys, base){
+      var tot=0;
+      opts.monthlyS1.forEach(function(it){
+        if(!it||!it.s) return;
+        var pjts=(it.o && it.o[base]) ? it.o[base] : (fb[base]||[]);
+        keys.forEach(function(k){
+          var o=it.s[k]; if(!o||!o.pjts) return;
+          pjts.forEach(function(p){ var r=o.pjts[p]; if(r) tot+=r.t||0; });
+        });
+      });
+      return tot;
+    }
+    var GROUPS=[
+      {name:'SP사업부', leftSeg:ctx.spTok, bases:['이통사','카드사','신규']},
+      {name:'카드사',   leftSeg:'카드사', bases:['카드사']},
+      {name:'신규',     leftSeg:'신규',   bases:['신규']},
+      {name:'라운드',   leftSeg:'라운드', bases:['라운드']}
+    ];
+    var segNo=['⑨','⑩','⑪','⑫'];
+    GROUPS.forEach(function(g,gi){
+      var errs=[];
+      Object.keys(SRC1_ROWS).forEach(function(id){
+        var row=find(id); if(!row) return;
+        var rep=V(row,g.leftSeg,false);  // 보고서 부문 실적
+        var src=g.bases.reduce(function(s,b){ return s+aggSrc(SRC1_ROWS[id],b); }, 0);
+        var diff=rep-src;
+        if(Math.abs(diff)>EPS) errs.push({label:row.label, leftLabel:'보고서', left:rep, rightLabel:'원천1 PJT합', right:src, diff:diff});
+      });
+      checks.push({name:segNo[gi]+' ['+g.name+'] 보고서 실적 = 원천1 PJT 개별값 합',
+        desc:g.name+' 부문 비용 실적이 원천1 손익원본의 해당 부문 소속 PJT 개별값 합과 일치 (원천 대사·실적 기준)',
+        pass:errs.length===0, errors:errs});
+    });
+  }
+
+  return checks;
+}
+
+function _r_opts(which, ctx){
+  return which===1
+    ? { monthlyS1:[{s:ctx.src1, o:ctx.segPjts}], fallbackSeg:ctx.segPjts }   // 월별: 단일 달
+    : { monthlyS1:ctx.monthlyS1||[], fallbackSeg:ctx.segPjts };               // 누적: 월별 분류 그대로
+}
+function _r_title(which, ctx){
+  return which===1
+    ? '월별 보고 합산검증 — '+ctx.year+'년 '+(ctx.month<10?'0':'')+ctx.month+'월'
+    : '누적 보고 합산검증 — '+ctx.year+'년 ~'+(ctx.month<10?'0':'')+ctx.month+'월 누적';
+}
+function showReport1Checks(){
+  var ctx=window._r1ctx;
+  if(!ctx){ alert('먼저 [월별 보고]에서 🔍 조회를 실행해 주세요.'); return; }
+  showReportChecksModal(_r_title(1,ctx), buildReportChecks(ctx, _r_opts(1,ctx)));
+}
+function showReport2Checks(){
+  var ctx=window._r2ctx;
+  if(!ctx){ alert('먼저 [누적 보고]에서 🔍 조회를 실행해 주세요.'); return; }
+  showReportChecksModal(_r_title(2,ctx), buildReportChecks(ctx, _r_opts(2,ctx)));
+}
+// 조회 시 자동 검증 — 불일치가 있으면 팝업으로 즉시 경고, 통과 시 상태줄에 표시만
+function reportAutoCheck(which){
+  try{
+    var ctx = which===1 ? window._r1ctx : window._r2ctx;
+    if(!ctx) return;
+    var checks = buildReportChecks(ctx, _r_opts(which, ctx));
+    var failed = checks.filter(function(c){ return !c.pass; });
+    var statusEl = document.getElementById(which===1 ? 'r1-status' : 'r2-status');
+    if(!failed.length){
+      if(statusEl) statusEl.innerHTML += ' <span style="color:#065f46;font-weight:600">· ✓ 합산검증 통과 ('+checks.length+'항목)</span>';
+      return;
+    }
+    if(statusEl) statusEl.innerHTML += ' <span style="color:#b91c1c;font-weight:700;cursor:pointer;text-decoration:underline" onclick="'
+      +(which===1?'showReport1Checks()':'showReport2Checks()')+'">· ⚠ 합산검증 불일치 '+failed.length+'건 — 클릭하여 상세보기</span>';
+    showReportChecksModal(_r_title(which, ctx), checks);
+  }catch(e){ console.warn('reportAutoCheck('+which+') 오류:', e); }
+}
+
 function pjtplDebugCheck(){
   if(!S.lastValidation){ alert('먼저 데이터를 조회하세요.'); return; }
   var vResult=S.lastValidation.vResult;
@@ -4629,6 +4967,7 @@ function _ledgerParseFile(file){
           else if(v==='ACCT_NM'||v==='계정과목명'||v==='계정과목') cIdx.acct=c;
         }
         var rows = [], totalDebit=0, totalCredit=0;
+        var carryDebit=0, carryCredit=0;  // 전월이월 누적 (검증용 합계에는 포함, 분석용 rows에서는 제외)
         for(var r=1; r<aoa.length; r++){
           var row = aoa[r] || [];
           var desc = String(row[cIdx.desc]||'').trim();
@@ -4636,6 +4975,22 @@ function _ledgerParseFile(file){
           if(desc.indexOf('[월') === 0 || desc.indexOf('[누') === 0) continue;
           var d = parseFloat(String(row[cIdx.debit]||'').replace(/,/g,'')) || 0;
           var cr = parseFloat(String(row[cIdx.credit]||'').replace(/,/g,'')) || 0;
+          // 이월 행 감지 — 2번행(r===1) 위치 기반 + 본문 중 이월 행 텍스트 기반
+          var isCarry = (r === 1);
+          if(!isCarry){
+            for(var _ci=0; _ci<row.length; _ci++){
+              var _cv = String(row[_ci]==null?'':row[_ci]);
+              if(_cv.indexOf('전월이월') >= 0 || _cv.indexOf('전기이월') >= 0 || _cv.indexOf('차월이월') >= 0){
+                isCarry = true; break;
+              }
+            }
+          }
+          if(isCarry){
+            // 이월 금액은 검증용 합계에만 가산 → 누적보고 실적(real_법인)과 정합
+            // 분석용 rows에는 추가하지 않음 → Top 5/거래처 분석에서 자동 제외
+            carryDebit += d; carryCredit += cr;
+            continue;
+          }
           if(!desc && !d && !cr) continue;
           totalDebit += d; totalCredit += cr;
           rows.push({
@@ -4650,8 +5005,13 @@ function _ledgerParseFile(file){
           });
         }
         var azValue = rows.length>0 ? rows[0].acct : '';
-        resolve({fileName:file.name, rows:rows, totalDebit:totalDebit, totalCredit:totalCredit,
-          netAmount: totalDebit - totalCredit, azAccount: azValue});
+        // 검증용 합계 = 본문 거래 + 전월이월 (누적보고 실적값과 정합)
+        // rows는 본문 거래만 포함 → Top 5/거래처 분석에서 이월 자동 제외
+        var validDebit = totalDebit + carryDebit;
+        var validCredit = totalCredit + carryCredit;
+        resolve({fileName:file.name, rows:rows, totalDebit:validDebit, totalCredit:validCredit,
+          netAmount: validDebit - validCredit, azAccount: azValue,
+          carryDebit:carryDebit, carryCredit:carryCredit, txDebit:totalDebit, txCredit:totalCredit});
       }catch(err){ reject(err.message || String(err)); }
     };
     fr.onerror = function(){ reject('파일 읽기 실패'); };
