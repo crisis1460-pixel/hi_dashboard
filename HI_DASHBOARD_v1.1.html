@@ -95,6 +95,8 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
 .ntab .ni{display:inline-block;width:20px;text-align:center;flex-shrink:0;}
 .ntab:hover{color:var(--blue);background:var(--blue-d);padding-left:22px;}
 .ntab.on{color:var(--blue);background:var(--blue-d);font-weight:700;border-left:3px solid var(--blue);padding-left:15px;}
+.ndrop-ghead{font-size:10px;font-weight:700;color:var(--txt3);padding:8px 18px 3px;letter-spacing:.3px;cursor:default;border-top:1px solid var(--border);margin-top:4px;}
+.ndrop-ghead.first{border-top:none;margin-top:0;}
 /* 단독 메뉴 (메인) */
 .nmenu-solo{padding:10px 18px;font-size:12px;font-weight:600;color:var(--txt3);cursor:pointer;display:flex;align-items:center;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;}
 .nmenu-solo:hover{color:var(--blue);border-bottom-color:var(--blue);background:var(--bg3);}
@@ -311,6 +313,23 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
 .r2-tbl thead tr { position: sticky; top: 0; z-index: 10; }
 .r2-tbl thead tr th:first-child { position: sticky; left: 0; z-index: 20; }
 .r2-tbl tbody tr td:first-child { position: sticky; left: 0; z-index: 1; background: inherit; }
+
+/* ══════════════════════════════════════════════════════════
+   기준서 콜센터 (K-IFRS) — 신규 모듈 전용 스타일 (.kifrs- 접두사로 완전 격리)
+   ══════════════════════════════════════════════════════════ */
+.kifrs-ntab-disabled{display:flex;align-items:center;gap:0;padding:10px 18px;font-size:12px;font-weight:500;color:var(--txt3);cursor:not-allowed;white-space:nowrap;opacity:.6;}
+.kifrs-ntab-disabled .ni{display:inline-block;width:20px;text-align:center;flex-shrink:0;}
+.kifrs-badge{display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;background:#e5e7eb;color:#6b7280;margin-left:6px;vertical-align:middle;}
+.kifrs-wrap{max-width:1000px;margin:0 auto;}
+.kifrs-header{display:flex;align-items:flex-start;gap:14px;padding:20px 22px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;}
+.kifrs-header-icon{width:46px;height:46px;border-radius:10px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.kifrs-header-title{font-size:16px;font-weight:700;color:var(--txt);}
+.kifrs-header-sub{font-size:12px;color:var(--txt3);margin-top:4px;line-height:1.5;}
+.kifrs-phase-tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;background:#dbeafe;color:#1d4ed8;margin-left:8px;}
+.kifrs-placeholder{margin-top:18px;padding:48px 24px;text-align:center;background:var(--bg3);border:1px dashed var(--border2);border-radius:10px;color:var(--txt3);}
+.kifrs-placeholder .ico{font-size:38px;opacity:.5;}
+.kifrs-placeholder .ttl{font-size:13px;font-weight:600;color:var(--txt2);margin-top:10px;}
+.kifrs-placeholder .desc{font-size:12px;margin-top:6px;line-height:1.6;}
 </style>
 </head>
 <body>
@@ -335,29 +354,27 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
   <!-- 메인 (단독) -->
   <div class="nmenu-solo active" id="solo-main" onclick="switchTab('main')">🏠 메인</div>
 
-  <!-- DB 관리 -->
+  <!-- HI_예실분석 (기존 DB관리 / 개별자료 / 보고자료 통합 — 탭 ID·동작은 그대로) -->
   <div class="nmenu">
-    <div class="nmenu-label" id="label-dbmgr">DB 관리 <span class="arr">▼</span></div>
-    <div class="ndrop">
+    <div class="nmenu-label" id="label-hianalysis">📊 HI_예실분석 <span class="arr">▼</span></div>
+    <div class="ndrop" style="min-width:184px">
+      <div class="ndrop-ghead first">DB 관리</div>
       <div class="ntab" id="ntab-datamgr" onclick="switchTab('datamgr')"><span class="ni">📂</span>원천 데이터 관리</div>
       <div class="ntab" id="ntab-pjtmgr" onclick="switchTab('pjtmgr')"><span class="ni">🗂</span>PJT 관리</div>
-    </div>
-  </div>
-
-  <!-- 개별자료 -->
-  <div class="nmenu">
-    <div class="nmenu-label" id="label-indiv">개별자료 <span class="arr">▼</span></div>
-    <div class="ndrop">
+      <div class="ndrop-ghead">개별자료</div>
       <div class="ntab" id="ntab-pjtpl" onclick="switchTab('pjtpl')"><span class="ni">📊</span>PJT 손익 안분</div>
-    </div>
-  </div>
-
-  <!-- 보고자료 -->
-  <div class="nmenu">
-    <div class="nmenu-label" id="label-report">보고자료 <span class="arr">▼</span></div>
-    <div class="ndrop">
+      <div class="ndrop-ghead">보고자료</div>
       <div class="ntab" id="ntab-report1" onclick="switchTab('report1')"><span class="ni">📋</span>월별 보고</div>
       <div class="ntab" id="ntab-report2" onclick="switchTab('report2')"><span class="ni">📈</span>누적 보고</div>
+    </div>
+  </div>
+
+  <!-- 기준서 콜센터 (신규 모듈 — KIFRS 네임스페이스로 격리) -->
+  <div class="nmenu">
+    <div class="nmenu-label" id="label-kifrs">📞 기준서 콜센터 <span class="arr">▼</span></div>
+    <div class="ndrop">
+      <div class="ntab" id="ntab-kifrs" onclick="switchTab('kifrs')"><span class="ni">📘</span>K-IFRS</div>
+      <div class="kifrs-ntab-disabled" title="Phase 2 — 준비 중입니다"><span class="ni">📗</span>K-GAAP<span class="kifrs-badge">준비 중</span></div>
     </div>
   </div>
 
@@ -376,9 +393,15 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
       <div class="ntab" id="ntab-admin-placeholder" style="color:var(--txt3);font-size:11px;padding:10px 18px;cursor:default">준비 중</div>
     </div>
   </div>
+
 </div>
 
 <div class="main">
+
+<!-- ══ TAB: 기준서 콜센터 (K-IFRS) — 신규 모듈, KIFRS 네임스페이스로 렌더 ══ -->
+<div class="tab" id="tab-kifrs">
+  <div id="kifrs-root"></div>
+</div>
 
 <!-- ══ TAB: 요약 ══ -->
 
@@ -636,26 +659,25 @@ function switchTab(name){
   // 상위 메뉴 active 표시
   document.querySelectorAll('.nmenu-label').forEach(function(el){el.classList.remove('active');});
   document.querySelectorAll('.nmenu-solo').forEach(function(el){el.classList.remove('active');});
-  var dbTabs    = ['datamgr','pjtmgr'];
-  var indivTabs = ['pjtpl'];
-  var reportTabs = ['report1','report2'];
+  // HI_예실분석으로 통합된 탭들(기존 DB관리/개별자료/보고자료) → 단일 부모 라벨 강조
+  var analysisTabs = ['datamgr','pjtmgr','pjtpl','report1','report2'];
   var adminTabs = ['devlog'];
   if(name==='main'){
     var solo = document.getElementById('solo-main');
     if(solo) solo.classList.add('active');
-  } else if(dbTabs.indexOf(name)>=0){
-    var lbl = document.getElementById('label-dbmgr');
+  } else if(analysisTabs.indexOf(name)>=0){
+    var lbl = document.getElementById('label-hianalysis');
     if(lbl) lbl.classList.add('active');
-  } else if(indivTabs.indexOf(name)>=0){
-    var lbli = document.getElementById('label-indiv');
-    if(lbli) lbli.classList.add('active');
-  } else if(reportTabs.indexOf(name)>=0){
-    var lbl2 = document.getElementById('label-report');
-    if(lbl2) lbl2.classList.add('active');
   } else if(adminTabs.indexOf(name)>=0){
     var lbl3 = document.getElementById('label-etc');
     if(lbl3) lbl3.classList.add('active');
+  } else if(name==='kifrs'){
+    var lblk = document.getElementById('label-kifrs');
+    if(lblk) lblk.classList.add('active');
   }
+
+  // 기준서 콜센터(K-IFRS) — 신규 모듈 (격리된 KIFRS 네임스페이스)
+  if(name==='kifrs' && window.KIFRS && typeof window.KIFRS.render==='function') window.KIFRS.render();
 
   // 탭별 렌더
   if(name==='datamgr') renderDataMgr();
@@ -5601,6 +5623,62 @@ function debugR1Compare(){
   ov.appendChild(box);
   document.body.appendChild(ov);
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   기준서 콜센터 — K-IFRS 모듈 (Phase 1)
+   ────────────────────────────────────────────────────────────────
+   ⚠ 격리 원칙
+   - 모든 코드는 이 IIFE 내부 + window.KIFRS 네임스페이스에만 존재
+   - 기존 전역 변수/함수(renderReport, _ledgerParseFile, S 등)를 호출/수정하지 않음
+   - localStorage 키는 모두 'kifrs-' 접두사 사용
+   - CSS 클래스는 모두 '.kifrs-' 접두사 사용
+   - switchTab('kifrs')에서 window.KIFRS.render()만 호출됨
+   ══════════════════════════════════════════════════════════════════ */
+(function(){
+  'use strict';
+
+  var KIFRS = {};
+
+  // 신규 모듈이 다룰 localStorage 키 접두사 (충돌 방지)
+  KIFRS.LS_PREFIX = 'kifrs-';
+
+  KIFRS._rendered = false;
+
+  // K-IFRS 탭 진입 시 호출 (switchTab('kifrs') → 여기로)
+  KIFRS.render = function(){
+    var root = document.getElementById('kifrs-root');
+    if(!root) return;
+    // Phase 1 - 1단계: 메뉴 탭 + 빈 화면(랜딩)만 렌더
+    if(KIFRS._rendered) return; // 이미 그려졌으면 재렌더 생략
+    root.innerHTML =
+      '<div class="kifrs-wrap">'
+      + '<div class="kifrs-header">'
+      +   '<div class="kifrs-header-icon">📞</div>'
+      +   '<div>'
+      +     '<div class="kifrs-header-title">기준서 콜센터'
+      +       '<span class="kifrs-phase-tag">K-IFRS · Phase 1</span>'
+      +     '</div>'
+      +     '<div class="kifrs-header-sub">'
+      +       '업로드한 문서를 K-IFRS 기준서 기준으로 자동 검토합니다.<br>'
+      +       '문서(PDF·Excel·CSV·Word)와 이미지(JPG·PNG·BMP)를 지원합니다.'
+      +     '</div>'
+      +   '</div>'
+      + '</div>'
+      + '<div class="kifrs-placeholder">'
+      +   '<div class="ico">🛠️</div>'
+      +   '<div class="ttl">K-IFRS 검토 화면 준비 중</div>'
+      +   '<div class="desc">'
+      +     '1단계: 메뉴 탭 + 빈 화면이 정상 표시되었습니다.<br>'
+      +     '다음 단계에서 파일 업로드 · 텍스트 추출 기능이 추가됩니다.'
+      +   '</div>'
+      + '</div>'
+      + '</div>';
+    KIFRS._rendered = true;
+  };
+
+  // 전역에 단일 네임스페이스로만 노출
+  window.KIFRS = KIFRS;
+})();
 
 </script>
 </body>
