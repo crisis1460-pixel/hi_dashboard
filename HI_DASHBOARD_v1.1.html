@@ -330,6 +330,56 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
 .kifrs-placeholder .ico{font-size:38px;opacity:.5;}
 .kifrs-placeholder .ttl{font-size:13px;font-weight:600;color:var(--txt2);margin-top:10px;}
 .kifrs-placeholder .desc{font-size:12px;margin-top:6px;line-height:1.6;}
+/* ── 2단계: 업로드 UI + 텍스트 추출 ── */
+.kifrs-section-title{font-size:13px;font-weight:700;color:var(--txt);margin:18px 0 8px;display:flex;align-items:center;gap:6px;}
+.kifrs-result-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:18px 0 8px;}
+.kifrs-clear-btn{padding:6px 14px;font-size:11px;}
+.kifrs-drop{margin-top:14px;border:2px dashed var(--border2);border-radius:12px;background:var(--bg3);padding:34px 24px;text-align:center;cursor:pointer;transition:all .15s;}
+.kifrs-drop:hover{border-color:var(--blue);background:var(--blue-d);}
+.kifrs-drop.drag{border-color:var(--blue);background:var(--blue-d);transform:scale(1.005);}
+.kifrs-drop .ico{font-size:34px;opacity:.6;}
+.kifrs-drop .main{font-size:13px;font-weight:600;color:var(--txt2);margin-top:8px;}
+.kifrs-drop .sub{font-size:11px;color:var(--txt3);margin-top:5px;line-height:1.6;}
+.kifrs-drop .pick{display:inline-block;margin-top:12px;padding:7px 18px;border-radius:7px;background:var(--blue);color:#fff;font-size:12px;font-weight:600;}
+.kifrs-filelist{margin-top:16px;display:flex;flex-direction:column;gap:10px;}
+.kifrs-file{border:1px solid var(--border);border-radius:10px;background:var(--bg2);overflow:hidden;}
+.kifrs-file-head{display:flex;align-items:center;gap:10px;padding:11px 14px;}
+.kifrs-file-ico{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:16px;background:var(--bg3);flex-shrink:0;}
+.kifrs-file-meta{flex:1;min-width:0;}
+.kifrs-file-name{font-size:12px;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.kifrs-file-stat{font-size:10.5px;color:var(--txt3);margin-top:2px;font-family:'DM Mono',monospace;}
+.kifrs-file-badge{font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:8px;white-space:nowrap;}
+.kifrs-b-wait{background:#e5e7eb;color:#6b7280;}
+.kifrs-b-proc{background:#fef3c7;color:#b45309;}
+.kifrs-b-done{background:#d1fae5;color:#047857;}
+.kifrs-b-img{background:#ede9fe;color:#6d28d9;}
+.kifrs-b-err{background:#fee2e2;color:#b91c1c;}
+.kifrs-file-x{cursor:pointer;color:var(--txt3);font-size:16px;padding:2px 6px;border-radius:5px;flex-shrink:0;}
+.kifrs-file-x:hover{background:var(--bg3);color:#b91c1c;}
+.kifrs-file-body{border-top:1px solid var(--border);padding:0 14px;max-height:0;overflow:hidden;transition:max-height .2s;}
+.kifrs-file-body.open{max-height:340px;overflow:auto;padding:12px 14px;}
+.kifrs-preview{font-size:11px;color:var(--txt2);white-space:pre-wrap;word-break:break-word;font-family:'DM Mono',monospace;line-height:1.55;margin:0;}
+.kifrs-thumb{max-width:200px;max-height:160px;border-radius:8px;border:1px solid var(--border);}
+.kifrs-toggle{font-size:11px;color:var(--blue);cursor:pointer;font-weight:600;white-space:nowrap;}
+.kifrs-spin{width:13px;height:13px;border:2px solid var(--border2);border-top-color:var(--blue);border-radius:50%;display:inline-block;animation:kifrs-spin .7s linear infinite;vertical-align:middle;}
+@keyframes kifrs-spin{to{transform:rotate(360deg);}}
+.kifrs-bar{height:5px;border-radius:3px;background:var(--bg3);overflow:hidden;margin-top:6px;}
+.kifrs-bar-fill{height:100%;background:var(--blue);width:0;transition:width .15s;}
+.kifrs-act{margin-top:18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.kifrs-btn{padding:9px 20px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:var(--blue);color:#fff;box-shadow:0 2px 6px rgba(37,99,235,.3);}
+.kifrs-btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none;}
+.kifrs-btn-ghost{background:var(--bg3);color:var(--txt2);border:1px solid var(--border2);box-shadow:none;}
+.kifrs-note{font-size:11px;color:var(--txt3);}
+/* 모달 (비지원 형식 등) */
+.kifrs-modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;}
+.kifrs-modal{background:var(--bg);border-radius:12px;padding:24px;max-width:420px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.25);text-align:center;}
+.kifrs-modal .m-ico{font-size:36px;}
+.kifrs-modal .m-ttl{font-size:14px;font-weight:700;color:var(--txt);margin-top:10px;}
+.kifrs-modal .m-msg{font-size:12px;color:var(--txt2);margin-top:8px;line-height:1.6;}
+.kifrs-modal .m-foot{margin-top:18px;display:flex;justify-content:center;gap:8px;}
+.kifrs-pw-input{width:100%;margin-top:14px;padding:10px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px;background:var(--bg);color:var(--txt);box-sizing:border-box;}
+.kifrs-pw-input:focus{outline:none;border-color:var(--blue);}
+.kifrs-pw-err{font-size:11px;color:#b91c1c;margin-top:8px;min-height:14px;}
 </style>
 </head>
 <body>
@@ -5644,36 +5694,458 @@ function debugR1Compare(){
 
   KIFRS._rendered = false;
 
-  // K-IFRS 탭 진입 시 호출 (switchTab('kifrs') → 여기로)
+  // ══ 설정 ══
+  KIFRS.SUPPORTED = {
+    doc:     ['pdf','xlsx','xls','csv','docx','pptx'],
+    image:   ['jpg','jpeg','png','bmp'],
+    archive: ['zip']
+  };
+  KIFRS.LIBS = {
+    pdfjs:   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
+    pdfwork: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
+    mammoth: 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js',
+    zip:     'https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2/dist/zip-full.min.js'  // .zip(암호)·.pptx 해제용
+  };
+  // 표준 ZIP이 아니라 해제 불가한 압축 형식 (전용 안내 팝업용)
+  KIFRS.OTHER_ARCHIVE = ['alz','egg','7z','rar','tar','gz','tgz','bz2','lzh','lz','cab','arj','iso','xz','z'];
+
+  // ══ 상태 (다음 단계로 전달) ══
+  // 각 rec: {id,name,ext,kind,size,status,text,error,dataUrl,file}
+  // status: waiting | processing | done | image | error
+  KIFRS.state = { files: [] };
+  KIFRS._seq = 0;
+
+  // ══ 유틸 ══
+  function getExt(name){ var i=name.lastIndexOf('.'); return i<0?'':name.slice(i+1).toLowerCase(); }
+  function kindOf(e){
+    if(KIFRS.SUPPORTED.doc.indexOf(e)>=0)     return 'doc';
+    if(KIFRS.SUPPORTED.image.indexOf(e)>=0)   return 'image';
+    if(KIFRS.SUPPORTED.archive.indexOf(e)>=0) return 'archive';
+    if(KIFRS.OTHER_ARCHIVE.indexOf(e)>=0)     return 'otherarchive';
+    return 'unsupported';
+  }
+  function fmtSize(b){ if(b<1024) return b+' B'; if(b<1048576) return (b/1024).toFixed(1)+' KB'; return (b/1048576).toFixed(1)+' MB'; }
+  function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function iconFor(kind,e){ if(kind==='archive') return '🗜️'; if(kind==='image') return '🖼️'; if(e==='pdf') return '📕'; if(e==='docx') return '📘'; if(e==='pptx') return '📙'; if(e==='csv') return '📑'; return '📗'; }
+
+  // ══ 라이브러리 지연 로드 (탭/형식 사용 시점에만 CDN 로드) ══
+  var _libCache = {};
+  function loadScript(url){
+    if(_libCache[url]) return _libCache[url];
+    _libCache[url] = new Promise(function(res,rej){
+      var s=document.createElement('script');
+      s.src=url;
+      s.onload=function(){ res(true); };
+      s.onerror=function(){ delete _libCache[url]; rej(new Error('라이브러리 로드 실패')); };
+      document.head.appendChild(s);
+    });
+    return _libCache[url];
+  }
+  KIFRS.ensurePdfJs = function(){
+    if(window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+    return loadScript(KIFRS.LIBS.pdfjs).then(function(){
+      if(window.pdfjsLib) window.pdfjsLib.GlobalWorkerOptions.workerSrc = KIFRS.LIBS.pdfwork;
+      return window.pdfjsLib;
+    });
+  };
+  KIFRS.ensureMammoth = function(){
+    if(window.mammoth) return Promise.resolve(window.mammoth);
+    return loadScript(KIFRS.LIBS.mammoth).then(function(){ return window.mammoth; });
+  };
+  KIFRS.ensureZip = function(){
+    if(window.zip) return Promise.resolve(window.zip);
+    return loadScript(KIFRS.LIBS.zip).then(function(){
+      if(window.zip && window.zip.configure) window.zip.configure({useWebWorkers:false}); // file:// 환경 — 워커 없이 인라인 실행
+      return window.zip;
+    });
+  };
+
+  // ══ 파일 읽기 헬퍼 ══
+  function readAs(file, how){
+    return new Promise(function(res,rej){
+      var r=new FileReader();
+      r.onload=function(){ res(r.result); };
+      r.onerror=function(){ rej(r.error||new Error('파일 읽기 실패')); };
+      if(how==='buffer') r.readAsArrayBuffer(file);
+      else if(how==='dataurl') r.readAsDataURL(file);
+      else r.readAsText(file);
+    });
+  }
+
+  // ══ 텍스트 추출기 (3-1단계, 오프라인) ══
+  function extractPdf(file, onProg){
+    return KIFRS.ensurePdfJs().then(function(pdfjsLib){
+      if(!pdfjsLib) throw new Error('PDF.js 사용 불가');
+      return readAs(file,'buffer').then(function(buf){
+        return pdfjsLib.getDocument({data:buf}).promise.then(function(pdf){
+          var n=pdf.numPages, chunks=[], chain=Promise.resolve();
+          for(var i=1;i<=n;i++){
+            (function(pg){
+              chain=chain.then(function(){
+                return pdf.getPage(pg).then(function(page){
+                  return page.getTextContent().then(function(tc){
+                    chunks.push(tc.items.map(function(it){return it.str;}).join(' '));
+                    if(onProg) onProg(pg/n);
+                  });
+                });
+              });
+            })(i);
+          }
+          return chain.then(function(){ return chunks.join('\n').trim(); });
+        });
+      });
+    });
+  }
+  function extractExcel(file){
+    return readAs(file,'buffer').then(function(buf){
+      var X = window.XLSX || window.XLSXStyle;
+      if(!X) throw new Error('XLSX 라이브러리 없음');
+      var wb = X.read(buf, {type:'array'});
+      var out=[];
+      wb.SheetNames.forEach(function(sn){ out.push('### '+sn); out.push(X.utils.sheet_to_csv(wb.Sheets[sn])); });
+      return out.join('\n').trim();
+    });
+  }
+  function extractWord(file){
+    return KIFRS.ensureMammoth().then(function(mammoth){
+      if(!mammoth) throw new Error('Mammoth.js 사용 불가');
+      return readAs(file,'buffer').then(function(buf){
+        return mammoth.extractRawText({arrayBuffer:buf}).then(function(r){ return (r.value||'').trim(); });
+      });
+    });
+  }
+  function decodeXml(s){
+    return s.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&apos;/g,"'")
+            .replace(/&#x([0-9a-fA-F]+);/g,function(_,h){return String.fromCharCode(parseInt(h,16));})
+            .replace(/&#(\d+);/g,function(_,d){return String.fromCharCode(parseInt(d,10));})
+            .replace(/&amp;/g,'&');
+  }
+  function extractPptx(file){
+    return KIFRS.ensureZip().then(function(zipLib){
+      if(!zipLib) throw new Error('zip.js 사용 불가');
+      var reader=new zipLib.ZipReader(new zipLib.BlobReader(file));
+      return reader.getEntries().then(function(entries){
+        var slides=entries.filter(function(e){ return /^ppt\/slides\/slide\d+\.xml$/.test(e.filename); })
+                          .sort(function(a,b){ return (+a.filename.replace(/\D/g,'')) - (+b.filename.replace(/\D/g,'')); });
+        var chain=Promise.resolve(), texts=[];
+        slides.forEach(function(en,i){
+          chain=chain.then(function(){
+            return en.getData(new zipLib.TextWriter()).then(function(xml){
+              var out=[], m, re=/<a:t>([\s\S]*?)<\/a:t>/g;
+              while((m=re.exec(xml))!==null){ out.push(decodeXml(m[1])); }
+              var t=out.join(' ').trim();
+              if(t) texts.push('[슬라이드 '+(i+1)+']\n'+t);
+            });
+          });
+        });
+        return chain.then(function(){ reader.close(); return texts.join('\n\n').trim(); });
+      });
+    });
+  }
+  function extractText(rec, onProg){
+    if(rec.ext==='pdf') return extractPdf(rec.file, onProg);
+    if(rec.ext==='xlsx'||rec.ext==='xls') return extractExcel(rec.file);
+    if(rec.ext==='csv') return readAs(rec.file,'text').then(function(t){return (t||'').trim();});
+    if(rec.ext==='docx') return extractWord(rec.file);
+    if(rec.ext==='pptx') return extractPptx(rec.file);
+    return Promise.reject(new Error('지원하지 않는 형식'));
+  }
+
+  // ══ 비지원 형식 모달 ══
+  function showUnsupportedModal(names){
+    var hasOffice = names.some(function(n){ return /\.(doc|ppt)$/i.test(n); });
+    var msg = esc(names.join(', ')) + '<br><br><b>해당 파일은 PDF로 변환 후 업로드해주세요.</b>';
+    if(hasOffice) msg += '<br><span class="kifrs-note">※ 구버전 .doc / .ppt 는 <b>.docx / .pptx</b> 또는 <b>PDF</b>로 저장한 뒤 올려주세요.</span>';
+    var ov=document.createElement('div');
+    ov.className='kifrs-modal-ov';
+    ov.innerHTML=
+      '<div class="kifrs-modal">'
+      + '<div class="m-ico">📄</div>'
+      + '<div class="m-ttl">지원하지 않는 파일 형식</div>'
+      + '<div class="m-msg">' + msg + '</div>'
+      + '<div class="m-foot"><button class="kifrs-btn">확인</button></div>'
+      + '</div>';
+    function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
+    ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
+    ov.querySelector('button').addEventListener('click', close);
+    document.body.appendChild(ov);
+  }
+
+  // ══ 파일 추가 → 분류 → 추출 ══
+  KIFRS.addFiles = function(fileList){
+    var arr = Array.prototype.slice.call(fileList||[]);
+    var unsupported=[], otherArch=[], added=[], archives=[];
+    arr.forEach(function(f){
+      var e=getExt(f.name), k=kindOf(e);
+      if(k==='otherarchive'){ otherArch.push(f.name); return; }
+      if(k==='unsupported'){ unsupported.push(f.name); return; }
+      var rec={ id:'f'+(++KIFRS._seq), name:f.name, ext:e, kind:k, size:f.size,
+                status:(k==='image'?'image':'waiting'), text:'', error:'', dataUrl:'', file:f, from:'' };
+      KIFRS.state.files.push(rec);
+      if(k==='archive') archives.push(rec); else added.push(rec);
+    });
+    if(otherArch.length)   showArchiveHelpModal(otherArch);
+    if(unsupported.length) showUnsupportedModal(unsupported);
+    renderFileList();
+    added.forEach(processRec);
+    archives.forEach(showPasswordModal);  // .zip → 비밀번호 입력 → 해제
+  };
+
+  // ══ 비표준 압축 형식 안내 모달 (.alz/.egg/.7z/.rar 등) ══
+  function showArchiveHelpModal(names){
+    var ov=document.createElement('div');
+    ov.className='kifrs-modal-ov';
+    ov.innerHTML=
+      '<div class="kifrs-modal">'
+      + '<div class="m-ico">🗜️</div>'
+      + '<div class="m-ttl">지원하지 않는 압축 형식</div>'
+      + '<div class="m-msg">' + esc(names.join(', ')) + '<br><br>압축 파일은 <b>표준 ZIP(.zip)</b>만 해제할 수 있습니다.'
+      +   '<br><span class="kifrs-note">※ 알집(.alz·.egg) · 7-Zip(.7z) · RAR(.rar) 등은 <b>.zip</b>으로 다시 압축하거나, 내부 파일을 꺼내 직접 업로드해주세요.</span></div>'
+      + '<div class="m-foot"><button class="kifrs-btn">확인</button></div>'
+      + '</div>';
+    function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
+    ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
+    ov.querySelector('button').addEventListener('click', close);
+    document.body.appendChild(ov);
+  }
+
+  // ══ .zip 비밀번호 모달 ══
+  function showPasswordModal(rec){
+    var ov=document.createElement('div');
+    ov.className='kifrs-modal-ov';
+    ov.innerHTML=
+      '<div class="kifrs-modal">'
+      + '<div class="m-ico">🔒</div>'
+      + '<div class="m-ttl">압축 파일 비밀번호</div>'
+      + '<div class="m-msg">' + esc(rec.name) + '<br>비밀번호를 입력하면 해제 후 내부 자료를 분석합니다.</div>'
+      + '<input type="password" id="kifrs-zip-pw" class="kifrs-pw-input" placeholder="비밀번호" autocomplete="off">'
+      + '<div class="kifrs-pw-err" id="kifrs-zip-pw-err"></div>'
+      + '<div class="m-foot">'
+      +   '<button class="kifrs-btn kifrs-btn-ghost" id="kifrs-zip-cancel">취소</button>'
+      +   '<button class="kifrs-btn" id="kifrs-zip-ok">해제</button>'
+      + '</div>'
+      + '</div>';
+    document.body.appendChild(ov);
+    var input=ov.querySelector('#kifrs-zip-pw');
+    var errEl=ov.querySelector('#kifrs-zip-pw-err');
+    var okBtn=ov.querySelector('#kifrs-zip-ok');
+    var cancelBtn=ov.querySelector('#kifrs-zip-cancel');
+    function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
+    function cancel(){ close(); KIFRS.removeFile(rec.id); }
+    function submit(){
+      var pw=input.value;
+      okBtn.disabled=true; cancelBtn.disabled=true; errEl.textContent='';
+      okBtn.innerHTML='<span class="kifrs-spin"></span> 해제 중…';
+      expandZip(rec, pw).then(function(){ close(); }).catch(function(err){
+        okBtn.disabled=false; cancelBtn.disabled=false; okBtn.textContent='해제';
+        errEl.textContent = '비밀번호가 올바르지 않거나 해제할 수 없는 파일입니다.';
+        rec.status='waiting'; renderFileList();
+        input.focus(); input.select();
+      });
+    }
+    okBtn.addEventListener('click', submit);
+    cancelBtn.addEventListener('click', cancel);
+    input.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); submit(); } });
+    setTimeout(function(){ input.focus(); }, 30);
+  }
+
+  // ══ .zip 해제 → 내부 파일을 기존 파이프라인으로 ══
+  function expandZip(rec, pw){
+    rec.status='processing'; rec.error=''; renderFileList();
+    return KIFRS.ensureZip().then(function(zipLib){
+      if(!zipLib) throw new Error('zip.js 사용 불가');
+      var reader=new zipLib.ZipReader(new zipLib.BlobReader(rec.file));
+      return reader.getEntries().then(function(entries){
+        var inner=entries.filter(function(e){ return !e.directory; });
+        var chain=Promise.resolve(), children=[];
+        inner.forEach(function(en){
+          chain=chain.then(function(){
+            return en.getData(new zipLib.BlobWriter(), {password:pw}).then(function(blob){
+              var base=en.filename.split('/').pop();
+              if(!base) return;  // 디렉터리 스킵
+              var e2=getExt(base), k2=kindOf(e2);
+              // 압축 내부의 또 다른 zip은 (재귀 방지 위해) 비지원 처리
+              if(k2==='archive') k2='unsupported';
+              var childFile;
+              try { childFile=new File([blob], base, {type:blob.type||''}); }
+              catch(_) { childFile=blob; childFile.name=base; }
+              children.push({ id:'f'+(++KIFRS._seq), name:base, ext:e2, kind:k2, size:blob.size,
+                status:(k2==='image'?'image':(k2==='unsupported'?'error':'waiting')),
+                text:'', error:(k2==='unsupported'?'압축 내부 비지원 형식':''), dataUrl:'', file:childFile, from:rec.name });
+            });
+          });
+        });
+        return chain.then(function(){ try{ reader.close(); }catch(_){} return children; });
+      });
+    }).then(function(children){
+      rec.status='done'; rec.expanded=children.length;
+      // 압축 카드 바로 뒤에 내부 파일 카드 삽입
+      var idx=KIFRS.state.files.indexOf(rec);
+      if(idx<0) idx=KIFRS.state.files.length-1;
+      for(var i=0;i<children.length;i++){ KIFRS.state.files.splice(idx+1+i,0,children[i]); }
+      renderFileList();
+      children.forEach(function(c){ if(c.status==='waiting'||c.status==='image') processRec(c); });
+    });
+  }
+
+  function processRec(rec){
+    if(rec.kind==='image'){
+      readAs(rec.file,'dataurl').then(function(url){ rec.dataUrl=url; renderFileList(); }).catch(function(){ renderFileList(); });
+      return;
+    }
+    rec.status='processing'; renderFileList();
+    extractText(rec, function(p){
+      var bar=document.getElementById('kifrs-bar-'+rec.id);
+      if(bar) bar.style.width=Math.round(p*100)+'%';
+    }).then(function(text){
+      rec.text=text||''; rec.status='done'; renderFileList();
+    }).catch(function(err){
+      rec.error=(err&&err.message)?err.message:'추출 실패'; rec.status='error'; renderFileList();
+    });
+  }
+
+  KIFRS.removeFile = function(id){
+    KIFRS.state.files = KIFRS.state.files.filter(function(r){return r.id!==id;});
+    renderFileList();
+  };
+  KIFRS.clearAll = function(){
+    var n=KIFRS.state.files.length;
+    if(!n) return;
+    if(!window.confirm('업로드된 파일 '+n+'건을 모두 삭제할까요?')) return;
+    KIFRS.state.files = [];
+    renderFileList();
+  };
+  KIFRS.togglePreview = function(id){
+    var body=document.getElementById('kifrs-body-'+id);
+    var tog=document.getElementById('kifrs-tog-'+id);
+    if(!body) return;
+    var open=body.classList.toggle('open');
+    if(tog) tog.textContent = open ? '접기 ▴' : '미리보기 ▾';
+  };
+
+  // ══ 렌더링 ══
+  function statLine(rec){
+    if(rec.kind==='archive'){
+      if(rec.status==='waiting')    return '🔒 비밀번호 입력 대기 · '+fmtSize(rec.size);
+      if(rec.status==='processing') return '압축 해제 중…';
+      if(rec.status==='done')       return '압축 해제 완료 · '+(rec.expanded||0)+'개 파일 · '+fmtSize(rec.size);
+      if(rec.status==='error')      return '오류: '+esc(rec.error);
+      return '';
+    }
+    var from = rec.from ? ' · 📦 '+esc(rec.from) : '';
+    if(rec.status==='waiting')    return '대기 중 · '+fmtSize(rec.size)+from;
+    if(rec.status==='processing') return '텍스트 추출 중… · '+rec.ext.toUpperCase()+from;
+    if(rec.status==='done')       return rec.text.length.toLocaleString()+'자 추출 · '+fmtSize(rec.size)+from;
+    if(rec.status==='image')      return '이미지 · 텍스트 추출 생략(6단계 API 직접 분석) · '+fmtSize(rec.size)+from;
+    if(rec.status==='error')      return '오류: '+esc(rec.error)+from;
+    return '';
+  }
+  function badgeHtml(rec){
+    if(rec.kind==='archive'){
+      var am={ waiting:['kifrs-b-wait','🔒 대기'], processing:['kifrs-b-proc','<span class="kifrs-spin"></span> 해제중'],
+               done:['kifrs-b-done','해제완료'], error:['kifrs-b-err','오류'] };
+      var ab=am[rec.status]||am.waiting;
+      return '<span class="kifrs-file-badge '+ab[0]+'">'+ab[1]+'</span>';
+    }
+    var m={ waiting:['kifrs-b-wait','대기'], processing:['kifrs-b-proc','<span class="kifrs-spin"></span> 추출중'],
+            done:['kifrs-b-done','추출완료'], image:['kifrs-b-img','이미지'], error:['kifrs-b-err','오류'] };
+    var b=m[rec.status]||m.waiting;
+    return '<span class="kifrs-file-badge '+b[0]+'">'+b[1]+'</span>';
+  }
+  function bodyHtml(rec){
+    if(rec.status==='image') return rec.dataUrl ? '<img class="kifrs-thumb" src="'+rec.dataUrl+'" alt="미리보기">' : '<span class="kifrs-note">미리보기 로딩 중…</span>';
+    if(rec.status==='done'){
+      var t=rec.text||'';
+      if(!t) return '<span class="kifrs-note">추출된 텍스트가 없습니다 (스캔본일 수 있어요 — 이미지/ PDF변환 권장).</span>';
+      var clip = t.length>8000 ? t.slice(0,8000)+'\n\n…(미리보기 일부만 표시 · 전체 '+t.length.toLocaleString()+'자)' : t;
+      return '<pre class="kifrs-preview">'+esc(clip)+'</pre>';
+    }
+    return '';
+  }
+  function fileRow(rec){
+    var canPreview = (rec.status==='done'||rec.status==='image') && rec.kind!=='archive';
+    return '<div class="kifrs-file" data-id="'+rec.id+'">'
+      + '<div class="kifrs-file-head">'
+      +   '<div class="kifrs-file-ico">'+iconFor(rec.kind,rec.ext)+'</div>'
+      +   '<div class="kifrs-file-meta">'
+      +     '<div class="kifrs-file-name">'+esc(rec.name)+'</div>'
+      +     '<div class="kifrs-file-stat">'+statLine(rec)+'</div>'
+      +     (rec.status==='processing' ? '<div class="kifrs-bar"><div class="kifrs-bar-fill" id="kifrs-bar-'+rec.id+'"></div></div>' : '')
+      +   '</div>'
+      +   badgeHtml(rec)
+      +   (canPreview ? '<span class="kifrs-toggle" id="kifrs-tog-'+rec.id+'" onclick="window.KIFRS.togglePreview(\''+rec.id+'\')">미리보기 ▾</span>' : '')
+      +   '<span class="kifrs-file-x" title="삭제" onclick="window.KIFRS.removeFile(\''+rec.id+'\')">✕</span>'
+      + '</div>'
+      + '<div class="kifrs-file-body" id="kifrs-body-'+rec.id+'">'+bodyHtml(rec)+'</div>'
+      + '</div>';
+  }
+  function renderFileList(){
+    var list=document.getElementById('kifrs-filelist');
+    if(list) list.innerHTML = KIFRS.state.files.map(fileRow).join('');
+    updateActions();
+  }
+  function updateActions(){
+    var info=document.getElementById('kifrs-ready-info');
+    var btn=document.getElementById('kifrs-next-btn');
+    var clearBtn=document.getElementById('kifrs-clear-btn');
+    var files=KIFRS.state.files;
+    if(clearBtn) clearBtn.style.display = files.length ? 'inline-block' : 'none';
+    var done=files.filter(function(r){return r.status==='done' && r.kind!=='archive';}).length;
+    var imgs=files.filter(function(r){return r.status==='image';}).length;
+    var busy=files.some(function(r){return r.status==='processing'||r.status==='waiting';});
+    if(info) info.textContent = files.length ? ('추출 완료 '+done+'건 · 이미지 '+imgs+'건'+(busy?' · 처리 중…':'')) : '아직 업로드된 파일이 없습니다.';
+    if(btn) btn.disabled = busy || (done+imgs===0);  // 3~4단계 연결 전까지는 안내용
+  }
+
+  // K-IFRS 탭 진입 시 호출 (switchTab('kifrs') → 여기로) — 정적 골격은 1회만 구성
   KIFRS.render = function(){
     var root = document.getElementById('kifrs-root');
     if(!root) return;
-    // Phase 1 - 1단계: 메뉴 탭 + 빈 화면(랜딩)만 렌더
-    if(KIFRS._rendered) return; // 이미 그려졌으면 재렌더 생략
+    if(KIFRS._rendered){ renderFileList(); return; }
     root.innerHTML =
       '<div class="kifrs-wrap">'
       + '<div class="kifrs-header">'
       +   '<div class="kifrs-header-icon">📞</div>'
       +   '<div>'
-      +     '<div class="kifrs-header-title">기준서 콜센터'
-      +       '<span class="kifrs-phase-tag">K-IFRS · Phase 1</span>'
-      +     '</div>'
-      +     '<div class="kifrs-header-sub">'
-      +       '업로드한 문서를 K-IFRS 기준서 기준으로 자동 검토합니다.<br>'
-      +       '문서(PDF·Excel·CSV·Word)와 이미지(JPG·PNG·BMP)를 지원합니다.'
-      +     '</div>'
+      +     '<div class="kifrs-header-title">기준서 콜센터<span class="kifrs-phase-tag">K-IFRS · Phase 1</span></div>'
+      +     '<div class="kifrs-header-sub">업로드한 문서를 K-IFRS 기준서 기준으로 자동 검토합니다.<br>문서(PDF·Excel·CSV·Word·PPT)·이미지(JPG·PNG·BMP)·암호 ZIP을 지원합니다.</div>'
       +   '</div>'
       + '</div>'
-      + '<div class="kifrs-placeholder">'
-      +   '<div class="ico">🛠️</div>'
-      +   '<div class="ttl">K-IFRS 검토 화면 준비 중</div>'
-      +   '<div class="desc">'
-      +     '1단계: 메뉴 탭 + 빈 화면이 정상 표시되었습니다.<br>'
-      +     '다음 단계에서 파일 업로드 · 텍스트 추출 기능이 추가됩니다.'
-      +   '</div>'
+      + '<div class="kifrs-section-title">📎 1) 검토할 파일 업로드</div>'
+      + '<div class="kifrs-drop" id="kifrs-drop">'
+      +   '<input type="file" id="kifrs-file-input" multiple accept=".pdf,.xlsx,.xls,.csv,.docx,.pptx,.zip,.jpg,.jpeg,.png,.bmp" style="display:none">'
+      +   '<div class="ico">📂</div>'
+      +   '<div class="main">파일을 여기로 끌어다 놓거나 클릭하세요</div>'
+      +   '<div class="sub">문서: PDF · Excel(.xlsx .xls) · CSV · Word(.docx) · PowerPoint(.pptx)<br>이미지: JPG · JPEG · PNG · BMP &nbsp;|&nbsp; 암호 ZIP(비번 입력 후 자동 해제) &nbsp;|&nbsp; 그 외 형식은 PDF로 변환 후 업로드</div>'
+      +   '<span class="pick">파일 선택</span>'
+      + '</div>'
+      + '<div class="kifrs-result-head">'
+      +   '<div class="kifrs-section-title" style="margin:0">📄 2) 추출 결과</div>'
+      +   '<button class="kifrs-btn kifrs-btn-ghost kifrs-clear-btn" id="kifrs-clear-btn" style="display:none">🗑 전체 삭제</button>'
+      + '</div>'
+      + '<div class="kifrs-filelist" id="kifrs-filelist"></div>'
+      + '<div class="kifrs-act">'
+      +   '<button class="kifrs-btn" id="kifrs-next-btn" disabled>다음 단계: 키워드 추출 ▶ (3~4단계에서 연결)</button>'
+      +   '<span class="kifrs-note" id="kifrs-ready-info">아직 업로드된 파일이 없습니다.</span>'
       + '</div>'
       + '</div>';
+
+    // 이벤트 와이어링 (1회)
+    var drop=document.getElementById('kifrs-drop');
+    var input=document.getElementById('kifrs-file-input');
+    drop.addEventListener('click', function(e){ if(e.target!==input) input.click(); });
+    input.addEventListener('change', function(){ if(input.files&&input.files.length) KIFRS.addFiles(input.files); input.value=''; });
+    drop.addEventListener('dragover', function(e){ e.preventDefault(); drop.classList.add('drag'); });
+    drop.addEventListener('dragleave', function(e){ e.preventDefault(); drop.classList.remove('drag'); });
+    drop.addEventListener('drop', function(e){
+      e.preventDefault(); drop.classList.remove('drag');
+      if(e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files.length) KIFRS.addFiles(e.dataTransfer.files);
+    });
+    var clearBtn=document.getElementById('kifrs-clear-btn');
+    if(clearBtn) clearBtn.addEventListener('click', KIFRS.clearAll);
+
     KIFRS._rendered = true;
+    renderFileList();
   };
 
   // 전역에 단일 네임스페이스로만 노출
