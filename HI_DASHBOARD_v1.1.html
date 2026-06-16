@@ -2285,7 +2285,10 @@ function processUpload(file, id, year, month, key){
     var reader2 = new FileReader();
     reader2.onload = function(evt2){
       try{
-        var wb2 = XLSXStyle.read(evt2.target.result, {type:'array'});
+        // CSV는 직접 파싱(회계식 음수 (-)1,234 → 진짜 음수). XLSX는 기존 경로 그대로.
+        var wb2 = /\.csv$/i.test(file.name)
+          ? _csvBufToWb(evt2.target.result)
+          : XLSXStyle.read(evt2.target.result, {type:'array'});
         var parsed2 = id === 'src2' ? parseSrc2(wb2, month) : parseSrc3(wb2, month);
         if(!parsed2){ if(statusEl) statusEl.innerHTML='<span style="color:red;font-size:11px">❌ 파싱 실패: 시트 구조를 확인하세요</span>'; return; }
         var now2=new Date();
@@ -2480,6 +2483,21 @@ function renderDevLogTab(tab){
         '세 화면(PJT 손익안분 / 월별 보고 / 누적 보고) 모두 조회만 하면 자동으로 사전검증이 실행됩니다 — 통과 시 상태줄에 표시, 불일치 시 팝업으로 즉시 알려줘 매번 검증 버튼을 누를 필요가 없습니다',
       ]
     },
+    {
+      date:'2026-06-15', dev:'Jiho Kim',
+      title:'원장 CSV 음수 인식 수정 & 누적 대사 기간검증·과거월 일괄 반영',
+      color:'#0891b2',
+      items:[
+        'CSV 원장에서 회계식 음수 표기 \'(-)1,234\'가 양수로 잘못 읽혀 환불/환불외(매출차감) 부호가 뒤집히던 문제를 해결했습니다 — 이제 CSV는 전용 파서로 직접 읽어 음수를 정확히 인식합니다 (XLSX·기존 저장분에는 영향 없음)',
+        '누적 보고 \'계정별원장 일괄 업로드\' 안내에 빨간 강조 문구를 추가했습니다 — \'누적 기준 월 기간과 동일 또는 더 넓은 기간의 원장 첨부 필수 (예: 기준월 4월 → 원장기간 1~4월 이상)\'',
+        '분석 시작 시, 원장의 회계기간(A열 회계귀속월)이 누적 기준월 전체를 포함하는지 자동으로 사전검사합니다 — 시작(1월부터)·끝(기준월까지)을 모두 확인하고, 부족하면 부족한 부분을 알려주며 재첨부를 안내합니다',
+        '기간이 더 넓은 원장(예: 기준 4월에 1~7월 원장)은 통과시키고, 해당 기준월까지의 거래만 자동으로 추려 대사·내역에 반영합니다 — 기준월마다 원장을 다시 받을 필요가 줄었습니다',
+        '4월 한 달치 등 일부 기간만 든 원장은 합계가 우연히 맞아도 거래 내역이 불완전해지므로 차단합니다 (전월이월 잔액으로 자동 판별)',
+        '과거월 내역 일괄 반영 기능을 신설했습니다 — 1~기준월이 든 원장 하나를 올리면, 내역이 비어있는 과거월을 찾아 한 번에 채울 수 있습니다 (월별 체크 선택 또는 전체 일괄)',
+        '일괄 반영 시 각 월은 그 달 기준으로 다시 대사하여, 통과한 계정만 누적 기준으로 내역을 기재하고 실패한 월·계정은 건너뛰며 결과를 월별로 요약해 보여줍니다',
+        '이미 작성된 월의 내역은 덮어쓰지 않고 보존합니다',
+      ]
+    },
   ];
 
   var logs = logs_biz;
@@ -2533,6 +2551,48 @@ function renderDevLogTab(tab){
   });
 
   wrap.innerHTML = html2;
+}
+
+// ── CSV 직접 파서 ──────────────────────────────────────────────
+// SheetJS의 CSV 숫자 변환이 회계식 음수 '(-)1,234' 의 부호를 잃고 양수로 읽는 문제가 있어,
+// CSV는 여기서 직접 파싱한다. '(-)1,234' / '(1,234)' → 진짜 음수, 천단위 콤마 제거.
+// XLSX 경로(parseSrc2/3, XLSXStyle.read)는 전혀 건드리지 않음.
+function _csvCellVal(v){
+  var s = String(v==null?'':v).trim();
+  if(s==='') return null;
+  var neg=false, t=s;
+  if(/^\(-\)/.test(t)){ neg=true; t=t.replace(/^\(-\)/,''); }
+  else if(/^\(.*\)$/.test(t) && /[0-9]/.test(t)){ neg=true; t=t.slice(1,-1); }
+  var cleaned=t.replace(/,/g,'').replace(/\s/g,'');
+  if(/^-?[0-9]*\.?[0-9]+$/.test(cleaned)){ var nn=parseFloat(cleaned); return neg?-nn:nn; }
+  return s;
+}
+function _csvToAoa(text){
+  if(text.charCodeAt(0)===0xFEFF) text = text.slice(1);
+  var rows=[], field='', row=[], inQ=false, i=0, n=text.length, ch;
+  for(i=0;i<n;i++){
+    ch=text.charAt(i);
+    if(inQ){
+      if(ch==='"'){ if(text.charAt(i+1)==='"'){ field+='"'; i++; } else inQ=false; }
+      else field+=ch;
+    } else {
+      if(ch==='"') inQ=true;
+      else if(ch===','){ row.push(field); field=''; }
+      else if(ch==='\r'){ /* skip */ }
+      else if(ch==='\n'){ row.push(field); rows.push(row); row=[]; field=''; }
+      else field+=ch;
+    }
+  }
+  if(field!=='' || row.length){ row.push(field); rows.push(row); }
+  return rows.map(function(r){ return r.map(_csvCellVal); });
+}
+// CSV ArrayBuffer → 워크북(SheetJS와 동일 인터페이스). 인코딩은 UTF-8 우선, 깨지면 EUC-KR.
+function _csvBufToWb(buf){
+  var b = new Uint8Array(buf);
+  var txt = new TextDecoder('utf-8').decode(b);
+  if(txt.indexOf('�') >= 0){ try{ txt = new TextDecoder('euc-kr').decode(b); }catch(_e){} }
+  var ws = XLSXStyle.utils.aoa_to_sheet(_csvToAoa(txt));
+  return { SheetNames:['Sheet1'], Sheets:{ Sheet1: ws } };
 }
 
 function parseSrc2(wb, month){
@@ -2977,6 +3037,7 @@ function renderReport2(){
       +'<button class="btn btn-green" onclick="handleLedgerUpload(document.getElementById(\'r2-ledger-input\').files)" style="font-size:12px;padding:7px 18px">🔍 분석 시작</button>'
       +'<span id="r2-ledger-status" style="font-size:11px;color:#374151"></span>'
       +'</div>'
+      +'<div style="font-size:12px;font-weight:700;color:#dc2626;margin:6px 0 6px 4px">※ 누적 기준 월 기간과 동일 또는 더 넓은 기간의 계정별원장 자료 첨부 필수 (예: 기준월 4월 → 원장기간 1~4월 이상)</div>'
       +'<div style="font-size:11px;color:#6b7280;margin:0 0 4px 4px">※ 아이큐브 &gt; 계정별원장 &gt; 원장 &gt; 데이터변환 &gt; 엑셀출력(숨긴항목 포함) 다운로드</div>'
       +'<div style="font-size:11px;color:#6b7280;margin:0 0 20px 4px">※ 첨부파일은 2개 이상 동시 첨부 가능하며, 파일명에 계정명 또는 자료 내 AZ열 계정과목(세목) 인식하여 실적금액과 대사</div>'
       +'<div id="r2-table-wrap"></div>';
@@ -3410,8 +3471,7 @@ function renderReport2Data(){
   if(!lsGet('hi-plan-'+year+'-src5')) missing.push(year+'년 — 원천5(사업계획raw)');
 
   if(missing.length>0){
-    showMissingPopup(missing);
-    if(status) status.innerHTML='<span style="color:red">데이터 누락</span>';
+    if(!window._r2Silent){ showMissingPopup(missing); if(status) status.innerHTML='<span style="color:red">데이터 누락</span>'; }
     return;
   }
 
@@ -3741,7 +3801,7 @@ function renderReport2Data(){
     monthlyS1:monthlyS1,   // 월별 {s:src1 dm, o:그 달 부문분류} — s1agg와 동일 기준으로 검증
     rowVal:function(row,seg,isPlan){ return getVal(seg,row,isPlan); }
   };
-  reportAutoCheck(2);  // 조회 시 자동 합산검증 (불일치 시 팝업)
+  if(!window._r2Silent) reportAutoCheck(2);  // 조회 시 자동 합산검증 (불일치 시 팝업). 백필 중엔 생략
 
   // 내역삭제 버튼
   if(!document.getElementById('r2-cmt-del-btn')){
@@ -4940,6 +5000,21 @@ function _ledgerIdentifyAccount(filename, azValue){
   return null;
 }
 
+// 원장 A열(회계귀속일) → {y, m}. 형식 자동대응: 2026-04-15 / 2026.04.15 / 2026/04/15 / 20260415 / 엑셀 날짜셀(숫자)
+function _ledgerYM(v){
+  if(v==null || v==='') return null;
+  if(typeof v==='number' && isFinite(v) && v>20000 && v<80000){
+    var dt=new Date(Math.round((v-25569)*86400000)); // 엑셀 시리얼(1900) → 날짜
+    return {y:dt.getUTCFullYear(), m:dt.getUTCMonth()+1};
+  }
+  var digits=String(v).replace(/[^0-9]/g,'');
+  if(digits.length>=6){
+    var y=parseInt(digits.substr(0,4),10), m=parseInt(digits.substr(4,2),10);
+    if(y>=2000 && y<=2100 && m>=1 && m<=12) return {y:y, m:m};
+  }
+  return null;
+}
+
 function _ledgerParseFile(file){
   return new Promise(function(resolve, reject){
     var fr = new FileReader();
@@ -4975,8 +5050,8 @@ function _ledgerParseFile(file){
           if(desc.indexOf('[월') === 0 || desc.indexOf('[누') === 0) continue;
           var d = parseFloat(String(row[cIdx.debit]||'').replace(/,/g,'')) || 0;
           var cr = parseFloat(String(row[cIdx.credit]||'').replace(/,/g,'')) || 0;
-          // 이월 행 감지 — 2번행(r===1) 위치 기반 + 본문 중 이월 행 텍스트 기반
-          var isCarry = (r === 1);
+          // 이월 행 감지 — 2번행(r===1)이되 '회계일자가 없는' 경우만(전월이월은 거래일자 없음; 실거래는 날짜 있음) + 본문 이월 텍스트
+          var isCarry = (r === 1 && !_ledgerYM(row[cIdx.date]));
           if(!isCarry){
             for(var _ci=0; _ci<row.length; _ci++){
               var _cv = String(row[_ci]==null?'':row[_ci]);
@@ -5032,6 +5107,24 @@ function handleLedgerUpload(files){
       promises.push(_ledgerParseFile(file)
         .then(function(parsed){
           var acct = _ledgerIdentifyAccount(parsed.fileName, parsed.azAccount);
+          // ── 기준월 필터: A열 회계월이 (기준연도·기준월) 이하인 거래만 합산 (전월이월은 항상 포함) ──
+          var fy = window._r2Computed.year, fm = window._r2Computed.month;
+          var parsedDates=0, maxM=0, minM=99;
+          parsed.rows.forEach(function(row){
+            var ym=_ledgerYM(row.date);
+            if(ym && ym.y===fy){ parsedDates++; if(ym.m>maxM) maxM=ym.m; if(ym.m<minM) minM=ym.m; }
+          });
+          var useFilter = parsedDates>0; // 기준연도 날짜가 인식될 때만 필터/사전검사 적용(미인식 시 기존 동작)
+          if(useFilter){
+            var kept=[], kD=0, kC=0;
+            parsed.rows.forEach(function(row){
+              var ym=_ledgerYM(row.date);
+              if(!ym || (ym.y===fy && ym.m<=fm)){ kept.push(row); kD+=row.debit; kC+=row.credit; } // 날짜 미인식 행은 보수적 포함
+            });
+            kD += parsed.carryDebit; kC += parsed.carryCredit; // 전월이월 가산(누적 정합)
+            parsed.rows = kept; parsed.totalDebit = kD; parsed.totalCredit = kC; parsed.netAmount = kD - kC;
+          }
+          parsed._period = {useFilter:useFilter, maxMonth:maxM, minMonth:(parsedDates?minM:0), fy:fy, fm:fm, carryNet:(parsed.carryDebit - parsed.carryCredit)};
           // 매출 계정은 대변 집계 → 부호 반전 (netAmount, 행별 차변/대변 swap)
           if(acct && _isRevenueParent(acct)){
             parsed.netAmount = -parsed.netAmount;
@@ -5054,6 +5147,20 @@ function handleLedgerUpload(files){
         errors.push({type:'parse_or_id', fileName:r.fileName,
           msg: r.error || '계정 식별 실패 — 파일명/AZ열에서 계정명을 찾을 수 없음'});
         return;
+      }
+      // 사전검사: 원장이 누적기간(1~기준월)을 모두 포함하는지 검사 (합계뿐 아니라 내역 분석 정합 위해).
+      //  - 시작 미포함: 전월이월 잔액 존재 = 1월부터 시작 아님 → 앞 기간 거래가 파일에 없어 내역 불완전
+      //  - 끝   미포함: 원장 최종 회계월 < 기준월
+      var pd = r.parsed._period;
+      if(pd && pd.useFilter){
+        var startMissing = Math.abs(pd.carryNet) >= 1;
+        var endMissing = pd.maxMonth < pd.fm;
+        if(startMissing || endMissing){
+          errors.push({type:'period_coverage', fileName:r.fileName, account:r.account,
+            startMissing:startMissing, endMissing:endMissing,
+            minMonth:pd.minMonth, maxMonth:pd.maxMonth, baseMonth:pd.fm, year:pd.fy});
+          return;
+        }
       }
       if(!grouped[r.account]) grouped[r.account] = [];
       grouped[r.account].push(r);
@@ -5101,6 +5208,8 @@ function handleLedgerUpload(files){
         });
         if(statusEl) statusEl.innerHTML='<span style="color:#059669;font-weight:600">✓ 검증 통과 ('+successes.length+'개 계정) — 거래처 요약 진행 중...</span>';
         runActivitySummary(window._r2Computed.year, window._r2Computed.month);
+        // 현재월 기재 후: 과거월 중 내역 미작성 월을 감지해 일괄 백필 제안
+        _backfillPrompt(window._uploadedLedgers, window._r2Computed.year, window._r2Computed.month);
       } else {
         window._uploadedLedgers = null;
         if(statusEl) statusEl.innerHTML='<span style="color:#dc2626;font-weight:600">✗ 검증 실패 ('+errors.length+'건) — 작업 중단</span>';
@@ -5123,6 +5232,17 @@ function _showLedgerValidationPopup(errors, successes, onClose){
         html += '<div style="color:#7f1d1d">'+e.msg+'</div>';
       } else if(e.type==='no_report'){
         html += '<div style="color:#7f1d1d">계정: '+e.account+' — '+e.msg+'</div>';
+      } else if(e.type==='period_coverage'){
+        var _reason = e.startMissing
+          ? (e.endMissing ? '원장이 1월부터 시작하지 않고 기준월까지 닿지도 않습니다'
+                          : '원장이 1월(누적 시작월)부터 시작하지 않습니다 — 앞 기간 거래가 빠져 내역 분석이 불완전해집니다')
+          : '원장 최종 회계월이 누적 기준월보다 빠릅니다';
+        html += '<div style="color:#7f1d1d">계정: <b>'+e.account+'</b> — '+_reason+'</div>'
+          + '<table style="font-size:11px;margin-top:6px;border-collapse:collapse">'
+          + '<tr><td style="padding:2px 8px;color:#6b7280">원장 회계기간</td><td style="padding:2px 8px;text-align:right;font-family:monospace">'+e.year+'년 '+(e.startMissing?(e.minMonth+'월'):'1월')+' ~ '+e.maxMonth+'월</td></tr>'
+          + '<tr><td style="padding:2px 8px;color:#6b7280">필요 기간(누적)</td><td style="padding:2px 8px;text-align:right;font-family:monospace;color:#dc2626;font-weight:700">'+e.year+'년 1월 ~ '+e.baseMonth+'월</td></tr>'
+          + '</table>'
+          + '<div style="color:#92400e;background:#fffbeb;padding:6px 10px;margin-top:6px;border:1px solid #fde68a;border-radius:4px;font-size:11px">⚠ 누적 '+e.baseMonth+'월 대사는 <b>1~'+e.baseMonth+'월 전체 거래</b>가 든 원장이 필요합니다(합계뿐 아니라 거래 내역까지 정확히 표기되도록). 회계기간을 <b>1월부터 '+e.baseMonth+'월 이상</b>으로 다시 받아 첨부해 주세요.</div>';
       } else if(e.type==='sum_mismatch'){
         html += '<div style="color:#7f1d1d">계정: <b>'+e.account+'</b> — 원장 누계 vs 보고 실적 불일치</div>'
           + '<table style="font-size:11px;margin-top:6px;border-collapse:collapse">'
@@ -5275,6 +5395,119 @@ function _renderActivityToCell(year, month, account, data){
   var cell = document.querySelector('td[data-cmtkey="'+cmtKey+'"]');
   if(cell) cell.innerHTML = html;
   try{ localStorage.setItem(cmtKey, html); }catch(e){}
+}
+
+// ════════════════════════════════════════
+// Phase 2-3: 과거월 내역 일괄 백필 (계정당 1회 업로드 → 현재월~과거월 일괄 반영)
+//  - 업로드 원장은 1~기준월을 포함하므로, 같은 데이터를 ≤M으로 재필터해 각 과거월 내역을 채울 수 있음
+//  - 각 월은 그 달 기준 보고실적과 재대사하여 통과한 계정만 기재(실패 월/계정은 건너뜀)
+// ════════════════════════════════════════
+function _ledgerCmtKey(year, month, acct){
+  return 'hi-r2-cmt-'+year+'-'+((month<10?'0':'')+month)+'-법인-'+acct;
+}
+
+function _backfillPrompt(originalLedgers, year, baseMonth){
+  var accounts = Object.keys(originalLedgers||{});
+  if(!accounts.length || baseMonth<=1) return;  // 1월이면 과거월 없음 → 통과
+  var missByMonth = {};
+  for(var M=1; M<baseMonth; M++){
+    var miss=[];
+    accounts.forEach(function(a){ if(!localStorage.getItem(_ledgerCmtKey(year,M,a))) miss.push(a); });
+    if(miss.length) missByMonth[M]=miss;
+  }
+  var months = Object.keys(missByMonth).map(Number).sort(function(a,b){return a-b;});
+  if(!months.length) return;  // 과거월 내역 모두 존재 → 조용히 종료
+
+  var html = '<div style="font-size:14px;font-weight:700;margin-bottom:6px;color:#1e3a5f">📋 과거월 내역 일괄 반영</div>'
+    + '<div style="font-size:11px;color:#6b7280;margin-bottom:12px">업로드한 원장은 1~'+baseMonth+'월을 포함합니다. 내역이 비어있는 과거월에 같은 계정 분석을 한 번에 채울 수 있습니다.<br>각 월은 그 달 기준 대사를 통과한 계정만 기재되고, 실패 월/계정은 건너뜁니다.</div>'
+    + '<div style="max-height:300px;overflow:auto;border:1px solid #e5e7eb;border-radius:6px;padding:6px">';
+  months.forEach(function(M){
+    html += '<label style="display:flex;align-items:center;gap:8px;padding:5px 8px;font-size:12px;cursor:pointer">'
+      + '<input type="checkbox" class="bf-month-cb" value="'+M+'" checked>'
+      + '<span><b>'+year+'년 '+M+'월</b> <span style="color:#6b7280">— 미작성: '+missByMonth[M].join(', ')+'</span></span></label>';
+  });
+  html += '</div>';
+
+  var bg=document.createElement('div'); bg.className='r2-ledger-popup';
+  bg.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99999;display:flex;align-items:center;justify-content:center';
+  var box=document.createElement('div');
+  box.style.cssText='background:#fff;padding:22px 26px;border-radius:10px;max-width:560px;width:90%;max-height:80vh;overflow:auto;box-shadow:0 8px 32px rgba(0,0,0,.2)';
+  box.innerHTML = html
+    + '<div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">'
+    + '<button id="bf-all-btn" style="padding:7px 16px;background:#059669;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer">전체 일괄 적용</button>'
+    + '<button id="bf-sel-btn" style="padding:7px 16px;background:#1e3a5f;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer">선택 적용</button>'
+    + '<button id="bf-close-btn" style="padding:7px 16px;background:#9ca3af;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer">닫기</button></div>';
+  bg.appendChild(box); document.body.appendChild(bg);
+  function close(){ bg.remove(); }
+  document.getElementById('bf-close-btn').onclick=close;
+  document.getElementById('bf-all-btn').onclick=function(){ close(); _backfillApply(originalLedgers, accounts, year, months); };
+  document.getElementById('bf-sel-btn').onclick=function(){
+    var sel=[], cbs=box.querySelectorAll('.bf-month-cb');
+    for(var i=0;i<cbs.length;i++){ if(cbs[i].checked) sel.push(parseInt(cbs[i].value,10)); }
+    if(!sel.length){ alert('적용할 월을 선택하세요.'); return; }
+    close(); _backfillApply(originalLedgers, accounts, year, sel);
+  };
+}
+
+function _backfillApply(originalLedgers, accounts, year, selMonths){
+  var monthEl=document.getElementById('r2-month');
+  if(!monthEl) return;
+  var savedMonthVal = monthEl.value, results = [];
+  window._r2Silent = true;
+  try{
+    selMonths.sort(function(a,b){return a-b;}).forEach(function(M){
+      monthEl.value = M;
+      renderReport2Data();
+      if(!window._r2Computed || window._r2Computed.month !== M){
+        results.push({month:M, skipped:'원천 데이터 누락 또는 보고서 계산 실패'}); return;
+      }
+      var okA=[], failA=[], tempLedgers={};
+      accounts.forEach(function(a){
+        if(localStorage.getItem(_ledgerCmtKey(year,M,a))) return; // 이미 작성됨 → 보존(덮어쓰지 않음)
+        var orig=originalLedgers[a]; if(!orig||!orig.rows) return;
+        var rowsM = orig.rows.filter(function(r){ var ym=_ledgerYM(r.date); return ym && ym.y===year && ym.m<=M; });
+        var netM=0; rowsM.forEach(function(r){ netM += (r.debit||0)-(r.credit||0); });
+        var rep = window._r2Computed.accounts[a];
+        if(!rep){ failA.push(a+'(보고서 계정없음)'); return; }
+        var diff = netM - (rep.real_법인||0);
+        if(Math.abs(diff) >= 1){ failA.push(a+'(차액 '+Math.round(diff).toLocaleString()+')'); return; }
+        tempLedgers[a] = {rows:rowsM, netAmount:netM, totalDebit:0, totalCredit:0, fileName:orig.fileName, sources:orig.sources};
+        okA.push(a);
+      });
+      if(Object.keys(tempLedgers).length){
+        var savedUL = window._uploadedLedgers;
+        window._uploadedLedgers = tempLedgers;
+        runActivitySummary(year, M);
+        window._uploadedLedgers = savedUL;
+      }
+      results.push({month:M, ok:okA, fail:failA});
+    });
+  } finally {
+    window._r2Silent = false;
+    monthEl.value = savedMonthVal;
+    renderReport2Data();
+  }
+  _showBackfillResult(year, results);
+}
+
+function _showBackfillResult(year, results){
+  var html='<div style="font-size:14px;font-weight:700;margin-bottom:12px;color:#1e3a5f">✓ 과거월 일괄 반영 결과</div>';
+  results.forEach(function(r){
+    if(r.skipped){
+      html += '<div style="padding:7px 10px;margin-bottom:5px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:11px"><b>'+year+'년 '+r.month+'월</b> — ⚠ 건너뜀: '+r.skipped+'</div>';
+      return;
+    }
+    var okTxt = r.ok.length ? '<span style="color:#059669">기재 '+r.ok.length+'개: '+r.ok.join(', ')+'</span>' : '<span style="color:#9ca3af">기재 없음</span>';
+    var failTxt = r.fail.length ? '<br><span style="color:#dc2626">실패 '+r.fail.length+'개: '+r.fail.join(', ')+'</span>' : '';
+    html += '<div style="padding:7px 10px;margin-bottom:5px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;font-size:11px"><b>'+year+'년 '+r.month+'월</b> — '+okTxt+failTxt+'</div>';
+  });
+  var bg=document.createElement('div'); bg.className='r2-ledger-popup';
+  bg.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99999;display:flex;align-items:center;justify-content:center';
+  var box=document.createElement('div');
+  box.style.cssText='background:#fff;padding:22px 26px;border-radius:10px;max-width:560px;width:90%;max-height:80vh;overflow:auto;box-shadow:0 8px 32px rgba(0,0,0,.2)';
+  box.innerHTML = html + '<div style="margin-top:14px;text-align:right"><button id="bf-result-close" style="padding:7px 22px;background:#1e3a5f;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer">닫기</button></div>';
+  bg.appendChild(box); document.body.appendChild(bg);
+  document.getElementById('bf-result-close').onclick=function(){ bg.remove(); };
 }
 
 function applyCustomPjtOverride(){
