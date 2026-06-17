@@ -454,6 +454,19 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
 .kifrs-precise-slot:not(:empty){margin-top:10px;padding-top:10px;border-top:1px dashed var(--border2);}
 .kifrs-audit-tag{font-size:9.5px;font-weight:700;color:#6d28d9;background:#ede9fe;border-radius:6px;padding:1px 7px;margin-left:4px;}
 .kifrs-pr-summary{font-size:11.5px;font-weight:700;color:var(--txt2);margin:8px 0 10px;}
+/* 개발 이력 — 프로젝트 카드(가로 드래그) */
+.devlog-projrow{display:flex;gap:14px;overflow-x:auto;padding:4px 2px 12px;cursor:grab;}
+.devlog-projrow.drag{cursor:grabbing;}
+.devlog-projrow::-webkit-scrollbar{height:8px;}
+.devlog-projrow::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+.devlog-projcard{flex:0 0 240px;border:2px solid var(--border);border-radius:12px;padding:14px 16px;background:var(--bg2);cursor:pointer;transition:all .15s;position:relative;user-select:none;}
+.devlog-projcard:hover{background:var(--bg3);}
+.devlog-projcard.on{background:var(--bg);box-shadow:0 3px 12px rgba(0,0,0,.07);}
+.devlog-projidx{position:absolute;top:10px;right:12px;font-size:10px;font-weight:700;color:var(--txt3);background:var(--bg3);border-radius:10px;padding:1px 8px;}
+.devlog-projname{font-size:15px;font-weight:800;}
+.devlog-projdesc{font-size:11px;color:var(--txt3);margin-top:4px;line-height:1.45;}
+.devlog-projrange{font-size:11px;color:var(--txt2);margin-top:12px;font-family:'DM Mono',monospace;}
+.devlog-projcount{font-size:10.5px;color:var(--txt3);margin-top:3px;}
 .kifrs-cf{font-size:10px;font-weight:700;border-radius:6px;padding:1px 8px;margin-left:6px;white-space:nowrap;}
 .kifrs-cf-g{color:#047857;background:#d1fae5;}
 .kifrs-cf-a{color:#b45309;background:#fef3c7;}
@@ -2514,205 +2527,195 @@ function setUploadComplete(id, fname){
 function renderDevLog(){
   var wrap = document.getElementById('devlog-wrap');
   if(!wrap) return;
-  window._devlogTab = window._devlogTab || 'biz';
-  renderDevLogTab(window._devlogTab);
-}
-
-function renderDevLogTab(tab){
-  window._devlogTab = 'biz';
-  var wrap = document.getElementById('devlog-wrap');
-  if(!wrap) return;
 
   var logs_biz = [
-    {
-      date:'2026-03-25', dev:'Jiho Kim',
-      title:'월별 손익 안분 조회 기능 오픈',
-      color:'#2563eb',
-      items:[
-        '더존에서 받은 파일만 올리면 프로젝트별 손익이 자동으로 정리되어 화면에 표시됩니다',
-        '숫자 합계 오류가 있으면 자동으로 잡아내 화면에 알려줍니다',
-        '새로운 프로젝트나 분류되지 않은 계정이 발견되면 팝업으로 바로 안내합니다',
-        '조회 결과를 엑셀 파일로 내려받을 수 있습니다',
-        '프로젝트 관리 화면에서 부문(이통사/카드사/신규/라운드)을 직접 변경하고 저장할 수 있습니다',
-      ]
-    },
-    {
-      date:'2026-03-26', dev:'Jiho Kim',
-      title:'화면 구성 및 사용 편의 개선',
-      color:'#0891b2',
-      items:[
-        '메인 화면 이미지를 사업회계팀 전용 일러스트로 교체했습니다',
-        '프로젝트 관리에서 저장할 때 무엇이 바뀌었는지 한눈에 보이도록 개선했습니다',
-        '바뀐 내용이 없는데 저장을 눌렀을 때 알아보기 쉽게 안내합니다',
-        '불필요한 화면 요소를 정리하고 파일 크기를 줄였습니다',
-      ]
-    },
-    {
-      date:'2026-03-27', dev:'Jiho Kim',
-      title:'메뉴 구조 개편 & 데이터 관리 화면 신설',
-      color:'#059669',
-      items:[
-        '상단 메뉴를 \'DB관리 / 개별자료 / 보고자료 / 기타\'로 새롭게 정리했습니다',
-        'DB관리 화면을 새로 만들었습니다 — 원천 파일 5종을 월별로 관리하고 저장 이력을 확인할 수 있습니다',
-        '파일을 업로드할 때 기존 데이터를 바꿀지 팝업으로 확인합니다',
-        'PJT 손익 안분은 조회 전용으로 분리했습니다',
-        '원천1 파일은 업로드 후 \'DB 저장\' 버튼을 눌러야 저장됩니다',
-        '개발 이력 메뉴와 관리자 설정 메뉴를 추가했습니다',
-      ]
-    },
-    {
-      date:'2026-03-30', dev:'Jiho Kim',
-      title:'원천 파일 연동 완성 & 월별 보고 화면 오픈',
-      color:'#ea580c',
-      items:[
-        '매출 세부 데이터(원천2)를 자동으로 연동했습니다 — 총매출/매출차감/환불을 부문별로 집계합니다',
-        '광고비 세부 데이터(원천3)를 자동으로 연동했습니다 — CPA/CPM/GDN/일반 광고비를 부문별로 집계합니다',
-        '월별 사업계획(원천4) 1~12월 계획값을 자동으로 불러옵니다',
-        '사업계획 raw 데이터(원천5)를 연동했습니다',
-        '보고자료 > 월별 보고 화면을 오픈했습니다 — 월을 선택하면 계획 vs 실적 비교표가 자동으로 생성됩니다',
-        '비용 항목별 실적이 원천1 계정과목 기준으로 자동 합산됩니다',
-        'SP사업부를 클릭하면 이통사/카드사/신규 세부 열을 펼치거나 접을 수 있습니다',
-        '부문별 색상 체계를 통일했습니다',
-      ]
-    },
-    {
-      date:'2026-04-02', dev:'Jiho Kim',
-      title:'누적 보고 화면 오픈 & 내역 관리',
-      color:'#7c3aed',
-      items:[
-        '보고자료 > 누적 보고 화면을 오픈했습니다 — 1~N월 누적 계획 vs 실적 비교표가 자동으로 생성됩니다',
-        '누적 조회 전에 데이터 누락 여부를 검증해, 어느 월의 어떤 원천이 빠졌는지 팝업으로 알려줍니다',
-        '보험료를 세분화했습니다 — 서비스 구성품과 4대보험을 분리해서 표시합니다',
-        '매출/비용/영업손익 라인을 굵게 강조하고 구분선을 적용했습니다',
-        '누적 보고에 사용자가 직접 입력할 수 있는 \'내역\' 컬럼을 추가했습니다',
-        '내역 저장/삭제/이력 관리 버튼을 추가했습니다',
-      ]
-    },
-    {
-      date:'2026-04-27', dev:'Jiho Kim',
-      title:'엑셀 다운로드 스타일 개선 & 보고자료 품질 강화',
-      color:'#b45309',
-      items:[
-        '엑셀을 로컬에서 직접 열어도 색상/굵기/숫자서식이 정상으로 표시되도록 개선했습니다',
-        'PJT 손익 안분 엑셀 — 부문별 색상 헤더, 음수는 빨간색, 천단위 콤마, 들여쓰기를 통일했습니다',
-        '보고자료 월별/누적 엑셀 다운로드를 신설했습니다',
-        '엑셀 하위 항목을 보강해 보험료 세부, 기타 16개 항목까지 모두 포함되도록 했습니다',
-        '월별보고/누적보고 화면에서 헤더와 A열을 고정해 스크롤해도 항목명이 보이게 했습니다',
-        'PJT 손익 안분 화면의 들여쓰기를 정렬했습니다',
-        '조회 후 합산검증 팝업이 안 뜨던 문제, 헤더 고정 타이밍 등 자잘한 버그를 수정했습니다',
-        '엑셀과 화면의 합산 로직이 완전히 일치하도록 다시 작성해 차이가 발생하지 않도록 했습니다',
-        '원천1 파일은 시트명과 무관하게 단일 시트면 자동으로 처리합니다',
-        'K-IFRS 검증에서 영업외수익/비용 세부 항목을 자동으로 합산하도록 개선했습니다',
-      ]
-    },
-    {
-      date:'2026-04-29', dev:'Jiho Kim',
-      title:'계정별 원장 자동 분석 & 거래처 요약 (Phase 2 Step 7)',
-      color:'#0d9488',
-      items:[
-        '계정별 원장(.xls) 일괄 업로드 기능을 신설했습니다 — 여러 파일을 한 번에 첨부할 수 있고, 파일명이나 AZ열 계정과목으로 어떤 계정인지 자동으로 인식합니다',
-        '업로드 후 누적 보고 실적과 합계가 일치하는지 자동으로 대사하고, 통과해야 다음 분석이 진행됩니다',
-        '검증 통과 시 계정별로 \'거래처 합계 상위 3개 × 거래처별 금액 상위 3행 = 9개 거래내역\'을 자동으로 추출해 누적보고 \'법인\' 영역의 해당 계정 \'내역\' 셀에 표기합니다',
-        '적요에 포함된 [내부문서번호]는 자동으로 제거해 가독성을 높였습니다',
-        '\'내역\' 컬럼 폭을 늘리고 자동 줄바꿈을 적용해 긴 적요도 한눈에 보입니다',
-        '서비스수입(순매출) 원장을 첨부하면 \'매출\' 행에 프로젝트별 합산 상위 5개 서비스가 자동 표기됩니다 ([순매출 상위 5개 프로젝트])',
-        'GDN 광고비 원장을 첨부하면 \'GDN\' 행에 프로젝트별 합산 상위 5개가 자동 표기됩니다 ([GDN 광고비 상위 5개 프로젝트])',
-        '매출은 대변 집계라 음수로 잡히던 문제를 자동으로 보정해 양수로 정상화했습니다',
-        '매출원가/인건비/감가상각비처럼 여러 하위 계정으로 구성된 합산 항목은, 하위 원장 여러 개를 자동으로 합쳐서 합계 검증과 분석을 진행합니다',
-        '하위 원장이 일부만 업로드되면 검증 실패 팝업에서 누락된 부분을 안내합니다',
-        '누적보고에 \'비고\' 열을 신설했습니다 — 어떤 원장을 어디서 받아야 하는지 행마다 안내 메모가 표시됩니다 (법인 영역에만)',
-        '비고 안내 메모를 13개 계정에 자동 등록했습니다 (매출/매출원가/GDN/지급수수료/보험료/복리후생비/건물관리비/도급비/세금과공과/여비교통비/접대비/지급임차료/통신비/회의비)',
-        '\'내역삭제\' 버튼을 신설했습니다 — 현재 조회 중인 연월의 자동 기재 내역만 한 번에 삭제할 수 있습니다 (비고는 유지)',
-        '\'내역\'은 사용자가 직접 입력하지 못하도록 잠가 시스템이 자동 기표한 것만 표시되게 했습니다',
-        '월별보고에 엑셀 다운로드 버튼을 추가했습니다',
-        '누적보고 엑셀 다운로드 양식을 화면과 똑같이 \'법인 → SP사업부 → 이통사 → 카드사 → 신규 → 라운드\' 순서로 위→아래 세로 배치로 변경했습니다 (비고 열은 엑셀에서 제외)',
-        '원장 업로드 박스 아래에 ※ 안내 두 줄을 추가했습니다 — 어디서 파일을 받는지(아이큐브 경로) 및 다중 첨부 안내',
-        '디버그용 임시 버튼(R2비교, 디버그비교)을 화면에서 제거했습니다',
-      ]
-    },
-    {
-      date:'2026-06-12', dev:'Jiho Kim',
-      title:'원천1 업로드 흐름 개선 & 합산검증 전면 강화',
-      color:'#4338ca',
-      items:[
-        'DB관리에서 원천1(손익원본)을 업로드하면 PJT 손익안분 화면으로 튕겨 보내고 다시 DB관리로 되돌리던 무한반복 문제를 해결했습니다 — 이제 업로드하면 그 자리에서 바로 DB에 저장됩니다 (원천2~5와 동일)',
-        'PJT 손익안분 조회 시 영업외수익/비용 등 추가 계정이 빠져 검증4(K-IFRS 소계)에 차액이 나던 문제를 수정했습니다 — 저장된 데이터에서도 계정과목을 자동으로 복원해 검증합니다',
-        'PJT 손익안분 조회 시 부문(이통사/카드사/신규/라운드) 분류가 복원되지 않아 검증3(부문합=법인)에 차액이 나던 문제를 수정했습니다 — 업로드 당시의 그 달 분류를 그대로 복원합니다',
-        '보고자료 > 월별 보고 / 누적 보고에 \'🔍 합산검증 내역보기\' 메뉴를 신설했습니다 (각 화면 헤더 우측, 엑셀 다운로드 옆)',
-        '보고서 검증 항목을 12종으로 구성했습니다 — 매출·비용·영업손익 소계, 광고판촉비·기타·보험료(직접/배부) 세부합, 부문합=법인, SP사업부=이통+카드+신규, 그리고 SP사업부/카드사/신규/라운드 4개 부문의 원천1 PJT 개별값 대사',
-        '누적 보고 검증은 달마다 달라지는 부문 분류를 그대로 반영해 정확히 대사합니다 (월별 누적 일치)',
-        '오류가 있으면 PJT 손익안분과 동일하게 해당 검증 바로 아래에 계정·차액 세부내역을 함께 표시합니다',
-        '세 화면(PJT 손익안분 / 월별 보고 / 누적 보고) 모두 조회만 하면 자동으로 사전검증이 실행됩니다 — 통과 시 상태줄에 표시, 불일치 시 팝업으로 즉시 알려줘 매번 검증 버튼을 누를 필요가 없습니다',
-      ]
-    },
-    {
-      date:'2026-06-15', dev:'Jiho Kim',
-      title:'원장 CSV 음수 인식 수정 & 누적 대사 기간검증·과거월 일괄 반영',
-      color:'#0891b2',
-      items:[
-        'CSV 원장에서 회계식 음수 표기 \'(-)1,234\'가 양수로 잘못 읽혀 환불/환불외(매출차감) 부호가 뒤집히던 문제를 해결했습니다 — 이제 CSV는 전용 파서로 직접 읽어 음수를 정확히 인식합니다 (XLSX·기존 저장분에는 영향 없음)',
-        '누적 보고 \'계정별원장 일괄 업로드\' 안내에 빨간 강조 문구를 추가했습니다 — \'누적 기준 월 기간과 동일 또는 더 넓은 기간의 원장 첨부 필수 (예: 기준월 4월 → 원장기간 1~4월 이상)\'',
-        '분석 시작 시, 원장의 회계기간(A열 회계귀속월)이 누적 기준월 전체를 포함하는지 자동으로 사전검사합니다 — 시작(1월부터)·끝(기준월까지)을 모두 확인하고, 부족하면 부족한 부분을 알려주며 재첨부를 안내합니다',
-        '기간이 더 넓은 원장(예: 기준 4월에 1~7월 원장)은 통과시키고, 해당 기준월까지의 거래만 자동으로 추려 대사·내역에 반영합니다 — 기준월마다 원장을 다시 받을 필요가 줄었습니다',
-        '4월 한 달치 등 일부 기간만 든 원장은 합계가 우연히 맞아도 거래 내역이 불완전해지므로 차단합니다 (전월이월 잔액으로 자동 판별)',
-        '과거월 내역 일괄 반영 기능을 신설했습니다 — 1~기준월이 든 원장 하나를 올리면, 내역이 비어있는 과거월을 찾아 한 번에 채울 수 있습니다 (월별 체크 선택 또는 전체 일괄)',
-        '일괄 반영 시 각 월은 그 달 기준으로 다시 대사하여, 통과한 계정만 누적 기준으로 내역을 기재하고 실패한 월·계정은 건너뛰며 결과를 월별로 요약해 보여줍니다',
-        '이미 작성된 월의 내역은 덮어쓰지 않고 보존합니다',
-      ]
-    },
+    { date:'2026-03-25', title:'월별 손익 안분 조회 기능 오픈', color:'#2563eb', items:[
+      '더존 파일 업로드 시 PJT별 손익 자동 정리·표시',
+      '합계 오류 자동 검출·표시',
+      '신규 PJT·미분류 계정 발견 시 팝업 안내',
+      '조회 결과 엑셀 다운로드',
+      'PJT 관리에서 부문(이통사/카드사/신규/라운드) 직접 변경·저장',
+    ]},
+    { date:'2026-03-26', title:'화면 구성·사용 편의 개선', color:'#0891b2', items:[
+      '메인 화면 일러스트 교체',
+      'PJT 관리 저장 시 변경 내역 한눈에 표시',
+      '변경 없이 저장 시 안내 개선',
+      '불필요 요소 정리·파일 용량 축소',
+    ]},
+    { date:'2026-03-27', title:'메뉴 구조 개편 & 데이터 관리 화면 신설', color:'#059669', items:[
+      '상단 메뉴를 DB관리/개별자료/보고자료/기타로 정리',
+      'DB관리 신설 — 원천 5종 월별 관리·저장 이력 확인',
+      '업로드 시 기존 데이터 교체 여부 팝업 확인',
+      'PJT 손익 안분 조회 전용 분리',
+      '원천1은 업로드 후 DB 저장 버튼으로 저장',
+      '개발 이력·관리자 설정 메뉴 추가',
+    ]},
+    { date:'2026-03-30', title:'원천 파일 연동 완성 & 월별 보고 오픈', color:'#ea580c', items:[
+      '원천2(매출 세부) 연동 — 총매출/매출차감/환불 부문별 집계',
+      '원천3(광고비 세부) 연동 — CPA/CPM/GDN/일반 부문별 집계',
+      '원천4(월별 사업계획) 1~12월 계획값 로드',
+      '원천5(사업계획 raw) 연동',
+      '월별 보고 오픈 — 월 선택 시 계획 vs 실적 비교표 자동 생성',
+      '비용 항목 원천1 계정과목 기준 자동 합산',
+      'SP사업부 클릭 시 이통사/카드사/신규 세부 열 펼침·접기',
+      '부문별 색상 체계 통일',
+    ]},
+    { date:'2026-04-02', title:'누적 보고 오픈 & 내역 관리', color:'#7c3aed', items:[
+      '누적 보고 오픈 — 1~N월 누적 계획 vs 실적 비교표 자동 생성',
+      '조회 전 데이터 누락 검증 — 빠진 월·원천 팝업 안내',
+      '보험료 세분화 — 서비스 구성품/4대보험 분리',
+      '매출·비용·영업손익 라인 강조·구분선 적용',
+      '누적 보고에 사용자 입력 내역 컬럼 추가',
+      '내역 저장/삭제/이력 관리 버튼 추가',
+    ]},
+    { date:'2026-04-27', title:'엑셀 다운로드 개선 & 보고자료 품질 강화', color:'#b45309', items:[
+      '엑셀 로컬 열람 시 색상/굵기/숫자서식 정상 표시',
+      'PJT 손익 안분 엑셀 — 부문 색상 헤더·음수 빨강·천단위 콤마·들여쓰기 통일',
+      '월별/누적 엑셀 다운로드 신설',
+      '엑셀 하위 항목 보강 — 보험료 세부 등 16개 포함',
+      '월별/누적 화면 헤더·A열 고정',
+      'PJT 손익 안분 들여쓰기 정렬',
+      '합산검증 팝업 미표시·헤더 고정 타이밍 등 버그 수정',
+      '엑셀·화면 합산 로직 일치화',
+      '원천1 단일 시트 자동 처리',
+      'K-IFRS 검증 영업외수익/비용 세부 자동 합산',
+    ]},
+    { date:'2026-04-29', title:'계정별 원장 자동 분석 & 거래처 요약', color:'#0d9488', items:[
+      '계정별 원장(.xls) 일괄 업로드 — 다중 첨부·파일명/AZ열 계정 자동 인식',
+      '업로드 후 누적 실적과 합계 자동 대사 — 통과 시 분석 진행',
+      '계정별 거래처 상위 3개 × 상위 3행 = 9개 거래내역 자동 추출·기재',
+      '적요 [내부문서번호] 자동 제거',
+      '내역 컬럼 폭 확대·자동 줄바꿈',
+      '서비스수입(순매출) 원장 → 매출 행에 PJT별 상위 5개 표기',
+      'GDN 광고비 원장 → GDN 행에 PJT별 상위 5개 표기',
+      '매출 대변 집계 음수 → 양수 자동 보정',
+      '매출원가/인건비/감가상각비 등 합산 항목, 하위 원장 자동 합산',
+      '하위 원장 일부 누락 시 검증 실패 안내',
+      '누적보고 비고 열 신설 — 행별 원장 출처 안내(법인 영역)',
+      '비고 안내 13개 계정 자동 등록',
+      '내역삭제 버튼 신설 — 조회 연월 자동 기재분만 삭제(비고 유지)',
+      '내역 직접 입력 잠금 — 시스템 자동 기표만 표시',
+      '월별보고 엑셀 다운로드 추가',
+      '누적보고 엑셀 양식 화면과 동일 세로 배치(비고 제외)',
+      '원장 업로드 안내(아이큐브 경로·다중 첨부) 추가',
+      '디버그 임시 버튼 제거',
+    ]},
+    { date:'2026-06-12', title:'원천1 업로드 흐름 개선 & 합산검증 전면 강화', color:'#4338ca', items:[
+      '원천1 업로드 무한반복 해결 — 그 자리에서 바로 DB 저장(원천2~5와 동일)',
+      'PJT 손익안분 검증4(K-IFRS 소계) 차액 수정 — 저장분에서 계정과목 자동 복원',
+      '검증3(부문합=법인) 차액 수정 — 업로드 당시 그 달 분류 복원',
+      '월별/누적 보고에 합산검증 내역보기 메뉴 신설',
+      '보고서 검증 12종 구성(소계·세부합·부문합·PJT 개별 대사)',
+      '누적 검증, 월별 부문 분류 반영',
+      '오류 시 계정·차액 세부 표시',
+      '세 화면 조회 시 자동 사전검증 — 통과 상태줄 표시·불일치 팝업',
+    ]},
+    { date:'2026-06-15', title:'원장 CSV 음수 인식 수정 & 누적 기간검증·과거월 일괄 반영', color:'#0891b2', items:[
+      'CSV 회계식 음수 (-)1,234 양수 오인식 수정 — 전용 파서로 정확 인식(XLSX·기존 저장분 무영향)',
+      '계정별원장 업로드 안내 강조 — 누적 기준월 이상 기간 원장 첨부 필수',
+      '분석 시 원장 회계기간이 누적 기준월 전체 포함하는지 자동 사전검사',
+      '더 넓은 기간 원장은 통과 후 기준월까지만 추려 반영',
+      '일부 기간 원장 차단(전월이월 잔액으로 판별)',
+      '과거월 내역 일괄 반영 신설 — 빈 과거월 한 번에 채움(월별 선택/전체)',
+      '일괄 반영 시 월별 재대사 — 통과 계정만 기재·결과 월별 요약',
+      '기존 작성 월 내역 보존',
+    ]},
   ];
 
-  var logs = logs_biz;
+  var logs_kifrs = [
+    { date:'2026-06-16', title:'메뉴 신설 & 워크스페이스 통합', color:'#7c3aed', items:[
+      '기준서 콜센터 메뉴 신설(K-IFRS / K-GAAP 준비중) — window.KIFRS 네임스페이스 격리',
+      'DB관리/개별자료/보고자료를 HI_예실분석 단일 메뉴로 통합',
+      '메뉴 순서: 메인 | HI_예실분석 | 기준서 콜센터 | 기타 | 관리자설정',
+      '헤더 표기 변경 — 헥토이노베이션 워크스페이스',
+    ]},
+    { date:'2026-06-16', title:'파일 업로드 & 텍스트 추출', color:'#6d28d9', items:[
+      '드래그&드롭 다중 업로드',
+      'PDF·Excel·CSV·Word·PPTX 텍스트 추출, 이미지 보관',
+      '암호 ZIP 비밀번호 해제 후 내부 파일 자동 처리',
+      '비지원·비표준압축(.alz/.7z 등) 전용 안내 팝업, 전체 삭제 버튼',
+    ]},
+    { date:'2026-06-17', title:'내장 K-IFRS DB 구축(원문 50종 전수 스캔)', color:'#2563eb', items:[
+      'K-IFRS 원문 PDF 50종 전수 추출 → kifrs-knowledge.json',
+      '기준서 50종 / 문단 지문 1,439개 / 회계용어 656개(동의어 포함 1,821개)',
+      'DB 뷰어 — 유형별 그룹·기준서별 조문·키워드·원문발췌 열람',
+    ]},
+    { date:'2026-06-17', title:'AI 기준서 분석 파이프라인(Gemini)', color:'#0d9488', items:[
+      '키워드 추출 + 부정어 필터(아닌/않는/제외/미해당) + 미분류',
+      'API① — 추출 키워드+본문 vs 50종 기준서 비교 → 표준용어 정규화 + 후보 기준서 선정',
+      'API② — 후보별 조문 정밀분석(체크항목·검토포인트·분개·근거조문)',
+      '검증 — 코드(문단실존·화이트리스트·키워드 교차검증) + AI감사인(조문 원문 대조)',
+      '신뢰도 라벨 — 검증완료/AI추천·미검증/확인불가 + 면책 문구',
+      '이미지·스캔PDF → Gemini 비전 OCR 후 동일 파이프라인 합류',
+    ]},
+    { date:'2026-06-17', title:'API 연동·안정화', color:'#b45309', items:[
+      'Gemini 키 화면 입력(localStorage)·무료 발급 가이드, 모델 gemini-2.5-flash 고정',
+      '503/429·쿼터 자동 재시도(최대 5회, 서버 권장 대기 존중)',
+      '분당 호출 가드 — 한도 임박 시 대기 팝업으로 사전 차단',
+      '동시 정밀분석 최대 3건 제한',
+    ]},
+  ];
 
-  var progressBanner = '';
-  progressBanner = progressBanner = '<div style="background:var(--bg3);border-radius:10px;padding:18px 22px;margin-bottom:28px">'
-      +'<div style="font-size:11px;font-weight:700;color:var(--txt3);margin-bottom:14px;letter-spacing:0.5px">현재 개발 진행 상황</div>'
-      +'<div style="display:flex;flex-direction:column;gap:10px">'
-      +'<div style="display:flex;align-items:center;gap:12px"><span style="background:#059669;color:white;font-size:10px;font-weight:700;padding:2px 9px;border-radius:10px">Step 3</span><div style="font-size:12px;color:#065f46;font-weight:600">완료 <span style="font-weight:400;color:#6b7280">— 매출·광고비 원천 파일 연동</span></div></div>'
-      +'<div style="display:flex;align-items:center;gap:12px"><span style="background:#059669;color:white;font-size:10px;font-weight:700;padding:2px 9px;border-radius:10px">Step 4</span><div style="font-size:12px;color:#065f46;font-weight:600">완료 <span style="font-weight:400;color:#6b7280">— 월별 사업계획 원천 파일 연동</span></div></div>'
-      +'<div style="display:flex;align-items:center;gap:12px"><span style="background:#059669;color:white;font-size:10px;font-weight:700;padding:2px 9px;border-radius:10px">Step 5</span><div style="font-size:12px;color:#065f46;font-weight:600">완료 <span style="font-weight:400;color:#6b7280">— 월별 예실 비교 보고 화면 오픈</span></div></div>'
-      +'<div style="display:flex;align-items:center;gap:12px"><span style="background:#059669;color:white;font-size:10px;font-weight:700;padding:2px 9px;border-radius:10px">Step 6</span><div style="font-size:12px;color:#065f46;font-weight:600">완료 <span style="font-weight:400;color:#6b7280">— 누적 예실 비교 보고 화면 오픈</span></div></div>'
-      +'<div style="display:flex;align-items:center;gap:12px"><span style="background:#059669;color:white;font-size:10px;font-weight:700;padding:2px 9px;border-radius:10px">Step 7</span><div style="font-size:12px;color:#065f46;font-weight:600">완료 <span style="font-weight:400;color:#6b7280">— 증감 원인 분석 코멘트 자동 생성(실적 기준)</span></div></div>'
-      +'</div></div>';
+  var PROJECTS = [
+    { id:'biz',   name:'HI_예실분석',   desc:'사업계획 예실 비교·보고 자동화', start:'2026-03-25', end:'2026-06-15', color:'#2563eb', logs:logs_biz },
+    { id:'kifrs', name:'기준서 콜센터', desc:'K-IFRS 기준서 자동 검토(AI)',  start:'2026-06-16', end:null,        color:'#7c3aed', logs:logs_kifrs },
+  ];
 
-  var html2 = '<div style="margin-bottom:28px">'
-    +'<div style="font-size:20px;font-weight:800;color:var(--txt);margin-bottom:4px">개발 이력</div>'
-    +'<div style="font-size:12px;color:var(--txt3)">HI_사업회계팀 대시보드 — 날짜별 업데이트 내역</div>'
-    +'<div style="margin-top:4px;font-size:11px;color:#aaa">담당: Jiho Kim · 사업회계팀</div>'
-    +'</div>';
+  if(!window._devlogProject || !PROJECTS.some(function(p){return p.id===window._devlogProject;})) window._devlogProject = PROJECTS[PROJECTS.length-1].id;
+  var sel = PROJECTS.filter(function(p){return p.id===window._devlogProject;})[0];
 
-  html2 += progressBanner;
+  var html = '<div style="margin-bottom:18px">'
+    + '<div style="font-size:20px;font-weight:800;color:var(--txt);margin-bottom:4px">개발 이력</div>'
+    + '<div style="font-size:12px;color:var(--txt3)">헥토이노베이션 워크스페이스 — 개발 프로젝트별 이력 <span style="color:#aaa">(카드 좌우 드래그)</span></div>'
+    + '</div>';
 
-  var dateGroups = {};
-  logs.forEach(function(log){
-    if(!dateGroups[log.date]) dateGroups[log.date] = [];
-    dateGroups[log.date].push(log);
+  html += '<div id="devlog-projrow" class="devlog-projrow">';
+  PROJECTS.forEach(function(p,i){
+    var on=(p.id===window._devlogProject);
+    var range=p.start+' ~ '+(p.end?p.end:'<b style="color:#059669">개발중</b>');
+    html += '<div class="devlog-projcard'+(on?' on':'')+'" style="border-color:'+(on?p.color:'var(--border)')+'" onclick="window._devlogProject=\''+p.id+'\';renderDevLog();">'
+      + '<div class="devlog-projidx">'+(i+1)+'</div>'
+      + '<div class="devlog-projname" style="color:'+p.color+'">'+p.name+'</div>'
+      + '<div class="devlog-projdesc">'+p.desc+'</div>'
+      + '<div class="devlog-projrange">'+range+'</div>'
+      + '<div class="devlog-projcount">업데이트 '+p.logs.length+'건</div>'
+      + '</div>';
   });
+  html += '</div>';
 
+  html += '<div style="margin-top:24px;margin-bottom:16px">'
+    + '<div style="font-size:14px;font-weight:800;color:var(--txt)">'+sel.name+' · 일자별 개발 이력</div>'
+    + '<div style="font-size:11px;color:var(--txt3);margin-top:2px">최근 항목이 위에 표시됨 · 담당: Jiho Kim</div>'
+    + '</div>';
+
+  var dateGroups={};
+  sel.logs.forEach(function(log){ (dateGroups[log.date]=dateGroups[log.date]||[]).push(log); });
   Object.keys(dateGroups).sort(function(a,b){return b.localeCompare(a);}).forEach(function(date){
-    var grp = dateGroups[date];
-    html2 += '<div style="margin-bottom:32px">';
-    html2 += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">'
-      +'<div style="font-size:12px;font-weight:700;color:var(--txt3);min-width:80px">'+date+'</div>'
-      +'<div style="flex:1;height:1px;background:var(--border)"></div>'
-      +'</div>';
-    grp.forEach(function(log){
-      html2 += '<div style="display:flex;gap:16px;margin-bottom:20px">'
-        +'<div style="width:4px;min-height:40px;border-radius:4px;background:'+log.color+';flex-shrink:0"></div>'
-        +'<div style="flex:1">'
-        +'<div style="font-size:13px;font-weight:700;color:var(--txt);margin-bottom:6px">'+log.title+'</div>'
-        +'<div style="font-size:10px;color:var(--txt3);margin-bottom:8px">by '+log.dev+'</div>'
-        +'<ul style="margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px">'
-        + log.items.map(function(item){
-            return '<li style="font-size:11.5px;color:var(--txt2);line-height:1.6">'+item+'</li>';
-          }).join('')
-        +'</ul>'
-        +'</div></div>';
+    html += '<div style="margin-bottom:28px">';
+    html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px"><div style="font-size:12px;font-weight:700;color:var(--txt3);min-width:84px">'+date+'</div><div style="flex:1;height:1px;background:var(--border)"></div></div>';
+    dateGroups[date].forEach(function(log){
+      html += '<div style="display:flex;gap:14px;margin-bottom:18px">'
+        + '<div style="width:4px;border-radius:4px;background:'+(log.color||sel.color)+';flex-shrink:0"></div>'
+        + '<div style="flex:1">'
+        + '<div style="font-size:13px;font-weight:700;color:var(--txt);margin-bottom:8px">'+log.title+'</div>'
+        + '<ul style="margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px">'
+        + log.items.map(function(it){ return '<li style="font-size:11.5px;color:var(--txt2);line-height:1.6">'+it+'</li>'; }).join('')
+        + '</ul></div></div>';
     });
-    html2 += '</div>';
+    html += '</div>';
   });
 
-  wrap.innerHTML = html2;
+  wrap.innerHTML = html;
+  if(typeof _enableDevlogDrag==='function') _enableDevlogDrag();
+}
+
+function _enableDevlogDrag(){
+  var el=document.getElementById('devlog-projrow'); if(!el) return;
+  var down=false, moved=false, sx=0, sl=0;
+  el.addEventListener('mousedown', function(e){ down=true; moved=false; sx=e.pageX; sl=el.scrollLeft; el.classList.add('drag'); });
+  window.addEventListener('mouseup', function(){ down=false; el.classList.remove('drag'); });
+  el.addEventListener('mousemove', function(e){ if(!down) return; var dx=e.pageX-sx; if(Math.abs(dx)>4) moved=true; el.scrollLeft=sl-dx; });
+  el.addEventListener('click', function(e){ if(moved){ e.stopPropagation(); e.preventDefault(); } }, true);
 }
 
 // ── CSV 직접 파서 ──────────────────────────────────────────────
@@ -6010,7 +6013,8 @@ function debugR1Compare(){
   // ══════════════════════════════════════════════════════════════
   KIFRS.API = {
     key: '',                         // ← 비워둠. 화면에서 입력(또는 여기에 직접 넣어도 됨)
-    model: 'gemini-2.5-flash',       // 무료 Flash 티어(검증됨). 화면 [모델] 칸에서 교체 가능
+    model: 'gemini-2.5-flash',       // 전 호출 동일 모델(이 키에서 무료 동작 확인됨)
+    ocrModel: '',                    // 비우면 분석 모델과 동일. (2.0-flash는 이 키에서 무료 할당 0이라 사용 불가 → 비움)
     endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/'
   };
   KIFRS.getApiKey = function(){
@@ -6044,7 +6048,8 @@ function debugR1Compare(){
   function _geminiCall(prompt, opts){
     var key=KIFRS.getApiKey();
     if(!key) return Promise.reject(new Error('API 키가 없습니다 — 화면에서 키를 입력·저장하세요.'));
-    var url=KIFRS.API.endpoint+encodeURIComponent(KIFRS.getModel())+':generateContent?key='+encodeURIComponent(key);
+    var model=(opts&&opts.model)||KIFRS.getModel();
+    var url=KIFRS.API.endpoint+encodeURIComponent(model)+':generateContent?key='+encodeURIComponent(key);
     var parts=[{text:prompt}];
     if(opts.images && opts.images.length){ opts.images.forEach(function(im){ if(im&&im.data) parts.push({inline_data:{mime_type:im.mimeType||'image/png', data:im.data}}); }); }
     var body={ contents:[{ role:'user', parts:parts }] };
@@ -6053,6 +6058,7 @@ function debugR1Compare(){
     if(opts.temperature!=null) gc.temperature=opts.temperature;
     if(Object.keys(gc).length) body.generationConfig=gc;
     if(opts.system) body.systemInstruction={parts:[{text:opts.system}]};
+    if(KIFRS._callTimes) KIFRS._callTimes.push(Date.now());   // 분당 가드용 호출 기록
     return fetch(url,{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) })
       .then(function(r){ return r.json().catch(function(){ var e=new Error('HTTP '+r.status+' (응답 파싱 실패)'); e.status=r.status; throw e; }).then(function(j){
         if(!r.ok){ var er=new Error((j&&j.error&&j.error.message) || ('HTTP '+r.status)); er.status=r.status; throw er; }
@@ -6068,10 +6074,10 @@ function debugR1Compare(){
   function _sleep(ms){ return new Promise(function(res){ setTimeout(res, ms); }); }
   function _isTransient(e){ var m=((e&&e.message)||'')+''; return (e&&(e.status===503||e.status===429||e.status===500)) || /high demand|overload|unavailable|try again later|rate limit|quota|exceeded|retry in|\b50[03]\b|\b429\b/i.test(m); }
   function _retryDelayMs(e){ var m=((e&&e.message)||'')+''; var mm=m.match(/retry in ([\d.]+)\s*s/i)||m.match(/retryDelay["':\s]+([\d.]+)s/i); return mm?Math.min(30000, Math.ceil(parseFloat(mm[1])*1000)+500):0; }
-  // 일시적 과부하(503)·레이트리밋(429·분당한도)·쿼터 자동 재시도. 서버 권장 대기시간(retry in Xs) 존중. opts.retry(기본4), opts.onRetry(n,max)
+  // 일시적 과부하(503)·레이트리밋(429·분당한도)·쿼터 자동 재시도. 서버 권장 대기시간(retry in Xs) 존중. opts.retry(기본5), opts.onRetry(n,max)
   KIFRS.callGemini = function(prompt, opts){
     opts=opts||{};
-    var max=(opts.retry!=null)?opts.retry:4;
+    var max=(opts.retry!=null)?opts.retry:5;
     function attempt(n){
       return _geminiCall(prompt, opts).catch(function(e){
         if(_isTransient(e) && n<max){
@@ -6084,6 +6090,33 @@ function debugR1Compare(){
     }
     return attempt(0);
   };
+  // ── 분당 호출 가드(클라이언트 측) — 서버 한도 닿기 전 미리 정지 ──
+  KIFRS.RPM_SOFT = 10;        // 최근 60초 내 허용 호출 수(이상이면 다음 액션 차단)
+  KIFRS.RPM_WINDOW = 60000;
+  KIFRS._callTimes = [];
+  KIFRS.rateGuard = function(){
+    var now=Date.now(), w=KIFRS.RPM_WINDOW;
+    KIFRS._callTimes = KIFRS._callTimes.filter(function(t){ return now-t < w; });
+    if(KIFRS._callTimes.length < KIFRS.RPM_SOFT) return {ok:true};
+    var idx=KIFRS._callTimes.length - KIFRS.RPM_SOFT;       // 이 호출이 창에서 빠져야 한 자리 생김
+    var waitMs=w - (now - KIFRS._callTimes[idx]);
+    return {ok:false, waitSec:Math.max(1, Math.ceil(waitMs/1000))};
+  };
+  function showRateWaitPopup(sec){
+    var ov=document.createElement('div'); ov.className='kifrs-modal-ov';
+    ov.innerHTML='<div class="kifrs-modal">'
+      + '<div class="m-ico">⏳</div>'
+      + '<div class="m-ttl">분당 호출 한도 보호</div>'
+      + '<div class="m-msg">무료 Gemini API의 <b>분당 호출 한도</b>에 가까워졌습니다.<br>과부하·오류 방지를 위해 <b id="kifrs-rate-cd">'+sec+'</b>초 뒤 다시 실행해 주세요.</div>'
+      + '<div class="m-foot"><button class="kifrs-btn">확인</button></div></div>';
+    var left=sec;
+    var iv=setInterval(function(){ left--; var el=document.getElementById('kifrs-rate-cd'); if(!el){ clearInterval(iv); return; } if(left>0){ el.textContent=left; } else { clearInterval(iv); el.parentNode.innerHTML='이제 다시 시도하셔도 됩니다.'; } },1000);
+    function close(){ clearInterval(iv); if(ov.parentNode) ov.parentNode.removeChild(ov); }
+    ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
+    ov.querySelector('.m-foot button').addEventListener('click', close);
+    document.body.appendChild(ov);
+  }
+
   // JSON 응답 파서(코드블록 펜스 제거 후 parse)
   KIFRS.parseJsonResponse = function(txt){
     if(!txt) return null;
@@ -6167,7 +6200,8 @@ function debugR1Compare(){
         : pdfPagesToImages(rec.file, 6).catch(function(e){ if(window.console) console.error('PDF→이미지 변환 실패', rec.name, e); rec._pdfErr=(e&&e.message)||'변환오류'; return []; });
       return partsP.then(function(parts){
         if(!parts.length){ rec.ocrText=''; rec.ocrDone=true; rec.ocrErr='PDF→이미지 변환 실패'+(rec._pdfErr?'('+rec._pdfErr+')':''); i++; renderFileList(); return step(); }
-        return KIFRS.callGemini(KIFRS.OCR_PROMPT, {images:parts, temperature:0, retry:4, onRetry:function(k,mx){ var b=document.getElementById('kifrs-ai'); if(b) b.innerHTML='<div class="kifrs-ai-load"><span class="kifrs-spin"></span> 🖼️ '+esc(rec.name)+' OCR 재시도 '+k+'/'+mx+'<div class="kifrs-note">모델 혼잡(503) — 잠시 대기 후 재시도</div></div>'; }})
+        var ocrM=KIFRS.API.ocrModel||KIFRS.getModel();
+        return KIFRS.callGemini(KIFRS.OCR_PROMPT, {images:parts, temperature:0, retry:5, model:ocrM, onRetry:function(k,mx){ var b=document.getElementById('kifrs-ai'); if(b) b.innerHTML='<div class="kifrs-ai-load"><span class="kifrs-spin"></span> 🖼️ '+esc(rec.name)+' OCR 재시도 '+k+'/'+mx+'<div class="kifrs-note">분당 한도 일시 초과 — 자동 대기 후 재시도(데이터 소진 아님)</div></div>'; }})
           .then(function(t){ rec.ocrText=(t||'').trim(); rec.ocrDone=true; i++; renderFileList(); return step(); })
           .catch(function(e){ rec.ocrText=''; rec.ocrDone=true; rec.ocrErr=(e&&e.message)||'OCR 실패'; i++; renderFileList(); return step(); });
       });
@@ -6192,6 +6226,7 @@ function debugR1Compare(){
     var done=KIFRS.state.files.filter(function(r){return r.status==='done'&&r.text;});
     var pending=KIFRS.state.files.filter(function(r){return !r.ocrDone && ((r.kind==='image'&&r.dataUrl)||r.needsOcr);});
     if(!done.length && !pending.length && !gatherText()){ box.innerHTML='<div class="kifrs-note">분석할 문서가 없습니다.</div>'; return; }
+    var _rg=KIFRS.rateGuard(); if(!_rg.ok){ showRateWaitPopup(_rg.waitSec); return; }   // 분당 한도 보호
     // 이전에 실패한 OCR은 재시도 가능하도록 초기화
     KIFRS.state.files.forEach(function(r){ if(r.ocrErr){ r.ocrDone=false; r.ocrErr=''; r._pdfErr=''; } });
     KIFRS._aiBusy=true;
@@ -6206,7 +6241,9 @@ function debugR1Compare(){
         KIFRS._aiBusy=false;
         var errs=KIFRS.state.files.filter(function(r){return r.ocrErr;}).map(function(r){return esc(r.name)+' → '+esc(r.ocrErr);});
         box.innerHTML='<div class="kifrs-api-stat err">추출된 텍스트가 없습니다.</div>'
-          + (errs.length?'<div class="kifrs-note" style="margin-top:6px"><b>OCR 오류</b><br>'+errs.join('<br>')+'</div>':'<div class="kifrs-note" style="margin-top:6px">OCR 대상이 없거나 실패했습니다. 파일 카드 상태를 확인하세요.</div>');
+          + (errs.length?'<div class="kifrs-note" style="margin-top:6px"><b>OCR 오류</b><br>'+errs.join('<br>')+'</div>':'<div class="kifrs-note" style="margin-top:6px">OCR 대상이 없거나 실패했습니다. 파일 카드 상태를 확인하세요.</div>')
+          + '<div class="kifrs-note" style="margin-top:6px">무료 한도(분당/일일) 초과면 잠시(약 30초~1분) 뒤 재시도하세요.</div>'
+          + '<div style="margin-top:8px"><button class="kifrs-btn kifrs-btn-sm" onclick="window.KIFRS.runAiAnalysis()">🔄 다시 시도</button></div>';
         return;
       }
       var off=KIFRS.analyze(text);
@@ -6224,7 +6261,9 @@ function debugR1Compare(){
         });
     }).catch(function(e){
       KIFRS._aiBusy=false;
-      box.innerHTML='<div class="kifrs-api-stat err">❌ '+esc(e.message)+'</div>';
+      var hint=/retry in|quota|exceeded|429|rate/i.test((e&&e.message)||'')?'<div class="kifrs-note" style="margin-top:6px">무료 한도(분당/일일) 초과일 수 있습니다. 잠시(약 30초~1분) 뒤 다시 시도하거나, 한 번에 올리는 파일 수를 줄여보세요.</div>':'';
+      box.innerHTML='<div class="kifrs-api-stat err">❌ '+esc(e.message)+'</div>'+hint
+        + '<div style="margin-top:8px"><button class="kifrs-btn kifrs-btn-sm" onclick="window.KIFRS.runAiAnalysis()">🔄 다시 시도</button></div>';
     });
   };
   KIFRS.showLabelHelp = function(){
@@ -6252,10 +6291,10 @@ function debugR1Compare(){
       + '<div class="m-ttl" style="text-align:center">🔑 Gemini API 무료 키 발급 가이드</div>'
       + '<div class="kifrs-help-body">'
       +   '<p><b>1.</b> <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">aistudio.google.com/app/apikey</a> 접속 → 구글 계정 로그인</p>'
-      +   '<p><b>2.</b> <b>[Create API key]</b> 클릭</p>'
-      +   '<p><b>3.</b> <span style="color:#b91c1c;font-weight:700">⚠ 반드시 “Create API key in new project”(새 프로젝트에 생성) 선택</span><br>'
+      +   '<p><b>2.</b> <b>[API 키 만들기]</b> 클릭</p>'
+      +   '<p><b>3.</b> <span style="color:#b91c1c;font-weight:700">⚠ 반드시 “새 프로젝트에서 API 키 만들기”(신규 프로젝트) 선택</span><br>'
       +       '<span class="kifrs-note">기존 프로젝트로 만들면 무료 할당이 0(limit:0)으로 막혀 연결이 안 되는 경우가 많습니다. 꼭 <b>신규 프로젝트</b>로 생성하세요.</span></p>'
-      +   '<p><b>4.</b> 생성된 키(<b>AIza…</b>로 시작)를 복사 → 왼쪽 <b>API 키 칸에 붙여넣고 [저장]</b></p>'
+      +   '<p><b>4.</b> 생성된 키(<b>AQ…</b>로 시작)를 복사 → 왼쪽 <b>API 키 칸에 붙여넣고 [저장]</b></p>'
       +   '<p><b>5.</b> <b>[연결 테스트]</b>로 확인 (모델 <b>gemini-2.5-flash</b> 권장). 연결 안 되면 <b>[모델 목록]</b>으로 사용 가능 모델 확인 후 <b>[모델] 칸</b>에 넣어 교체</p>'
       +   '<div class="kifrs-disclaimer" style="margin-top:10px"><b>특이사항</b><br>'
       +       '· 무료 티어라 분당·일일 호출 한도가 있습니다. <b>“retry in N초”</b>는 일시적 분당 초과로 <b>자동 재시도</b>되니 데이터 소진이 아닙니다.<br>'
@@ -6328,11 +6367,25 @@ function debugR1Compare(){
       '{"items":[{"기준서번호":"'+std.no+'","조문번호":"","체크항목":"","검토포인트":"","분개예시":"","근거조문원문요약":""}]}'
     ].join('\n');
   }
-  KIFRS._preciseBusy=false;
+  KIFRS._preciseBusy={};   // 기준서별 진행상태 → 여러 후보 동시 정밀분석 허용
+  KIFRS.MAX_PRECISE=3;     // 동시 정밀분석 최대 건수(무료 API 분당 한도 보호)
+  function showConcurrencyPopup(running){
+    var ov=document.createElement('div'); ov.className='kifrs-modal-ov';
+    ov.innerHTML='<div class="kifrs-modal">'
+      + '<div class="m-ico">⏳</div>'
+      + '<div class="m-ttl">동시 분석은 최대 '+KIFRS.MAX_PRECISE+'건까지</div>'
+      + '<div class="m-msg">현재 <b>'+running+'건</b>이 분석 중입니다.<br>무료 Gemini API는 <b>분당 호출 한도(RPM)</b>가 있어, 한꺼번에 너무 많이 요청하면 오류가 납니다.<br><br>진행 중인 분석이 <b>끝난 뒤 다시</b> 눌러주세요.</div>'
+      + '<div class="m-foot"><button class="kifrs-btn">확인</button></div></div>';
+    function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
+    ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
+    ov.querySelector('.m-foot button').addEventListener('click', close);
+    document.body.appendChild(ov);
+  }
   KIFRS.runPreciseAnalysis = function(stdNo){
-    if(KIFRS._preciseBusy) return;
     var std=KIFRS.findStandard(stdNo);
     var no=std?std.no:String(stdNo).replace(/[^0-9]/g,'');
+    if(KIFRS._preciseBusy[no]) return;   // 같은 기준서 중복 클릭만 차단(다른 기준서는 동시 가능)
+    if(Object.keys(KIFRS._preciseBusy).length >= KIFRS.MAX_PRECISE){ showConcurrencyPopup(Object.keys(KIFRS._preciseBusy).length); return; }  // 4번째 차단
     var box=document.getElementById('kifrs-precise-'+no) || document.getElementById('kifrs-precise');
     if(!box) return;
     box.style.display='block';
@@ -6340,21 +6393,24 @@ function debugR1Compare(){
     if(!KIFRS.getApiKey()){ box.innerHTML='<div class="kifrs-note">API 키가 필요합니다.</div>'; return; }
     var text=gatherText();
     if(!text){ box.innerHTML='<div class="kifrs-note">텍스트가 없습니다 — 먼저 [🤖 AI 기준서 분석]을 실행해 이미지 OCR을 진행하세요.</div>'; return; }
+    var _rg=KIFRS.rateGuard(); if(!_rg.ok){ showRateWaitPopup(_rg.waitSec); return; }
     var prompt=buildPrecisePrompt(std, text);
-    KIFRS._preciseBusy=true;
+    KIFRS._preciseBusy[no]=true;
     var t0=Date.now();
-    var timer=setInterval(function(){ var el=document.getElementById('kifrs-pr-timer'); if(el) el.textContent=((Date.now()-t0)/1000).toFixed(1)+'초'; },100);
-    box.innerHTML='<div class="kifrs-ai-load"><span class="kifrs-spin"></span> 🔬 제'+esc(std.no)+'호 정밀 분석 중… <b id="kifrs-pr-timer">0.0초</b><div class="kifrs-note">API ② — 조문별 체크·검토포인트·분개</div></div>';
+    var tid='kifrs-pr-timer-'+no;
+    var timer=setInterval(function(){ var el=document.getElementById(tid); if(el) el.textContent=((Date.now()-t0)/1000).toFixed(1)+'초'; },100);
+    function fin(){ clearInterval(timer); delete KIFRS._preciseBusy[no]; }
+    box.innerHTML='<div class="kifrs-ai-load"><span class="kifrs-spin"></span> 🔬 제'+esc(std.no)+'호 정밀 분석 중… <b id="'+tid+'">0.0초</b><div class="kifrs-note">API ② — 조문별 체크·검토포인트·분개</div></div>';
     KIFRS.callGemini(prompt, {json:true, temperature:0.1, system:'당신은 K-IFRS 전문 회계사입니다. 지정된 기준서·조문 범위에 근거하여 분석하고, 반드시 JSON으로만 답합니다.',
-        onRetry:function(k,mx){ box.innerHTML='<div class="kifrs-ai-load"><span class="kifrs-spin"></span> 🔬 제'+esc(std.no)+'호 — 모델 혼잡 재시도 '+k+'/'+mx+' <b id="kifrs-pr-timer">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="kifrs-note">API ② — 잠시 대기 후 재시도</div></div>'; }})
+        onRetry:function(k,mx){ box.innerHTML='<div class="kifrs-ai-load"><span class="kifrs-spin"></span> 🔬 제'+esc(std.no)+'호 — 모델 혼잡 재시도 '+k+'/'+mx+' <b id="'+tid+'">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="kifrs-note">API ② — 잠시 대기 후 재시도</div></div>'; }})
       .then(function(txt){
-        clearInterval(timer); KIFRS._preciseBusy=false;
+        fin();
         var data=KIFRS.parseJsonResponse(txt);
         if(!data){ box.innerHTML='<div class="kifrs-api-stat err">JSON 파싱 실패 — 원문 일부:</div><pre class="kifrs-preview">'+esc(txt.slice(0,1500))+'</pre>'; return; }
         KIFRS._lastPrecise=KIFRS._lastPrecise||{}; KIFRS._lastPrecise[std.no]=data;
         box.innerHTML=renderPreciseResult(data, std, ((Date.now()-t0)/1000).toFixed(1));
       })
-      .catch(function(e){ clearInterval(timer); KIFRS._preciseBusy=false; box.innerHTML='<div class="kifrs-api-stat err">❌ '+esc(e.message)+'</div>'; });
+      .catch(function(e){ fin(); box.innerHTML='<div class="kifrs-api-stat err">❌ '+esc(e.message)+'</div>'; });
   };
   // ── 6단계: 코드 기반 교차검증 (번호 실존 + 화이트리스트 + 키워드 교차검증) → 신뢰도 라벨 ──
   KIFRS.verifyItem = function(stdNo, item){
@@ -6409,7 +6465,7 @@ function debugR1Compare(){
         + '</div>';
     });
     var summary='<div class="kifrs-pr-summary">🟢 검증완료 '+cnt.green+' · 🟠 미검증 '+cnt.amber+' · 🔴 확인불가 '+cnt.red
-      + ' <button class="kifrs-btn kifrs-btn-sm" style="margin-left:8px" onclick="window.KIFRS.runFinalAudit(\''+std.no+'\')">✅ 최종 검증(감사인 재검토)</button></div>';
+      + ' <button class="kifrs-btn kifrs-btn-sm" style="margin-left:8px" onclick="window.KIFRS.runFinalAudit(\''+std.no+'\')">✅ 최종 검증(AI감사인 재검토)</button></div>';
     var foot='<div class="kifrs-disclaimer">본 결과는 참고용이며, 최종 판단은 담당자 확인이 필요합니다. (검증: 코드 기반 — 문단 실존·기준서 화이트리스트·문단 키워드 교차검증)</div>';
     var auditSlot='<div class="kifrs-precise-slot" id="kifrs-audit-'+std.no+'"></div>';
     return head+summary+body+auditSlot+foot;
@@ -6439,27 +6495,28 @@ function debugR1Compare(){
       '{"audited":[{"조문번호":"","판정":"부합|의심|오류","사유":"","교정안":""}]}'
     ].join('\n');
   }
-  KIFRS._auditBusy=false;
+  KIFRS._auditBusy={};   // 기준서별 → 동시 감사 허용
   KIFRS.runFinalAudit = function(stdNo){
-    if(KIFRS._auditBusy) return;
     var std=KIFRS.findStandard(stdNo); var no=std?std.no:String(stdNo).trim();
+    if(KIFRS._auditBusy[no]) return;
     var slot=document.getElementById('kifrs-audit-'+no); if(!std||!slot) return;
     var last=KIFRS._lastPrecise&&KIFRS._lastPrecise[no]; var items=(last&&last.items)||[];
     if(!items.length){ slot.innerHTML='<div class="kifrs-note">먼저 정밀 분석을 실행하세요.</div>'; return; }
     if(!KIFRS.getApiKey()){ slot.innerHTML='<div class="kifrs-note">API 키가 필요합니다.</div>'; return; }
-    KIFRS._auditBusy=true;
+    var _rg=KIFRS.rateGuard(); if(!_rg.ok){ showRateWaitPopup(_rg.waitSec); return; }
+    KIFRS._auditBusy[no]=true;
     var t0=Date.now();
     var timer=setInterval(function(){ var el=document.getElementById('kifrs-audit-timer-'+no); if(el) el.textContent=((Date.now()-t0)/1000).toFixed(1)+'초'; },100);
-    slot.innerHTML='<div class="kifrs-ai-load"><span class="kifrs-spin"></span> ✅ 감사인 재검토 중… <b id="kifrs-audit-timer-'+no+'">0.0초</b><div class="kifrs-note">각 항목을 기준서 조문 원문과 대조</div></div>';
+    slot.innerHTML='<div class="kifrs-ai-load"><span class="kifrs-spin"></span> ✅ AI감사인 재검토 중… <b id="kifrs-audit-timer-'+no+'">0.0초</b><div class="kifrs-note">각 항목을 기준서 조문 원문과 대조</div></div>';
     KIFRS.callGemini(buildAuditPrompt(std, items), {json:true, temperature:0, system:'당신은 보수적이고 깐깐한 회계 감사인입니다. 제공된 기준서 조문 원문에만 근거하여 1차 분석의 오류·할루시네이션을 찾아내고 JSON으로만 답합니다.',
-        onRetry:function(k,mx){ slot.innerHTML='<div class="kifrs-ai-load"><span class="kifrs-spin"></span> ✅ 감사 재검토 — 모델 혼잡 재시도 '+k+'/'+mx+'</div>'; }})
+        onRetry:function(k,mx){ slot.innerHTML='<div class="kifrs-ai-load"><span class="kifrs-spin"></span> ✅ AI감사 재검토 — 모델 혼잡 재시도 '+k+'/'+mx+'</div>'; }})
       .then(function(txt){
-        clearInterval(timer); KIFRS._auditBusy=false;
+        clearInterval(timer); delete KIFRS._auditBusy[no];
         var data=KIFRS.parseJsonResponse(txt);
         if(!data||!data.audited){ slot.innerHTML='<div class="kifrs-api-stat err">감사 응답 파싱 실패 — 원문:</div><pre class="kifrs-preview">'+esc((txt||'').slice(0,1200))+'</pre>'; return; }
         slot.innerHTML=renderFinalAudit(std, items, data.audited, ((Date.now()-t0)/1000).toFixed(1));
       })
-      .catch(function(e){ clearInterval(timer); KIFRS._auditBusy=false; slot.innerHTML='<div class="kifrs-api-stat err">❌ '+esc(e.message)+'</div>'; });
+      .catch(function(e){ clearInterval(timer); delete KIFRS._auditBusy[no]; slot.innerHTML='<div class="kifrs-api-stat err">❌ '+esc(e.message)+'</div>'; });
   };
   function renderFinalAudit(std, items, audited, secs){
     var byNo={}; audited.forEach(function(a){ byNo[String(a['조문번호']||'').trim()]=a; });
@@ -6472,15 +6529,15 @@ function debugR1Compare(){
       var level = (verd==='오류') ? 'red' : (verd==='의심') ? 'amber' : (verd==='부합') ? (code.level==='green'?'green':'amber') : code.level;
       cnt[level]++;
       return '<div class="kifrs-pr-item kifrs-cfb-'+level+'">'
-        + '<div class="kifrs-pr-h">문단 '+esc(artNo||'-')+' '+_cfLabel(level)+(verd?' <span class="kifrs-audit-tag">감사: '+esc(verd)+'</span>':'')+'</div>'
+        + '<div class="kifrs-pr-h">문단 '+esc(artNo||'-')+' '+_cfLabel(level)+(verd?' <span class="kifrs-audit-tag">AI감사: '+esc(verd)+'</span>':'')+'</div>'
         + (it['체크항목']?'<div class="kifrs-pr-row"><b>체크항목</b> '+esc(it['체크항목'])+'</div>':'')
         + (it['검토포인트']?'<div class="kifrs-pr-row"><b>검토포인트</b> '+esc(it['검토포인트'])+'</div>':'')
-        + (a['사유']?'<div class="kifrs-pr-row kifrs-pr-src"><b>감사의견</b> '+esc(a['사유'])+'</div>':'')
+        + (a['사유']?'<div class="kifrs-pr-row kifrs-pr-src"><b>AI감사의견</b> '+esc(a['사유'])+'</div>':'')
         + (((verd==='의심'||verd==='오류')&&a['교정안'])?'<div class="kifrs-pr-row" style="color:#b45309"><b>교정안</b> '+esc(a['교정안'])+'</div>':'')
         + '</div>';
     }).join('');
     var summary='<div class="kifrs-pr-summary">✅ 최종(코드+AI감사) — 🟢 '+cnt.green+' · 🟠 '+cnt.amber+' · 🔴 '+cnt.red+'</div>';
-    return '<div class="kifrs-an-head" style="margin-top:8px;border-top:1px solid var(--border);padding-top:10px">✅ 최종 검증 결과 <span>'+secs+'초 · 감사인 재검토(조문 원문 대조)</span></div>'+summary+rows;
+    return '<div class="kifrs-an-head" style="margin-top:8px;border-top:1px solid var(--border);padding-top:10px">✅ 최종 검증 결과 <span>'+secs+'초 · AI감사인 재검토(조문 원문 대조)</span></div>'+summary+rows;
   }
 
   // ══ 유틸 ══
@@ -6783,6 +6840,8 @@ function debugR1Compare(){
     if(!n) return;
     if(!window.confirm('업로드된 파일 '+n+'건을 모두 삭제할까요?')) return;
     KIFRS.state.files = [];
+    KIFRS._lastAi=null; KIFRS._lastPrecise={};
+    ['kifrs-ai','kifrs-analysis'].forEach(function(id){ var el=document.getElementById(id); if(el){ el.innerHTML=''; el.style.display='none'; } });
     renderFileList();
   };
 
@@ -6964,12 +7023,12 @@ function debugR1Compare(){
       + '<div class="kifrs-api-bar">'
       +   '<span class="kifrs-api-ico">⚙</span>'
       +   '<span class="kifrs-api-label">Gemini API</span>'
-      +   '<input type="password" id="kifrs-api-key" class="kifrs-api-input" placeholder="API 키 붙여넣기 (AIza…)" autocomplete="off">'
+      +   '<input type="password" id="kifrs-api-key" class="kifrs-api-input" placeholder="API 키 붙여넣기 (AQ…)" autocomplete="off">'
       +   '<button class="kifrs-btn kifrs-btn-sm" id="kifrs-api-save">저장</button>'
       +   '<button class="kifrs-btn kifrs-btn-ghost kifrs-btn-sm" id="kifrs-api-test">연결 테스트</button>'
       +   '<span class="kifrs-api-stat" id="kifrs-api-stat"></span>'
       +   '<div class="kifrs-keyguide">'
-      +     '🆓 <b>무료 키 발급</b> &nbsp;① <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">AI Studio</a> 접속 → ② [Create API key] → ③ <span class="kifrs-kg-warn">⚠ 반드시 “Create API key in new project(신규 프로젝트)”로 생성</span> → ④ 키(AIza…) 복사 후 위 칸에 붙여넣고 [저장] → ⑤ [연결 테스트]'
+      +     '🆓 <b>무료 키 발급</b> &nbsp;① <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">AI Studio</a> 접속 → ② [API 키 만들기] → ③ <span class="kifrs-kg-warn">⚠ 반드시 “새 프로젝트에서 API 키 만들기”(신규 프로젝트)로 생성</span> → ④ 키(AQ…) 복사 후 위 칸에 붙여넣고 [저장] → ⑤ [연결 테스트]'
       +     '<button class="kifrs-help-btn" id="kifrs-api-guide">자세히 보기</button>'
       +   '</div>'
       + '</div>'
