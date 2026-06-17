@@ -432,6 +432,12 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
 .kifrs-api-stat{font-size:11px;color:var(--txt3);flex-basis:100%;}
 .kifrs-api-stat.ok{color:#047857;}
 .kifrs-api-stat.err{color:#b91c1c;}
+#kifrs-api-guide{margin-left:0;}
+.kifrs-help-body a{color:var(--blue);font-weight:600;}
+.kifrs-keyguide{flex-basis:100%;margin-top:8px;font-size:11px;color:var(--txt2);background:var(--bg);border:1px dashed var(--border2);border-radius:8px;padding:9px 12px;line-height:1.6;}
+.kifrs-keyguide a{color:var(--blue);font-weight:700;}
+.kifrs-kg-warn{color:#b91c1c;font-weight:700;}
+.kifrs-keyguide .kifrs-help-btn{margin-left:8px;}
 .kifrs-ai-load{padding:18px;text-align:center;font-size:13px;color:var(--txt2);font-weight:600;}
 .kifrs-ai-load b{color:var(--blue);font-family:'DM Mono',monospace;}
 .kifrs-nt{width:100%;border-collapse:collapse;font-size:11px;margin-top:4px;}
@@ -446,6 +452,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
 .kifrs-pr-ok{font-size:10px;font-weight:700;color:#047857;background:#d1fae5;border-radius:6px;padding:1px 7px;margin-left:4px;}
 .kifrs-pr-warn{font-size:10px;font-weight:700;color:#b45309;background:#fef3c7;border-radius:6px;padding:1px 7px;margin-left:4px;}
 .kifrs-precise-slot:not(:empty){margin-top:10px;padding-top:10px;border-top:1px dashed var(--border2);}
+.kifrs-audit-tag{font-size:9.5px;font-weight:700;color:#6d28d9;background:#ede9fe;border-radius:6px;padding:1px 7px;margin-left:4px;}
 .kifrs-pr-summary{font-size:11.5px;font-weight:700;color:var(--txt2);margin:8px 0 10px;}
 .kifrs-cf{font-size:10px;font-weight:700;border-radius:6px;padding:1px 8px;margin-left:6px;white-space:nowrap;}
 .kifrs-cf-g{color:#047857;background:#d1fae5;}
@@ -6014,7 +6021,7 @@ function debugR1Compare(){
     k=(k||'').trim(); KIFRS.API.key=k;
     try { if(k) localStorage.setItem('kifrs-apikey',k); else localStorage.removeItem('kifrs-apikey'); } catch(e){}
   };
-  KIFRS.getModel = function(){ try { return localStorage.getItem('kifrs-model') || KIFRS.API.model; } catch(e){ return KIFRS.API.model; } };
+  KIFRS.getModel = function(){ return KIFRS.API.model; };  // 전 사용자 동일 고정: gemini-2.5-flash
   KIFRS.setModel = function(m){ m=(m||'').trim()||KIFRS.API.model; KIFRS.API.model=m; try { localStorage.setItem('kifrs-model',m); } catch(e){} };
   // 이 키로 generateContent 가능한 모델 목록 조회 (할당량 0 진단·모델 찾기)
   KIFRS.listModelsUI = function(){
@@ -6059,16 +6066,18 @@ function debugR1Compare(){
       });
   }
   function _sleep(ms){ return new Promise(function(res){ setTimeout(res, ms); }); }
-  function _isTransient(e){ var m=((e&&e.message)||'')+''; return (e&&(e.status===503||e.status===429||e.status===500)) || /high demand|overload|unavailable|try again later|rate limit|\b50[03]\b|\b429\b/i.test(m); }
-  // 일시적 과부하(503)·레이트리밋(429) 자동 재시도(지수 backoff). opts.retry(기본3), opts.onRetry(n,max)
+  function _isTransient(e){ var m=((e&&e.message)||'')+''; return (e&&(e.status===503||e.status===429||e.status===500)) || /high demand|overload|unavailable|try again later|rate limit|quota|exceeded|retry in|\b50[03]\b|\b429\b/i.test(m); }
+  function _retryDelayMs(e){ var m=((e&&e.message)||'')+''; var mm=m.match(/retry in ([\d.]+)\s*s/i)||m.match(/retryDelay["':\s]+([\d.]+)s/i); return mm?Math.min(30000, Math.ceil(parseFloat(mm[1])*1000)+500):0; }
+  // 일시적 과부하(503)·레이트리밋(429·분당한도)·쿼터 자동 재시도. 서버 권장 대기시간(retry in Xs) 존중. opts.retry(기본4), opts.onRetry(n,max)
   KIFRS.callGemini = function(prompt, opts){
     opts=opts||{};
-    var max=(opts.retry!=null)?opts.retry:3;
+    var max=(opts.retry!=null)?opts.retry:4;
     function attempt(n){
       return _geminiCall(prompt, opts).catch(function(e){
         if(_isTransient(e) && n<max){
           if(opts.onRetry) opts.onRetry(n+1, max);
-          return _sleep(900*Math.pow(2,n)).then(function(){ return attempt(n+1); });
+          var wait=Math.max(_retryDelayMs(e), 900*Math.pow(2,n));
+          return _sleep(wait).then(function(){ return attempt(n+1); });
         }
         throw e;
       });
@@ -6236,6 +6245,30 @@ function debugR1Compare(){
     ov.querySelector('.m-foot button').addEventListener('click', close);
     document.body.appendChild(ov);
   };
+  KIFRS.showApiKeyGuide = function(){
+    var ov=document.createElement('div');
+    ov.className='kifrs-modal-ov';
+    ov.innerHTML='<div class="kifrs-modal" style="max-width:540px;text-align:left">'
+      + '<div class="m-ttl" style="text-align:center">🔑 Gemini API 무료 키 발급 가이드</div>'
+      + '<div class="kifrs-help-body">'
+      +   '<p><b>1.</b> <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">aistudio.google.com/app/apikey</a> 접속 → 구글 계정 로그인</p>'
+      +   '<p><b>2.</b> <b>[Create API key]</b> 클릭</p>'
+      +   '<p><b>3.</b> <span style="color:#b91c1c;font-weight:700">⚠ 반드시 “Create API key in new project”(새 프로젝트에 생성) 선택</span><br>'
+      +       '<span class="kifrs-note">기존 프로젝트로 만들면 무료 할당이 0(limit:0)으로 막혀 연결이 안 되는 경우가 많습니다. 꼭 <b>신규 프로젝트</b>로 생성하세요.</span></p>'
+      +   '<p><b>4.</b> 생성된 키(<b>AIza…</b>로 시작)를 복사 → 왼쪽 <b>API 키 칸에 붙여넣고 [저장]</b></p>'
+      +   '<p><b>5.</b> <b>[연결 테스트]</b>로 확인 (모델 <b>gemini-2.5-flash</b> 권장). 연결 안 되면 <b>[모델 목록]</b>으로 사용 가능 모델 확인 후 <b>[모델] 칸</b>에 넣어 교체</p>'
+      +   '<div class="kifrs-disclaimer" style="margin-top:10px"><b>특이사항</b><br>'
+      +       '· 무료 티어라 분당·일일 호출 한도가 있습니다. <b>“retry in N초”</b>는 일시적 분당 초과로 <b>자동 재시도</b>되니 데이터 소진이 아닙니다.<br>'
+      +       '· 자주 막히면 <b>모델을 gemini-2.0-flash</b>로 바꾸면 한도가 더 큽니다.<br>'
+      +       '· 잔여 한도 확인: <a href="https://aistudio.google.com/app/usage" target="_blank" rel="noopener">aistudio.google.com/app/usage</a><br>'
+      +       '· 키는 이 브라우저(localStorage)에만 저장되며 <b>외부 공유 금지</b>. 다른 PC에선 각자 발급·입력해야 합니다.</div>'
+      + '</div>'
+      + '<div class="m-foot"><button class="kifrs-btn">확인</button></div></div>';
+    function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
+    ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
+    ov.querySelector('.m-foot button').addEventListener('click', close);
+    document.body.appendChild(ov);
+  };
   function renderAiResult(data, secs){
     var h='<div class="kifrs-an-head">🤖 AI 분석 결과 (API ①) <span>'+secs+'초 · '+esc(KIFRS.getModel())+'</span>'
       + '<button class="kifrs-help-btn" onclick="window.KIFRS.showLabelHelp()">ⓘ 신뢰도 라벨 설명</button></div>';
@@ -6275,7 +6308,10 @@ function debugR1Compare(){
 
   // ── API ②: 특정 기준서 조문 범위 정밀 분석 ──
   function buildPrecisePrompt(std, text){
-    var arts=(std.paragraphs||[]).map(function(p){ return p.no+' '+(p.topic||'')+': '+(p.summary||'').replace(/\s+/g,' ').slice(0,90); }).join('\n');
+    var arts=(std.paragraphs||[]).map(function(p){
+      var ex=(p.excerpt||'').replace(/\s+/g,' ').slice(0,160);
+      return p.no+' '+(p.topic||'')+': '+(p.summary||'').replace(/\s+/g,' ').slice(0,90)+(ex?'  |원문: '+ex:'');
+    }).join('\n');
     var excerpt=text.replace(/\s+/g,' ').slice(0,3000);
     return [
       '당신은 K-IFRS 전문 회계사입니다. 아래 문서를 기업회계기준서 제'+std.no+'호 「'+std.name+'」 기준으로 분석하세요.',
@@ -6372,9 +6408,79 @@ function debugR1Compare(){
         + '<div class="kifrs-pr-verify">'+verifyLine+'</div>'
         + '</div>';
     });
-    var summary='<div class="kifrs-pr-summary">🟢 검증완료 '+cnt.green+' · 🟠 미검증 '+cnt.amber+' · 🔴 확인불가 '+cnt.red+'</div>';
+    var summary='<div class="kifrs-pr-summary">🟢 검증완료 '+cnt.green+' · 🟠 미검증 '+cnt.amber+' · 🔴 확인불가 '+cnt.red
+      + ' <button class="kifrs-btn kifrs-btn-sm" style="margin-left:8px" onclick="window.KIFRS.runFinalAudit(\''+std.no+'\')">✅ 최종 검증(감사인 재검토)</button></div>';
     var foot='<div class="kifrs-disclaimer">본 결과는 참고용이며, 최종 판단은 담당자 확인이 필요합니다. (검증: 코드 기반 — 문단 실존·기준서 화이트리스트·문단 키워드 교차검증)</div>';
-    return head+summary+body+foot;
+    var auditSlot='<div class="kifrs-precise-slot" id="kifrs-audit-'+std.no+'"></div>';
+    return head+summary+body+auditSlot+foot;
+  }
+  // ── 최종 검증: AI 감사인이 각 항목을 "실제 기준서 조문 원문"과 대조 (별도 버튼) ──
+  function buildAuditPrompt(std, items){
+    var lines=items.map(function(it,idx){
+      var artNo=String(it['조문번호']||'');
+      var para=KIFRS.findArticle(std.no, artNo);
+      var src=para ? ((para.summary||'')+' / 원문: '+(para.excerpt||'')).replace(/\s+/g,' ').slice(0,320) : '(DB에서 해당 문단 원문을 찾지 못함)';
+      return '['+(idx+1)+'] 조문 '+artNo
+        + '\n  · 체크항목: '+(it['체크항목']||'')
+        + '\n  · 검토포인트: '+(it['검토포인트']||'')
+        + '\n  · 분석이 인용한 근거: '+(it['근거조문원문요약']||'')
+        + '\n  · 실제 기준서 조문 원문(대조 기준): '+src;
+    }).join('\n\n');
+    return [
+      '당신은 매우 깐깐한 회계 감사인입니다. 아래는 기업회계기준서 제'+std.no+'호 「'+std.name+'」에 대한 1차 분석 결과와, 각 항목의 실제 기준서 조문 원문입니다.',
+      '각 항목을 "실제 기준서 조문 원문"에만 비추어 보수적으로 판정하세요.',
+      '- 원문에 근거가 분명: "부합"',
+      '- 원문에 없는 내용·과장·왜곡(할루시네이션): "오류"',
+      '- 근거가 약하거나 애매: "의심" (확신 없으면 보수적으로 의심 이상)',
+      '',
+      lines,
+      '',
+      '반드시 아래 JSON으로만 응답(항목 순서대로):',
+      '{"audited":[{"조문번호":"","판정":"부합|의심|오류","사유":"","교정안":""}]}'
+    ].join('\n');
+  }
+  KIFRS._auditBusy=false;
+  KIFRS.runFinalAudit = function(stdNo){
+    if(KIFRS._auditBusy) return;
+    var std=KIFRS.findStandard(stdNo); var no=std?std.no:String(stdNo).trim();
+    var slot=document.getElementById('kifrs-audit-'+no); if(!std||!slot) return;
+    var last=KIFRS._lastPrecise&&KIFRS._lastPrecise[no]; var items=(last&&last.items)||[];
+    if(!items.length){ slot.innerHTML='<div class="kifrs-note">먼저 정밀 분석을 실행하세요.</div>'; return; }
+    if(!KIFRS.getApiKey()){ slot.innerHTML='<div class="kifrs-note">API 키가 필요합니다.</div>'; return; }
+    KIFRS._auditBusy=true;
+    var t0=Date.now();
+    var timer=setInterval(function(){ var el=document.getElementById('kifrs-audit-timer-'+no); if(el) el.textContent=((Date.now()-t0)/1000).toFixed(1)+'초'; },100);
+    slot.innerHTML='<div class="kifrs-ai-load"><span class="kifrs-spin"></span> ✅ 감사인 재검토 중… <b id="kifrs-audit-timer-'+no+'">0.0초</b><div class="kifrs-note">각 항목을 기준서 조문 원문과 대조</div></div>';
+    KIFRS.callGemini(buildAuditPrompt(std, items), {json:true, temperature:0, system:'당신은 보수적이고 깐깐한 회계 감사인입니다. 제공된 기준서 조문 원문에만 근거하여 1차 분석의 오류·할루시네이션을 찾아내고 JSON으로만 답합니다.',
+        onRetry:function(k,mx){ slot.innerHTML='<div class="kifrs-ai-load"><span class="kifrs-spin"></span> ✅ 감사 재검토 — 모델 혼잡 재시도 '+k+'/'+mx+'</div>'; }})
+      .then(function(txt){
+        clearInterval(timer); KIFRS._auditBusy=false;
+        var data=KIFRS.parseJsonResponse(txt);
+        if(!data||!data.audited){ slot.innerHTML='<div class="kifrs-api-stat err">감사 응답 파싱 실패 — 원문:</div><pre class="kifrs-preview">'+esc((txt||'').slice(0,1200))+'</pre>'; return; }
+        slot.innerHTML=renderFinalAudit(std, items, data.audited, ((Date.now()-t0)/1000).toFixed(1));
+      })
+      .catch(function(e){ clearInterval(timer); KIFRS._auditBusy=false; slot.innerHTML='<div class="kifrs-api-stat err">❌ '+esc(e.message)+'</div>'; });
+  };
+  function renderFinalAudit(std, items, audited, secs){
+    var byNo={}; audited.forEach(function(a){ byNo[String(a['조문번호']||'').trim()]=a; });
+    var cnt={green:0,amber:0,red:0};
+    var rows=items.map(function(it,idx){
+      var artNo=String(it['조문번호']||'').trim();
+      var a=byNo[artNo]||audited[idx]||{};
+      var verd=a['판정']||'';
+      var code=KIFRS.verifyItem(std.no, it);
+      var level = (verd==='오류') ? 'red' : (verd==='의심') ? 'amber' : (verd==='부합') ? (code.level==='green'?'green':'amber') : code.level;
+      cnt[level]++;
+      return '<div class="kifrs-pr-item kifrs-cfb-'+level+'">'
+        + '<div class="kifrs-pr-h">문단 '+esc(artNo||'-')+' '+_cfLabel(level)+(verd?' <span class="kifrs-audit-tag">감사: '+esc(verd)+'</span>':'')+'</div>'
+        + (it['체크항목']?'<div class="kifrs-pr-row"><b>체크항목</b> '+esc(it['체크항목'])+'</div>':'')
+        + (it['검토포인트']?'<div class="kifrs-pr-row"><b>검토포인트</b> '+esc(it['검토포인트'])+'</div>':'')
+        + (a['사유']?'<div class="kifrs-pr-row kifrs-pr-src"><b>감사의견</b> '+esc(a['사유'])+'</div>':'')
+        + (((verd==='의심'||verd==='오류')&&a['교정안'])?'<div class="kifrs-pr-row" style="color:#b45309"><b>교정안</b> '+esc(a['교정안'])+'</div>':'')
+        + '</div>';
+    }).join('');
+    var summary='<div class="kifrs-pr-summary">✅ 최종(코드+AI감사) — 🟢 '+cnt.green+' · 🟠 '+cnt.amber+' · 🔴 '+cnt.red+'</div>';
+    return '<div class="kifrs-an-head" style="margin-top:8px;border-top:1px solid var(--border);padding-top:10px">✅ 최종 검증 결과 <span>'+secs+'초 · 감사인 재검토(조문 원문 대조)</span></div>'+summary+rows;
   }
 
   // ══ 유틸 ══
@@ -6859,11 +6965,13 @@ function debugR1Compare(){
       +   '<span class="kifrs-api-ico">⚙</span>'
       +   '<span class="kifrs-api-label">Gemini API</span>'
       +   '<input type="password" id="kifrs-api-key" class="kifrs-api-input" placeholder="API 키 붙여넣기 (AIza…)" autocomplete="off">'
-      +   '<input type="text" id="kifrs-api-model" class="kifrs-api-model" placeholder="모델명" autocomplete="off">'
       +   '<button class="kifrs-btn kifrs-btn-sm" id="kifrs-api-save">저장</button>'
       +   '<button class="kifrs-btn kifrs-btn-ghost kifrs-btn-sm" id="kifrs-api-test">연결 테스트</button>'
-      +   '<button class="kifrs-btn kifrs-btn-ghost kifrs-btn-sm" id="kifrs-api-models">모델 목록</button>'
       +   '<span class="kifrs-api-stat" id="kifrs-api-stat"></span>'
+      +   '<div class="kifrs-keyguide">'
+      +     '🆓 <b>무료 키 발급</b> &nbsp;① <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">AI Studio</a> 접속 → ② [Create API key] → ③ <span class="kifrs-kg-warn">⚠ 반드시 “Create API key in new project(신규 프로젝트)”로 생성</span> → ④ 키(AIza…) 복사 후 위 칸에 붙여넣고 [저장] → ⑤ [연결 테스트]'
+      +     '<button class="kifrs-help-btn" id="kifrs-api-guide">자세히 보기</button>'
+      +   '</div>'
       + '</div>'
       + '<div class="kifrs-section-title">📎 1) 검토할 파일 업로드</div>'
       + '<div class="kifrs-drop" id="kifrs-drop">'
@@ -6914,23 +7022,21 @@ function debugR1Compare(){
     if(aiBtn) aiBtn.addEventListener('click', KIFRS.runAiAnalysis);
     // API 설정 바
     var apiKeyEl=document.getElementById('kifrs-api-key');
-    var apiModelEl=document.getElementById('kifrs-api-model');
     var apiSave=document.getElementById('kifrs-api-save');
     var apiTest=document.getElementById('kifrs-api-test');
-    var apiModels=document.getElementById('kifrs-api-models');
     var apiStat=document.getElementById('kifrs-api-stat');
-    if(apiModelEl) apiModelEl.value=KIFRS.getModel();
     if(apiKeyEl){
       var saved=KIFRS.getApiKey();
       if(saved){ apiKeyEl.value=saved; if(apiStat){ apiStat.className='kifrs-api-stat ok'; apiStat.textContent='저장된 키 있음 · 연결 테스트로 확인하세요'; } }
     }
-    function _applyApiInputs(){ KIFRS.setApiKey(apiKeyEl?apiKeyEl.value:''); if(apiModelEl) KIFRS.setModel(apiModelEl.value); }
+    function _applyApiInputs(){ KIFRS.setApiKey(apiKeyEl?apiKeyEl.value:''); }
     if(apiSave) apiSave.addEventListener('click', function(){
       _applyApiInputs();
-      if(apiStat){ apiStat.className='kifrs-api-stat ok'; apiStat.textContent= KIFRS.getApiKey()?('✅ 저장됨 · 모델: '+KIFRS.getModel()):'키가 비워졌습니다'; }
+      if(apiStat){ apiStat.className='kifrs-api-stat ok'; apiStat.textContent= KIFRS.getApiKey()?'✅ 키 저장됨':'키가 비워졌습니다'; }
     });
-    if(apiTest)   apiTest.addEventListener('click', function(){ _applyApiInputs(); KIFRS.testApiUI(); });
-    if(apiModels) apiModels.addEventListener('click', function(){ _applyApiInputs(); KIFRS.listModelsUI(); });
+    if(apiTest) apiTest.addEventListener('click', function(){ _applyApiInputs(); KIFRS.testApiUI(); });
+    var apiGuide=document.getElementById('kifrs-api-guide');
+    if(apiGuide) apiGuide.addEventListener('click', KIFRS.showApiKeyGuide);
 
     KIFRS._rendered = true;
     renderFileList();
