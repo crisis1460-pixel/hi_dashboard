@@ -1,0 +1,11 @@
+# K-IFRS 원문 PDF·중간 산출물 — 대용량. 영구 보관은 추출 결과(kifrs-knowledge.json)만.
+K-IFRS/원문PDF/
+K-IFRS/txt/
+K-IFRS/parts/
+K-IFRS/_*.js
+K-IFRS/_*.txt
+
+# 로컬 백업/대용량 자료
+*.bak
+HI_예실분석 자동화*.zip
+월 별 원천자료/
