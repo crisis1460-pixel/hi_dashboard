@@ -438,6 +438,31 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
 .kifrs-nt th{background:var(--bg3);color:var(--txt2);font-weight:700;text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);}
 .kifrs-nt td{padding:6px 8px;border-bottom:1px solid var(--border);color:var(--txt2);}
 .kifrs-nt tr:hover td{background:var(--bg3);}
+.kifrs-pr-item{border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;background:var(--bg);padding:10px 12px;margin-bottom:8px;}
+.kifrs-pr-h{font-size:12px;font-weight:700;color:var(--txt);margin-bottom:5px;}
+.kifrs-pr-row{font-size:11.5px;color:var(--txt2);line-height:1.6;margin-top:3px;}
+.kifrs-pr-row b{color:var(--blue);font-weight:700;margin-right:4px;}
+.kifrs-pr-src{color:var(--txt3);}
+.kifrs-pr-ok{font-size:10px;font-weight:700;color:#047857;background:#d1fae5;border-radius:6px;padding:1px 7px;margin-left:4px;}
+.kifrs-pr-warn{font-size:10px;font-weight:700;color:#b45309;background:#fef3c7;border-radius:6px;padding:1px 7px;margin-left:4px;}
+.kifrs-precise-slot:not(:empty){margin-top:10px;padding-top:10px;border-top:1px dashed var(--border2);}
+.kifrs-pr-summary{font-size:11.5px;font-weight:700;color:var(--txt2);margin:8px 0 10px;}
+.kifrs-cf{font-size:10px;font-weight:700;border-radius:6px;padding:1px 8px;margin-left:6px;white-space:nowrap;}
+.kifrs-cf-g{color:#047857;background:#d1fae5;}
+.kifrs-cf-a{color:#b45309;background:#fef3c7;}
+.kifrs-cf-r{color:#b91c1c;background:#fee2e2;}
+.kifrs-cfb-green{border-left-color:#10b981;}
+.kifrs-cfb-amber{border-left-color:#f59e0b;}
+.kifrs-cfb-red{border-left-color:#ef4444;}
+.kifrs-pr-verify{font-size:10px;color:var(--txt3);margin-top:7px;font-family:'DM Mono',monospace;border-top:1px dotted var(--border);padding-top:6px;}
+.kifrs-disclaimer{margin-top:14px;font-size:11px;color:var(--txt3);background:var(--bg3);border-radius:8px;padding:10px 12px;line-height:1.6;}
+.kifrs-help-btn{margin-left:auto;font-size:11px;font-weight:600;color:var(--blue);background:var(--blue-d);border:none;border-radius:6px;padding:4px 10px;cursor:pointer;}
+.kifrs-help-btn:hover{background:var(--blue);color:#fff;}
+.kifrs-an-head{display:flex;align-items:center;gap:6px;}
+.kifrs-help-body{font-size:12px;color:var(--txt2);line-height:1.65;margin-top:12px;}
+.kifrs-help-body p{margin:0 0 10px;}
+.kifrs-help-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:9px;}
+.kifrs-help-row .kifrs-cf{margin-left:0;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -5794,9 +5819,36 @@ function debugR1Compare(){
     for(i=2101;i<=2122;i++) m[String(i)]=true;
     (KIFRS.DB.standards||[]).forEach(function(s){ m[String(s.no)]=true; });
     return m; })();
-  KIFRS.isValidStdNo = function(no){ return !!KIFRS.DB.whitelist[String(no).replace(/[^0-9]/g,'')]; };
-  KIFRS.findStandard = function(no){ no=String(no).replace(/[^0-9]/g,''); for(var i=0;i<KIFRS.DB.standards.length;i++){ if(KIFRS.DB.standards[i].no===no) return KIFRS.DB.standards[i]; } return null; };
-  KIFRS.findArticle = function(no, art){ var s=KIFRS.findStandard(no); if(!s||!s.paragraphs) return null; art=String(art); for(var i=0;i<s.paragraphs.length;i++){ if(s.paragraphs[i].no===art) return s.paragraphs[i]; } return null; };
+  KIFRS.findStandard = function(no){
+    no=String(no||'').trim();
+    var i;
+    for(i=0;i<KIFRS.DB.standards.length;i++){ if(KIFRS.DB.standards[i].no===no) return KIFRS.DB.standards[i]; }  // 정확 일치(F_concept 등 포함)
+    var n=no.replace(/[^0-9]/g,'');
+    if(n) for(i=0;i<KIFRS.DB.standards.length;i++){ if(KIFRS.DB.standards[i].no===n) return KIFRS.DB.standards[i]; }  // 숫자 일치
+    return null;
+  };
+  KIFRS.isValidStdNo = function(no){ return !!KIFRS.findStandard(no) || !!KIFRS.DB.whitelist[String(no||'').replace(/[^0-9]/g,'')]; };
+  // 문단번호 매칭 — DB는 범위형('31~34','9~16','한2.1'), AI는 단일('31') → 범위/접두 인식
+  function _paraNum(s){ var m=String(s).match(/\d+(?:\.\d+)*/); return m?m[0]:''; }
+  function _cmpDotted(a,b){ var pa=a.split('.').map(Number), pb=b.split('.').map(Number); for(var i=0;i<Math.max(pa.length,pb.length);i++){ var x=pa[i]||0, y=pb[i]||0; if(x!==y) return x-y; } return 0; }
+  function _hasAlpha(s){ return /[A-Za-z가-힣]/.test(s); }
+  KIFRS.paraMatch = function(dbNo, q){
+    dbNo=String(dbNo); q=String(q);
+    if(dbNo===q) return true;
+    var qn=_paraNum(q); if(!qn) return false;
+    var qa=_hasAlpha(q);
+    var parts=dbNo.split(/[~∼∽－—–\-]/);   // 범위 구분자(물결/하이픈류)
+    if(parts.length===2){
+      if(_hasAlpha(parts[0])!==qa) return false;   // 접두문자(B/AG/한 등) 불일치 제외
+      var lo=_paraNum(parts[0]), hi=_paraNum(parts[1]);
+      if(lo&&hi) return _cmpDotted(qn,lo)>=0 && _cmpDotted(qn,hi)<=0;
+      return false;
+    }
+    if(_hasAlpha(dbNo)!==qa) return false;
+    var dn=_paraNum(dbNo);
+    return !!dn && dn===qn;
+  };
+  KIFRS.findArticle = function(no, art){ var s=KIFRS.findStandard(no); if(!s||!s.paragraphs) return null; for(var i=0;i<s.paragraphs.length;i++){ if(KIFRS.paraMatch(s.paragraphs[i].no, art)) return s.paragraphs[i]; } return null; };
 
   // 동의어 → 표준용어 역인덱스 (소문자·공백제거 정규화)
   KIFRS._termIndex = null;
@@ -5981,29 +6033,47 @@ function debugR1Compare(){
       })
       .catch(function(e){ stat.className='kifrs-api-stat err'; stat.textContent='❌ '+e.message; });
   };
-  // Gemini generateContent 호출. opts:{json:true→JSON 강제, temperature, system}
-  KIFRS.callGemini = function(prompt, opts){
-    opts=opts||{};
+  // Gemini generateContent 1회 호출
+  function _geminiCall(prompt, opts){
     var key=KIFRS.getApiKey();
     if(!key) return Promise.reject(new Error('API 키가 없습니다 — 화면에서 키를 입력·저장하세요.'));
     var url=KIFRS.API.endpoint+encodeURIComponent(KIFRS.getModel())+':generateContent?key='+encodeURIComponent(key);
-    var body={ contents:[{ role:'user', parts:[{text:prompt}] }] };
+    var parts=[{text:prompt}];
+    if(opts.images && opts.images.length){ opts.images.forEach(function(im){ if(im&&im.data) parts.push({inline_data:{mime_type:im.mimeType||'image/png', data:im.data}}); }); }
+    var body={ contents:[{ role:'user', parts:parts }] };
     var gc={};
     if(opts.json) gc.responseMimeType='application/json';
     if(opts.temperature!=null) gc.temperature=opts.temperature;
     if(Object.keys(gc).length) body.generationConfig=gc;
     if(opts.system) body.systemInstruction={parts:[{text:opts.system}]};
     return fetch(url,{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) })
-      .then(function(r){ return r.json().catch(function(){ throw new Error('HTTP '+r.status+' (응답 파싱 실패)'); }).then(function(j){
-        if(!r.ok){ throw new Error((j&&j.error&&j.error.message) || ('HTTP '+r.status)); }
+      .then(function(r){ return r.json().catch(function(){ var e=new Error('HTTP '+r.status+' (응답 파싱 실패)'); e.status=r.status; throw e; }).then(function(j){
+        if(!r.ok){ var er=new Error((j&&j.error&&j.error.message) || ('HTTP '+r.status)); er.status=r.status; throw er; }
         return j;
       }); })
       .then(function(j){
         var c=j.candidates&&j.candidates[0];
         if(!c) throw new Error('응답에 후보가 없습니다(차단/필터 가능)');
-        var parts=c.content&&c.content.parts;
-        return (parts?parts.map(function(p){return p.text||'';}).join(''):'') || '';
+        var ps=c.content&&c.content.parts;
+        return (ps?ps.map(function(p){return p.text||'';}).join(''):'') || '';
       });
+  }
+  function _sleep(ms){ return new Promise(function(res){ setTimeout(res, ms); }); }
+  function _isTransient(e){ var m=((e&&e.message)||'')+''; return (e&&(e.status===503||e.status===429||e.status===500)) || /high demand|overload|unavailable|try again later|rate limit|\b50[03]\b|\b429\b/i.test(m); }
+  // 일시적 과부하(503)·레이트리밋(429) 자동 재시도(지수 backoff). opts.retry(기본3), opts.onRetry(n,max)
+  KIFRS.callGemini = function(prompt, opts){
+    opts=opts||{};
+    var max=(opts.retry!=null)?opts.retry:3;
+    function attempt(n){
+      return _geminiCall(prompt, opts).catch(function(e){
+        if(_isTransient(e) && n<max){
+          if(opts.onRetry) opts.onRetry(n+1, max);
+          return _sleep(900*Math.pow(2,n)).then(function(){ return attempt(n+1); });
+        }
+        throw e;
+      });
+    }
+    return attempt(0);
   };
   // JSON 응답 파서(코드블록 펜스 제거 후 parse)
   KIFRS.parseJsonResponse = function(txt){
@@ -6051,6 +6121,59 @@ function debugR1Compare(){
       '{"normalizedTerms":[{"원문":"","표준용어":"","기준서번호":"","신뢰도":"높음"}],"generalTerms":[""],"candidates":[{"기준서번호":"","명칭":"","관련성":0,"사유":"","관련쟁점":[""]}]}'
     ].join('\n');
   }
+  // ── 이미지 OCR (Gemini 비전) — 최초 분석 시점에 이미지를 텍스트화하여 같은 파이프라인 합류 ──
+  KIFRS.OCR_PROMPT='이 이미지는 회계/계약 관련 업무 문서입니다. 보이는 텍스트를 빠짐없이 그대로 추출하세요. 표는 행/열을 알아볼 수 있게 정리하고, 설명·해석 없이 추출 텍스트만 출력하세요.';
+  function _dataUrlPart(durl){ var m=/^data:([^;]+);base64,([\s\S]*)$/.exec(durl||''); return m?{mimeType:m[1], data:m[2]}:null; }
+  function _imgParts(rec){ return _dataUrlPart(rec.dataUrl); }
+  // 스캔 PDF → 페이지를 이미지로 렌더링 (PDF.js canvas)
+  function pdfPagesToImages(file, maxPages){
+    return KIFRS.ensurePdfJs().then(function(pdfjsLib){
+      if(!pdfjsLib) throw new Error('PDF.js 없음');
+      return readAs(file,'buffer').then(function(buf){
+        return pdfjsLib.getDocument({data:buf}).promise.then(function(pdf){
+          var n=Math.min(pdf.numPages, maxPages||5), out=[], chain=Promise.resolve();
+          for(var i=1;i<=n;i++){ (function(pg){ chain=chain.then(function(){
+            return pdf.getPage(pg).then(function(page){
+              var vp=page.getViewport({scale:1.5});
+              var c=document.createElement('canvas'); c.width=vp.width; c.height=vp.height;
+              return page.render({canvasContext:c.getContext('2d'), viewport:vp}).promise.then(function(){
+                var p=_dataUrlPart(c.toDataURL('image/jpeg',0.8)); if(p) out.push(p);
+              });
+            });
+          }); })(i); }
+          return chain.then(function(){ return out; });
+        });
+      });
+    });
+  }
+  // OCR 대상: 이미지 파일 + 텍스트가 거의 없는 스캔 PDF(needsOcr)
+  KIFRS.ensureImagesOcr = function(onProg){
+    var targets=KIFRS.state.files.filter(function(r){ return !r.ocrDone && ((r.kind==='image'&&r.dataUrl) || r.needsOcr); });
+    var i=0;
+    function step(){
+      if(i>=targets.length) return Promise.resolve(targets.length);
+      var rec=targets[i]; if(onProg) onProg(i+1, targets.length, rec.name);
+      var partsP = (rec.kind==='image')
+        ? Promise.resolve((function(){ var p=_imgParts(rec); return p?[p]:[]; })())
+        : pdfPagesToImages(rec.file, 6).catch(function(e){ if(window.console) console.error('PDF→이미지 변환 실패', rec.name, e); rec._pdfErr=(e&&e.message)||'변환오류'; return []; });
+      return partsP.then(function(parts){
+        if(!parts.length){ rec.ocrText=''; rec.ocrDone=true; rec.ocrErr='PDF→이미지 변환 실패'+(rec._pdfErr?'('+rec._pdfErr+')':''); i++; renderFileList(); return step(); }
+        return KIFRS.callGemini(KIFRS.OCR_PROMPT, {images:parts, temperature:0, retry:4, onRetry:function(k,mx){ var b=document.getElementById('kifrs-ai'); if(b) b.innerHTML='<div class="kifrs-ai-load"><span class="kifrs-spin"></span> 🖼️ '+esc(rec.name)+' OCR 재시도 '+k+'/'+mx+'<div class="kifrs-note">모델 혼잡(503) — 잠시 대기 후 재시도</div></div>'; }})
+          .then(function(t){ rec.ocrText=(t||'').trim(); rec.ocrDone=true; i++; renderFileList(); return step(); })
+          .catch(function(e){ rec.ocrText=''; rec.ocrDone=true; rec.ocrErr=(e&&e.message)||'OCR 실패'; i++; renderFileList(); return step(); });
+      });
+    }
+    return step();
+  };
+  function gatherText(){
+    var parts=[];
+    KIFRS.state.files.forEach(function(r){
+      if(r.status==='done' && r.text) parts.push(r.text);
+      else if(r.ocrText) parts.push('['+(r.kind==='image'?'이미지':'스캔')+' 문서: '+r.name+']\n'+r.ocrText);
+    });
+    return parts.join('\n');
+  }
+
   KIFRS._aiBusy=false;
   KIFRS.runAiAnalysis = function(){
     if(KIFRS._aiBusy) return;
@@ -6058,42 +6181,81 @@ function debugR1Compare(){
     box.style.display='block';
     if(!KIFRS.getApiKey()){ box.innerHTML='<div class="kifrs-note">먼저 위 ⚙ Gemini API 칸에 키를 저장·연결하세요.</div>'; return; }
     var done=KIFRS.state.files.filter(function(r){return r.status==='done'&&r.text;});
-    var imgs=KIFRS.state.files.filter(function(r){return r.status==='image';}).length;
-    if(!done.length){ box.innerHTML='<div class="kifrs-note">텍스트 문서가 없습니다.'+(imgs?' (이미지 '+imgs+'건의 직접 분석은 6단계에서 지원)':'')+'</div>'; return; }
-    var text=done.map(function(r){return r.text;}).join('\n');
-    var off=KIFRS.analyze(text);
-    var prompt=buildNormalizePrompt(text, off);
+    var pending=KIFRS.state.files.filter(function(r){return !r.ocrDone && ((r.kind==='image'&&r.dataUrl)||r.needsOcr);});
+    if(!done.length && !pending.length && !gatherText()){ box.innerHTML='<div class="kifrs-note">분석할 문서가 없습니다.</div>'; return; }
+    // 이전에 실패한 OCR은 재시도 가능하도록 초기화
+    KIFRS.state.files.forEach(function(r){ if(r.ocrErr){ r.ocrDone=false; r.ocrErr=''; r._pdfErr=''; } });
     KIFRS._aiBusy=true;
     var t0=Date.now();
-    var timer=setInterval(function(){ var el=document.getElementById('kifrs-ai-timer'); if(el) el.textContent=((Date.now()-t0)/1000).toFixed(1)+'초'; },100);
-    box.innerHTML='<div class="kifrs-ai-load"><span class="kifrs-spin"></span> 🤖 Gemini 분석 중… <b id="kifrs-ai-timer">0.0초</b><div class="kifrs-note">API ① — 용어 정규화 + 후보 기준서 선정</div></div>';
-    KIFRS.callGemini(prompt, {json:true, temperature:0.2, system:'당신은 K-IFRS(한국채택국제회계기준) 전문 회계사입니다. 실무 문서의 용어를 기준서 표준 용어로 정규화하고, 적용 기준서를 정확히 판단합니다.'})
-      .then(function(txt){
-        clearInterval(timer); KIFRS._aiBusy=false;
-        var data=KIFRS.parseJsonResponse(txt);
-        if(!data){ box.innerHTML='<div class="kifrs-api-stat err">응답 JSON 파싱 실패 — 원문 일부:</div><pre class="kifrs-preview">'+esc(txt.slice(0,1500))+'</pre>'; return; }
-        KIFRS._lastAi=data;
-        box.innerHTML=renderAiResult(data, ((Date.now()-t0)/1000).toFixed(1));
-      })
-      .catch(function(e){
-        clearInterval(timer); KIFRS._aiBusy=false;
-        box.innerHTML='<div class="kifrs-api-stat err">❌ '+esc(e.message)+'</div>';
-      });
+    box.innerHTML='<div class="kifrs-ai-load"><span class="kifrs-spin"></span> 준비 중…</div>';
+    // 1) 이미지 OCR(비전) 먼저 → 텍스트 합류
+    KIFRS.ensureImagesOcr(function(n,total,name){
+      box.innerHTML='<div class="kifrs-ai-load"><span class="kifrs-spin"></span> 🖼️ 이미지 텍스트 추출(OCR) '+n+'/'+total+'…<div class="kifrs-note">'+esc(name)+'</div></div>';
+    }).then(function(){
+      var text=gatherText();
+      if(!text){
+        KIFRS._aiBusy=false;
+        var errs=KIFRS.state.files.filter(function(r){return r.ocrErr;}).map(function(r){return esc(r.name)+' → '+esc(r.ocrErr);});
+        box.innerHTML='<div class="kifrs-api-stat err">추출된 텍스트가 없습니다.</div>'
+          + (errs.length?'<div class="kifrs-note" style="margin-top:6px"><b>OCR 오류</b><br>'+errs.join('<br>')+'</div>':'<div class="kifrs-note" style="margin-top:6px">OCR 대상이 없거나 실패했습니다. 파일 카드 상태를 확인하세요.</div>');
+        return;
+      }
+      var off=KIFRS.analyze(text);
+      var prompt=buildNormalizePrompt(text, off);
+      var timer=setInterval(function(){ var el=document.getElementById('kifrs-ai-timer'); if(el) el.textContent=((Date.now()-t0)/1000).toFixed(1)+'초'; },100);
+      box.innerHTML='<div class="kifrs-ai-load"><span class="kifrs-spin"></span> 🤖 Gemini 분석 중… <b id="kifrs-ai-timer">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="kifrs-note">API ① — 용어 정규화 + 후보 기준서 선정</div></div>';
+      return KIFRS.callGemini(prompt, {json:true, temperature:0.2, system:'당신은 K-IFRS(한국채택국제회계기준) 전문 회계사입니다. 실무 문서의 용어를 기준서 표준 용어로 정규화하고, 적용 기준서를 정확히 판단합니다.',
+          onRetry:function(k,mx){ if(box) box.innerHTML='<div class="kifrs-ai-load"><span class="kifrs-spin"></span> 🤖 모델 혼잡 — 재시도 '+k+'/'+mx+' <b id="kifrs-ai-timer">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="kifrs-note">API ① — 잠시 대기 후 재시도</div></div>'; }})
+        .then(function(txt){
+          clearInterval(timer); KIFRS._aiBusy=false;
+          var data=KIFRS.parseJsonResponse(txt);
+          if(!data){ box.innerHTML='<div class="kifrs-api-stat err">응답 JSON 파싱 실패 — 원문 일부:</div><pre class="kifrs-preview">'+esc(txt.slice(0,1500))+'</pre>'; return; }
+          KIFRS._lastAi=data;
+          box.innerHTML=renderAiResult(data, ((Date.now()-t0)/1000).toFixed(1));
+        });
+    }).catch(function(e){
+      KIFRS._aiBusy=false;
+      box.innerHTML='<div class="kifrs-api-stat err">❌ '+esc(e.message)+'</div>';
+    });
+  };
+  KIFRS.showLabelHelp = function(){
+    var ov=document.createElement('div');
+    ov.className='kifrs-modal-ov';
+    ov.innerHTML='<div class="kifrs-modal" style="max-width:500px;text-align:left">'
+      + '<div class="m-ttl" style="text-align:center">🔎 신뢰도 라벨 설명</div>'
+      + '<div class="kifrs-help-body">'
+      +   '<p>정밀 분석(API②)의 각 조문 항목은 <b>코드</b>가 3가지를 교차검증해 라벨을 붙입니다(AI 자기검증 편향 방지).</p>'
+      +   '<div class="kifrs-help-row"><span class="kifrs-cf kifrs-cf-g">🟢 검증완료</span><div>문단번호가 내장 DB에 <b>실존</b> + 기준서 <b>화이트리스트</b> 통과 + DB 해당 문단의 핵심 <b>키워드가 AI 결과와 충분히 겹침</b>. 비교적 신뢰할 수 있습니다.</div></div>'
+      +   '<div class="kifrs-help-row"><span class="kifrs-cf kifrs-cf-a">🟠 AI추천·미검증</span><div>문단번호는 맞지만 <b>키워드 겹침이 약해</b> 내용 부합이 불확실합니다. 담당자 확인을 권장합니다.</div></div>'
+      +   '<div class="kifrs-help-row"><span class="kifrs-cf kifrs-cf-r">🔴 확인불가</span><div>문단번호가 DB에 <b>없거나</b> 기준서 화이트리스트 <b>밖</b>입니다. AI가 잘못 인용했을 수 있어 신뢰하기 어렵습니다.</div></div>'
+      +   '<p class="kifrs-note">※ 검증은 “문장이 똑같은가”가 아니라 <b>“핵심 개념(키워드)이 겹치는가”</b>로 판정합니다 — 기준서 원문도 AI 요약도 모두 의역이라 문장 자체는 다를 수밖에 없기 때문입니다. 각 항목 하단 <b>검증 라인</b>에 문단 실존·화이트리스트·키워드 N/M이 표시됩니다.</p>'
+      + '</div>'
+      + '<div class="m-foot"><button class="kifrs-btn">확인</button></div></div>';
+    function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
+    ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
+    ov.querySelector('.m-foot button').addEventListener('click', close);
+    document.body.appendChild(ov);
   };
   function renderAiResult(data, secs){
-    var h='<div class="kifrs-an-head">🤖 AI 분석 결과 (API ①) <span>'+secs+'초 · '+esc(KIFRS.getModel())+'</span></div>';
+    var h='<div class="kifrs-an-head">🤖 AI 분석 결과 (API ①) <span>'+secs+'초 · '+esc(KIFRS.getModel())+'</span>'
+      + '<button class="kifrs-help-btn" onclick="window.KIFRS.showLabelHelp()">ⓘ 신뢰도 라벨 설명</button></div>';
     var cands=data.candidates||[];
     h+='<div class="kifrs-an-sec">후보 기준서 <span>'+cands.length+'종 · AI 판단</span></div>';
     if(!cands.length){ h+='<div class="kifrs-note">적용 기준서를 특정하지 못했습니다.</div>'; }
     else cands.forEach(function(c){
-      var no=String(c['기준서번호']||'').replace(/[^0-9]/g,'');
-      var valid=KIFRS.isValidStdNo(no);
+      var rawNo=String(c['기준서번호']||'').trim();
+      var std=KIFRS.findStandard(rawNo);
+      var valid=!!std;
+      var key=std?std.no:rawNo.replace(/[^0-9]/g,'');
       var issues=(c['관련쟁점']||[]).map(function(x){return esc(x);}).join(', ');
       h+='<div class="kifrs-an-std">'
-        + '<div class="kifrs-an-std-h"><span class="kifrs-std-no">'+esc(c['기준서번호']||'?')+'</span><span class="kifrs-an-name">'+esc(c['명칭']||'')+'</span><span class="kifrs-an-score">관련성 '+(c['관련성']||0)+'</span></div>'
+        + '<div class="kifrs-an-std-h"><span class="kifrs-std-no">'+esc(rawNo||'?')+'</span><span class="kifrs-an-name">'+esc(c['명칭']||(std?std.name:''))+'</span><span class="kifrs-an-score">관련성 '+(c['관련성']||0)+'</span></div>'
         + (c['사유']?'<div class="kifrs-an-para">'+esc(c['사유'])+'</div>':'')
         + (issues?'<div class="kifrs-an-para">쟁점: <span class="kifrs-an-hit">'+issues+'</span></div>':'')
-        + (valid?'':'<div class="kifrs-api-stat err" style="margin-top:4px">⚠ 내장 DB에 없는 기준서번호 — 6단계 검증 대상</div>')
+        + (valid
+            ? '<div style="margin-top:8px"><button class="kifrs-btn kifrs-btn-sm" onclick="window.KIFRS.runPreciseAnalysis(\''+key+'\')">🔬 정밀 분석</button></div>'
+              + '<div class="kifrs-precise-slot" id="kifrs-precise-'+key+'"></div>'
+            : '<div class="kifrs-api-stat err" style="margin-top:4px">⚠ 내장 DB에 없는 기준서번호 — 6단계 검증 대상</div>')
         + '</div>';
     });
     var nt=data.normalizedTerms||[];
@@ -6107,8 +6269,112 @@ function debugR1Compare(){
       h+='<div class="kifrs-an-sec">일반 업무 용어(분석 제외) <span>'+data.generalTerms.length+'개</span></div>';
       h+='<div class="kifrs-an-chips">'+data.generalTerms.map(function(g){return '<span class="kifrs-chip-unc">'+esc(g)+'</span>';}).join('')+'</div>';
     }
-    h+='<div class="kifrs-note" style="margin-top:12px">다음(API ②): 위 후보 기준서의 조문 범위만 정밀 분석(체크리스트·검토포인트·분개)합니다.</div>';
+    h+='<div class="kifrs-note" style="margin-top:12px">후보의 [🔬 정밀 분석]을 누르면 그 기준서 조문 범위로 상세 분석(API ②)합니다.</div>';
     return h;
+  }
+
+  // ── API ②: 특정 기준서 조문 범위 정밀 분석 ──
+  function buildPrecisePrompt(std, text){
+    var arts=(std.paragraphs||[]).map(function(p){ return p.no+' '+(p.topic||'')+': '+(p.summary||'').replace(/\s+/g,' ').slice(0,90); }).join('\n');
+    var excerpt=text.replace(/\s+/g,' ').slice(0,3000);
+    return [
+      '당신은 K-IFRS 전문 회계사입니다. 아래 문서를 기업회계기준서 제'+std.no+'호 「'+std.name+'」 기준으로 분석하세요.',
+      '',
+      '[문서 본문 발췌]\n'+excerpt,
+      '',
+      '[제'+std.no+'호 조문(문단) 범위 — 근거로만 사용하고, 조문번호는 반드시 이 목록에서 인용]\n'+arts,
+      '',
+      '[지시]',
+      '- 이 문서에 실제로 관련된 조문만 분석하세요(억지 매칭 금지).',
+      '- 분개예시는 해당하면 "(차) … / (대) …" 형식, 아니면 빈 문자열.',
+      '- 근거조문원문요약은 위 조문 범위에 근거하여 1~2문장.',
+      '- 반드시 아래 JSON 형식으로만 응답(자유 서술 금지):',
+      '{"items":[{"기준서번호":"'+std.no+'","조문번호":"","체크항목":"","검토포인트":"","분개예시":"","근거조문원문요약":""}]}'
+    ].join('\n');
+  }
+  KIFRS._preciseBusy=false;
+  KIFRS.runPreciseAnalysis = function(stdNo){
+    if(KIFRS._preciseBusy) return;
+    var std=KIFRS.findStandard(stdNo);
+    var no=std?std.no:String(stdNo).replace(/[^0-9]/g,'');
+    var box=document.getElementById('kifrs-precise-'+no) || document.getElementById('kifrs-precise');
+    if(!box) return;
+    box.style.display='block';
+    if(!std){ box.innerHTML='<div class="kifrs-api-stat err">내장 DB에 제'+esc(String(stdNo))+'호가 없습니다.</div>'; return; }
+    if(!KIFRS.getApiKey()){ box.innerHTML='<div class="kifrs-note">API 키가 필요합니다.</div>'; return; }
+    var text=gatherText();
+    if(!text){ box.innerHTML='<div class="kifrs-note">텍스트가 없습니다 — 먼저 [🤖 AI 기준서 분석]을 실행해 이미지 OCR을 진행하세요.</div>'; return; }
+    var prompt=buildPrecisePrompt(std, text);
+    KIFRS._preciseBusy=true;
+    var t0=Date.now();
+    var timer=setInterval(function(){ var el=document.getElementById('kifrs-pr-timer'); if(el) el.textContent=((Date.now()-t0)/1000).toFixed(1)+'초'; },100);
+    box.innerHTML='<div class="kifrs-ai-load"><span class="kifrs-spin"></span> 🔬 제'+esc(std.no)+'호 정밀 분석 중… <b id="kifrs-pr-timer">0.0초</b><div class="kifrs-note">API ② — 조문별 체크·검토포인트·분개</div></div>';
+    KIFRS.callGemini(prompt, {json:true, temperature:0.1, system:'당신은 K-IFRS 전문 회계사입니다. 지정된 기준서·조문 범위에 근거하여 분석하고, 반드시 JSON으로만 답합니다.',
+        onRetry:function(k,mx){ box.innerHTML='<div class="kifrs-ai-load"><span class="kifrs-spin"></span> 🔬 제'+esc(std.no)+'호 — 모델 혼잡 재시도 '+k+'/'+mx+' <b id="kifrs-pr-timer">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="kifrs-note">API ② — 잠시 대기 후 재시도</div></div>'; }})
+      .then(function(txt){
+        clearInterval(timer); KIFRS._preciseBusy=false;
+        var data=KIFRS.parseJsonResponse(txt);
+        if(!data){ box.innerHTML='<div class="kifrs-api-stat err">JSON 파싱 실패 — 원문 일부:</div><pre class="kifrs-preview">'+esc(txt.slice(0,1500))+'</pre>'; return; }
+        KIFRS._lastPrecise=KIFRS._lastPrecise||{}; KIFRS._lastPrecise[std.no]=data;
+        box.innerHTML=renderPreciseResult(data, std, ((Date.now()-t0)/1000).toFixed(1));
+      })
+      .catch(function(e){ clearInterval(timer); KIFRS._preciseBusy=false; box.innerHTML='<div class="kifrs-api-stat err">❌ '+esc(e.message)+'</div>'; });
+  };
+  // ── 6단계: 코드 기반 교차검증 (번호 실존 + 화이트리스트 + 키워드 교차검증) → 신뢰도 라벨 ──
+  KIFRS.verifyItem = function(stdNo, item){
+    var std0=KIFRS.findStandard(stdNo);
+    var no=std0?std0.no:String(stdNo).trim();
+    var artNo=String(item['조문번호']||'');
+    var reasons=[];
+    var wl=KIFRS.isValidStdNo(no);
+    if(!wl) reasons.push('기준서번호 화이트리스트 밖');
+    var para=artNo?KIFRS.findArticle(no, artNo):null;
+    if(!artNo) reasons.push('조문번호 없음');
+    else if(!para) reasons.push('문단번호 DB 불일치');
+    // 키워드 교차검증: DB 문단 키워드가 AI 결과 텍스트에 개념적으로 겹치는지(글자 아닌 개념)
+    var aiText=_normTerm((item['체크항목']||'')+' '+(item['검토포인트']||'')+' '+(item['근거조문원문요약']||''));
+    var kwTotal=0, kwHit=0, hit=[], miss=[];
+    if(para && para.keywords){
+      para.keywords.forEach(function(k){
+        var w=k.w||1; kwTotal+=w;
+        if(aiText.indexOf(_normTerm(k.t))>=0){ kwHit+=w; hit.push(k.t); } else miss.push(k.t);
+      });
+    }
+    var level;
+    if(!wl || !para){ level='red'; }
+    else if(kwTotal===0){ level='amber'; reasons.push('DB 문단에 등록된 키워드 없음(교차검증 불가)'); }
+    else if(kwHit>=2 || (kwHit/kwTotal)>=0.4){ level='green'; }
+    else { level='amber'; reasons.push('DB 문단 키워드와 겹침 약함('+kwHit+'/'+kwTotal+')'); }
+    return {level:level, para:para, whitelist:wl, kwTotal:kwTotal, kwHit:kwHit, hit:hit, miss:miss, reasons:reasons};
+  };
+  function _cfLabel(level){
+    if(level==='green') return '<span class="kifrs-cf kifrs-cf-g">🟢 검증완료</span>';
+    if(level==='amber') return '<span class="kifrs-cf kifrs-cf-a">🟠 AI추천·미검증</span>';
+    return '<span class="kifrs-cf kifrs-cf-r">🔴 확인불가</span>';
+  }
+  function renderPreciseResult(data, std, secs){
+    var items=data.items||[];
+    var head='<div class="kifrs-an-head">🔬 정밀 분석 — 제'+esc(std.no)+'호 '+esc(std.name)+' <span>'+secs+'초 · 항목 '+items.length+'개</span></div>';
+    if(!items.length){ return head+'<div class="kifrs-note">관련 조문 분석 결과가 없습니다.</div>'; }
+    var cnt={green:0,amber:0,red:0}, body='';
+    items.forEach(function(it){
+      var v=KIFRS.verifyItem(std.no, it); cnt[v.level]++;
+      var artNo=String(it['조문번호']||'');
+      var verifyLine='검증: 문단 '+(v.para?'실존':'불일치')+' · 화이트리스트 '+(v.whitelist?'OK':'밖')
+        + (v.kwTotal? ' · 키워드 '+v.kwHit+'/'+v.kwTotal+(v.hit.length?'('+v.hit.map(esc).join(',')+')':'') : ' · 키워드 없음')
+        + (v.reasons.length? ' · '+v.reasons.map(esc).join('; ') : '');
+      body+='<div class="kifrs-pr-item kifrs-cfb-'+v.level+'">'
+        + '<div class="kifrs-pr-h">문단 '+esc(artNo||'-')+' '+_cfLabel(v.level)+'</div>'
+        + (it['체크항목']?'<div class="kifrs-pr-row"><b>체크항목</b> '+esc(it['체크항목'])+'</div>':'')
+        + (it['검토포인트']?'<div class="kifrs-pr-row"><b>검토포인트</b> '+esc(it['검토포인트'])+'</div>':'')
+        + (it['근거조문원문요약']?'<div class="kifrs-pr-row kifrs-pr-src"><b>근거조문</b> '+esc(it['근거조문원문요약'])+'</div>':'')
+        + (it['분개예시']?'<div class="kifrs-art-jn">'+esc(it['분개예시'])+'</div>':'')
+        + '<div class="kifrs-pr-verify">'+verifyLine+'</div>'
+        + '</div>';
+    });
+    var summary='<div class="kifrs-pr-summary">🟢 검증완료 '+cnt.green+' · 🟠 미검증 '+cnt.amber+' · 🔴 확인불가 '+cnt.red+'</div>';
+    var foot='<div class="kifrs-disclaimer">본 결과는 참고용이며, 최종 판단은 담당자 확인이 필요합니다. (검증: 코드 기반 — 문단 실존·기준서 화이트리스트·문단 키워드 교차검증)</div>';
+    return head+summary+body+foot;
   }
 
   // ══ 유틸 ══
@@ -6394,7 +6660,9 @@ function debugR1Compare(){
       var bar=document.getElementById('kifrs-bar-'+rec.id);
       if(bar) bar.style.width=Math.round(p*100)+'%';
     }).then(function(text){
-      rec.text=text||''; rec.status='done'; renderFileList();
+      rec.text=text||''; rec.status='done';
+      if(rec.ext==='pdf' && rec.text.replace(/\s/g,'').length<20){ rec.needsOcr=true; }  // 스캔 PDF → AI 분석 시 OCR
+      renderFileList();
     }).catch(function(err){
       rec.error=(err&&err.message)?err.message:'추출 실패'; rec.status='error'; renderFileList();
     });
@@ -6493,8 +6761,19 @@ function debugR1Compare(){
     var from = rec.from ? ' · 📦 '+esc(rec.from) : '';
     if(rec.status==='waiting')    return '대기 중 · '+fmtSize(rec.size)+from;
     if(rec.status==='processing') return '텍스트 추출 중… · '+rec.ext.toUpperCase()+from;
-    if(rec.status==='done')       return rec.text.length.toLocaleString()+'자 추출 · '+fmtSize(rec.size)+from;
-    if(rec.status==='image')      return '이미지 · 텍스트 추출 생략(6단계 API 직접 분석) · '+fmtSize(rec.size)+from;
+    if(rec.status==='done'){
+      if(rec.needsOcr){
+        if(rec.ocrDone && rec.ocrText) return '스캔 PDF · AI 텍스트추출(OCR) '+rec.ocrText.length.toLocaleString()+'자 · '+fmtSize(rec.size)+from;
+        if(rec.ocrDone)                return '스캔 PDF · OCR 결과 없음'+(rec.ocrErr?'('+esc(rec.ocrErr)+')':'')+' · '+fmtSize(rec.size)+from;
+        return '스캔 PDF(텍스트 없음) · AI 분석 시 OCR · '+fmtSize(rec.size)+from;
+      }
+      return rec.text.length.toLocaleString()+'자 추출 · '+fmtSize(rec.size)+from;
+    }
+    if(rec.status==='image'){
+      if(rec.ocrDone && rec.ocrText) return '이미지 · AI 텍스트추출(OCR) '+rec.ocrText.length.toLocaleString()+'자 · '+fmtSize(rec.size)+from;
+      if(rec.ocrDone)                return '이미지 · OCR 결과 없음'+(rec.ocrErr?'('+esc(rec.ocrErr)+')':'')+' · '+fmtSize(rec.size)+from;
+      return '이미지 · AI 분석 시 텍스트 추출(OCR) · '+fmtSize(rec.size)+from;
+    }
     if(rec.status==='error')      return '오류: '+esc(rec.error)+from;
     return '';
   }
@@ -6511,10 +6790,15 @@ function debugR1Compare(){
     return '<span class="kifrs-file-badge '+b[0]+'">'+b[1]+'</span>';
   }
   function bodyHtml(rec){
-    if(rec.status==='image') return rec.dataUrl ? '<img class="kifrs-thumb" src="'+rec.dataUrl+'" alt="미리보기">' : '<span class="kifrs-note">미리보기 로딩 중…</span>';
+    if(rec.status==='image'){
+      var img = rec.dataUrl ? '<img class="kifrs-thumb" src="'+rec.dataUrl+'" alt="미리보기">' : '<span class="kifrs-note">미리보기 로딩 중…</span>';
+      if(rec.ocrText){ var t=rec.ocrText.length>8000?rec.ocrText.slice(0,8000)+'\n\n…(일부)':rec.ocrText; return img+'<div class="kifrs-note" style="margin-top:8px"><b>OCR 추출 텍스트</b></div><pre class="kifrs-preview">'+esc(t)+'</pre>'; }
+      return img;
+    }
     if(rec.status==='done'){
       var t=rec.text||'';
-      if(!t) return '<span class="kifrs-note">추출된 텍스트가 없습니다 (스캔본일 수 있어요 — 이미지/ PDF변환 권장).</span>';
+      if(!t && rec.ocrText){ var ot=rec.ocrText.length>8000?rec.ocrText.slice(0,8000)+'\n\n…(일부)':rec.ocrText; return '<div class="kifrs-note"><b>OCR 추출 텍스트</b></div><pre class="kifrs-preview">'+esc(ot)+'</pre>'; }
+      if(!t) return '<span class="kifrs-note">추출된 텍스트가 없습니다 — 스캔 PDF로 보입니다. [🤖 AI 기준서 분석] 시 자동 OCR합니다.</span>';
       var clip = t.length>8000 ? t.slice(0,8000)+'\n\n…(미리보기 일부만 표시 · 전체 '+t.length.toLocaleString()+'자)' : t;
       return '<pre class="kifrs-preview">'+esc(clip)+'</pre>';
     }
@@ -6554,7 +6838,7 @@ function debugR1Compare(){
     if(info) info.textContent = files.length ? ('추출 완료 '+done+'건 · 이미지 '+imgs+'건'+(busy?' · 처리 중…':'')) : '아직 업로드된 파일이 없습니다.';
     if(btn) btn.disabled = busy || (done+imgs===0);
     var aiBtn=document.getElementById('kifrs-ai-btn');
-    if(aiBtn) aiBtn.disabled = busy || (done===0);  // AI 분석은 텍스트 문서가 있어야
+    if(aiBtn) aiBtn.disabled = busy || (done+imgs===0);  // 텍스트 문서 또는 이미지(OCR)면 가능
   }
 
   // K-IFRS 탭 진입 시 호출 (switchTab('kifrs') → 여기로) — 정적 골격은 1회만 구성
@@ -6600,6 +6884,7 @@ function debugR1Compare(){
       +   '<span class="kifrs-note" id="kifrs-ready-info">아직 업로드된 파일이 없습니다.</span>'
       + '</div>'
       + '<div id="kifrs-ai" class="kifrs-analysis" style="display:none"></div>'
+      + '<div id="kifrs-precise" class="kifrs-analysis" style="display:none"></div>'
       + '<div id="kifrs-analysis" class="kifrs-analysis" style="display:none"></div>'
       + '<div class="kifrs-result-head" style="margin-top:26px">'
       +   '<div class="kifrs-section-title" style="margin:0">🗄 내장 K-IFRS 기준서 DB</div>'
