@@ -6723,38 +6723,66 @@ function debugR1Compare(){
     var auditSlot='<div class="kifrs-precise-slot" id="kifrs-audit-'+std.no+'"></div>';
     return head+summary+body+auditSlot+foot;
   }
-  // ── 최종 검증: AI 감사인이 각 검토포인트를 "실제 문서 내용"에 적용해 충족 여부 판단 ──
-  function buildAuditPrompt(std, items, docText){
-    var doc=_docExcerpt(docText||'', 9000);
-    var lines=items.map(function(it,idx){
-      var artNo=String(it['조문번호']||'');
-      var para=KIFRS.findArticle(std.no, artNo);
-      var src=para ? ((para.summary||'')+' / 원문: '+(para.excerpt||'')).replace(/\s+/g,' ').slice(0,260) : '(원문 미확보)';
-      return '['+(idx+1)+'] 조문 '+artNo
-        + '\n  · 체크항목: '+(it['체크항목']||'')
-        + '\n  · 검토포인트(문서에 적용할 질문): '+(it['검토포인트']||'')
-        + '\n  · (참고)기준서 조문 원문: '+src;
+  // ── 최종 검증(3단계 근거기반 감사): 근거추출 → 코드검증 → 판정 → 교차검증 ──
+  function _aopts(asig, sys, onRetry){ return {json:true, temperature:0, signal:asig, system:sys, onRetry:onRetry}; }
+  function _alignByArt(list, art, idx){
+    if(!list||!list.length) return null;
+    art=String(art||'').trim();
+    for(var i=0;i<list.length;i++){ if(String(list[i]['조문번호']||'').trim()===art) return list[i]; }
+    return list[idx]||null;
+  }
+  // 인용이 문서에 실제로 존재하는가(공백·대소문자 무시한 verbatim 8자 이상 일치) — 할루시네이션 차단
+  function _quoteInDoc(q, docNorm){ var n=_normTerm(q||''); return n.length>=8 && docNorm.indexOf(n)>=0; }
+  // 1단계: 문서에서 검토포인트 관련 '원문 그대로' 인용만 추출
+  function buildEvidencePrompt(std, items, docText){
+    var doc=_docExcerpt(docText||'', 16000);
+    var lines=items.map(function(it,idx){ return '['+(idx+1)+'] 조문 '+String(it['조문번호']||'')+' · 검토포인트: '+(it['검토포인트']||''); }).join('\n');
+    return [
+      '당신은 회계 감사 보조원입니다. 아래 [문서]에서 각 검토포인트와 직접 관련된 부분을 문서에 적힌 그대로(원문 verbatim) 인용만 추출하세요.',
+      '⚠ 절대 규칙: 요약·해석·추측 금지. 문서에 글자 그대로 존재하는 문장/구절만 한 글자도 바꾸지 말고 복사. 관련 내용이 없으면 인용을 빈 배열로 두고 근거없음=true.',
+      '',
+      '[문서]\n'+doc,
+      '',
+      '[검토포인트]\n'+lines,
+      '',
+      '각 항목당 가장 관련 깊은 인용 1~3개. 반드시 아래 JSON으로만:',
+      '{"evidence":[{"조문번호":"","인용":["문서원문구절"],"근거없음":false}]}'
+    ].join('\n');
+  }
+  // 2단계: 코드로 검증된 근거만 가지고 판정
+  function buildJudgePrompt(std, itemsEv){
+    var lines=itemsEv.map(function(e,idx){
+      var q=e.quotes.length ? e.quotes.map(function(x){return '「'+x+'」';}).join(' / ') : '(검증된 근거 없음)';
+      return '['+(idx+1)+'] 조문 '+String(e.it['조문번호']||'')+'\n  · 검토포인트: '+(e.it['검토포인트']||'')+'\n  · 검증된 문서 근거: '+q;
     }).join('\n\n');
     return [
-      '당신은 깐깐한 회계 감사인입니다. 아래 [검토 대상 문서]를 읽고, 1차 분석이 도출한 각 [검토포인트]를 그 문서에 실제로 적용하여 감사하세요.',
-      '⚠ 핵심: "검토포인트가 기준서 원문과 맞는가"(그건 당연)가 아니라, "이 문서의 실제 내용·사실관계가 그 검토포인트(요건)를 충족하는가"를 판단하는 것입니다. 반드시 문서 내용을 근거로 판단하세요.',
+      '당신은 깐깐한 회계 감사인입니다. 각 검토포인트를, 아래 [검증된 문서 근거](문서에 실제 존재함이 코드로 확인된 인용)만 사용해 판정하세요.',
+      '⚠ 절대 규칙: 제시된 근거 외의 외부 지식·일반론·추측 사용 금지. 근거에 없는 사실을 단정하지 마세요.',
       '',
-      '[검토 대상 문서 발췌]\n'+doc,
+      '제'+std.no+'호 「'+std.name+'」',
+      lines,
       '',
-      '[기업회계기준서 제'+std.no+'호 「'+std.name+'」 — 검토 항목]\n'+lines,
+      '[판정] 충족: 근거가 충족을 명확히 뒷받침 / 미흡: 근거가 위반·미달·누락을 보여줌 / 확인필요: 근거가 없거나 불충분해 판단 불가 / 해당없음: 근거상 이 거래에 요건 미적용이 분명',
+      '⚠ "검증된 근거 없음"이면 충족·미흡 판정 금지 → 반드시 확인필요.',
+      '확인필요면 판단불가사유에 "무엇이 없어서/불충분해 판단 못 하는지 + 사용자가 후속 확인할 사항"을 구체적으로. 감사의견은 제시된 근거를 인용해 1~2문장.',
+      '반드시 아래 JSON으로만:',
+      '{"audited":[{"조문번호":"","판정":"충족|미흡|확인필요|해당없음","감사의견":"","보완사항":"","판단불가사유":""}]}'
+    ].join('\n');
+  }
+  // 3단계: 2차 검토자가 1차 판정이 근거를 넘어서지 않았는지 재검증
+  function buildAuditVerifyPrompt(std, judgedEv){
+    var lines=judgedEv.map(function(e,idx){
+      var q=e.quotes.length ? e.quotes.map(function(x){return '「'+x+'」';}).join(' / ') : '(없음)';
+      return '['+(idx+1)+'] 조문 '+String(e.it['조문번호']||'')+'\n  · 검토포인트: '+(e.it['검토포인트']||'')+'\n  · 검증된 근거: '+q+'\n  · 1차 판정: '+(e.judg['판정']||'')+'\n  · 1차 감사의견: '+(e.judg['감사의견']||'');
+    }).join('\n\n');
+    return [
+      '당신은 1차 감사 결과를 검증하는 2차 검토자입니다. 각 판정이 "제시된 근거만으로" 타당한지 보수적으로 재검증하세요.',
+      '다음 중 하나라도 해당하면 "하향": ① 감사의견이 근거에 없는 내용을 단정(과잉판단) ② 근거가 부족·불명확한데 충족 또는 미흡으로 단정 ③ 근거와 판정이 논리적으로 불일치. 문제 없으면 "유지".',
       '',
-      '[판정 기준]',
-      '- 충족: 문서 내용이 해당 요건을 명확히 충족함(근거 조항/사실 제시 가능)',
-      '- 미흡: 문서가 요건을 충족하지 못하거나 누락·위반·불충분',
-      '- 확인필요: 문서 정보만으로는 충족 여부 판단 불가(추가 자료·수치 필요)',
-      '- 해당없음: 이 문서의 거래에는 해당 요건이 적용되지 않음',
+      lines,
       '',
-      '[지시]',
-      '- 감사의견은 반드시 문서의 구체적 내용(어느 조항/어떤 사실)을 근거로 2~3문장.',
-      '- 보완사항: 미흡·확인필요면 무엇을 보완·확인해야 하는지 1~2문장, 충족·해당없음이면 빈 문자열.',
-      '- 막연히 "부합/충족"으로 몰지 말고, 문서에 근거가 없으면 확인필요/미흡으로 보수적으로 판정.',
-      '- 반드시 아래 JSON으로만 응답(항목 순서대로):',
-      '{"audited":[{"조문번호":"","판정":"충족|미흡|확인필요|해당없음","감사의견":"","보완사항":""}]}'
+      '하향이면 사유에 "왜 확인필요로 낮춰야 하는지 + 후속 확인사항". 반드시 아래 JSON으로만:',
+      '{"verified":[{"조문번호":"","결과":"유지|하향","사유":""}]}'
     ].join('\n');
   }
   KIFRS._auditBusy={};   // 기준서별 → 동시 감사 허용
@@ -6767,6 +6795,9 @@ function debugR1Compare(){
     if(!items.length){ slot.innerHTML='<div class="kifrs-note">먼저 정밀 분석을 실행하세요.</div>'; return; }
     if(!KIFRS.getApiKey()){ slot.innerHTML='<div class="kifrs-note">API 키가 필요합니다.</div>'; return; }
     var _rg=KIFRS.rateGuard(); if(!_rg.ok){ showRateWaitPopup(_rg.waitSec); return; }
+    var docText=gatherText();
+    if(!docText){ slot.innerHTML='<div class="kifrs-note">문서 텍스트가 없습니다 — 먼저 분석을 실행하세요.</div>'; return; }
+    var docNorm=_normTerm(docText);
     KIFRS._auditBusy[no]=true;
     var ctl=(typeof AbortController!=='undefined')?new AbortController():null;
     KIFRS._auditCtl[no]=ctl; var asig=ctl?ctl.signal:undefined;
@@ -6774,18 +6805,51 @@ function debugR1Compare(){
     var timer=setInterval(function(){ var el=document.getElementById('kifrs-audit-timer-'+no); if(el) el.textContent=((Date.now()-t0)/1000).toFixed(1)+'초'; },100);
     function afin(){ clearInterval(timer); delete KIFRS._auditBusy[no]; delete KIFRS._auditCtl[no]; }
     var auCancel=_cancelBtn("window.KIFRS.cancelAudit('"+no+"')", '최종 검증 중단');
-    slot.innerHTML=_stepper(6)+'<div class="kifrs-ai-load"><span class="kifrs-spin"></span> ✅ AI감사인 검토 중… <b id="kifrs-audit-timer-'+no+'">0.0초</b><div class="kifrs-note">각 검토포인트를 실제 문서 내용에 적용해 충족 여부 판단</div>'+auCancel+'</div>';
-    KIFRS.callGemini(buildAuditPrompt(std, items, gatherText()), {json:true, temperature:0, signal:asig, system:'당신은 깐깐한 회계 감사인입니다. 제공된 문서 내용에 근거하여 각 검토포인트의 충족 여부를 판단하고, 근거 없이 충족으로 몰지 않으며, 반드시 JSON으로만 답합니다.',
-        onRetry:function(k,mx){ slot.innerHTML=_stepper(6)+'<div class="kifrs-ai-load"><span class="kifrs-spin"></span> ✅ AI감사 재검토 — 모델 혼잡 재시도 '+k+'/'+mx+auCancel+'</div>'; }})
-      .then(function(txt){
-        afin();
-        var data=KIFRS.parseJsonResponse(txt);
-        if(!data||!data.audited){ slot.innerHTML='<div class="kifrs-api-stat err">감사 응답 파싱 실패 — 원문:</div><pre class="kifrs-preview">'+esc((txt||'').slice(0,1200))+'</pre>'; return; }
-        slot.innerHTML=renderFinalAudit(std, items, data.audited, ((Date.now()-t0)/1000).toFixed(1));
+    function stage(t, sub){ slot.innerHTML=_stepper(6)+'<div class="kifrs-ai-load"><span class="kifrs-spin"></span> ✅ AI감사 '+t+' <b id="kifrs-audit-timer-'+no+'">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="kifrs-note">'+sub+'</div>'+auCancel+'</div>'; }
+    // 1단계: 근거 추출
+    stage('1/3 근거 추출 중…', '문서에서 검토포인트 관련 원문을 그대로(verbatim) 추출');
+    KIFRS.callGemini(buildEvidencePrompt(std, items, docText), _aopts(asig, '문서에 실제로 존재하는 원문만 그대로 인용 추출. 요약·추측 금지. JSON만.', function(k,mx){ stage('1/3 근거추출 재시도 '+k+'/'+mx, '모델 혼잡 — 대기 후 재시도'); }))
+      .then(function(t1){
+        var ev=KIFRS.parseJsonResponse(t1); var evList=(ev&&ev.evidence)||[];
+        // 코드 검증: AI가 댄 인용이 문서에 실재하는지(할루시네이션 제거)
+        var itemsEv=items.map(function(it,i){
+          var e=_alignByArt(evList, it['조문번호'], i);
+          var quotes=(e&&e['인용'])||[]; var verified=[], halluc=0;
+          quotes.forEach(function(q){ if(_quoteInDoc(q, docNorm)) verified.push(q); else halluc++; });
+          return { it:it, quotes:verified, halluc:halluc };
+        });
+        // 2단계: 검증된 근거로만 판정
+        stage('2/3 판정 중…', '코드로 검증된 근거만 사용해 충족 여부 판단(근거 없으면 판단불가)');
+        return KIFRS.callGemini(buildJudgePrompt(std, itemsEv), _aopts(asig, '제시된 검증 근거만 사용. 외부지식·추측 금지. 근거 없으면 확인필요. JSON만.', function(k,mx){ stage('2/3 판정 재시도 '+k+'/'+mx, '모델 혼잡 — 대기 후 재시도'); }))
+          .then(function(t2){
+            var jd=KIFRS.parseJsonResponse(t2); var jList=(jd&&jd.audited)||[];
+            var judgedEv=itemsEv.map(function(e,i){
+              var j=_alignByArt(jList, e.it['조문번호'], i)||{};
+              var verd=j['판정']||'확인필요';
+              if(!e.quotes.length && (verd==='충족'||verd==='미흡')){ verd='확인필요'; j['판단불가사유']='검증된 문서 근거가 없어 자동 보류. '+(j['판단불가사유']||''); }
+              j['판정']=verd;
+              return { it:e.it, quotes:e.quotes, halluc:e.halluc, judg:j };
+            });
+            // 3단계: 교차검증(과잉판단 하향)
+            stage('3/3 교차검증 중…', '판정이 근거를 넘어서지 않는지 2차 검토자가 재검증');
+            return KIFRS.callGemini(buildAuditVerifyPrompt(std, judgedEv), _aopts(asig, '1차 판정이 근거만으로 타당한지 보수적으로 재검증. 과잉판단이면 하향. JSON만.', function(k,mx){ stage('3/3 교차검증 재시도 '+k+'/'+mx, '모델 혼잡 — 대기 후 재시도'); }))
+              .then(function(t3){
+                afin();
+                var vf=KIFRS.parseJsonResponse(t3); var vList=(vf&&vf.verified)||[];
+                var audited=judgedEv.map(function(e,i){
+                  var v=_alignByArt(vList, e.it['조문번호'], i)||{}; var j=e.judg;
+                  var verd=j['판정']||'확인필요'; var downReason='';
+                  if(String(v['결과']||'')==='하향' && verd!=='확인필요'){ downReason=v['사유']||'2차 검증에서 근거 부족으로 하향'; verd='확인필요'; }
+                  return { '조문번호':e.it['조문번호']||'', '판정':verd, '감사의견':j['감사의견']||'', '보완사항':j['보완사항']||'',
+                    '판단불가사유':(downReason?downReason+' ':'')+(j['판단불가사유']||''), '근거인용':e.quotes, '환각제외':e.halluc, '교차':String(v['결과']||'유지') };
+                });
+                slot.innerHTML=renderFinalAudit(std, items, audited, ((Date.now()-t0)/1000).toFixed(1));
+              });
+          });
       })
       .catch(function(e){ afin();
         if(_isAbort(e)){ slot.innerHTML='<div class="kifrs-api-stat">⏹ 최종 검증을 중단했습니다.</div><div style="margin-top:8px"><button class="kifrs-btn kifrs-btn-sm" onclick="window.KIFRS.runFinalAudit(\''+no+'\')">🔄 다시 최종 검증</button></div>'; return; }
-        slot.innerHTML='<div class="kifrs-api-stat err">❌ '+esc(e.message)+'</div>'; });
+        slot.innerHTML='<div class="kifrs-api-stat err">❌ '+esc(e.message)+'</div><div style="margin-top:8px"><button class="kifrs-btn kifrs-btn-sm" onclick="window.KIFRS.runFinalAudit(\''+no+'\')">🔄 다시 시도</button></div>'; });
   };
   KIFRS.cancelAudit=function(no){ var c=KIFRS._auditCtl&&KIFRS._auditCtl[no]; if(c){ try{c.abort();}catch(e){} } };
   function _auditVerd(v){
@@ -6804,17 +6868,30 @@ function debugR1Compare(){
       cnt[verd]++;
       var vm=_auditVerd(verd);
       var code=KIFRS.verifyItem(std.no, it);   // 코드 신뢰도(존재성)는 보조 표시
+      var quotes=a['근거인용']||[];
+      var quoteHtml = quotes.length
+        ? '<div class="kifrs-pr-row kifrs-pr-src"><b>문서 근거(검증됨)</b> '+quotes.map(function(q){return '“'+esc(q)+'”';}).join(' &nbsp;/&nbsp; ')+'</div>'
+        : '<div class="kifrs-pr-row" style="color:#6b7280"><b>문서 근거</b> 검증된 인용 없음</div>';
+      var unable = (verd==='확인필요' && a['판단불가사유'] && String(a['판단불가사유']).trim())
+        ? '<div class="kifrs-pr-row" style="color:#b45309"><b>❓ 판단불가 사유 · 후속확인</b> '+esc(a['판단불가사유'])+'</div>'
+        : '';
+      var hallucNote = (a['환각제외']>0)
+        ? '<div class="kifrs-pr-verify">⚠ AI가 제시한 근거 '+a['환각제외']+'건은 문서에서 확인되지 않아 제외함(할루시네이션 차단)</div>'
+        : '';
       return '<div class="kifrs-pr-item kifrs-cfb-'+vm.cfb+'">'
         + '<div class="kifrs-pr-h">문단 '+esc(artNo||'-')+' <span class="kifrs-cf kifrs-cf-'+vm.cls+'">'+vm.ico+' '+esc(verd)+'</span>'
+          + (a['교차']==='하향'?' <span class="kifrs-audit-tag">2차검증 하향</span>':'')
           + (code.level!=='green'?' <span class="kifrs-audit-tag">코드검증 '+(code.level==='red'?'확인불가':'미검증')+'</span>':'')+'</div>'
-        + (it['체크항목']?'<div class="kifrs-pr-row"><b>체크항목</b> '+esc(it['체크항목'])+'</div>':'')
         + (it['검토포인트']?'<div class="kifrs-pr-row"><b>검토포인트</b> '+esc(it['검토포인트'])+'</div>':'')
-        + (a['감사의견']?'<div class="kifrs-pr-row kifrs-pr-src"><b>AI감사의견</b> '+esc(a['감사의견'])+'</div>':'')
-        + (a['보완사항']?'<div class="kifrs-pr-row" style="color:#b45309"><b>보완·확인</b> '+esc(a['보완사항'])+'</div>':'')
+        + quoteHtml
+        + (a['감사의견']?'<div class="kifrs-pr-row"><b>AI감사의견</b> '+esc(a['감사의견'])+'</div>':'')
+        + (verd!=='확인필요' && a['보완사항']?'<div class="kifrs-pr-row" style="color:#b45309"><b>보완·확인</b> '+esc(a['보완사항'])+'</div>':'')
+        + unable + hallucNote
         + '</div>';
     }).join('');
-    var summary='<div class="kifrs-pr-summary">✅ 충족 '+cnt['충족']+' · ❗ 미흡 '+cnt['미흡']+' · ⚠️ 확인필요 '+cnt['확인필요']+' · ➖ 해당없음 '+cnt['해당없음']+'</div>';
-    return '<div class="kifrs-an-head" style="margin-top:8px;border-top:1px solid var(--border);padding-top:10px">✅ AI감사 결과 <span>'+secs+'초 · 검토포인트를 문서에 적용</span></div>'+summary+rows;
+    var summary='<div class="kifrs-pr-summary">✅ 충족 '+cnt['충족']+' · ❗ 미흡 '+cnt['미흡']+' · ⚠️ 확인필요(판단불가) '+cnt['확인필요']+' · ➖ 해당없음 '+cnt['해당없음']+'</div>';
+    var note='<div class="kifrs-disclaimer">3단계 감사(①근거추출 → 코드로 인용 실존 검증 → ②검증근거로만 판정 → ③교차검증). 모든 판정은 <b>문서에서 코드로 검증된 인용</b>에만 근거하며, 근거가 없거나 불충분한 항목은 임의 판단 없이 <b>판단불가(확인필요)</b>로 표기하고 후속확인을 안내합니다.</div>';
+    return '<div class="kifrs-an-head" style="margin-top:8px;border-top:1px solid var(--border);padding-top:10px">✅ AI감사 결과 <span>'+secs+'초 · 3단계 근거기반 검증</span></div>'+summary+rows+note;
   }
 
   // ── 7단계: 증빙 PDF 다운로드 (브라우저 인쇄 → "PDF로 저장") ──
@@ -7456,6 +7533,200 @@ function debugR1Compare(){
   window.KIFRS = KIFRS;
 })();
 
+</script>
+
+<!-- ══ 브레이크타임: 메인 페이지 도트 캐릭터 (독립 모듈 · .kifrs-char- 격리) ══ -->
+<style>
+.kifrs-char-stage{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:20;}
+.kifrs-char{position:absolute;width:64px;height:64px;transform:translate(-50%,-100%);will-change:left,top;}
+.kifrs-char-sprite{position:absolute;left:0;bottom:6px;width:64px;height:64px;image-rendering:pixelated;transform-origin:50% 100%;}
+.kifrs-char-shadow{position:absolute;left:50%;bottom:2px;width:34px;height:9px;background:rgba(0,0,0,.22);border-radius:50%;filter:blur(1px);transform:translateX(-50%);}
+.kifrs-char-emote{position:absolute;left:50%;top:-12px;transform:translateX(-50%);font-size:15px;line-height:1;white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.3);pointer-events:none;}
+.kifrs-char-name{position:absolute;left:50%;top:-28px;transform:translateX(-50%);font-size:8.5px;font-weight:700;color:#555;background:rgba(255,255,255,.72);padding:1px 5px;border-radius:8px;white-space:nowrap;}
+.kifrs-char-bubble{position:absolute;left:50%;top:-30px;transform:translateX(-50%);background:#fff;border:1px solid #d8dee6;border-radius:10px;padding:3px 9px;font-size:10px;color:#333;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.13);display:none;pointer-events:none;animation:kifrs-char-pop .18s ease-out;}
+.kifrs-char-bubble::after{content:'';position:absolute;left:50%;bottom:-5px;transform:translateX(-50%);border:5px solid transparent;border-top-color:#fff;border-bottom:0;}
+@keyframes kifrs-char-pop{from{transform:translateX(-50%) scale(.6);opacity:0;}to{transform:translateX(-50%) scale(1);opacity:1;}}
+.kifrs-char-panel{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.9);border:1px solid #dde3ea;border-radius:10px;padding:8px 11px;font-size:11px;color:#333;pointer-events:auto;box-shadow:0 2px 8px rgba(0,0,0,.08);z-index:5000;min-width:128px;}
+.kifrs-char-panel .ttl{font-size:10px;font-weight:700;color:#8a93a0;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.kifrs-char-panel .row{display:flex;justify-content:space-between;gap:12px;padding:2px 0;}
+.kifrs-char-panel .nm{font-weight:700;color:#2c3e50;}
+.kifrs-char-panel .st{color:#5a6a7a;}
+.kifrs-char-x{cursor:pointer;color:#bbb;font-weight:700;padding:0 2px;line-height:1;}
+.kifrs-char-x:hover{color:#e05050;}
+.kifrs-char-log{position:absolute;bottom:8px;left:10px;font-size:10px;color:#7a8794;background:rgba(255,255,255,.62);border-radius:8px;padding:5px 9px;z-index:5000;max-width:62%;line-height:1.55;pointer-events:none;}
+.kifrs-char-restore{position:absolute;bottom:10px;right:10px;background:rgba(255,255,255,.9);border:1px solid #dde3ea;border-radius:18px;padding:5px 12px;font-size:12px;cursor:pointer;pointer-events:auto;z-index:5001;box-shadow:0 2px 8px rgba(0,0,0,.08);display:none;}
+.kifrs-char-restore:hover{background:#eef4fb;}
+</style>
+<script>
+(function(){
+  if(window.__kifrsCharsLoaded) return; window.__kifrsCharsLoaded=true;
+  var PAL={'_':null,'B':'#111','Sk':'#F0C8A0','Sl':'#FDDCB5','Sd':'#D4A878',
+    'Ha':'#5C3A1E','Hl':'#7A5030','Hd':'#3D2410','Hb':'#141418','Hbl':'#222228',
+    'Hm':'#2C1810','Hml':'#3D2416','Cd':'#C8B898','Cl':'#D8CCAC','Mt':'#A8D8C8','Ml':'#C0E8D8',
+    'Jn':'#4A6A8A','Jl':'#5A7A9A','Dr':'#3A3A40','Dl':'#4A4A52','Dd':'#2A2A30','Bt':'#2A2018',
+    'Nv':'#1B2A4A','Nl':'#2A3D66','Nd':'#0F1B30','Wh':'#ECF0F1','Rd':'#B03028','Rl':'#D04038',
+    'Sh':'#2C2016','Shl':'#3D3020','Sn':'#E8E0D8','Snl':'#C8C0B0','Hy':'#1A1018'};
+  var SP={
+    sujin:'_,_,_,_,_,Ha,Ha,Ha,Ha,Ha,Ha,_,_,_,_,_,_,_,_,_,Ha,Hl,Hl,Hl,Hl,Hl,Hl,Ha,_,_,_,_,_,_,_,Ha,Hd,Hl,Hl,Hl,Hl,Hl,Hl,Hd,Ha,_,_,_,_,_,_,Ha,Hl,Sk,Sl,Sl,Sl,Sl,Sk,Hl,Ha,_,_,_,_,_,_,Ha,Sk,B,Sl,Sl,Sl,Sl,B,Sk,Ha,_,_,_,_,_,_,Ha,_,Sk,Sk,Sd,Sd,Sk,Sk,_,Ha,_,_,_,_,_,_,_,_,_,Sk,Sk,Sk,Sk,_,_,_,_,_,_,_,_,_,_,Cd,Cd,Mt,Ml,Ml,Mt,Cd,Cd,_,_,_,_,_,_,_,Cd,Cl,Cd,Mt,Mt,Mt,Mt,Cd,Cl,Cd,_,_,_,_,_,Sd,Cd,Cd,Cl,Cd,Cd,Cd,Cl,Cd,Cd,Sd,_,_,_,_,_,_,Cd,Cd,Cd,Cd,Cd,Cd,Cd,_,_,_,_,_,_,_,_,_,Jn,Jl,Jn,Jn,Jl,Jn,_,_,_,_,_,_,_,_,_,Jn,Jn,_,_,Jn,Jn,_,_,_,_,_,_,_,_,Sk,Sk,Sk,_,_,Sk,Sk,Sk,_,_,_,_,_,_,_,_,Sn,Snl,Sn,_,_,Sn,Snl,Sn,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_',
+    jiyeon:'_,_,_,_,_,Hb,Hb,Hb,Hb,Hb,Hb,_,_,_,_,_,_,_,_,_,Hb,Hbl,Hbl,Hbl,Hbl,Hbl,Hbl,Hb,_,_,_,_,_,_,_,Hb,Hbl,Hbl,Hbl,Hbl,Hbl,Hbl,Hbl,Hbl,Hb,_,_,_,_,_,Hb,Hbl,Hbl,Sk,Sl,Sl,Sl,Sl,Sk,Hbl,Hbl,Hb,_,_,_,_,Hb,Hbl,Sk,B,Sl,Sl,Sl,Sl,B,Sk,Hbl,Hb,_,_,_,_,Hb,Hbl,_,Sk,Sk,Sd,Sd,Sk,Sk,_,Hbl,Hb,_,_,_,_,Hb,Hbl,_,_,Sk,Sk,Sk,Sk,_,_,Hbl,Hb,_,_,_,_,Hb,Hbl,Dr,Dr,Wh,Wh,Wh,Dr,Dr,_,Hbl,Hb,_,_,_,_,Hb,Dr,Dl,Dr,Wh,Wh,Dr,Dr,Dl,Dr,Hb,_,_,_,_,_,Sd,Hb,Dr,Dl,Bt,Bt,Dr,Dl,Dr,Hb,Sd,_,_,_,_,_,_,Hb,Dr,Dr,Dd,Dr,Dr,Dd,Dr,Hb,_,_,_,_,_,_,_,Hb,_,Dr,Dr,Dr,Dr,Dr,_,Hb,_,_,_,_,_,_,_,Hb,_,Sk,Sk,_,_,Sk,Sk,Hb,_,_,_,_,_,_,_,Hb,Sk,Sk,_,_,_,_,Sk,Sk,Hb,_,_,_,_,_,_,_,Hy,Hy,_,_,_,_,Hy,Hy,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_',
+    minsu:'_,_,_,_,_,Hm,Hm,Hm,Hm,Hm,_,_,_,_,_,_,_,_,_,_,Hm,Hml,Hm,Hm,Hm,Hml,Hm,_,_,_,_,_,_,_,_,_,Hm,Hm,Hm,Hm,Hm,Hm,Hm,_,_,_,_,_,_,_,_,_,Hm,Sk,Sl,Sl,Sl,Sl,Sk,Hm,_,_,_,_,_,_,_,_,_,Sk,B,Sl,Sl,B,Sk,_,_,_,_,_,_,_,_,_,_,Sk,Sk,Sd,Sd,Sk,Sk,_,_,_,_,_,_,_,_,_,_,_,Sk,Sk,Sk,Sk,_,_,_,_,_,_,_,_,_,_,_,Nv,Nv,Wh,Rd,Wh,Nv,Nv,_,_,_,_,_,_,_,_,Nv,Nl,Nv,Wh,Rl,Wh,Nv,Nl,Nv,_,_,_,_,_,_,Sd,Nv,Nv,Nl,Nv,Rd,Nv,Nl,Nv,Nv,Sd,_,_,_,_,_,_,Nv,Nv,Nd,Rd,Nd,Nv,Nv,_,_,_,_,_,_,_,_,_,_,Nv,Nv,Nv,Nv,Nv,_,_,_,_,_,_,_,_,_,_,Nv,Nv,_,_,Nv,Nv,_,_,_,_,_,_,_,_,_,Sk,Sk,Sk,_,_,Sk,Sk,Sk,_,_,_,_,_,_,_,_,Sh,Shl,Sh,_,_,Sh,Shl,Sh,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_'
+  };
+  var NAMES={sujin:'수진',jiyeon:'지연',minsu:'민수'};
+  // 말풍선 멘트(회사원 고충) — 캐릭터별 12개
+  var LINES={
+    sujin:['퇴근까지 아직도 한참 남았네…','커피 없으면 진짜 못 버텨 ☕','점심 뭐 먹지? 이게 제일 어려워','월급은 통장을 그냥 스쳐 지나가','이 보고서 누가 보긴 하나…','어깨가 돌처럼 뭉쳤어 ㅠㅠ','금요일아 어디쯤 오고 있니','연차 쓰고 싶다… 진짜로','엑셀 수식 또 깨졌어 하…','오늘도 정시 퇴근은 글렀다','자리에 앉은 지 5시간째 🪑','카페인으로 굴러가는 인생'],
+    jiyeon:['또 야근인가… 하…','회의가 또 회의를 부른다','메일함이 줄어들질 않아','퇴근하고 싶다… 그냥 집 가고 싶어','팀장님이 또 부르신다 😶','주말은 왜 이렇게 짧을까','월요일은 누가 만든 거야','카톡으로 업무 그만 보내요…','딱 10분만 자고 싶다 💤','할 일은 늘고 시간은 없고','내 청춘이 사무실에서 녹는다','오늘 하루도 무사히…'],
+    minsu:['넥타이가 목을 조여온다','또 회의실 잡혔네…','보고서 컨펌 언제쯤 나오려나','상무님 보고가 코앞이야 😰','야근 수당은 대체 어디에…','출근길 지옥철 또 시작 🚇','이번 분기도 실적 압박이네','회식 또 잡혔다… 하…','아침부터 퇴사가 마렵다','대출 이자가 월급을 추월했어','팀장 눈치 보는 중 👀','정년까지 버틸 수 있을까']
+  };
+  var LABEL={walk:'걷기',run:'달리기 💨',idle:'멈춤',look:'두리번 ❓',jump:'점프 ⬆️',fly:'점프 🚀',sit:'휴식 ☕',sleep:'낮잠 💤',wave:'인사 👋',dance:'춤 🎵',chase:'추격 🔥',flee:'도주 😱',talk:'대화 💬'};
+  var EMOTE={run:'💨',look:'❓',jump:'⬆️',fly:'🚀',sit:'☕',sleep:'💤',wave:'👋',dance:'🎵',chase:'🔥',flee:'😱',talk:'💬',walk:'',idle:''};
+  var MOVING={walk:1,run:1,chase:1,flee:1};
+  var STAY={idle:1,look:1,sit:1,sleep:1,wave:1,dance:1,talk:1};
+  var WALK=0.7, RUN=1.6, PAD=34;
+  function rand(a,b){return a+Math.random()*(b-a);}
+  function pick(a){return a[Math.floor(Math.random()*a.length)];}
+  function dur(s){switch(s){case 'idle':return rand(1,2.5);case 'look':return rand(1.5,2.5);case 'sit':return rand(3,6);case 'sleep':return rand(4,8);case 'wave':return rand(1.3,1.8);case 'dance':return rand(3,5);case 'talk':return rand(2,3.5);default:return 2;}}
+  function makeSprite(str){
+    var t=str.split(','), c=document.createElement('canvas'); c.width=64; c.height=64; c.className='kifrs-char-sprite';
+    var ctx=c.getContext('2d'), CELL=4;
+    for(var i=0;i<t.length&&i<256;i++){ var col=PAL[t[i]]; if(col){ ctx.fillStyle=col; ctx.fillRect((i%16)*CELL, ((i/16)|0)*CELL, CELL, CELL); } }
+    return c;
+  }
+
+  var host, stage, panel, logEl, restoreEl, chars=[], logs=[], last=0, evTimer=0, sayTimer=0, nextSay=4000, running=false;
+
+  function Char(idx, key, x, y){
+    this.idx=idx; this.key=key; this.name=NAMES[key];
+    this.x=x; this.y=y; this.tx=x; this.ty=y; this.dir=1;
+    this.state='walk'; this.t=0; this.frame=0; this.jumpY=0; this.vy=0;
+    this.partner=null;
+    var el=document.createElement('div'); el.className='kifrs-char';
+    var sh=document.createElement('div'); sh.className='kifrs-char-shadow';
+    var em=document.createElement('div'); em.className='kifrs-char-emote';
+    var bb=document.createElement('div'); bb.className='kifrs-char-bubble';
+    var sp=makeSprite(SP[key]);
+    el.appendChild(sh); el.appendChild(em); el.appendChild(bb); el.appendChild(sp);
+    this.el=el; this.sprite=sp; this.shadow=sh; this.emote=em; this.bubble=bb; this.sayT=0;
+    stage.appendChild(el);
+  }
+  Char.prototype.bounds=function(W,H){ return {xn:PAD, xx:Math.max(PAD+1,W-PAD), yn:Math.max(PAD, H*0.30), yx:Math.max(PAD+1,H-10)}; };
+  Char.prototype.newTarget=function(W,H){ var b=this.bounds(W,H); this.tx=rand(b.xn,b.xx); this.ty=rand(b.yn,b.yx); };
+  Char.prototype.faceTo=function(o){ this.dir=(o.x<this.x)?-1:1; };
+  Char.prototype.say=function(text){ if(!text) return; this.bubble.textContent=text; this.sayT=2900; };
+  Char.prototype.setState=function(s,W,H){
+    this.state=s;
+    if(s==='jump'){ this.vy=-3.5; this.jumpY=-0.1; }
+    if(s==='fly'){ this.vy=-8.2; this.jumpY=-0.1; }   // 높이 날아오름
+    if(STAY[s]) this.t=dur(s)*1000;
+    if(s==='walk'||s==='run') this.newTarget(W,H);
+    updatePanel();
+  };
+  Char.prototype.resume=function(W,H){ this.setState(Math.random()<0.6?'walk':'run', W,H); };
+  Char.prototype.arrive=function(W,H){
+    var next=pick(['idle','idle','look','sit','sleep','wave','dance','walk','run','jump']);
+    if(next==='wave'){ doWave(this,W,H); return; }
+    this.setState(next,W,H);
+  };
+  Char.prototype.talkWith=function(o,W,H){
+    this.faceTo(o); o.faceTo(this);
+    this.setState('talk',W,H); o.setState('talk',W,H);
+    pushLog('💬 '+this.name+'와(과) '+o.name+'이(가) 대화 중');
+  };
+  Char.prototype.update=function(f,dt,W,H){
+    this.frame+=f;
+    if(this.sayT>0) this.sayT-=dt;
+    var s=this.state;
+    if(s==='jump'||s==='fly'){
+      this.vy+=0.25*f; this.jumpY+=this.vy*f;
+      if(this.jumpY>=0){ this.jumpY=0; this.vy=0; this.resume(W,H); }
+    } else if(MOVING[s]){
+      if(s==='chase' && this.partner){ this.tx=this.partner.x; this.ty=this.partner.y; }
+      var sp=((s==='walk')?WALK:RUN)*f;
+      var dx=this.tx-this.x, dy=this.ty-this.y, d=Math.sqrt(dx*dx+dy*dy)||1;
+      if(s==='chase' && this.partner && d<34){ this.talkWith(this.partner,W,H); }
+      else if(d<5){ if(s==='walk'||s==='run') this.arrive(W,H); else this.resume(W,H); }
+      else { this.x+=dx/d*sp; this.y+=dy/d*sp; if(dx<-0.5)this.dir=-1; else if(dx>0.5)this.dir=1; }
+    } else {
+      this.t-=dt; if(this.t<=0) this.resume(W,H);
+    }
+    // 경계 클램프
+    var b=this.bounds(W,H);
+    if(this.x<b.xn)this.x=b.xn; if(this.x>b.xx)this.x=b.xx;
+    if(this.y<b.yn)this.y=b.yn; if(this.y>b.yx)this.y=b.yx;
+  };
+  Char.prototype.render=function(){
+    this.el.style.left=this.x+'px'; this.el.style.top=this.y+'px';
+    this.el.style.zIndex=String(1000+Math.round(this.y));
+    var tf='scaleX('+this.dir+')', by=this.jumpY, s=this.state;
+    if(s==='walk') by+=Math.sin(this.frame*0.3)*1.5;
+    else if(s==='run'||s==='chase'||s==='flee') by+=Math.sin(this.frame*0.6)*2.5;
+    if(s==='sleep') tf+=' rotate(90deg)';
+    else if(s==='sit') tf+=' scaleY(0.85)';
+    else if(s==='dance') tf+=' rotate('+(Math.sin(this.frame*0.5)*14)+'deg)';
+    else if(s==='wave') tf+=' rotate('+(Math.sin(this.frame*0.7)*8)+'deg)';
+    else if(s==='fly') tf+=' rotate('+(Math.sin(this.frame*0.4)*16)+'deg) scale(1.08)';
+    this.sprite.style.transform='translateY('+by+'px) '+tf;
+    this.emote.textContent=EMOTE[s]||'';
+    if(this.sayT>0){ this.bubble.style.display='block'; this.emote.style.display='none'; }
+    else { this.bubble.style.display='none'; this.emote.style.display=''; }
+    var sc=1+this.jumpY/120;
+    this.shadow.style.transform='translateX(-50%) scaleX('+Math.max(0.4,sc)+')';
+    this.shadow.style.opacity=String(Math.max(0.08,0.22*sc));
+  };
+
+  function nearest(c){ var best=null,bd=1e9; for(var i=0;i<chars.length;i++){ if(chars[i]===c)continue; var dx=chars[i].x-c.x,dy=chars[i].y-c.y,d=Math.sqrt(dx*dx+dy*dy); if(d<bd){bd=d;best=chars[i];} } return {c:best,d:bd}; }
+  function doWave(c,W,H){
+    var n=nearest(c); if(!n.c){ c.setState('wave',W,H); return; }
+    c.faceTo(n.c);
+    if(n.d<120){ c.talkWith(n.c,W,H); }
+    else { c.setState('wave',W,H); pushLog('👋 '+c.name+'이(가) 손을 흔듦'); }
+  }
+  function randomEvent(W,H){
+    var c=pick(chars), a=pick(['walk','run','idle','look','jump','jump','fly','sit','sleep','wave','dance','chase','flee','talk']);
+    if(a==='wave'){ doWave(c,W,H); }
+    else if(a==='talk'){ var n=nearest(c); if(n.c) c.talkWith(n.c,W,H); else c.setState('look',W,H); }
+    else if(a==='chase'){ c.partner=chars[(c.idx+1)%chars.length]; c.setState('chase',W,H); pushLog('🔥 '+c.name+'이(가) '+c.partner.name+' 추격!'); }
+    else if(a==='flee'){ var n2=nearest(c); var b=c.bounds(W,H);
+        if(n2.c){ c.tx=Math.min(b.xx,Math.max(b.xn, c.x+(c.x-n2.c.x)*2)); c.ty=Math.min(b.yx,Math.max(b.yn, c.y+(c.y-n2.c.y)*2)); }
+        c.state='flee'; c.t=2000; updatePanel(); pushLog('😱 '+c.name+'이(가) 도망!'); }
+    else if(a==='jump'){ c.setState('jump',W,H); }
+    else { c.setState(a,W,H); }
+  }
+  function pushLog(m){ logs.unshift(m); if(logs.length>3) logs.pop(); if(logEl) logEl.innerHTML=logs.map(function(x){return '· '+x;}).join('<br>'); }
+  function updatePanel(){
+    if(!panel) return;
+    var rows=chars.map(function(c){ return '<div class="row"><span class="nm">'+c.name+'</span><span class="st">'+(LABEL[c.state]||c.state)+'</span></div>'; }).join('');
+    panel.innerHTML='<div class="ttl"><span>🎮 브레이크타임</span><span class="kifrs-char-x" title="숨기기">✕</span></div>'+rows;
+    panel.querySelector('.kifrs-char-x').onclick=function(){ stage.style.display='none'; if(restoreEl) restoreEl.style.display='block'; };
+  }
+
+  function loop(ts){
+    if(!running){ return; }
+    if(!host || host.offsetParent===null){ last=ts; requestAnimationFrame(loop); return; }   // 다른 탭이면 일시정지
+    var W=host.clientWidth, H=host.clientHeight;
+    var dt=last?Math.min(60,ts-last):16; last=ts;
+    var f=Math.min(3,dt/16.67);
+    evTimer+=dt; if(evTimer>=4000){ evTimer=0; randomEvent(W,H); }
+    sayTimer+=dt; if(sayTimer>=nextSay){ sayTimer=0; nextSay=rand(3000,6500); var sc=pick(chars); if(sc.sayT<=0 && sc.state!=='talk' && sc.state!=='sleep') sc.say(pick(LINES[sc.key])); }
+    for(var i=0;i<chars.length;i++){ chars[i].update(f,dt,W,H); chars[i].render(); }
+    requestAnimationFrame(loop);
+  }
+
+  function init(){
+    var tabMain=document.getElementById('tab-main');
+    host = tabMain ? tabMain.querySelector('div') : null;   // 첫 div = 배경 영역(position:relative;overflow:hidden)
+    if(!host){ return; }
+    stage=document.createElement('div'); stage.className='kifrs-char-stage';
+    host.appendChild(stage);
+    var W=host.clientWidth||800, H=host.clientHeight||500;
+    chars.push(new Char(0,'sujin', W*0.30, H*0.55));
+    chars.push(new Char(1,'jiyeon', W*0.52, H*0.65));
+    chars.push(new Char(2,'minsu', W*0.72, H*0.50));
+    chars.forEach(function(c){ c.newTarget(W,H); c.render(); });
+    running=true; requestAnimationFrame(loop);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
 </script>
 </body>
 </html>
