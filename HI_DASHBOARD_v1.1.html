@@ -63,7 +63,7 @@ if(typeof XLSXStyle==='undefined'){
   --col-rn-base:#888888;  /* 라운드 진한색 */
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif;min-height:100vh;}
+body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif;min-height:100vh;margin:0;overflow-x:hidden;}
 
 /* ── Header ── */
 .hdr{display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:54px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
@@ -79,7 +79,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
 .badge.err{background:var(--red-d);color:var(--red);}
 
 /* ── Nav ── */
-.nav{display:flex;gap:0;padding:0 16px;background:var(--bg2);border-bottom:2px solid var(--border);align-items:stretch;}
+.nav{display:flex;gap:0;padding:0 16px;background:var(--bg2);border-bottom:2px solid var(--border);align-items:stretch;position:sticky;top:54px;z-index:99;}
 /* 상위 메뉴 그룹 */
 .nmenu{position:relative;display:flex;align-items:stretch;}
 .nmenu-label{padding:10px 18px;font-size:12px;font-weight:600;color:var(--txt3);cursor:pointer;display:flex;align-items:center;gap:5px;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap;}
@@ -7537,14 +7537,16 @@ function debugR1Compare(){
 
 <!-- ══ 브레이크타임: 메인 페이지 도트 캐릭터 (독립 모듈 · .kifrs-char- 격리) ══ -->
 <style>
-.kifrs-char-stage{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:20;}
-.kifrs-char{position:absolute;width:64px;height:64px;transform:translate(-50%,-100%);will-change:left,top;}
+.kifrs-char-stage{position:fixed;top:0;left:0;right:0;bottom:0;overflow:hidden;pointer-events:none;z-index:150;}
+.kifrs-char{position:absolute;width:64px;height:64px;transform:translate(-50%,-100%);transform-origin:50% 100%;will-change:left,top,transform;pointer-events:auto;cursor:pointer;}
 .kifrs-char-sprite{position:absolute;left:0;bottom:6px;width:64px;height:64px;image-rendering:pixelated;transform-origin:50% 100%;}
 .kifrs-char-shadow{position:absolute;left:50%;bottom:2px;width:34px;height:9px;background:rgba(0,0,0,.22);border-radius:50%;filter:blur(1px);transform:translateX(-50%);}
 .kifrs-char-emote{position:absolute;left:50%;top:-12px;transform:translateX(-50%);font-size:15px;line-height:1;white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.3);pointer-events:none;}
 .kifrs-char-name{position:absolute;left:50%;top:-28px;transform:translateX(-50%);font-size:8.5px;font-weight:700;color:#555;background:rgba(255,255,255,.72);padding:1px 5px;border-radius:8px;white-space:nowrap;}
-.kifrs-char-bubble{position:absolute;left:50%;top:-30px;transform:translateX(-50%);background:#fff;border:1px solid #d8dee6;border-radius:10px;padding:3px 9px;font-size:10px;color:#333;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.13);display:none;pointer-events:none;animation:kifrs-char-pop .18s ease-out;}
+.kifrs-char-bubble{position:absolute;left:50%;bottom:100%;margin-bottom:8px;transform:translateX(-50%);transform-origin:50% 100%;background:#fff;border:1px solid #d8dee6;border-radius:10px;padding:3px 9px;font-size:10px;color:#333;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.13);display:none;pointer-events:none;animation:kifrs-char-pop .18s ease-out;}
 .kifrs-char-bubble::after{content:'';position:absolute;left:50%;bottom:-5px;transform:translateX(-50%);border:5px solid transparent;border-top-color:#fff;border-bottom:0;}
+.kifrs-char-bubble.kbelow{bottom:auto;top:100%;margin-bottom:0;margin-top:9px;}
+.kifrs-char-bubble.kbelow::after{bottom:auto;top:-5px;border-top:0;border-bottom:5px solid #fff;}
 @keyframes kifrs-char-pop{from{transform:translateX(-50%) scale(.6);opacity:0;}to{transform:translateX(-50%) scale(1);opacity:1;}}
 .kifrs-char-panel{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.9);border:1px solid #dde3ea;border-radius:10px;padding:8px 11px;font-size:11px;color:#333;pointer-events:auto;box-shadow:0 2px 8px rgba(0,0,0,.08);z-index:5000;min-width:128px;}
 .kifrs-char-panel .ttl{font-size:10px;font-weight:700;color:#8a93a0;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
@@ -7560,6 +7562,9 @@ function debugR1Compare(){
 <script>
 (function(){
   if(window.__kifrsCharsLoaded) return; window.__kifrsCharsLoaded=true;
+  // 새로고침 시 항상 페이지 최상단(메뉴 보이게) — 브라우저 스크롤 위치 복원 끔
+  try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }catch(e){}
+  window.addEventListener('load', function(){ try{ window.scrollTo(0,0); }catch(e){} });
   var PAL={'_':null,'B':'#111','Sk':'#F0C8A0','Sl':'#FDDCB5','Sd':'#D4A878',
     'Ha':'#5C3A1E','Hl':'#7A5030','Hd':'#3D2410','Hb':'#141418','Hbl':'#222228',
     'Hm':'#2C1810','Hml':'#3D2416','Cd':'#C8B898','Cl':'#D8CCAC','Mt':'#A8D8C8','Ml':'#C0E8D8',
@@ -7572,16 +7577,41 @@ function debugR1Compare(){
     minsu:'_,_,_,_,_,Hm,Hm,Hm,Hm,Hm,_,_,_,_,_,_,_,_,_,_,Hm,Hml,Hm,Hm,Hm,Hml,Hm,_,_,_,_,_,_,_,_,_,Hm,Hm,Hm,Hm,Hm,Hm,Hm,_,_,_,_,_,_,_,_,_,Hm,Sk,Sl,Sl,Sl,Sl,Sk,Hm,_,_,_,_,_,_,_,_,_,Sk,B,Sl,Sl,B,Sk,_,_,_,_,_,_,_,_,_,_,Sk,Sk,Sd,Sd,Sk,Sk,_,_,_,_,_,_,_,_,_,_,_,Sk,Sk,Sk,Sk,_,_,_,_,_,_,_,_,_,_,_,Nv,Nv,Wh,Rd,Wh,Nv,Nv,_,_,_,_,_,_,_,_,Nv,Nl,Nv,Wh,Rl,Wh,Nv,Nl,Nv,_,_,_,_,_,_,Sd,Nv,Nv,Nl,Nv,Rd,Nv,Nl,Nv,Nv,Sd,_,_,_,_,_,_,Nv,Nv,Nd,Rd,Nd,Nv,Nv,_,_,_,_,_,_,_,_,_,_,Nv,Nv,Nv,Nv,Nv,_,_,_,_,_,_,_,_,_,_,Nv,Nv,_,_,Nv,Nv,_,_,_,_,_,_,_,_,_,Sk,Sk,Sk,_,_,Sk,Sk,Sk,_,_,_,_,_,_,_,_,Sh,Shl,Sh,_,_,Sh,Shl,Sh,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_'
   };
   var NAMES={sujin:'수진',jiyeon:'지연',minsu:'민수'};
-  // 말풍선 멘트(회사원 고충) — 캐릭터별 12개
+  // 말풍선 멘트(회사 생활) — 캐릭터별 25개(서로 중복 없음)
   var LINES={
-    sujin:['퇴근까지 아직도 한참 남았네…','커피 없으면 진짜 못 버텨 ☕','점심 뭐 먹지? 이게 제일 어려워','월급은 통장을 그냥 스쳐 지나가','이 보고서 누가 보긴 하나…','어깨가 돌처럼 뭉쳤어 ㅠㅠ','금요일아 어디쯤 오고 있니','연차 쓰고 싶다… 진짜로','엑셀 수식 또 깨졌어 하…','오늘도 정시 퇴근은 글렀다','자리에 앉은 지 5시간째 🪑','카페인으로 굴러가는 인생'],
-    jiyeon:['또 야근인가… 하…','회의가 또 회의를 부른다','메일함이 줄어들질 않아','퇴근하고 싶다… 그냥 집 가고 싶어','팀장님이 또 부르신다 😶','주말은 왜 이렇게 짧을까','월요일은 누가 만든 거야','카톡으로 업무 그만 보내요…','딱 10분만 자고 싶다 💤','할 일은 늘고 시간은 없고','내 청춘이 사무실에서 녹는다','오늘 하루도 무사히…'],
-    minsu:['넥타이가 목을 조여온다','또 회의실 잡혔네…','보고서 컨펌 언제쯤 나오려나','상무님 보고가 코앞이야 😰','야근 수당은 대체 어디에…','출근길 지옥철 또 시작 🚇','이번 분기도 실적 압박이네','회식 또 잡혔다… 하…','아침부터 퇴사가 마렵다','대출 이자가 월급을 추월했어','팀장 눈치 보는 중 👀','정년까지 버틸 수 있을까']
+    sujin:['퇴근까지 아직도 한참 남았네…','커피 없으면 진짜 못 버텨 ☕','점심 뭐 먹지? 이게 제일 어려워','월급은 통장을 그냥 스쳐 지나가','이 보고서 누가 보긴 하나…','어깨가 돌처럼 뭉쳤어 ㅠㅠ','금요일아 어디쯤 오고 있니','연차 쓰고 싶다… 진짜로','엑셀 수식 또 깨졌어 하…','오늘도 정시 퇴근은 글렀다','자리에 앉은 지 5시간째 🪑','카페인으로 굴러가는 인생','모니터를 너무 봤더니 눈이 뻑뻑해','내일은 좀 한가하려나…','복사기는 꼭 급할 때 고장 나','사무실 에어컨 너무 추워 🥶','메신저 알림 소리만 들어도 깜짝','오늘 점심은 내가 쏜다… 농담이야','탕비실 간식 누가 다 먹었어','출근 도장 찍고 영혼은 퇴근','단톡방 알림 좀 꺼두고 싶다','모니터 두 개로도 부족해','오늘따라 키보드가 안 쳐져','점심 먹고 나른해지는 마법','회의실 와이파이가 또 느려'],
+    jiyeon:['또 야근인가… 하…','회의가 또 회의를 부른다','메일함이 줄어들질 않아','퇴근하고 싶다… 그냥 집 가고 싶어','팀장님이 또 부르신다 😶','주말은 왜 이렇게 짧을까','월요일은 누가 만든 거야','카톡으로 업무 그만 보내요…','딱 10분만 자고 싶다 💤','할 일은 늘고 시간은 없고','내 청춘이 사무실에서 녹는다','오늘 하루도 무사히…','점심 먹고 나면 왜 이렇게 졸리지','프린터에 또 종이 걸렸어','오후 3시, 가장 힘든 시간','책상 위가 서류로 산이 됐어','이번 주도 벌써 수요일이라니','프린터야 제발 한 번에 되라','캘린더가 회의로 빽빽해','커피 내기 또 졌어…','엘리베이터는 왜 항상 만원','책상 정리는 영원한 숙제','다이어리만 보면 한숨이…','오늘도 무사 출근 성공','탕비실 커피가 떨어졌네'],
+    minsu:['넥타이가 목을 조여온다','또 회의실 잡혔네…','보고서 컨펌 언제쯤 나오려나','상무님 보고가 코앞이야 😰','야근 수당은 대체 어디에…','출근길 지옥철 또 시작 🚇','이번 분기도 실적 압박이네','회식 또 잡혔다… 하…','아침부터 퇴사가 마렵다','대출 이자가 월급을 추월했어','팀장 눈치 보는 중 👀','정년까지 버틸 수 있을까','결재 라인이 왜 이렇게 길어','거래처 전화는 왜 점심시간에…','양복이 여름엔 너무 더워 🥵','회의록 정리도 내 몫이구나','승진은 언제쯤 하려나','넥타이 매듭이 자꾸 비뚤어','결재판 들고 또 한 바퀴','회의 자료는 왜 항상 새벽에','법인카드는 늘 한도 초과','구두가 오늘따라 무겁네','명함이 또 떨어졌어','보고는 타이밍이 생명이지','정시 퇴근이 꿈은 아니겠지']
+  };
+  // 클릭 시 색다른 리액션 멘트 — 캐릭터별 10개(서로 중복 없음)
+  var CLICK={
+    sujin:['으악! 깜짝이야 😆','왜 콕콕 찔러요~','어? 저 불렀어요?','히히 간지러워요','일하는 척 좀 해야 하는데','오늘은 그냥 놀래!','커피 한 잔 사주실 거죠?','앗, 들켰다!','나 지금 농땡이 중인데 🤫','헉, 팀장님인 줄!'],
+    jiyeon:['어머, 깜짝이야!','음…? 부르셨어요?','살짝 졸고 있었는데…','콕 찌르지 마세요~','오늘만 농땡이 봐주세요','네네, 일어났어요!','잠깐 쉬는 중이었어요 🍵','어, 저요?','비밀인데… 딴짓 중 🙈','하마터면 졸 뻔!'],
+    minsu:['옙! 부르셨습니까!','어이쿠, 깜짝이야','보고서… 거의 다 됐습니다!','아, 자리 비운 거 아닙니다!','잠시 스트레칭 중이었습니다','넵, 바로 가겠습니다!','커피 한 잔의 여유였습니다 ☕','헛, 들켰군요','이건 업무 관련 휴식입니다 😎','정신 차렷! 일해야지']
+  };
+  // 벽 충돌(꽈당) 멘트 — 캐릭터별 5개(서로 중복 없음)
+  var CRASH={
+    sujin:['아야! 벽이다 😵','으악, 코 깨질 뻔!','누가 벽 갖다 놨어!','앞 좀 보고 다니자…','꽈당! 아 창피해'],
+    jiyeon:['어맛! 부딪혔다','아야야… 멍들겠어','벽이 갑자기 튀어나왔어','으… 별이 보여 ✨','넘어질 뻔했네 휴…'],
+    minsu:['으억! 박았다','이런, 정신이 번쩍','벽도 업무의 일부인가','아이고 허리야…','꽈당! 체면 구겼네']
+  };
+  // 점프(관리자설정 끝·워크스페이스 글씨 앞에서 폴짝) 멘트 — 층 오르내림 아님
+  var CLIMB={
+    sujin:['폴짝!','앗 장애물, 점프!','가뿐하게 뛰어넘기','이쯤에서 통통','여기 한 번 점프~'],
+    jiyeon:['폴짝 폴짝','살짝 뛰어볼까','통, 가볍게~','요기서 점프!','넘어가 볼까'],
+    minsu:['얍! 도약','이 정도쯤이야','가볍게 폴짝','뛰어넘기 성공!','점프 한 방!']
+  };
+  // 우측 모니터 끝(화들짝) 멘트
+  var STARTLE={
+    sujin:['헉! 여기가 끝이네','앗 떨어질 뻔!','여긴 막다른 길!','우와 낭떠러지야','깜짝아, 돌아가자'],
+    jiyeon:['어맛! 끝이다','휘청… 떨어질 뻔','여기서 더는 못 가','으악 가장자리!','돌아서야겠다'],
+    minsu:['어이쿠, 절벽이군','여기가 한계선인가','더는 못 가겠는데','아찔하다, 후진!','경계 초과, 복귀!']
   };
   var LABEL={walk:'걷기',run:'달리기 💨',idle:'멈춤',look:'두리번 ❓',jump:'점프 ⬆️',fly:'점프 🚀',sit:'휴식 ☕',sleep:'낮잠 💤',wave:'인사 👋',dance:'춤 🎵',chase:'추격 🔥',flee:'도주 😱',talk:'대화 💬'};
   var EMOTE={run:'💨',look:'❓',jump:'⬆️',fly:'🚀',sit:'☕',sleep:'💤',wave:'👋',dance:'🎵',chase:'🔥',flee:'😱',talk:'💬',walk:'',idle:''};
   var MOVING={walk:1,run:1,chase:1,flee:1};
   var STAY={idle:1,look:1,sit:1,sleep:1,wave:1,dance:1,talk:1};
+  var CLICKACT={spin:1,flip:1,hop:1,shake:1,pop:1};   // 클릭 리액션 5종
   var WALK=0.7, RUN=1.6, PAD=34;
   function rand(a,b){return a+Math.random()*(b-a);}
   function pick(a){return a[Math.floor(Math.random()*a.length)];}
@@ -7594,12 +7624,14 @@ function debugR1Compare(){
   }
 
   var host, stage, panel, logEl, restoreEl, chars=[], logs=[], last=0, evTimer=0, sayTimer=0, nextSay=4000, running=false;
+  var gMode='main', gScale=1, MINI_SCALE=0.55;   // 메인=전체+원본크기 / 그 외=상단 워크스페이스 띠+축소
+  var gLowY=92, gHighY=44, gAdminX=0, gTitleR=0, hdrEl, navEl, adminEl, titleEl;   // 미니: 두 줄 바·텍스트 좌표
 
   function Char(idx, key, x, y){
     this.idx=idx; this.key=key; this.name=NAMES[key];
     this.x=x; this.y=y; this.tx=x; this.ty=y; this.dir=1;
     this.state='walk'; this.t=0; this.frame=0; this.jumpY=0; this.vy=0;
-    this.partner=null;
+    this.partner=null; this.miniTick=2000; this.level=0; this.climb=0;
     var el=document.createElement('div'); el.className='kifrs-char';
     var sh=document.createElement('div'); sh.className='kifrs-char-shadow';
     var em=document.createElement('div'); em.className='kifrs-char-emote';
@@ -7607,12 +7639,25 @@ function debugR1Compare(){
     var sp=makeSprite(SP[key]);
     el.appendChild(sh); el.appendChild(em); el.appendChild(bb); el.appendChild(sp);
     this.el=el; this.sprite=sp; this.shadow=sh; this.emote=em; this.bubble=bb; this.sayT=0;
+    var self=this; el.addEventListener('click', function(e){ e.stopPropagation(); self.react(); });
     stage.appendChild(el);
   }
-  Char.prototype.bounds=function(W,H){ return {xn:PAD, xx:Math.max(PAD+1,W-PAD), yn:Math.max(PAD, H*0.30), yx:Math.max(PAD+1,H-10)}; };
+  Char.prototype.bounds=function(W,H){
+    var p=PAD*gScale;
+    if(gMode==='mini'){ return {xn:p, xx:Math.max(p+1,W-p), yn:20, yx:gLowY}; }
+    return {xn:p, xx:Math.max(p+1,W-p), yn:Math.max(120,H*0.30), yx:Math.max(p+1,H-10)};   // 메인: 헤더(96px) 아래에서만
+  };
   Char.prototype.newTarget=function(W,H){ var b=this.bounds(W,H); this.tx=rand(b.xn,b.xx); this.ty=rand(b.yn,b.yx); };
   Char.prototype.faceTo=function(o){ this.dir=(o.x<this.x)?-1:1; };
   Char.prototype.say=function(text){ if(!text) return; this.bubble.textContent=text; this.sayT=2900; };
+  Char.prototype.react=function(){   // 클릭 리액션: 5종 랜덤 + 색다른 멘트
+    if(CLICKACT[this.state]) return;
+    var type=pick(['spin','flip','hop','shake','pop']);
+    this.frame=0; this.say(pick(CLICK[this.key]));
+    if(type==='spin'){ this.state='spin'; this.vy=-5.5; this.jumpY=-0.1; }
+    else if(type==='flip'){ this.state='flip'; this.vy=-9; this.jumpY=-0.1; }
+    else { this.state=type; this.t=1000; }   // hop/shake/pop: 1초 타이머
+  };
   Char.prototype.setState=function(s,W,H){
     this.state=s;
     if(s==='jump'){ this.vy=-3.5; this.jumpY=-0.1; }
@@ -7632,11 +7677,44 @@ function debugR1Compare(){
     this.setState('talk',W,H); o.setState('talk',W,H);
     pushLog('💬 '+this.name+'와(과) '+o.name+'이(가) 대화 중');
   };
+  Char.prototype.miniResume=function(){ this.state='walk'; };
+  Char.prototype.startJump=function(v){ this.state='jump'; this.vy=v; this.jumpY=-0.1; };
+  Char.prototype.startClimb=function(){ this.state='jump'; this.vy=-5.6; this.jumpY=-0.1; this.climb=1; this.say(pick(CLIMB[this.key])); };
+  Char.prototype.crash=function(){ this.state='crash'; this.t=1250; this.jumpY=0; this.vy=0; this.say(pick(CRASH[this.key])); };
+  Char.prototype.startle=function(){ this.state='startle'; this.t=900; this.jumpY=0; this.vy=0; this.say(pick(STARTLE[this.key])); };
+  Char.prototype.onModeChange=function(W,H){
+    this.jumpY=0; this.vy=0; this.climb=0;
+    if(gMode==='mini'){ this.level=0; this.y=gLowY; var p=PAD*gScale; this.x=Math.min(W-p,Math.max(p,this.x)); this.state='walk'; this.dir=Math.random()<0.5?-1:1; this.miniTick=rand(800,2500); }
+    else { this.newTarget(W,H); this.state='walk'; }
+  };
+  // 미니(상단 두 줄 바): 아래줄=메뉴바, 윗줄=제목바. 관리자설정→위로 점프, 워크스페이스 글씨/좌벽→꽈당, 우측끝→화들짝
+  Char.prototype.miniUpdate=function(f,dt,W,H){
+    var s=this.state, p=PAD*gScale, leftW=p, rightW=W-p;
+    this.y=gLowY;   // 메뉴 바 상단(글씨 위)을 밟고
+    if(s==='jump'||s==='fly'||s==='spin'||s==='flip'){
+      this.vy+=0.25*f; this.jumpY+=this.vy*f; this.x+=this.dir*WALK*0.8*f;
+      if(this.jumpY>=0){ this.jumpY=0; this.vy=0; this.miniResume(); }
+    } else if(s==='hop'||s==='shake'||s==='pop'||s==='idle'){
+      this.t-=dt; if(this.t<=0) this.miniResume();
+    } else if(s==='crash'){
+      this.t-=dt; if(this.t<=0){ this.dir=-this.dir; this.x+=this.dir*6; this.miniResume(); }
+    } else if(s==='startle'){
+      this.t-=dt; if(this.t<=0){ this.dir=-this.dir; this.x+=this.dir*6; this.miniResume(); }
+    } else {   // walk: 메뉴 바 위를 좌우로
+      this.x+=this.dir*WALK*1.2*f; this.miniTick-=dt;
+      if(this.dir<0 && gTitleR>0 && this.x<=gTitleR+6){ this.x=gTitleR+8; if(Math.random()<0.5){ this.startJump(-4.4); this.dir=1; this.say(pick(CLIMB[this.key])); } else this.crash(); }  // 워크스페이스 글씨: 점프 시도 or 자빠짐
+      else if(this.dir>0 && gAdminX>0 && this.x>=gAdminX-2 && this.x<=gAdminX+22){ this.startJump(-5.2); this.say(pick(CLIMB[this.key])); }  // 관리자설정 끝에서 폴짝
+      else if(this.miniTick<=0){ this.miniTick=rand(1500,3200); var r=Math.random(); if(r<0.38) this.startJump(-4.2); else if(r<0.52){ this.state='idle'; this.t=rand(500,1200); } }
+    }
+    if(this.x<=leftW){ this.x=leftW; if(s==='walk') this.crash(); }
+    else if(this.x>=rightW){ this.x=rightW; if(s==='walk') this.startle(); }   // 우측 모니터 끝 → 화들짝
+  };
   Char.prototype.update=function(f,dt,W,H){
     this.frame+=f;
     if(this.sayT>0) this.sayT-=dt;
+    if(gMode==='mini'){ this.miniUpdate(f,dt,W,H); return; }
     var s=this.state;
-    if(s==='jump'||s==='fly'){
+    if(s==='jump'||s==='fly'||s==='spin'||s==='flip'){
       this.vy+=0.25*f; this.jumpY+=this.vy*f;
       if(this.jumpY>=0){ this.jumpY=0; this.vy=0; this.resume(W,H); }
     } else if(MOVING[s]){
@@ -7656,18 +7734,29 @@ function debugR1Compare(){
   };
   Char.prototype.render=function(){
     this.el.style.left=this.x+'px'; this.el.style.top=this.y+'px';
+    this.el.style.transform='translate(-50%,-100%) scale('+gScale+')';   // 탭별 크기 축소 반영
     this.el.style.zIndex=String(1000+Math.round(this.y));
-    var tf='scaleX('+this.dir+')', by=this.jumpY, s=this.state;
+    var tf='scaleX('+this.dir+')', by=this.jumpY, bx=0, s=this.state;
     if(s==='walk') by+=Math.sin(this.frame*0.3)*1.5;
     else if(s==='run'||s==='chase'||s==='flee') by+=Math.sin(this.frame*0.6)*2.5;
+    else if(s==='hop') by+=-Math.abs(Math.sin(this.frame*0.45))*16;       // 통통 튀기
+    else if(s==='shake') bx=Math.sin(this.frame*1.4)*5;                    // 좌우 부르르
+    else if(s==='startle') bx=Math.sin(this.frame*1.7)*6;                  // 화들짝(우측끝)
     if(s==='sleep') tf+=' rotate(90deg)';
     else if(s==='sit') tf+=' scaleY(0.85)';
     else if(s==='dance') tf+=' rotate('+(Math.sin(this.frame*0.5)*14)+'deg)';
     else if(s==='wave') tf+=' rotate('+(Math.sin(this.frame*0.7)*8)+'deg)';
     else if(s==='fly') tf+=' rotate('+(Math.sin(this.frame*0.4)*16)+'deg) scale(1.08)';
-    this.sprite.style.transform='translateY('+by+'px) '+tf;
+    else if(s==='spin') tf+=' rotate('+(this.frame*40)+'deg) scale(1.12)';
+    else if(s==='flip') tf+=' rotate('+(this.frame*34)+'deg) scale(1.1)';  // 고공점프+회전
+    else if(s==='pop') tf+=' scale('+(1+Math.abs(Math.sin(this.frame*0.5))*0.3)+')';  // 커졌다 작아짐
+    else if(s==='crash') tf+=' rotate(76deg)';   // 꽈당(쓰러짐)
+    this.sprite.style.transform='translate('+bx+'px,'+by+'px) '+tf;
     this.emote.textContent=EMOTE[s]||'';
-    if(this.sayT>0){ this.bubble.style.display='block'; this.emote.style.display='none'; }
+    if(this.sayT>0){ this.bubble.style.display='block'; this.emote.style.display='none';
+      if(gMode==='mini'){ this.bubble.classList.add('kbelow'); this.bubble.style.transformOrigin='50% 0%'; }   // 상단 바에선 말풍선 아래로(위는 잘림)
+      else { this.bubble.classList.remove('kbelow'); this.bubble.style.transformOrigin='50% 100%'; }
+      this.bubble.style.transform='translateX(-50%) scale('+(1/gScale)+')'; }   // 풀사이즈 유지
     else { this.bubble.style.display='none'; this.emote.style.display=''; }
     var sc=1+this.jumpY/120;
     this.shadow.style.transform='translateX(-50%) scaleX('+Math.max(0.4,sc)+')';
@@ -7702,23 +7791,34 @@ function debugR1Compare(){
 
   function loop(ts){
     if(!running){ return; }
-    if(!host || host.offsetParent===null){ last=ts; requestAnimationFrame(loop); return; }   // 다른 탭이면 일시정지
-    var W=host.clientWidth, H=host.clientHeight;
+    if(!stage){ requestAnimationFrame(loop); return; }
+    var W=stage.clientWidth, H=stage.clientHeight;
+    // 활성 탭 감지 → 메인:전체+원본 / 그 외:상단 워크스페이스 띠+축소. 전환 시 새 영역으로 재타겟
+    var act=document.querySelector('.tab.on');
+    var mode=(act && act.id==='tab-main')?'main':'mini';
+    if(mode==='mini'){   // 상단 두 줄 바·텍스트 좌표 실시간 측정(스크롤 무관 — sticky)
+      var nr=navEl&&navEl.getBoundingClientRect();
+      if(nr) gLowY=nr.top;   // 메뉴 바 상단(글씨 위)을 밟고 다님 → 메뉴명 안 가림
+      gAdminX=adminEl?adminEl.getBoundingClientRect().right:W*0.85;   // 관리자설정 끝
+      gTitleR=titleEl?titleEl.getBoundingClientRect().right:W*0.2;
+    }
+    if(mode!==gMode){ gMode=mode; gScale=(mode==='mini')?MINI_SCALE:1; for(var k=0;k<chars.length;k++) chars[k].onModeChange(W,H); }
     var dt=last?Math.min(60,ts-last):16; last=ts;
     var f=Math.min(3,dt/16.67);
-    evTimer+=dt; if(evTimer>=4000){ evTimer=0; randomEvent(W,H); }
+    evTimer+=dt; if(evTimer>=4000){ evTimer=0; if(gMode!=='mini') randomEvent(W,H); }   // 미니(워크스페이스)는 좌우걷기/점프만
     sayTimer+=dt; if(sayTimer>=nextSay){ sayTimer=0; nextSay=rand(3000,6500); var sc=pick(chars); if(sc.sayT<=0 && sc.state!=='talk' && sc.state!=='sleep') sc.say(pick(LINES[sc.key])); }
     for(var i=0;i<chars.length;i++){ chars[i].update(f,dt,W,H); chars[i].render(); }
     requestAnimationFrame(loop);
   }
 
   function init(){
-    var tabMain=document.getElementById('tab-main');
-    host = tabMain ? tabMain.querySelector('div') : null;   // 첫 div = 배경 영역(position:relative;overflow:hidden)
-    if(!host){ return; }
+    if(!document.body){ return; }
     stage=document.createElement('div'); stage.className='kifrs-char-stage';
-    host.appendChild(stage);
-    var W=host.clientWidth||800, H=host.clientHeight||500;
+    document.body.appendChild(stage);                       // 전 화면 공통 고정 오버레이
+    hdrEl=document.querySelector('.hdr'); navEl=document.getElementById('main-nav'); titleEl=document.querySelector('.hdr-title');
+    var labs=document.querySelectorAll('#main-nav .nmenu-label, #main-nav .nmenu-solo');
+    for(var li=0;li<labs.length;li++){ if(labs[li].textContent.indexOf('관리자')>=0){ adminEl=labs[li]; break; } }
+    var W=stage.clientWidth||window.innerWidth||800, H=stage.clientHeight||500;
     chars.push(new Char(0,'sujin', W*0.30, H*0.55));
     chars.push(new Char(1,'jiyeon', W*0.52, H*0.65));
     chars.push(new Char(2,'minsu', W*0.72, H*0.50));
