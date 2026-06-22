@@ -315,7 +315,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
 .r2-tbl tbody tr td:first-child { position: sticky; left: 0; z-index: 1; background: inherit; }
 
 /* ══════════════════════════════════════════════════════════
-   기준서 콜센터 (K-IFRS) — 신규 모듈 전용 스타일 (.kifrs- 접두사로 완전 격리)
+   AI기준서 (K-IFRS) — 신규 모듈 전용 스타일 (.kifrs- 접두사로 완전 격리)
    ══════════════════════════════════════════════════════════ */
 .kifrs-ntab-disabled{display:flex;align-items:center;gap:0;padding:10px 18px;font-size:12px;font-weight:500;color:var(--txt3);cursor:not-allowed;white-space:nowrap;opacity:.6;}
 .kifrs-ntab-disabled .ni{display:inline-block;width:20px;text-align:center;flex-shrink:0;}
@@ -509,11 +509,12 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
 .kifrs-prt-legend{font-size:11px;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:9px 11px;margin-top:14px;line-height:1.6;}
 .kifrs-prt-foot{font-size:10.5px;color:#6b7280;line-height:1.6;margin-top:10px;padding-top:8px;border-top:1px solid #e5e7eb;}
 @media print{
-  body{background:#fff !important;}
-  body *{visibility:hidden !important;}
-  #kifrs-print-area, #kifrs-print-area *{visibility:visible !important;}
-  #kifrs-print-area{display:block !important;position:absolute;left:0;top:0;width:100%;color:#111;
+  html,body{background:#fff !important;height:auto !important;min-height:0 !important;overflow:visible !important;}
+  /* 증빙 영역만 남기고 나머지는 레이아웃에서 완전히 제거 — 잔여 높이로 생기는 빈 페이지 방지 */
+  body > *:not(#kifrs-print-area){display:none !important;}
+  #kifrs-print-area{display:block !important;position:static;left:auto;top:auto;width:100%;color:#111;
     --txt:#111;--txt2:#222;--txt3:#555;--bg:#fff;--bg2:#fff;--bg3:#f7f7f8;--border:#dcdfe4;--border2:#cbd0d6;--blue:#1d4ed8;--blue-d:#eef2ff;}
+  #kifrs-print-area, #kifrs-print-area *{visibility:visible !important;}
   #kifrs-print-area button,#kifrs-print-area .kifrs-help-btn{display:none !important;}
   .kifrs-prt-header{border-bottom:2px solid #1d4ed8;padding-bottom:10px;margin-bottom:14px;}
   .kifrs-pr-item,.kifrs-an-std,.kifrs-pr-summary,.kifrs-prt-legend,.kifrs-prt-foot,.kifrs-nt,table,tr{page-break-inside:avoid;break-inside:avoid;}
@@ -559,9 +560,9 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
     </div>
   </div>
 
-  <!-- 기준서 콜센터 (신규 모듈 — KIFRS 네임스페이스로 격리) -->
+  <!-- AI기준서 (신규 모듈 — KIFRS 네임스페이스로 격리) -->
   <div class="nmenu">
-    <div class="nmenu-label" id="label-kifrs">📞 기준서 콜센터 <span class="arr">▼</span></div>
+    <div class="nmenu-label" id="label-kifrs">📞 AI기준서 <span class="arr">▼</span></div>
     <div class="ndrop">
       <div class="ntab" id="ntab-kifrs" onclick="switchTab('kifrs')"><span class="ni">📘</span>K-IFRS</div>
       <div class="kifrs-ntab-disabled" title="Phase 2 — 준비 중입니다"><span class="ni">📗</span>K-GAAP<span class="kifrs-badge">준비 중</span></div>
@@ -588,7 +589,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
 
 <div class="main">
 
-<!-- ══ TAB: 기준서 콜센터 (K-IFRS) — 신규 모듈, KIFRS 네임스페이스로 렌더 ══ -->
+<!-- ══ TAB: AI기준서 (K-IFRS) — 신규 모듈, KIFRS 네임스페이스로 렌더 ══ -->
 <div class="tab" id="tab-kifrs">
   <div id="kifrs-root"></div>
 </div>
@@ -866,7 +867,7 @@ function switchTab(name){
     if(lblk) lblk.classList.add('active');
   }
 
-  // 기준서 콜센터(K-IFRS) — 신규 모듈 (격리된 KIFRS 네임스페이스)
+  // AI기준서(K-IFRS) — 신규 모듈 (격리된 KIFRS 네임스페이스)
   if(name==='kifrs' && window.KIFRS && typeof window.KIFRS.render==='function') window.KIFRS.render();
 
   // 탭별 렌더
@@ -2661,9 +2662,9 @@ function renderDevLog(){
 
   var logs_kifrs = [
     { date:'2026-06-16', title:'메뉴 신설 & 워크스페이스 통합', color:'#7c3aed', items:[
-      '기준서 콜센터 메뉴 신설(K-IFRS / K-GAAP 준비중) — window.KIFRS 네임스페이스 격리',
+      'AI기준서 메뉴 신설(K-IFRS / K-GAAP 준비중) — window.KIFRS 네임스페이스 격리',
       'DB관리/개별자료/보고자료를 HI_예실분석 단일 메뉴로 통합',
-      '메뉴 순서: 메인 | HI_예실분석 | 기준서 콜센터 | 기타 | 관리자설정',
+      '메뉴 순서: 메인 | HI_예실분석 | AI기준서 | 기타 | 관리자설정',
       '헤더 표기 변경 — 헥토이노베이션 워크스페이스',
     ]},
     { date:'2026-06-16', title:'파일 업로드 & 텍스트 추출', color:'#6d28d9', items:[
@@ -2691,6 +2692,34 @@ function renderDevLog(){
       '분당 호출 가드 — 한도 임박 시 대기 팝업으로 사전 차단',
       '동시 정밀분석 최대 3건 제한',
     ]},
+    { date:'2026-06-18', title:'증빙 PDF 출력 & API 운영 안정화', color:'#0891b2', items:[
+      '증빙 PDF 출력 신설 — 분석·검증 결과를 감사 대응용 양식으로 인쇄(브라우저 인쇄 → PDF 저장)',
+      'API 단계별 중단(⏹) 버튼 — 진행 중인 분석을 단계별로 즉시 정지',
+      '자동 모델 선택 강화 — 되는 모델 우선 폴백',
+      '긴 응답 JSON 잘림 자동 복구 — 출력이 길어 잘려도 후보 기준서 보존',
+    ]},
+    { date:'2026-06-18', title:'진행 스텝퍼 & 긴 문서 분석 정확도', color:'#059669', items:[
+      '진행 스텝퍼 추가 — 업로드→OCR→AI분석→후보선정→정밀분석→검증 6단계 시각화',
+      '긴 문서 앞·중간·뒤 발췌 샘플링 — 핵심 조항이 뒤에 있어도 누락 없이 검토',
+      '후보 기준서 보존 버그 수정 — 응답 잘림 시 후보 유실 방지',
+      '검증 단계(5단계) 개편',
+    ]},
+    { date:'2026-06-18', title:'AI 감사인 근거검증 고도화(3단계)', color:'#db2777', items:[
+      '1차 — 문서에서 검토포인트 관련 원문 인용 추출',
+      '2차 — 인용이 문서에 실재하는지 코드로 검증(할루시네이션 차단)',
+      '3차 — 검증된 근거로만 판정(충족/미흡/확인필요/해당없음) + 교차검증, 근거 없으면 판단불가+후속확인',
+      '결과 색 구분 — 문서 근거(청록)/AI 감사의견(보라)',
+    ]},
+    { date:'2026-06-18', title:'맥락(HI 역할) 파악 도입', color:'#4338ca', items:[
+      '보고실체를 ㈜헥토이노베이션으로 고정 — 항상 HI 장부 관점으로 분석',
+      '대금 흐름(공급자=수익 / 고객=비용·자산 / 기타)으로 HI 역할 먼저 판단 후 그 관점으로 기준서 선정',
+      '결과 최상단 맥락 박스 표시(문서유형·HI 역할·거래요지) — 틀리면 정정 안내',
+    ]},
+    { date:'2026-06-18', title:'브레이크타임 캐릭터 & 상단 바', color:'#ea580c', items:[
+      '메인 화면 자유 로밍 캐릭터 / 그 외 탭은 상단 메뉴바 위 사이드스크롤러(걷기·점프·클릭 반응·꽈당·화들짝)',
+      '상단 바 그룹 고정 — 스크롤해도 상단 영역 유지',
+      '새로고침 시 화면 상단으로 이동',
+    ]},
   ];
 
   var PROJECTS = [
@@ -2705,7 +2734,7 @@ function renderDevLog(){
         {n:7,t:'계정별 원장 자동 분석·증감 원인',s:'done'},
         {n:8,t:'합산검증 강화·원장 기간검증',s:'done'},
       ] },
-    { id:'kifrs', name:'기준서 콜센터', desc:'K-IFRS 기준서 자동 검토(AI)', start:'2026-06-16', end:null, color:'#7c3aed', logs:logs_kifrs,
+    { id:'kifrs', name:'AI기준서', desc:'K-IFRS 기준서 자동 검토(AI)', start:'2026-06-16', end:null, color:'#7c3aed', logs:logs_kifrs,
       steps:[
         {n:1,t:'메뉴 탭·빈 화면',s:'done'},
         {n:2,t:'파일 업로드·텍스트 추출',s:'done'},
@@ -2714,7 +2743,7 @@ function renderDevLog(){
         {n:5,t:'Gemini API 연동(정규화·정밀분석)',s:'done'},
         {n:6,t:'검증·신뢰도 라벨(AI감사인)',s:'done'},
         {n:7,t:'결과 출력·증빙 PDF 다운로드',s:'done'},
-        {n:8,t:'로딩 UI(6단계 스텝퍼)',s:'todo'},
+        {n:8,t:'로딩 UI(6단계 스텝퍼)',s:'done'},
         {n:9,t:'객관식 팝업 3종',s:'todo'},
       ] },
   ];
@@ -5840,7 +5869,7 @@ function debugR1Compare(){
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   기준서 콜센터 — K-IFRS 모듈 (Phase 1)
+   AI기준서 — K-IFRS 모듈 (Phase 1)
    ────────────────────────────────────────────────────────────────
    ⚠ 격리 원칙
    - 모든 코드는 이 IIFE 내부 + window.KIFRS 네임스페이스에만 존재
@@ -6203,6 +6232,15 @@ function debugR1Compare(){
   }
   function _isTransient(e){ var m=((e&&e.message)||'')+''; return (e&&(e.status===503||e.status===429||e.status===500)) || /high demand|overload|unavailable|try again later|rate limit|quota|exceeded|retry in|\b50[03]\b|\b429\b/i.test(m); }
   function _retryDelayMs(e){ var m=((e&&e.message)||'')+''; var mm=m.match(/retry in ([\d.]+)\s*s/i)||m.match(/retryDelay["':\s]+([\d.]+)s/i); return mm?Math.min(30000, Math.ceil(parseFloat(mm[1])*1000)+500):0; }
+  // 재시도 사유를 실제 에러로 분류 — '분당 한도' 하드코딩 오인 표시 방지
+  function _retryReason(e){
+    var m=((e&&e.message)||'')+''; var st=e&&e.status;
+    if(st===429 || /\b429\b|rate limit|quota|exceeded|RESOURCE_EXHAUSTED|limit:\s*0/i.test(m))
+      return '분당/일일 무료 한도 — 자동 대기 후 재시도(데이터 소진 아님)';
+    if(st===503 || st===500 || /\b50[03]\b|overload|high demand|unavailable|try again later/i.test(m))
+      return '모델 혼잡(서버 일시 과부하) — 자동 대기 후 재시도';
+    return '일시 오류 — 자동 대기 후 재시도';
+  }
   // 일시적 과부하(503)·레이트리밋(429·분당한도)·쿼터 자동 재시도. 서버 권장 대기시간(retry in Xs) 존중. opts.retry(기본5), opts.onRetry(n,max)
   // 이 모델로 직접 호출(지정 모델, 일시오류 max회 재시도)
   function _callModel(prompt, opts, model, max){
@@ -6212,7 +6250,7 @@ function debugR1Compare(){
       return _geminiCall(prompt, o2).catch(function(e){
         if(_isAbort(e)){ e.aborted=true; throw e; }            // 중단이면 재시도 없이 종료
         if(_isTransient(e) && n<max){
-          if(opts.onRetry) opts.onRetry(n+1, max, model);
+          if(opts.onRetry) opts.onRetry(n+1, max, model, e);
           var wait=Math.max(_retryDelayMs(e), 900*Math.pow(2,n));
           return _sleep(wait, opts.signal).then(function(){ return attempt(n+1); });
         }
@@ -6234,12 +6272,12 @@ function debugR1Compare(){
     if(opts.model || !KIFRS.API.auto){
       return _callModel(prompt, opts, opts.model||KIFRS.getModel(), max);
     }
-    // 자동 모드 → 우선순위 체인 순회. 각 모델마다 max회(기본 5) 재시도 후 안 되면 다음 모델로 폴백
+    // 자동 모드 → 우선순위 체인 순회. 폴백이 이미 넓이를 주므로 모델당 재시도는 최대 2회로 제한(전체 churn·버퍼링 폭증 방지)
     var order=KIFRS._modelTryOrder(), idx=0, lastErr=null;
     function tryNext(){
       if(idx>=order.length) return Promise.reject(lastErr||new Error('사용 가능한 모델이 없습니다(모든 후보 한도/권한 초과).'));
       var model=order[idx++];
-      var perModel=max;   // 모든 모델 동일하게 max회(5) 재시도
+      var perModel=Math.min(max, 2);   // 자동모드: 모델당 최대 2회(retry:0 같은 더 작은 값은 존중)
       if(opts.onModel) opts.onModel(model, idx, order.length);
       return _callModel(prompt, opts, model, perModel).then(function(t){
         KIFRS._activeModel=model;     // 성공 → 그날 이 모델 우선
@@ -6352,30 +6390,100 @@ function debugR1Compare(){
     var ms=Math.max(head, Math.floor(t.length/2 - mid/2));
     return t.slice(0,head) + '\n…(중략)…\n' + t.slice(ms, ms+mid) + '\n…(중략)…\n' + t.slice(t.length-tail);
   }
+  // 보고실체(당사) — 전천후 재사용을 위해 회사명만 설정값으로 분리(기본값 ㈜헥토이노베이션)
+  KIFRS.ENTITY_DEFAULT='㈜헥토이노베이션';
+  KIFRS.getEntity=function(){ try{ return (localStorage.getItem('kifrs-entity')||'').trim()||KIFRS.ENTITY_DEFAULT; }catch(e){ return KIFRS.ENTITY_DEFAULT; } };
+  KIFRS.setEntity=function(v){ try{ localStorage.setItem('kifrs-entity', (v||'').trim()); }catch(e){} };
+  // 1차 호출 — 용어 정규화만(맥락·후보 판단은 buildStructurePrompt로 분리)
   function buildNormalizePrompt(text, off){
     var kw=off.keptTerms.slice(0,40).map(function(e){return e.std;}).join(', ');
     var unc=off.unclassified.slice(0,20).map(function(e){return e.w;}).join(', ');
     var full=(text||'').replace(/\s+/g,' ');
-    var excerpt=_docExcerpt(text, 12000);   // 앞 2500자만 보내 도입부만 보던 문제 해결
+    var excerpt=_docExcerpt(text, 12000);
     return [
-      '아래 문서에서 추출된 회계 관련 용어를 K-IFRS 기준서 표준 용어로 변환하고, 이 문서에 적용되는 기준서를 판단하세요.',
-      '문서 전체 길이는 약 '+full.length+'자이며, 아래 발췌는 앞·중간·뒤를 샘플링한 것입니다(핵심 조항이 뒤에 있을 수 있으니 발췌 전체를 검토).',
+      '당신은 '+KIFRS.getEntity()+'(이하 당사)의 회계 분석을 돕습니다. 아래 문서의 회계 관련 용어를 K-IFRS 기준서 표준 용어로 정규화하세요.',
+      '문서 길이 약 '+full.length+'자(발췌는 앞·중간·뒤 샘플).',
       '',
       '[오프라인 추출 키워드]\n'+(kw||'(없음)'),
       '[사전 미등록 단어]\n'+(unc||'(없음)'),
       '[문서 본문 발췌(앞·중간·뒤 샘플)]\n'+excerpt,
       '',
+      '[지시]',
+      '- 회계처리와 무관한 일반 업무 용어(결재/기안/부서명/담당자명 등)는 generalTerms에 넣으세요.',
+      '- 각 표준용어 변환에 신뢰도(높음/보통/낮음)와 (알면) 관련 기준서번호를 포함. normalizedTerms 최대 25개.',
+      '- ⚠ 다른 텍스트 없이 아래 JSON으로만 응답:',
+      '{"normalizedTerms":[{"원문":"","표준용어":"","기준서번호":"","신뢰도":"높음"}],"generalTerms":[""]}'
+    ].join('\n');
+  }
+  // 2차 호출 — 거래구조(HI 위치·관계) 확정 → 그 관점으로 후보 기준서 선정. 매칭 전 전용 판단 단계.
+  function buildStructurePrompt(text, normTerms){
+    var ENT=KIFRS.getEntity();
+    var full=(text||'').replace(/\s+/g,' ');
+    var excerpt=_docExcerpt(text, 14000);
+    var nt=(normTerms||[]).slice(0,25).map(function(t){ return (t['원문']||'')+'→'+(t['표준용어']||'')+(t['기준서번호']?'('+t['기준서번호']+')':''); }).join(', ');
+    return [
+      '당신은 '+ENT+'(이하 당사)의 회계 분석가입니다. 보고실체는 항상 당사이며, 반드시 당사 장부 관점으로 판단합니다.',
+      '매칭 전에 먼저 "이 자료에서 당사의 위치와 거래 상대방(있다면)과의 관계"를 확정한 뒤, 그 관점으로 적용 기준서 후보를 선정하세요. 문서 약 '+full.length+'자.',
+      '',
+      '[문서 발췌(앞·중간·뒤 샘플)]\n'+excerpt,
+      '[정규화 용어]\n'+(nt||'(없음)'),
+      '',
       '[검토 대상 K-IFRS 기준서 목록 — 반드시 이 번호만 사용]\n'+buildStandardsDigest(),
       '',
-      '[지시]',
-      '- 회계처리와 무관한 일반 업무 용어(결재/기안/부서명/담당자명 등)는 변환하지 말고 generalTerms에 넣으세요.',
-      '- 각 표준용어 변환에 신뢰도(높음/보통/낮음)를 포함하세요.',
-      '- 계약서·약관 등 금액이 적혀 있지 않아도 거래의 경제적 실질로 판단하세요. 예: 결제대행/정산/수수료 수취 → 수익(본인·대리인, 총액·순액) 1115; 예치금·보증금·미지급정산금 → 금융부채/금융상품 1109; 지급보류·이행보증·담보 → 충당부채·우발부채 1037.',
-      '- candidates: 이 문서의 회계 쟁점에 적용 가능한 기준서를 관련성(0~100) 높은 순으로 최대 8개. 위 목록의 기준서번호만 사용. 관련성이 다소 낮아도(직접 쟁점은 아니나 검토할 가치가 있으면) 낮은 관련성 점수로 포함하세요 — 누락보다 포괄을 우선. 회계처리가 수반되는 거래(수익·비용·자산·부채)가 조금이라도 보이면 비우지 마세요(명백히 회계와 무관할 때만 빈 배열).',
-      '- ⚠ 출력이 잘려도 후보가 보존되도록 candidates를 JSON에서 가장 먼저 출력하세요. normalizedTerms는 핵심만 최대 25개로 제한.',
-      '- 반드시 아래 JSON 형식·순서로만 응답(다른 텍스트 금지):',
-      '{"candidates":[{"기준서번호":"","명칭":"","관련성":0,"사유":"","관련쟁점":[""]}],"normalizedTerms":[{"원문":"","표준용어":"","기준서번호":"","신뢰도":"높음"}],"generalTerms":[""]}'
+      '── 1단계: 자료성격 분기(먼저 결정) ──',
+      '① 거래형: 외부 상대방과 대가·교환이 있음. → 이때만 "돈을 받거나 청구하는 주체 = 공급자(수익)" 규칙 적용.',
+      '② 내부형: 상대방 없이 당사 내부 자산·부채를 평가·배분·측정(감가상각·재고·손상·환산·충당부채 추정 등). → 돈 규칙 미적용, 핵심회계논점이 앵커.',
+      '③ 논점·질의형: 거래가 아니라 "되나요/어느 기준서/어떻게 처리?" 류 질의. → 돈 규칙 미적용, 논점이 앵커.',
+      '④ 복합·기타: 여러 거래 혼재하거나 분류 애매. → 무리하게 단정 말고 신뢰도를 "낮음"으로.',
+      '',
+      '── 2단계: 당사 위치·관계 판정(가장 중요) ──',
+      '- ⚠ 상대방(거래처) 관점 분석 금지. 반드시 당사 관점.',
+      '- 거래형이면: 입금·청구·계좌 주체가 당사면 "공급자(수익)", 당사가 지급·취득하면 "고객(비용·자산)".',
+      '- ⚠ 표면 단어("광고/게재/신청서" 등)만으로 비용 단정 금지 — 당사가 매체·플랫폼 제공자로서 대가를 수취하면 광고매출(수익)이다.',
+      '- ⚠ 1115(수익)는 당사가 "공급자(대가 수취)"일 때만 후보에 넣을 것. 당사가 고객(지급) 측이면 1115는 적용 대상이 아니다 — 고객의 지급(비용)은 1115 범위 밖이며 "수익 기준서를 고객 관점에서 본다"는 식의 적용은 금지.',
+      '',
+      '── 케이스 라이브러리(해당하면 참고, 없으면 일반 판단) ──',
+      'A.수익·판매(당사 공급자, 대가 수취): 광고게재(매체=당사)→1115 광고매출 / 상품·서비스·구독 판매→1115 / 결제대행·정산(당사=PG)→1115 본인vs대리인(총액·순액), 예치금·미지급정산금·가맹점보증금→금융부채 1109 / 포인트·리워드→1115 / 보유 IP 라이선스 제공→1115+1038',
+      'B.매입·비용·취득(당사 고객, 대가 지급 — 1115 아님): 광고·판촉비 지급(당사=광고주)→1038 문단69 발생시 비용처리(자산 불인정) / 마케팅·콘텐츠 대행 위탁→비용, 산출물 저작권 당사 귀속 시 1038 자산화 검토 / 용역·외주→비용 / 설비·SW 구입→1016·1038 / 임차·리스(당사 이용)→1116 / 차입(당사)→1109·1023 / 보증·담보·이행보증→충당·우발부채 1037',
+      'C.내부 평가·결산(상대방 없음): 감가상각·내용연수→1016·추정변경 1008 / 무형 상각·개발비 자산화→1038 / 자산손상→1036 / 재고 실사·저가법→1002 / 충당부채 추정→1037 / 외화환산→1021 / 기대신용손실→1109',
+      'D.인사·자본·세무: 급여·퇴직급여→1019 / 주식보상→1102 / 법인세·이연법인세→1012 / 증자·배당·자기주식·RCPS(부채분류)→1032 / 정부보조금→1020',
+      'E.구조·특수: 사업결합→1103 / 지분투자·관계기업→1027·1028 / 매각예정·중단영업→1105 / 리스제공자(당사가 빌려줌)→1116',
+      'F.비회계: 회계와 무관(인사규정·단순 안내)이면 candidates를 비우고 자료성격은 "복합·기타", 핵심회계논점에 "회계 무관" 표기.',
+      '',
+      '── 출력 규칙 ──',
+      '- 근거인용: 거래구조 판정의 근거가 된 문서 "원문 그대로의 구절"만 1~4개(요약·창작 금지 — 코드가 문서 실존을 검증함). 없으면 빈 배열·신뢰도 낮음.',
+      '- candidates: 위 판정 관점으로 관련성(0~100) 높은 순 최대 8개. 낮아도 검토가치 있으면 포함(누락보다 포괄). 위 목록 번호만.',
+      '- ⚠ 광고·판촉비처럼 별도 "비용" 기준서가 없는 지출은, 그 비용처리를 규정한 기준서(광고비=1038 문단69)를 최상위 관련 기준서로 둘 것 — 자산화하지 않더라도 그것이 회계처리 근거이므로 관련성을 높게(자산화 안 한다고 1038을 강등하지 말 것).',
+      '- ⚠ 일반·구조 기준서(1001 재무제표 표시, 1008 회계정책·추정변경·오류, 개념체계 등)는 문서에 그 특정 쟁점(표시·분류 다툼, 회계정책/추정 변경, 오류수정)이 실제로 있을 때만 후보에 넣고, 단순 거래에서는 상위로 올리지 말 것.',
+      '- 당사 위치가 모호하거나 근거가 약하면 신뢰도 "낮음".',
+      '- ⚠ 출력이 잘려도 보존되도록 거래구조와 candidates를 먼저 출력. 반드시 아래 JSON 순서로만(다른 텍스트 금지):',
+      '{"거래구조":{"자료성격":"거래형|내부형|논점·질의형|복합·기타","상대방있음":true,"상대방":"","당사위치":"","관계유형":"공급(수취)|취득·수령(지급)|차입|대여|투자|내부평가·배분|회계·세무논점|기타","대금방향":"당사 수취|당사 지급|해당없음","핵심회계논점":"","회계영향측":["수익"],"경제적실질":"","근거인용":[""],"신뢰도":"높음|보통|낮음"},"candidates":[{"기준서번호":"","명칭":"","관련성":0,"사유":"","관련쟁점":[""]}]}'
     ].join('\n');
+  }
+  // 거래구조로부터 HI가 수익(공급자) 측인지 비용(고객) 측인지 판별
+  function _hiSide(gs){
+    gs=gs||{};
+    var s=(gs['당사위치']||gs['HI위치']||gs['HI역할']||'')+' '+(gs['관계유형']||'')+' '+(gs['대금방향']||'')+' '+(Array.isArray(gs['회계영향측'])?gs['회계영향측'].join(' '):(gs['회계영향측']||''));
+    var supplier=/공급자|수취|수익/.test(s);
+    var customer=/고객|비용|자산|취득|수령|지급/.test(s);
+    if(supplier && !customer) return 'supplier';
+    if(customer && !supplier) return 'customer';
+    return 'mixed';   // 양쪽/불명 → 가드 미적용(오판 방지)
+  }
+  // 수익(공급자) 전용 기준서 — 고객(비용) 측 문서에 뜨면 강등
+  var _REVENUE_ONLY={ '1115':true };
+  // 거래구조 방향과 어긋나는 후보 강등(예: HI가 고객인데 1115 수익이 높게 뜨는 오류 차단)
+  function _applyDirectionGuard(gs, cands){
+    var side=_hiSide(gs);
+    if(side==='mixed' || !cands || !cands.length) return;
+    cands.forEach(function(c){
+      var no=String(c['기준서번호']||'').replace(/[^0-9]/g,'');
+      if(side==='customer' && _REVENUE_ONLY[no] && Number(c['관련성']||0)>15){
+        c.__dirflag='⚠ 당사가 고객(비용·자산) 측이라 수익 기준서 '+no+'는 적용 대상이 아닐 가능성 — 관련성 강등(광고·판촉비는 1038 문단69 비용처리 검토).';
+        c['관련성']=15;
+      }
+    });
+    cands.sort(function(a,b){ return (Number(b['관련성']||0))-(Number(a['관련성']||0)); });
   }
   // ── 이미지 OCR (Gemini 비전) — 최초 분석 시점에 이미지를 텍스트화하여 같은 파이프라인 합류 ──
   KIFRS.OCR_PROMPT='이 이미지는 회계/계약 관련 업무 문서입니다. 보이는 텍스트를 빠짐없이 그대로 추출하세요. 표는 행/열을 알아볼 수 있게 정리하고, 설명·해석 없이 추출 텍스트만 출력하세요.';
@@ -6417,7 +6525,7 @@ function debugR1Compare(){
         if(signal && signal.aborted) return Promise.reject(_abortErr());
         if(!parts.length){ rec.ocrText=''; rec.ocrDone=true; rec.ocrErr='PDF→이미지 변환 실패'+(rec._pdfErr?'('+rec._pdfErr+')':''); i++; renderFileList(); return step(); }
         var ocrM=KIFRS.API.ocrModel||undefined;   // 비우면 자동모드(또는 수동 현재모델) 따라감
-        return KIFRS.callGemini(KIFRS.OCR_PROMPT, {images:parts, temperature:0, retry:5, model:ocrM, signal:signal, onRetry:function(k,mx){ var b=document.getElementById('kifrs-ai'); if(b) b.innerHTML=_stepper(2)+'<div class="kifrs-ai-load"><span class="kifrs-spin"></span> 🖼️ '+esc(rec.name)+' OCR 재시도 '+k+'/'+mx+'<div class="kifrs-note">분당 한도 일시 초과 — 자동 대기 후 재시도(데이터 소진 아님)</div>'+_aiCancelBtn()+'</div>'; }})
+        return KIFRS.callGemini(KIFRS.OCR_PROMPT, {images:parts, temperature:0, retry:5, model:ocrM, signal:signal, onRetry:function(k,mx,mdl,e){ var b=document.getElementById('kifrs-ai'); if(b) b.innerHTML=_stepper(2)+'<div class="kifrs-ai-load"><span class="kifrs-spin"></span> 🖼️ '+esc(rec.name)+' OCR 재시도 '+k+'/'+mx+'<div class="kifrs-note">'+_retryReason(e)+'</div>'+_aiCancelBtn()+'</div>'; }})
           .then(function(t){ rec.ocrText=(t||'').trim(); rec.ocrDone=true; i++; renderFileList(); return step(); })
           .catch(function(e){ if(_isAbort(e)) throw e;   // 중단이면 다음 파일로 넘어가지 않고 루프 종료
             rec.ocrText=''; rec.ocrDone=true; rec.ocrErr=(e&&e.message)||'OCR 실패'; i++; renderFileList(); return step(); });
@@ -6467,17 +6575,32 @@ function debugR1Compare(){
         return;
       }
       var off=KIFRS.analyze(text);
-      var prompt=buildNormalizePrompt(text, off);
+      var docNorm=_qnorm(text);   // 거래구조 근거인용 실존검증용
       aiTimer=setInterval(function(){ var el=document.getElementById('kifrs-ai-timer'); if(el) el.textContent=((Date.now()-t0)/1000).toFixed(1)+'초'; },100);
-      box.innerHTML=_stepper(3)+'<div class="kifrs-ai-load"><span class="kifrs-spin"></span> 🤖 Gemini 분석 중… <b id="kifrs-ai-timer">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="kifrs-note">API ① — 용어 정규화 + 후보 기준서 선정</div>'+_aiCancelBtn()+'</div>';
-      return KIFRS.callGemini(prompt, {json:true, temperature:0.2, signal:_sig, system:'당신은 K-IFRS(한국채택국제회계기준) 전문가입니다. 실무 문서의 용어를 기준서 표준 용어로 정규화하고, 적용 기준서를 정확히 판단합니다.',
-          onRetry:function(k,mx){ if(box) box.innerHTML=_stepper(3)+'<div class="kifrs-ai-load"><span class="kifrs-spin"></span> 🤖 모델 혼잡 — 재시도 '+k+'/'+mx+' <b id="kifrs-ai-timer">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="kifrs-note">API ① — 잠시 대기 후 재시도</div>'+_aiCancelBtn()+'</div>'; }})
-        .then(function(txt){
-          clearInterval(aiTimer); KIFRS._aiBusy=false;
-          var data=KIFRS.parseJsonResponse(txt);
-          if(!data){ box.innerHTML='<div class="kifrs-api-stat err">응답 JSON 파싱 실패 — 원문 일부:</div><pre class="kifrs-preview">'+esc(txt.slice(0,1500))+'</pre>'; return; }
-          KIFRS._lastAi=data;
-          box.innerHTML=renderAiResult(data, ((Date.now()-t0)/1000).toFixed(1));
+      // ── 1차: 용어 정규화 ──
+      box.innerHTML=_stepper(3)+'<div class="kifrs-ai-load"><span class="kifrs-spin"></span> 🤖 용어 정규화 중… <b id="kifrs-ai-timer">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="kifrs-note">1/2 — 회계용어 표준화</div>'+_aiCancelBtn()+'</div>';
+      return KIFRS.callGemini(buildNormalizePrompt(text, off), {json:true, temperature:0.2, signal:_sig, system:'당신은 K-IFRS 전문가입니다. 실무 문서의 용어를 기준서 표준 용어로 정규화합니다. JSON으로만 답합니다.',
+          onRetry:function(k,mx,mdl,e){ if(box) box.innerHTML=_stepper(3)+'<div class="kifrs-ai-load"><span class="kifrs-spin"></span> 🤖 정규화 재시도 '+k+'/'+mx+' <b id="kifrs-ai-timer">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="kifrs-note">1/2 — '+_retryReason(e)+'</div>'+_aiCancelBtn()+'</div>'; }})
+        .then(function(txt1){
+          var norm=KIFRS.parseJsonResponse(txt1)||{};
+          // ── 2차: 거래구조(당사 위치·관계) 확정 → 후보 기준서 ──
+          box.innerHTML=_stepper(4)+'<div class="kifrs-ai-load"><span class="kifrs-spin"></span> 🧭 거래구조(당사 위치·관계) 분석 중… <b id="kifrs-ai-timer">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="kifrs-note">2/2 — 당사 위치 확정 → 후보 기준서 선정</div>'+_aiCancelBtn()+'</div>';
+          return KIFRS.callGemini(buildStructurePrompt(text, norm.normalizedTerms||[]), {json:true, temperature:0.1, signal:_sig, system:'당신은 K-IFRS 전문가입니다. 보고실체(당사) 관점에서 거래구조를 확정하고 적용 기준서를 정확히 판단합니다. JSON으로만 답합니다.',
+              onRetry:function(k,mx,mdl,e){ if(box) box.innerHTML=_stepper(4)+'<div class="kifrs-ai-load"><span class="kifrs-spin"></span> 🧭 거래구조 재시도 '+k+'/'+mx+' <b id="kifrs-ai-timer">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="kifrs-note">2/2 — '+_retryReason(e)+'</div>'+_aiCancelBtn()+'</div>'; }})
+            .then(function(txt2){
+              clearInterval(aiTimer); KIFRS._aiBusy=false;
+              var st=KIFRS.parseJsonResponse(txt2);
+              if(!st){ box.innerHTML='<div class="kifrs-api-stat err">응답 JSON 파싱 실패 — 원문 일부:</div><pre class="kifrs-preview">'+esc(txt2.slice(0,1500))+'</pre>'; return; }
+              var gs=st['거래구조']||{};
+              var raw=gs['근거인용']||[];
+              gs['근거인용원본수']=raw.length;
+              gs['근거인용검증']=raw.filter(function(q){ return _quoteInDoc(q, docNorm); });   // 문서 실존분만 채택(할루시네이션 차단)
+              var cands=st.candidates||[];
+              _applyDirectionGuard(gs, cands);   // 거래구조 방향과 어긋나는 수익/비용 기준서 강등
+              var data={ '거래구조':gs, candidates:cands, normalizedTerms:norm.normalizedTerms||[], generalTerms:norm.generalTerms||[], __truncated:(norm.__truncated||st.__truncated) };
+              KIFRS._lastAi=data;
+              box.innerHTML=renderAiResult(data, ((Date.now()-t0)/1000).toFixed(1));
+            });
         });
     }).catch(function(e){
       KIFRS._aiBusy=false; if(aiTimer) clearInterval(aiTimer);
@@ -6501,7 +6624,7 @@ function debugR1Compare(){
   KIFRS.showLabelHelp = function(){
     var ov=document.createElement('div');
     ov.className='kifrs-modal-ov';
-    ov.innerHTML='<div class="kifrs-modal" style="max-width:860px;width:92vw;text-align:left">'
+    ov.innerHTML='<div class="kifrs-modal" style="max-width:960px;width:94vw;text-align:left">'
       + '<div class="m-ttl" style="text-align:center">🔎 신뢰도 라벨 설명</div>'
       + '<div class="kifrs-help-body">'
       +   '<p>라벨은 <b>두 종류</b>입니다. ⓐ <b>코드검증(5단계)</b> = 분석이 가리킨 조문이 실재하는가(신뢰도). ⓑ <b>AI감사(6단계)</b> = 그 검토포인트를 <b>실제 업로드 문서에 적용했을 때 문서가 요건을 충족하는가</b>(실질 판정).</p>'
@@ -6547,10 +6670,30 @@ function debugR1Compare(){
     document.body.appendChild(ov);
   };
   function renderAiResult(data, secs){
-    var h='<div class="kifrs-an-head">🤖 AI 분석 결과 (API ①) <span>'+secs+'초 · '+esc(KIFRS.getModel())+'</span>'
+    var h='<div class="kifrs-an-head">🤖 AI 분석 결과 (거래구조·후보) <span>'+secs+'초 · '+esc(KIFRS.getModel())+'</span>'
       + '<button class="kifrs-help-btn" onclick="window.KIFRS.showLabelHelp()">ⓘ 신뢰도 라벨 설명</button>'
       + '<button class="kifrs-help-btn" onclick="window.KIFRS.printEvidence()" title="현재 분석·검증 결과를 감사 대응용 PDF로 저장(브라우저 인쇄 → 대상에서 PDF로 저장)">📄 증빙 PDF 출력</button></div>';
     if(data.__truncated){ h+='<div class="kifrs-api-stat err" style="margin:4px 0">⚠ 응답이 길어 일부가 잘렸습니다 — 후보는 보존되지만 정규화 용어 일부가 누락될 수 있습니다. (다시 분석 권장)</div>'; }
+    var gs=data['거래구조']||data.context||{};   // 신규 거래구조 / 구버전 context 하위호환
+    if(gs && (gs['자료성격']||gs['당사위치']||gs['HI위치']||gs['관계유형']||gs['핵심회계논점']||gs['경제적실질']||gs['문서유형']||gs['HI역할']||gs['거래요지'])){
+      var low=(gs['신뢰도']==='낮음')||(gs['자료성격']==='복합·기타');
+      var ver=gs['근거인용검증']||[], rawn=gs['근거인용원본수']||0;
+      var hipos=gs['당사위치']||gs['HI위치']||gs['HI역할']||'';   // 구버전 호환
+      h+='<div style="margin:10px 0;padding:10px 13px;background:'+(low?'#fff7ed':'#eef6ff')+';border:1px solid '+(low?'#fed7aa':'#cfe2f5')+';border-radius:8px;font-size:12px;color:#234;line-height:1.7">'
+        + '<b>🧭 거래구조 (당사 위치·관계)</b>'
+        + (gs['자료성격']?' &nbsp;<span style="background:#1d4ed8;color:#fff;border-radius:4px;padding:1px 7px;font-size:11px">'+esc(gs['자료성격'])+'</span>':'')
+        + (hipos?'<div style="margin-top:4px">당사 위치: <b style="color:#1d4ed8">'+esc(hipos)+'</b>'
+            +(gs['상대방']?' &nbsp;|&nbsp; 상대방: <b>'+esc(gs['상대방'])+'</b>':(gs['상대방있음']===false?' &nbsp;|&nbsp; 상대방: <b>없음(내부)</b>':''))+'</div>':'')
+        + (gs['관계유형']?'<div>관계: <b>'+esc(gs['관계유형'])+'</b>'+(gs['대금방향']&&gs['대금방향']!=='해당없음'?' &nbsp;|&nbsp; 대금: '+esc(gs['대금방향']):'')+'</div>':'')
+        + (gs['핵심회계논점']?'<div>핵심 논점: '+esc(gs['핵심회계논점'])+'</div>':'')
+        + (Array.isArray(gs['회계영향측'])&&gs['회계영향측'].length?'<div>영향 측면: '+gs['회계영향측'].map(function(x){return esc(x);}).join(' · ')+'</div>':(typeof gs['회계영향측']==='string'&&gs['회계영향측']?'<div>영향 측면: '+esc(gs['회계영향측'])+'</div>':''))
+        + (gs['경제적실질']||gs['거래요지']?'<div style="margin-top:3px;color:#45607a">'+esc(gs['경제적실질']||gs['거래요지'])+'</div>':'')
+        + (ver.length?'<div class="kifrs-pr-row kifrs-pr-src" style="color:#0f766e;margin-top:4px"><b>문서 근거(검증됨)</b> '+ver.map(function(q){return '“'+esc(q)+'”';}).join(' &nbsp;/&nbsp; ')+'</div>'
+            :(rawn?'<div style="color:#b45309;margin-top:4px"><b>문서 근거</b> 검증된 인용 없음(AI 제시 '+rawn+'건이 문서와 불일치)</div>':''))
+        + '<div style="margin-top:5px">'+(gs['신뢰도']?'신뢰도: <b style="color:'+(low?'#c2410c':'#0f766e')+'">'+esc(gs['신뢰도'])+'</b> &nbsp;':'')
+        + '<span class="kifrs-note">'+(low?'※ 당사 위치/분류가 모호합니다 — 아래 후보가 부적절하면 당사 위치를 정정해 알려주세요(재분석).':'※ 당사 위치가 틀리면 적용 기준서가 달라집니다 — 잘못됐으면 알려주세요.')+'</span></div>'
+        + '</div>';
+    }
     var cands=data.candidates||[];
     h+='<div class="kifrs-an-sec">후보 기준서 <span>'+cands.length+'종 · AI 판단</span></div>';
     if(!cands.length){ h+='<div class="kifrs-note">적용 기준서를 특정하지 못했습니다.</div>'; }
@@ -6562,6 +6705,7 @@ function debugR1Compare(){
       var issues=(c['관련쟁점']||[]).map(function(x){return esc(x);}).join(', ');
       h+='<div class="kifrs-an-std">'
         + '<div class="kifrs-an-std-h"><span class="kifrs-std-no">'+esc(rawNo||'?')+'</span><span class="kifrs-an-name">'+esc(c['명칭']||(std?std.name:''))+'</span><span class="kifrs-an-score">관련성 '+(c['관련성']||0)+'</span></div>'
+        + (c.__dirflag?'<div class="kifrs-api-stat err" style="margin-top:4px">'+esc(c.__dirflag)+'</div>':'')
         + (c['사유']?'<div class="kifrs-an-para">'+esc(c['사유'])+'</div>':'')
         + (issues?'<div class="kifrs-an-para">쟁점: <span class="kifrs-an-hit">'+issues+'</span></div>':'')
         + (valid
@@ -6586,27 +6730,39 @@ function debugR1Compare(){
   }
 
   // ── API ②: 특정 기준서 조문 범위 정밀 분석 ──
-  function buildPrecisePrompt(std, text){
+  function buildPrecisePrompt(std, text, gs){
+    gs=gs||{};
     var arts=(std.paragraphs||[]).map(function(p){
       var ex=(p.excerpt||'').replace(/\s+/g,' ').slice(0,160);
       return p.no+' '+(p.topic||'')+': '+(p.summary||'').replace(/\s+/g,' ').slice(0,90)+(ex?'  |원문: '+ex:'');
     }).join('\n');
     var excerpt=_docExcerpt(text, 10000);   // 앞부분만 보던 문제 해결: 앞·중간·뒤 샘플
+    var hipos=gs['당사위치']||gs['HI위치']||'';
+    var ctx=(hipos||gs['자료성격']||gs['핵심회계논점']||gs['경제적실질'])
+      ? '[확정된 거래구조 — 이 전제를 반드시 따르라]\n'
+        + '- 자료성격: '+(gs['자료성격']||'?')+' / 당사 위치: '+(hipos||'?')+(gs['대금방향']?' / 대금: '+gs['대금방향']:'')+'\n'
+        + '- 핵심 논점: '+(gs['핵심회계논점']||'?')+'\n'
+        + '- 경제적 실질: '+(gs['경제적실질']||'?')+'\n'
+        + '⚠ 위 거래구조와 모순되는 결론 금지 — 당사가 고객(지급·비용·자산) 측이면 수익인식 분석을 하지 말고, 비용성 지출을 무리하게 자산화하지 말 것.\n'
+        + '⚠ 광고·판촉 목적 지출(당사가 광고주로서 지급)은 1038 문단69에 따라 발생시점에 비용으로 인식하며, 매체를 일정기간 배타적으로 사용하더라도 무형자산으로 자산화하지 않는다. 검토포인트는 "자산화 가능"이 아니라 "광고비의 비용 인식 적정성·인식시점·기간 대응"으로 둘 것.'
+      : '';
     return [
-      '당신은 K-IFRS 전문가입니다. 아래 문서를 기업회계기준서 제'+std.no+'호 「'+std.name+'」 기준으로 분석하세요.',
-      '',
+      '당신은 K-IFRS 전문가입니다. 아래 [확정된 거래구조]를 전제로, 이 문서를 기업회계기준서 제'+std.no+'호 「'+std.name+'」 관점에서 분석하세요.',
+      ''
+    ].concat(ctx?[ctx,'']:[]).concat([
       '[문서 본문 발췌]\n'+excerpt,
       '',
       '[제'+std.no+'호 조문(문단) 범위 — 근거로만 사용하고, 조문번호는 반드시 이 목록에서 인용]\n'+arts,
       '',
       '[지시]',
       '- 이 문서에 실제로 관련된 조문만 분석하세요(억지 매칭 금지). 항목은 최대 6개.',
+      '- ⚠ 검토포인트는 위 거래구조(당사 위치·핵심 논점)와 일치해야 한다. 거래구조에 어긋나는 자산화·수익화 결론을 만들지 말 것.',
       '- 검토포인트는 핵심만 2~3문장(항목당 200자 이내)으로 간결히. 장황한 서술·반복 금지.',
       '- 분개예시는 해당하면 "(차) … / (대) …" 형식, 아니면 빈 문자열.',
       '- 근거조문원문요약은 위 조문 범위에 근거하여 1문장.',
       '- 반드시 아래 JSON 형식으로만 응답(자유 서술 금지):',
       '{"items":[{"기준서번호":"'+std.no+'","조문번호":"","체크항목":"","검토포인트":"","분개예시":"","근거조문원문요약":""}]}'
-    ].join('\n');
+    ]).join('\n');
   }
   KIFRS._preciseBusy={};   // 기준서별 진행상태 → 여러 후보 동시 정밀분석 허용
   KIFRS._preciseCtl={};    // 기준서별 AbortController(중단용)
@@ -6636,7 +6792,8 @@ function debugR1Compare(){
     var text=gatherText();
     if(!text){ box.innerHTML='<div class="kifrs-note">텍스트가 없습니다 — 먼저 [🤖 AI 기준서 분석]을 실행해 이미지 OCR을 진행하세요.</div>'; return; }
     var _rg=KIFRS.rateGuard(); if(!_rg.ok){ showRateWaitPopup(_rg.waitSec); return; }
-    var prompt=buildPrecisePrompt(std, text);
+    var _gs=(KIFRS._lastAi&&KIFRS._lastAi['거래구조'])||{};   // 거래구조 전제를 정밀분석에 전달(방향 일관성)
+    var prompt=buildPrecisePrompt(std, text, _gs);
     KIFRS._preciseBusy[no]=true;
     var ctl=(typeof AbortController!=='undefined')?new AbortController():null;
     KIFRS._preciseCtl[no]=ctl; var psig=ctl?ctl.signal:undefined;
@@ -6647,7 +6804,7 @@ function debugR1Compare(){
     var prCancel=_cancelBtn("window.KIFRS.cancelPrecise('"+no+"')", '정밀 분석 중단');
     box.innerHTML=_stepper(5)+'<div class="kifrs-ai-load"><span class="kifrs-spin"></span> 🔬 제'+esc(std.no)+'호 정밀 분석 중… <b id="'+tid+'">0.0초</b><div class="kifrs-note">API ② — 조문별 체크·검토포인트·분개</div>'+prCancel+'</div>';
     KIFRS.callGemini(prompt, {json:true, temperature:0.1, signal:psig, system:'당신은 K-IFRS 전문가입니다. 지정된 기준서·조문 범위에 근거하여 분석하고, 반드시 JSON으로만 답합니다.',
-        onRetry:function(k,mx){ box.innerHTML=_stepper(5)+'<div class="kifrs-ai-load"><span class="kifrs-spin"></span> 🔬 제'+esc(std.no)+'호 — 모델 혼잡 재시도 '+k+'/'+mx+' <b id="'+tid+'">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="kifrs-note">API ② — 잠시 대기 후 재시도</div>'+prCancel+'</div>'; }})
+        onRetry:function(k,mx,mdl,e){ box.innerHTML=_stepper(5)+'<div class="kifrs-ai-load"><span class="kifrs-spin"></span> 🔬 제'+esc(std.no)+'호 재시도 '+k+'/'+mx+' <b id="'+tid+'">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="kifrs-note">API ② — '+_retryReason(e)+'</div>'+prCancel+'</div>'; }})
       .then(function(txt){
         fin();
         var data=KIFRS.parseJsonResponse(txt);
@@ -6732,7 +6889,17 @@ function debugR1Compare(){
     return list[idx]||null;
   }
   // 인용이 문서에 실제로 존재하는가(공백·대소문자 무시한 verbatim 8자 이상 일치) — 할루시네이션 차단
-  function _quoteInDoc(q, docNorm){ var n=_normTerm(q||''); return n.length>=8 && docNorm.indexOf(n)>=0; }
+  // 인용 정규화: 소문자 + 공백·문장부호 제거 (의역·띄어쓰기 차이 흡수)
+  function _qnorm(s){ return String(s||'').toLowerCase().replace(/[\s.,!?;:()'"“”‘’…·\-]/g,''); }
+  // 인용이 문서에 실재하는가 — 완전일치 또는 6자 조각 55%↑ 부분일치(할루시네이션만 걸러내고 의역은 인정)
+  function _quoteInDoc(q, docNorm){
+    var n=_qnorm(q); if(n.length<4) return false;
+    if(docNorm.indexOf(n)>=0) return true;
+    if(n.length<8) return false;
+    var grams=0, hit=0;
+    for(var i=0;i+6<=n.length;i+=3){ grams++; if(docNorm.indexOf(n.substr(i,6))>=0) hit++; }
+    return grams>=2 && (hit/grams)>=0.55;
+  }
   // 1단계: 문서에서 검토포인트 관련 '원문 그대로' 인용만 추출
   function buildEvidencePrompt(std, items, docText){
     var doc=_docExcerpt(docText||'', 16000);
@@ -6750,34 +6917,42 @@ function debugR1Compare(){
     ].join('\n');
   }
   // 2단계: 코드로 검증된 근거만 가지고 판정
-  function buildJudgePrompt(std, itemsEv){
+  function buildJudgePrompt(std, itemsEv, docKind){
     var lines=itemsEv.map(function(e,idx){
       var q=e.quotes.length ? e.quotes.map(function(x){return '「'+x+'」';}).join(' / ') : '(검증된 근거 없음)';
       return '['+(idx+1)+'] 조문 '+String(e.it['조문번호']||'')+'\n  · 검토포인트: '+(e.it['검토포인트']||'')+'\n  · 검증된 문서 근거: '+q;
     }).join('\n\n');
     return [
-      '당신은 깐깐한 회계 감사인입니다. 각 검토포인트를, 아래 [검증된 문서 근거](문서에 실제 존재함이 코드로 확인된 인용)만 사용해 판정하세요.',
+      '당신은 신중하고 균형 잡힌 회계 검토자입니다. 각 검토포인트를, 아래 [검증된 문서 근거](문서에 실제 존재함이 코드로 확인된 인용)만 사용해 판정하세요.',
       '⚠ 절대 규칙: 제시된 근거 외의 외부 지식·일반론·추측 사용 금지. 근거에 없는 사실을 단정하지 마세요.',
+      '',
+      '[문서 성격] 이 문서는 '+(docKind||'원천 문서(계약서 등)')+'입니다. 즉 회계기록(분개·재무제표·주석)이 아니라 회계처리의 입력이 되는 원천 자료입니다.',
+      '⚠ 따라서 회계처리 결론·회계용어(수익인식 시점, 수행의무 배분, 변동대가 추정 등)가 문서에 적혀 있지 않은 것은 정상이며, 그 부재만으로 "미흡"으로 판정하지 마세요.',
       '',
       '제'+std.no+'호 「'+std.name+'」',
       lines,
       '',
-      '[판정] 충족: 근거가 충족을 명확히 뒷받침 / 미흡: 근거가 위반·미달·누락을 보여줌 / 확인필요: 근거가 없거나 불충분해 판단 불가 / 해당없음: 근거상 이 거래에 요건 미적용이 분명',
-      '⚠ "검증된 근거 없음"이면 충족·미흡 판정 금지 → 반드시 확인필요.',
+      '[판정 기준]',
+      '- 충족: 근거가 그 검토포인트에 필요한 사실·조건을 갖추고 있어 회계처리에 충분.',
+      '- 미흡: 근거가 요건에 명백히 배치되거나, 회계처리에 꼭 필요한 핵심 사실을 적극적으로 결하여 그대로면 실제 회계처리에 문제가 됨. (단순 미언급·회계용어 부재는 미흡 아님)',
+      '- 확인필요: 근거가 없거나 불충분해 판단 불가, 또는 문서 밖 추가 자료가 있어야 결론 가능.',
+      '- 해당없음: 이 거래에는 그 요건이 적용되지 않음.',
+      '⚠ "검증된 근거 없음"이면 충족·미흡 금지 → 반드시 확인필요. 충족인지 미흡인지 애매하면 미흡이 아니라 확인필요로.',
       '확인필요면 판단불가사유에 "무엇이 없어서/불충분해 판단 못 하는지 + 사용자가 후속 확인할 사항"을 구체적으로. 감사의견은 제시된 근거를 인용해 1~2문장.',
       '반드시 아래 JSON으로만:',
       '{"audited":[{"조문번호":"","판정":"충족|미흡|확인필요|해당없음","감사의견":"","보완사항":"","판단불가사유":""}]}'
     ].join('\n');
   }
   // 3단계: 2차 검토자가 1차 판정이 근거를 넘어서지 않았는지 재검증
-  function buildAuditVerifyPrompt(std, judgedEv){
+  function buildAuditVerifyPrompt(std, judgedEv, docKind){
     var lines=judgedEv.map(function(e,idx){
       var q=e.quotes.length ? e.quotes.map(function(x){return '「'+x+'」';}).join(' / ') : '(없음)';
       return '['+(idx+1)+'] 조문 '+String(e.it['조문번호']||'')+'\n  · 검토포인트: '+(e.it['검토포인트']||'')+'\n  · 검증된 근거: '+q+'\n  · 1차 판정: '+(e.judg['판정']||'')+'\n  · 1차 감사의견: '+(e.judg['감사의견']||'');
     }).join('\n\n');
     return [
       '당신은 1차 감사 결과를 검증하는 2차 검토자입니다. 각 판정이 "제시된 근거만으로" 타당한지 보수적으로 재검증하세요.',
-      '다음 중 하나라도 해당하면 "하향": ① 감사의견이 근거에 없는 내용을 단정(과잉판단) ② 근거가 부족·불명확한데 충족 또는 미흡으로 단정 ③ 근거와 판정이 논리적으로 불일치. 문제 없으면 "유지".',
+      '[문서 성격] 이 문서는 '+(docKind||'원천 문서(계약서 등)')+'(회계기록 아님)입니다.',
+      '다음 중 하나라도 해당하면 "하향": ① 감사의견이 근거에 없는 내용을 단정(과잉판단) ② 근거가 부족·불명확한데 충족 또는 미흡으로 단정 ③ 근거와 판정이 논리적으로 불일치 ④ 원천문서에 회계 결론·용어가 없다는 이유(단순 미언급)로 미흡 판정. 문제 없으면 "유지".',
       '',
       lines,
       '',
@@ -6797,7 +6972,10 @@ function debugR1Compare(){
     var _rg=KIFRS.rateGuard(); if(!_rg.ok){ showRateWaitPopup(_rg.waitSec); return; }
     var docText=gatherText();
     if(!docText){ slot.innerHTML='<div class="kifrs-note">문서 텍스트가 없습니다 — 먼저 분석을 실행하세요.</div>'; return; }
-    var docNorm=_normTerm(docText);
+    var docNorm=_qnorm(docText);   // 인용 검증용 정규화(공백·문장부호 제거)
+    var _gs=(KIFRS._lastAi&&KIFRS._lastAi['거래구조'])||{};   // 거래구조에서 문서성격 가져와 감사에 전달
+    var _hipos=_gs['당사위치']||_gs['HI위치']||'';
+    var docKind=(_gs['자료성격']||'원천 문서(계약서 등)')+(_hipos?' · 당사는 '+_hipos:'')+(_gs['관계유형']?'('+_gs['관계유형']+')':'');
     KIFRS._auditBusy[no]=true;
     var ctl=(typeof AbortController!=='undefined')?new AbortController():null;
     KIFRS._auditCtl[no]=ctl; var asig=ctl?ctl.signal:undefined;
@@ -6808,7 +6986,7 @@ function debugR1Compare(){
     function stage(t, sub){ slot.innerHTML=_stepper(6)+'<div class="kifrs-ai-load"><span class="kifrs-spin"></span> ✅ AI감사 '+t+' <b id="kifrs-audit-timer-'+no+'">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="kifrs-note">'+sub+'</div>'+auCancel+'</div>'; }
     // 1단계: 근거 추출
     stage('1/3 근거 추출 중…', '문서에서 검토포인트 관련 원문을 그대로(verbatim) 추출');
-    KIFRS.callGemini(buildEvidencePrompt(std, items, docText), _aopts(asig, '문서에 실제로 존재하는 원문만 그대로 인용 추출. 요약·추측 금지. JSON만.', function(k,mx){ stage('1/3 근거추출 재시도 '+k+'/'+mx, '모델 혼잡 — 대기 후 재시도'); }))
+    KIFRS.callGemini(buildEvidencePrompt(std, items, docText), _aopts(asig, '문서에 실제로 존재하는 원문만 그대로 인용 추출. 요약·추측 금지. JSON만.', function(k,mx,mdl,e){ stage('1/3 근거추출 재시도 '+k+'/'+mx, _retryReason(e)); }))
       .then(function(t1){
         var ev=KIFRS.parseJsonResponse(t1); var evList=(ev&&ev.evidence)||[];
         // 코드 검증: AI가 댄 인용이 문서에 실재하는지(할루시네이션 제거)
@@ -6820,7 +6998,7 @@ function debugR1Compare(){
         });
         // 2단계: 검증된 근거로만 판정
         stage('2/3 판정 중…', '코드로 검증된 근거만 사용해 충족 여부 판단(근거 없으면 판단불가)');
-        return KIFRS.callGemini(buildJudgePrompt(std, itemsEv), _aopts(asig, '제시된 검증 근거만 사용. 외부지식·추측 금지. 근거 없으면 확인필요. JSON만.', function(k,mx){ stage('2/3 판정 재시도 '+k+'/'+mx, '모델 혼잡 — 대기 후 재시도'); }))
+        return KIFRS.callGemini(buildJudgePrompt(std, itemsEv, docKind), _aopts(asig, '제시된 검증 근거만 사용. 외부지식·추측 금지. 근거 없으면 확인필요. 원천문서에 회계용어 없는 건 미흡 아님. JSON만.', function(k,mx,mdl,e){ stage('2/3 판정 재시도 '+k+'/'+mx, _retryReason(e)); }))
           .then(function(t2){
             var jd=KIFRS.parseJsonResponse(t2); var jList=(jd&&jd.audited)||[];
             var judgedEv=itemsEv.map(function(e,i){
@@ -6832,7 +7010,7 @@ function debugR1Compare(){
             });
             // 3단계: 교차검증(과잉판단 하향)
             stage('3/3 교차검증 중…', '판정이 근거를 넘어서지 않는지 2차 검토자가 재검증');
-            return KIFRS.callGemini(buildAuditVerifyPrompt(std, judgedEv), _aopts(asig, '1차 판정이 근거만으로 타당한지 보수적으로 재검증. 과잉판단이면 하향. JSON만.', function(k,mx){ stage('3/3 교차검증 재시도 '+k+'/'+mx, '모델 혼잡 — 대기 후 재시도'); }))
+            return KIFRS.callGemini(buildAuditVerifyPrompt(std, judgedEv, docKind), _aopts(asig, '1차 판정이 근거만으로 타당한지 보수적으로 재검증. 과잉판단이면 하향. 원천문서 회계용어 부재로 미흡이면 하향. JSON만.', function(k,mx,mdl,e){ stage('3/3 교차검증 재시도 '+k+'/'+mx, _retryReason(e)); }))
               .then(function(t3){
                 afin();
                 var vf=KIFRS.parseJsonResponse(t3); var vList=(vf&&vf.verified)||[];
@@ -6870,7 +7048,7 @@ function debugR1Compare(){
       var code=KIFRS.verifyItem(std.no, it);   // 코드 신뢰도(존재성)는 보조 표시
       var quotes=a['근거인용']||[];
       var quoteHtml = quotes.length
-        ? '<div class="kifrs-pr-row kifrs-pr-src"><b>문서 근거(검증됨)</b> '+quotes.map(function(q){return '“'+esc(q)+'”';}).join(' &nbsp;/&nbsp; ')+'</div>'
+        ? '<div class="kifrs-pr-row kifrs-pr-src" style="color:#0f766e"><b>문서 근거(검증됨)</b> '+quotes.map(function(q){return '“'+esc(q)+'”';}).join(' &nbsp;/&nbsp; ')+'</div>'
         : '<div class="kifrs-pr-row" style="color:#6b7280"><b>문서 근거</b> 검증된 인용 없음</div>';
       var unable = (verd==='확인필요' && a['판단불가사유'] && String(a['판단불가사유']).trim())
         ? '<div class="kifrs-pr-row" style="color:#b45309"><b>❓ 판단불가 사유 · 후속확인</b> '+esc(a['판단불가사유'])+'</div>'
@@ -6884,7 +7062,7 @@ function debugR1Compare(){
           + (code.level!=='green'?' <span class="kifrs-audit-tag">코드검증 '+(code.level==='red'?'확인불가':'미검증')+'</span>':'')+'</div>'
         + (it['검토포인트']?'<div class="kifrs-pr-row"><b>검토포인트</b> '+esc(it['검토포인트'])+'</div>':'')
         + quoteHtml
-        + (a['감사의견']?'<div class="kifrs-pr-row"><b>AI감사의견</b> '+esc(a['감사의견'])+'</div>':'')
+        + (a['감사의견']?'<div class="kifrs-pr-row" style="color:#6d28d9"><b>AI감사의견</b> '+esc(a['감사의견'])+'</div>':'')
         + (verd!=='확인필요' && a['보완사항']?'<div class="kifrs-pr-row" style="color:#b45309"><b>보완·확인</b> '+esc(a['보완사항'])+'</div>':'')
         + unable + hallucNote
         + '</div>';
@@ -7417,9 +7595,17 @@ function debugR1Compare(){
       + '<div class="kifrs-header">'
       +   '<div class="kifrs-header-icon">📞</div>'
       +   '<div>'
-      +     '<div class="kifrs-header-title">기준서 콜센터<span class="kifrs-phase-tag">K-IFRS · Phase 1</span></div>'
+      +     '<div class="kifrs-header-title">AI기준서<span class="kifrs-phase-tag">K-IFRS · Phase 1</span></div>'
       +     '<div class="kifrs-header-sub">업로드한 문서를 K-IFRS 기준서 기준으로 자동 검토합니다.<br>문서(PDF·Excel·CSV·Word·PPT)·이미지(JPG·PNG·BMP)·암호 ZIP을 지원합니다.</div>'
       +   '</div>'
+      + '</div>'
+      + '<div class="kifrs-api-bar">'
+      +   '<span class="kifrs-api-ico">🏢</span>'
+      +   '<span class="kifrs-api-label">보고실체(당사)</span>'
+      +   '<input type="text" id="kifrs-entity" class="kifrs-api-input" placeholder="당사 회사명 (기본: ㈜헥토이노베이션)" autocomplete="off">'
+      +   '<button class="kifrs-btn kifrs-btn-sm" id="kifrs-entity-save">저장</button>'
+      +   '<span class="kifrs-api-stat" id="kifrs-entity-stat"></span>'
+      +   '<span class="kifrs-keyguide">분석 기준이 되는 회사(보고실체)입니다. 다른 법인 자료를 검토하려면 그 회사명을 입력하세요.</span>'
       + '</div>'
       + '<div class="kifrs-api-bar">'
       +   '<span class="kifrs-api-ico">⚙</span>'
@@ -7498,6 +7684,16 @@ function debugR1Compare(){
       var saved=KIFRS.getApiKey();
       if(saved){ apiKeyEl.value=saved; if(apiStat){ apiStat.className='kifrs-api-stat ok'; apiStat.textContent='저장된 키 있음 · 연결 테스트로 확인하세요'; } }
     }
+    // 보고실체(당사) — 저장값 복원 + 저장
+    var entEl=document.getElementById('kifrs-entity');
+    var entSave=document.getElementById('kifrs-entity-save');
+    var entStat=document.getElementById('kifrs-entity-stat');
+    if(entEl){ entEl.value=KIFRS.getEntity(); }
+    if(entSave) entSave.addEventListener('click', function(){
+      KIFRS.setEntity(entEl?entEl.value:'');
+      if(entEl) entEl.value=KIFRS.getEntity();
+      if(entStat){ entStat.className='kifrs-api-stat ok'; entStat.textContent='✅ 보고실체: '+KIFRS.getEntity(); }
+    });
     // 모델 선택 — 저장된 모델 복원 + 전환 시 저장(모델별 무료 한도가 달라 2.5↔2.0 교체용)
     try{ var _sm=localStorage.getItem('kifrs-model'); if(_sm) KIFRS.setModel(_sm); }catch(e){}
     var apiModel=document.getElementById('kifrs-api-model');
