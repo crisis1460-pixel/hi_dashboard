@@ -6158,7 +6158,9 @@ function debugR1Compare(){
     endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/'
   };
   // 자동 모델 우선순위 — 무료 한도/품질 균형 순. 호출 때 위에서부터 되는 걸 사용
-  KIFRS.MODEL_CHAIN = ['gemini-2.0-flash','gemini-2.5-flash-lite','gemini-2.0-flash-lite','gemini-2.5-flash','gemini-1.5-flash'];
+  KIFRS.MODEL_CHAIN = ['gemini-2.0-flash','gemini-2.5-flash-lite','gemini-2.0-flash-lite','gemini-2.5-flash'];
+  // 구글이 퇴역시킨 모델 — 선택/체인에 있으면 404(generateContent 미지원). 자동 마이그레이션 대상
+  KIFRS._RETIRED = {'gemini-1.5-flash':1,'gemini-1.5-flash-latest':1,'gemini-1.5-flash-8b':1,'gemini-1.5-pro':1,'gemini-1.5-pro-latest':1,'gemini-1.0-pro':1,'gemini-pro':1};
   KIFRS._activeModel = null;         // 자동모드에서 최근 성공 모델(그날 계속 우선 시도)
   KIFRS._modelTryOrder = function(){
     var act=KIFRS._activeModel, chain=KIFRS.MODEL_CHAIN.slice();
@@ -6172,11 +6174,16 @@ function debugR1Compare(){
     k=(k||'').trim(); KIFRS.API.key=k;
     try { if(k) localStorage.setItem('kifrs-apikey',k); else localStorage.removeItem('kifrs-apikey'); } catch(e){}
   };
-  // 표시·실호출용 현재 모델. 자동모드면 최근 성공 모델(없으면 체인 1순위)
-  KIFRS.getModel = function(){ return KIFRS.API.auto ? (KIFRS._activeModel || KIFRS.MODEL_CHAIN[0]) : KIFRS.API.model; };
-  // 'auto' → 자동모드. 실제 모델명 → 그 모델 고정(수동)
+  // 표시·실호출용 현재 모델. 자동모드면 최근 성공 모델(없으면 체인 1순위). 퇴역 모델이면 체인 1순위로 폴백
+  KIFRS.getModel = function(){
+    var m = KIFRS.API.auto ? (KIFRS._activeModel || KIFRS.MODEL_CHAIN[0]) : KIFRS.API.model;
+    if(KIFRS._RETIRED[m]){ if(KIFRS._activeModel===m) KIFRS._activeModel=null; m=KIFRS.MODEL_CHAIN[0]; }
+    return m;
+  };
+  // 'auto' → 자동모드. 실제 모델명 → 그 모델 고정(수동). 퇴역 모델 선택 시 자동모드로 마이그레이션
   KIFRS.setModel = function(m){
     m=(m||'').trim();
+    if(m && KIFRS._RETIRED[m]) m='auto';
     if(m==='auto'){ KIFRS.API.auto=true; try{ localStorage.setItem('kifrs-model','auto'); }catch(e){} return; }
     KIFRS.API.auto=false; KIFRS.API.model = m || KIFRS.API.model;
     try { localStorage.setItem('kifrs-model', KIFRS.API.model); } catch(e){}
@@ -7890,7 +7897,6 @@ function debugR1Compare(){
       +     '<option value="gemini-2.0-flash-lite">2.0-flash-lite · OCR·대량(빠름)</option>'
       +     '<option value="gemini-2.5-flash-lite">2.5-flash-lite · 2.5추론+한도절충</option>'
       +     '<option value="gemini-2.5-flash">2.5-flash · 최신·정밀(한도 적음 ~250/일)</option>'
-      +     '<option value="gemini-1.5-flash">1.5-flash · 구형</option>'
       +   '</select>'
       +   '<button class="kifrs-btn kifrs-btn-sm" id="kifrs-api-test">연결 테스트</button>'
       +   '<button class="kifrs-btn kifrs-btn-ghost kifrs-btn-sm" id="kifrs-api-models" title="이 키로 generateContent 가능한 모델 조회">모델 목록</button>'
