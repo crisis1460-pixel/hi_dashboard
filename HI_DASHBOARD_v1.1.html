@@ -6852,8 +6852,25 @@ function debugR1Compare(){
         box.innerHTML='<div class="kifrs-api-stat err">❌ '+esc(e.message)+'</div>'; });
   };
   KIFRS.cancelPrecise=function(no){ var c=KIFRS._preciseCtl&&KIFRS._preciseCtl[no]; if(c){ try{c.abort();}catch(e){} } };
+  // ── 수익인식 5단계(1115) 분류: 문단을 표준 5단계로 매핑(거래가격=3·배분=4·인식=5). DB 본문순 오번호(이행=3 등) 교정 ──
+  KIFRS.STEP_MAP = {
+    '1115': [
+      {step:1, name:'계약 식별', ranges:[[9,21]]},
+      {step:2, name:'수행의무 식별', ranges:[[22,30]]},
+      {step:3, name:'거래가격 산정', ranges:[[46,72]]},
+      {step:4, name:'거래가격 배분', ranges:[[73,90]]},
+      {step:5, name:'수익 인식(수행의무 이행)', ranges:[[31,45]]}
+    ]
+  };
+  KIFRS.classifyStep = function(stdNo, paraNo){
+    var std=KIFRS.findStandard(stdNo); if(!std) return null;
+    var map=KIFRS.STEP_MAP[std.no]; if(!map) return null;
+    var mm=String(paraNo).match(/\d+/); if(!mm) return null; var n=parseInt(mm[0],10);
+    for(var i=0;i<map.length;i++){ for(var j=0;j<map[i].ranges.length;j++){ if(n>=map[i].ranges[j][0] && n<=map[i].ranges[j][1]) return map[i]; } }
+    return null;
+  };
   // ── 세부 핀포인트: DB가 범위(예 68~71)로 뭉친 문단을 실제 문단·항목(69(3)) 단위로 분해(원문 K-IFRS/txt 기준) ──
-  // AI 검토텍스트의 변별 키워드로 어느 세부항목인지 코드로 특정 → '68~71' 대신 '69(3)'을 검증된 채로 표기.
+  // kw 있으면 우선, 없으면 t에서 변별토큰 자동 도출 → AI 검토텍스트와 대조해 세부항목 특정.
   KIFRS.PARA_POINTS = {
     '1038': {
       '65~67': [
@@ -6876,19 +6893,49 @@ function debugR1Compare(){
         {no:'70', idx:'',    t:'재화·용역을 제공받기 전 지급한 선급금은 자산으로 인식할 수 있다', kw:['선급금']},
         {no:'71', idx:'',    t:'이미 비용으로 인식한 지출은 그 이후에 무형자산의 원가로 인식할 수 없다', kw:['이미비용','과거비용','소급자본화','소급하여']}
       ]
+    },
+    '1115': {
+      '26~30': [
+        {no:'26', idx:'(1)',  t:'기업이 생산한 재화의 판매(예: 제조업자의 재고자산)'},
+        {no:'26', idx:'(2)',  t:'기업이 구매한 재화의 재판매(예: 소매업자의 상품)'},
+        {no:'26', idx:'(3)',  t:'기업이 구매한 재화·용역에 대한 권리의 재판매'},
+        {no:'26', idx:'(4)',  t:'고객을 위해 계약상 합의한 업무의 수행'},
+        {no:'26', idx:'(5)',  t:'언제라도 제공할 수 있는 상태여야 하는 용역의 제공(대기성 용역)'},
+        {no:'26', idx:'(6)',  t:'다른 당사자가 재화·용역을 이전하도록 주선하는 용역의 제공(대리인)'},
+        {no:'26', idx:'(7)',  t:'고객이 재판매·공급하도록 미래에 제공할 재화·용역에 대한 권리'},
+        {no:'26', idx:'(8)',  t:'고객을 위하여 자산을 건설·제조·개발'},
+        {no:'26', idx:'(9)',  t:'라이선스 부여'},
+        {no:'26', idx:'(10)', t:'추가 재화·용역을 구매할 수 있는 선택권 부여'}
+      ],
+      '46~49': [
+        {no:'48', idx:'(1)', t:'변동대가'},
+        {no:'48', idx:'(2)', t:'변동대가 추정치의 제약'},
+        {no:'48', idx:'(3)', t:'계약에 있는 유의적인 금융요소'},
+        {no:'48', idx:'(4)', t:'비현금 대가'},
+        {no:'48', idx:'(5)', t:'고객에게 지급할 대가'}
+      ]
     }
   };
-  // AI 검토텍스트(정규화)에서 변별 키워드 적중수가 유일 최대인 세부항목을 특정(동점이면 모호 → 범위 유지)
+  // 항목 텍스트(kw 우선)에서 일반 회계어를 뺀 변별토큰 도출
+  KIFRS._PP_STOP = {'비용':1,'인식':1,'지출':1,'자산':1,'부채':1,'자본':1,'수익':1,'원가':1,'금액':1,'기업':1,'경우':1,'관련':1,'발생':1,'충족':1,'요건':1,'항목':1,'해당':1,'대한':1,'위한':1,'활동':1,'대가':1,'계약':1,'거래':1,'손실':1,'평가':1,'측정':1,'회계':1,'부분':1,'일부':1,'전부':1,'이미':1,'참조':1,'규정':1,'적용':1,'방법':1,'효과':1,'정보':1,'공시':1,'기준':1,'기간':1,'사용':1,'제공':1,'포함':1,'산정':1,'결정':1,'예상':1,'여부':1,'또는':1,'그리고':1,'다음':1,'모든':1,'금융':1,'이러한':1};
+  function _ppTokens(s){
+    var raw=String(s||'').split(/[\s().,·~∼\-\/]+/), out=[], seen={}, i;
+    for(i=0;i<raw.length;i++){
+      var w=raw[i].toLowerCase().replace(/(으로서|으로써|으로|에게|에서|에는|에도|이나|라는|은|는|이|가|을|를|에|의|로|와|과|도|만|및|등|한|적|인|된|될|할|하는|되는)$/,'');
+      if(w.length>=2 && !KIFRS._PP_STOP[w] && !seen[w]){ seen[w]=1; out.push(w); }
+    }
+    return out;
+  }
+  // 형제 항목에 없는(df=1) 변별토큰 적중수가 유일 최대인 세부항목을 특정(동점/0이면 모호 → 범위 유지)
   KIFRS.pinpointParagraph = function(stdNo, paraNo, aiNormText){
     var std=KIFRS.findStandard(stdNo); if(!std) return null;
     var byStd=KIFRS.PARA_POINTS[std.no]; if(!byStd) return null;
-    var pts=byStd[paraNo]; if(!pts||!pts.length||!aiNormText) return null;
+    var pts=byStd[paraNo]; if(!pts||pts.length<2||!aiNormText) return null;
+    var toks=[], df={}, i, j;
+    for(i=0;i<pts.length;i++){ var tk=(pts[i].kw&&pts[i].kw.length)?pts[i].kw.slice():_ppTokens(pts[i].t); toks.push(tk); for(j=0;j<tk.length;j++){ df[tk[j]]=(df[tk[j]]||0)+1; } }
     var best=null, bestN=0, tie=false;
-    pts.forEach(function(p){
-      var n=0; (p.kw||[]).forEach(function(k){ if(k && aiNormText.indexOf(_normTerm(k))>=0) n++; });
-      if(n>bestN){ bestN=n; best=p; tie=false; } else if(n===bestN && n>0){ tie=true; }
-    });
-    return (best && bestN>0 && !tie) ? {no:best.no, idx:best.idx, t:best.t} : null;
+    for(i=0;i<pts.length;i++){ var n=0; for(j=0;j<toks[i].length;j++){ var w=toks[i][j]; if(df[w]===1 && aiNormText.indexOf(_normTerm(w))>=0) n++; } if(n>bestN){ bestN=n; best=pts[i]; tie=false; } else if(n===bestN && n>0){ tie=true; } }
+    return (best && bestN>=1 && !tie) ? {no:best.no, idx:best.idx, t:best.t} : null;
   };
   // ── 6단계: 코드 기반 교차검증 (번호 실존 + 화이트리스트 + 키워드 교차검증) → 신뢰도 라벨 ──
   KIFRS.verifyItem = function(stdNo, item){
@@ -6948,13 +6995,15 @@ function debugR1Compare(){
       var artNo=String(it['조문번호']||'');
       var rangeNo=KIFRS.stripStdPrefix(std.no, artNo)||artNo||'-';
       var paraLabel=v.pinpoint?(v.pinpoint.no+v.pinpoint.idx):rangeNo;
+      var step=KIFRS.classifyStep(std.no, artNo);
+      var stepBadge=step?'<span class="kifrs-audit-tag" style="background:#ede9fe;color:#6d28d9;border-color:#ddd6fe" title="수익인식 5단계">'+step.step+'단계 '+esc(step.name)+'</span> ':'';
       var verifyLine='검증: 문단 '+(v.para?'실존':'불일치')+' · 화이트리스트 '+(v.whitelist?'OK':'밖')
         + (v.kwTotal? ' · 키워드 '+v.kwHit+'/'+v.kwTotal+(v.hit.length?'('+v.hit.map(esc).join(',')+')':'') : ' · 키워드 없음')
         + (v.srcHit? ' · 원문직접인용 ✓' : '')
         + (v.pinpoint? ' · 세부 '+esc(v.pinpoint.no+v.pinpoint.idx)+' DB일치 ✓' : '')
         + (v.reasons.length? ' · '+v.reasons.map(esc).join('; ') : '');
       body+='<div class="kifrs-pr-item kifrs-cfb-'+v.level+'">'
-        + '<div class="kifrs-pr-h">문단 '+esc(paraLabel)+' '+_cfLabel(v.level)
+        + '<div class="kifrs-pr-h">'+stepBadge+'문단 '+esc(paraLabel)+' '+_cfLabel(v.level)
           + (v.pinpoint?' <span class="kifrs-audit-tag" title="DB 범위문단 '+esc(rangeNo)+' 내에서 코드로 특정">범위 '+esc(rangeNo)+'</span>':'')+'</div>'
         + (v.pinpoint?'<div class="kifrs-pr-row kifrs-pr-src" style="color:#0f766e"><b>해당 세부조문(원문)</b> '+esc(v.pinpoint.no+v.pinpoint.idx)+' '+esc(v.pinpoint.t)+'</div>':'')
         + (it['체크항목']?'<div class="kifrs-pr-row"><b>체크항목</b> '+esc(it['체크항목'])+'</div>':'')
@@ -7148,8 +7197,10 @@ function debugR1Compare(){
         : '';
       var auRange=KIFRS.stripStdPrefix(std.no, artNo)||artNo||'-';
       var auLabel=code.pinpoint?(code.pinpoint.no+code.pinpoint.idx):auRange;
+      var auStep=KIFRS.classifyStep(std.no, artNo);
+      var auStepBadge=auStep?'<span class="kifrs-audit-tag" style="background:#ede9fe;color:#6d28d9;border-color:#ddd6fe" title="수익인식 5단계">'+auStep.step+'단계 '+esc(auStep.name)+'</span> ':'';
       return '<div class="kifrs-pr-item kifrs-cfb-'+vm.cfb+'">'
-        + '<div class="kifrs-pr-h">문단 '+esc(auLabel)+' <span class="kifrs-cf kifrs-cf-'+vm.cls+'">'+vm.ico+' '+esc(verd)+'</span>'
+        + '<div class="kifrs-pr-h">'+auStepBadge+'문단 '+esc(auLabel)+' <span class="kifrs-cf kifrs-cf-'+vm.cls+'">'+vm.ico+' '+esc(verd)+'</span>'
           + (code.pinpoint?' <span class="kifrs-audit-tag" title="DB 범위문단 '+esc(auRange)+' 내에서 코드로 특정">범위 '+esc(auRange)+'</span>':'')
           + (a['교차']==='하향'?' <span class="kifrs-audit-tag">2차검증 하향</span>':'')
           + (code.level!=='green'?' <span class="kifrs-audit-tag">코드검증 '+(code.level==='red'?'확인불가':'미검증')+'</span>':'')+'</div>'
