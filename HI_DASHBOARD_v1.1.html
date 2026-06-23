@@ -7118,6 +7118,34 @@ function debugR1Compare(){
     if(level==='amber') return '<span class="kifrs-cf kifrs-cf-a">🟠 미검증</span>';
     return '<span class="kifrs-cf kifrs-cf-r">🔴 확인불가</span>';
   }
+  // 문단 라벨 클릭 → 해당 문단 기준서 원문(내장 DB 발췌) 팝업
+  KIFRS.showParaText = function(stdNo, paraNo){
+    var std=KIFRS.findStandard(stdNo); if(!std) return;
+    var para=KIFRS.findArticle(stdNo, paraNo);
+    var label=KIFRS.stripStdPrefix(std.no, paraNo)||paraNo;
+    var body;
+    if(!para){
+      body='<div class="kifrs-note">해당 문단 원문을 내장 DB에서 찾지 못했습니다. (원본 기준서를 직접 확인하세요)</div>';
+    } else {
+      body=(para.topic?'<div style="color:#6d28d9;font-weight:600;margin-bottom:6px">'+esc(para.topic)+'</div>':'')
+        + '<div style="white-space:pre-wrap;line-height:1.75;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:13px">'+esc(para.excerpt||para.summary||'(원문 없음)')+'</div>'
+        + (para.summary && para.excerpt?'<div class="kifrs-note" style="margin-top:8px"><b>요약</b> '+esc(para.summary)+'</div>':'')
+        + (para.keywords&&para.keywords.length?'<div class="kifrs-note" style="margin-top:6px"><b>핵심어</b> '+para.keywords.map(function(k){return esc(k.t);}).join(' · ')+'</div>':'')
+        + '<div class="kifrs-note" style="margin-top:8px;color:#94a3b8">※ 내장 DB 발췌본입니다. 정확한 전문은 원본 K-IFRS 기준서를 확인하세요.</div>';
+    }
+    var ov=document.createElement('div'); ov.className='kifrs-modal-ov';
+    ov.innerHTML='<div class="kifrs-modal" style="max-width:720px;text-align:left;max-height:82vh;overflow:auto">'
+      + '<div style="font-weight:700;font-size:15px;margin-bottom:10px">📖 제'+esc(std.no)+'호 「'+esc(std.name)+'」 · 문단 '+esc(label)+'</div>'
+      + body
+      + '<div class="m-foot" style="margin-top:14px;text-align:right"><button class="kifrs-btn kifrs-btn-sm">닫기</button></div></div>';
+    function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
+    ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
+    ov.querySelector('.m-foot button').addEventListener('click', close);
+    document.body.appendChild(ov);
+  };
+  function _paraLink(stdNo, rangeNo, inner){
+    return '<span style="cursor:pointer;border-bottom:1px dotted currentColor" title="클릭 — 기준서 원문 보기" onclick="window.KIFRS.showParaText(\''+stdNo+'\',\''+rangeNo+'\')">'+inner+'</span>';
+  }
   function renderPreciseResult(data, std, secs){
     var items=data.items||[];
     var head='<div class="kifrs-an-head">🔬 정밀 분석 — 제'+esc(std.no)+'호 '+esc(std.name)+' <span>'+secs+'초 · 항목 '+items.length+'개</span></div>';
@@ -7137,7 +7165,7 @@ function debugR1Compare(){
         + (v.pinpoint? ' · 세부 '+esc(v.pinpoint.no+v.pinpoint.idx)+' DB일치 ✓' : '')
         + (v.reasons.length? ' · '+v.reasons.map(esc).join('; ') : '');
       body+='<div class="kifrs-pr-item kifrs-cfb-'+v.level+'">'
-        + '<div class="kifrs-pr-h">'+stepBadge+'문단 '+esc(paraLabel)+' '+_cfLabel(v.level)
+        + '<div class="kifrs-pr-h">'+stepBadge+_paraLink(std.no, rangeNo, '문단 '+esc(paraLabel))+' '+_cfLabel(v.level)
           + (v.pinpoint?' <span class="kifrs-audit-tag" title="DB 범위문단 '+esc(rangeNo)+' 내에서 코드로 특정">범위 '+esc(rangeNo)+'</span>':'')+'</div>'
         + (v.pinpoint?'<div class="kifrs-pr-row kifrs-pr-src" style="color:#0f766e"><b>해당 세부조문(원문)</b> '+esc(v.pinpoint.no+v.pinpoint.idx)+' '+esc(v.pinpoint.t)+'</div>':'')
         + (it['체크항목']?'<div class="kifrs-pr-row"><b>체크항목</b> '+esc(it['체크항목'])+'</div>':'')
@@ -7205,13 +7233,14 @@ function debugR1Compare(){
       '제'+std.no+'호 「'+std.name+'」',
       lines,
       '',
-      '[판정 기준]',
-      '- 충족: 근거가 그 검토포인트에 필요한 사실·조건을 갖추고 있어 회계처리에 충분.',
-      '- 미흡: 근거가 요건에 명백히 배치되거나, 회계처리에 꼭 필요한 핵심 사실을 적극적으로 결하여 그대로면 실제 회계처리에 문제가 됨. (단순 미언급·회계용어 부재는 미흡 아님)',
-      '- 확인필요: 근거가 없거나 불충분해 판단 불가, 또는 문서 밖 추가 자료가 있어야 결론 가능.',
-      '- 해당없음: 이 거래에는 그 요건이 적용되지 않음.',
-      '⚠ "검증된 근거 없음"이면 충족·미흡 금지 → 반드시 확인필요. 충족인지 미흡인지 애매하면 미흡이 아니라 확인필요로.',
-      '확인필요면 판단불가사유에 "무엇이 없어서/불충분해 판단 못 하는지 + 사용자가 후속 확인할 사항"을 구체적으로. 감사의견은 제시된 근거를 인용해 1~2문장.',
+      '[판정 기준 — 매우 중요]',
+      '※ 검토포인트의 결론(예: "비용으로 인식", "자산화 불가", "인식요건 미충족")은 기준서를 적용한 회계적 결론이며, 원천 문서에 그대로 적혀 있지 않은 것이 정상이다. 당신의 임무는 "문서가 그 결론의 전제가 되는 거래의 성격·사실관계를 보여주는가"를 판단하는 것이다(기준서 적용은 검토자가 수행한다).',
+      '- 충족: 문서 근거가 검토포인트가 기초하는 거래의 성격·사실(예: 광고·판촉 목적의 대가 지급, 용역을 제공받음, 당사자 권리·의무)을 확인해 주고, 그 사실에 제'+std.no+'호 조문을 적용하면 검토포인트의 결론이 도출된다. → 결론·회계용어가 문서에 명시될 필요 없음.',
+      '- 해당없음: 그 조문·요건이 이 거래에 적용되지 않음. (검토포인트 스스로 "직접 적용되지 않는다/무관하다"고 하면 대개 해당없음)',
+      '- 미흡: 문서의 사실관계가 기준서 요건에 명백히 배치되어 그대로면 회계처리에 문제가 됨.',
+      '- 확인필요: 문서가 거래의 기본 성격·사실조차 보여주지 못하거나(검증된 근거 없음), 결론을 좌우하는 핵심 수치·조건이 문서 밖에 있어야 함.',
+      '⚠ 거래의 성격이 문서로 확인되면 "문서에 회계 결론·용어가 없다"는 이유만으로 확인필요로 미루지 말 것 — 그 경우는 충족이다. 검증된 근거가 전혀 없을 때만 확인필요.',
+      '확인필요·해당없음이면 판단불가사유에 이유와 후속 확인사항을 구체적으로. 감사의견은 제시된 근거를 인용해 1~2문장.',
       '반드시 아래 JSON으로만:',
       '{"audited":[{"조문번호":"","판정":"충족|미흡|확인필요|해당없음","감사의견":"","보완사항":"","판단불가사유":""}]}'
     ].join('\n');
@@ -7225,7 +7254,8 @@ function debugR1Compare(){
     return [
       '당신은 1차 감사 결과를 검증하는 2차 검토자입니다. 각 판정이 "제시된 근거만으로" 타당한지 보수적으로 재검증하세요.',
       '[문서 성격] 이 문서는 '+(docKind||'원천 문서(계약서 등)')+'(회계기록 아님)입니다.',
-      '다음 중 하나라도 해당하면 "하향": ① 감사의견이 근거에 없는 내용을 단정(과잉판단) ② 근거가 부족·불명확한데 충족 또는 미흡으로 단정 ③ 근거와 판정이 논리적으로 불일치 ④ 원천문서에 회계 결론·용어가 없다는 이유(단순 미언급)로 미흡 판정. 문제 없으면 "유지".',
+      '다음 중 하나에 해당할 때만 "하향"(확인필요로): ① 감사의견이 문서에 없는 사실관계를 지어냄(사실 날조) ② 거래의 기본 성격조차 문서로 확인되지 않는데 충족으로 단정 ③ 근거와 판정이 논리적으로 모순. 그 외에는 "유지".',
+      '⚠ 다음은 절대 하향 사유가 아니다(유지하라): ⓐ 검토포인트의 회계 결론(비용처리·자산화 불가 등)이 문서에 그대로 적혀 있지 않음 ⓑ 거래 성격은 문서로 확인되고 기준서 적용으로 결론이 도출됨 ⓒ 회계용어·결론의 단순 부재. 이 문서는 회계기록이 아니라 원천 자료이므로, 회계 결론은 원래 문서에 없고 검토자가 기준서를 적용해 내린다.',
       '',
       lines,
       '',
@@ -7334,7 +7364,7 @@ function debugR1Compare(){
       var auStep=KIFRS.classifyStep(std.no, artNo);
       var auStepBadge=auStep?'<span class="kifrs-audit-tag" style="background:#ede9fe;color:#6d28d9;border-color:#ddd6fe" title="수익인식 5단계">'+auStep.step+'단계 '+esc(auStep.name)+'</span> ':'';
       return '<div class="kifrs-pr-item kifrs-cfb-'+vm.cfb+'">'
-        + '<div class="kifrs-pr-h">'+auStepBadge+'문단 '+esc(auLabel)+' <span class="kifrs-cf kifrs-cf-'+vm.cls+'">'+vm.ico+' '+esc(verd)+'</span>'
+        + '<div class="kifrs-pr-h">'+auStepBadge+_paraLink(std.no, auRange, '문단 '+esc(auLabel))+' <span class="kifrs-cf kifrs-cf-'+vm.cls+'">'+vm.ico+' '+esc(verd)+'</span>'
           + (code.pinpoint?' <span class="kifrs-audit-tag" title="DB 범위문단 '+esc(auRange)+' 내에서 코드로 특정">범위 '+esc(auRange)+'</span>':'')
           + (a['교차']==='하향'?' <span class="kifrs-audit-tag">2차검증 하향</span>':'')
           + (code.level!=='green'?' <span class="kifrs-audit-tag">코드검증 '+(code.level==='red'?'확인불가':'미검증')+'</span>':'')+'</div>'
