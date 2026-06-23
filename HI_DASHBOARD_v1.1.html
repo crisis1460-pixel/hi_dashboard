@@ -5973,7 +5973,15 @@ function debugR1Compare(){
     var dn=_paraNum(dbNo);
     return !!dn && dn===qn;
   };
-  KIFRS.findArticle = function(no, art){ var s=KIFRS.findStandard(no); if(!s||!s.paragraphs) return null; for(var i=0;i<s.paragraphs.length;i++){ if(KIFRS.paraMatch(s.paragraphs[i].no, art)) return s.paragraphs[i]; } return null; };
+  // AI가 조문번호에 기준서번호를 접두로 붙이는 경우('1038.68~71','제1038호 68~71') 제거 →
+  // 안 그러면 _paraNum이 '1038.68'을 뽑아 범위매칭이 전부 깨져 코드검증이 싹다 '확인불가'가 됨
+  KIFRS.stripStdPrefix = function(no, art){
+    art=String(art||'').trim();
+    var n=String(no||'').replace(/[^0-9]/g,'');
+    if(n) art=art.replace(new RegExp('^\\s*제?\\s*'+n+'\\s*[호\\.\\-\\s]\\s*'), '').trim();
+    return art;
+  };
+  KIFRS.findArticle = function(no, art){ var s=KIFRS.findStandard(no); if(!s||!s.paragraphs) return null; art=KIFRS.stripStdPrefix(no, art); for(var i=0;i<s.paragraphs.length;i++){ if(KIFRS.paraMatch(s.paragraphs[i].no, art)) return s.paragraphs[i]; } return null; };
 
   // 동의어 → 표준용어 역인덱스 (소문자·공백제거 정규화)
   KIFRS._termIndex = null;
@@ -6786,6 +6794,7 @@ function debugR1Compare(){
       '- 검토포인트는 핵심만 2~3문장(항목당 200자 이내)으로 간결히. 장황한 서술·반복 금지.',
       '- 분개예시는 해당하면 "(차) … / (대) …" 형식, 아니면 빈 문자열.',
       '- 근거조문원문요약은 위 조문 범위에 근거하여 1문장.',
+      '- ⚠ "조문번호"에는 위 목록의 문단번호만 그대로 적으세요(예: "68~71"). 기준서번호를 접두로 붙이지 마세요(❌"'+std.no+'.68~71" ❌"제'+std.no+'호 68").',
       '- 반드시 아래 JSON 형식으로만 응답(자유 서술 금지):',
       '{"items":[{"기준서번호":"'+std.no+'","조문번호":"","체크항목":"","검토포인트":"","분개예시":"","근거조문원문요약":""}]}'
     ]).join('\n');
@@ -6865,12 +6874,21 @@ function debugR1Compare(){
         if(got){ kwHit+=w; hit.push(k.t); } else miss.push(k.t);
       });
     }
+    // 보조검증: DB 키워드가 '내부창출원가'처럼 압축 라벨이라 자연어와 substring 매칭이 구조적으로 안 되는 경우 대비.
+    // AI 근거조문요약이 DB 문단 원문(excerpt/summary)에 실재하면 '직접 인용'으로 보고 통과 인정(false 🟠 미검증 완화).
+    var srcHit=false;
+    if(para){
+      var refNorm=_qnorm((para.excerpt||'')+(para.summary||''));
+      var srcQuote=item['근거조문원문요약']||'';
+      if(srcQuote && refNorm) srcHit=_quoteInDoc(srcQuote, refNorm);
+    }
     var level;
     if(!wl || !para){ level='red'; }
+    else if(kwTotal>0 && (kwHit>=2 || (kwHit/kwTotal)>=0.4)){ level='green'; }
+    else if(srcHit){ level='green'; reasons.push('근거조문이 DB 문단 원문과 직접 일치(인용 실재)'); }
     else if(kwTotal===0){ level='amber'; reasons.push('DB 문단에 등록된 키워드 없음(교차검증 불가)'); }
-    else if(kwHit>=2 || (kwHit/kwTotal)>=0.4){ level='green'; }
     else { level='amber'; reasons.push('DB 문단 키워드와 겹침 약함('+kwHit+'/'+kwTotal+')'); }
-    return {level:level, para:para, whitelist:wl, kwTotal:kwTotal, kwHit:kwHit, hit:hit, miss:miss, reasons:reasons};
+    return {level:level, para:para, whitelist:wl, kwTotal:kwTotal, kwHit:kwHit, srcHit:srcHit, hit:hit, miss:miss, reasons:reasons};
   };
   function _cfLabel(level, audited){
     if(level==='green') return audited
@@ -6890,9 +6908,10 @@ function debugR1Compare(){
       var artNo=String(it['조문번호']||'');
       var verifyLine='검증: 문단 '+(v.para?'실존':'불일치')+' · 화이트리스트 '+(v.whitelist?'OK':'밖')
         + (v.kwTotal? ' · 키워드 '+v.kwHit+'/'+v.kwTotal+(v.hit.length?'('+v.hit.map(esc).join(',')+')':'') : ' · 키워드 없음')
+        + (v.srcHit? ' · 원문직접인용 ✓' : '')
         + (v.reasons.length? ' · '+v.reasons.map(esc).join('; ') : '');
       body+='<div class="kifrs-pr-item kifrs-cfb-'+v.level+'">'
-        + '<div class="kifrs-pr-h">문단 '+esc(artNo||'-')+' '+_cfLabel(v.level)+'</div>'
+        + '<div class="kifrs-pr-h">문단 '+esc(KIFRS.stripStdPrefix(std.no, artNo)||artNo||'-')+' '+_cfLabel(v.level)+'</div>'
         + (it['체크항목']?'<div class="kifrs-pr-row"><b>체크항목</b> '+esc(it['체크항목'])+'</div>':'')
         + (it['검토포인트']?'<div class="kifrs-pr-row"><b>검토포인트</b> '+esc(it['검토포인트'])+'</div>':'')
         + (it['근거조문원문요약']?'<div class="kifrs-pr-row kifrs-pr-src"><b>근거조문</b> '+esc(it['근거조문원문요약'])+'</div>':'')
@@ -7083,7 +7102,7 @@ function debugR1Compare(){
         ? '<div class="kifrs-pr-verify">⚠ AI가 제시한 근거 '+a['환각제외']+'건은 문서에서 확인되지 않아 제외함(할루시네이션 차단)</div>'
         : '';
       return '<div class="kifrs-pr-item kifrs-cfb-'+vm.cfb+'">'
-        + '<div class="kifrs-pr-h">문단 '+esc(artNo||'-')+' <span class="kifrs-cf kifrs-cf-'+vm.cls+'">'+vm.ico+' '+esc(verd)+'</span>'
+        + '<div class="kifrs-pr-h">문단 '+esc(KIFRS.stripStdPrefix(std.no, artNo)||artNo||'-')+' <span class="kifrs-cf kifrs-cf-'+vm.cls+'">'+vm.ico+' '+esc(verd)+'</span>'
           + (a['교차']==='하향'?' <span class="kifrs-audit-tag">2차검증 하향</span>':'')
           + (code.level!=='green'?' <span class="kifrs-audit-tag">코드검증 '+(code.level==='red'?'확인불가':'미검증')+'</span>':'')+'</div>'
         + (it['검토포인트']?'<div class="kifrs-pr-row"><b>검토포인트</b> '+esc(it['검토포인트'])+'</div>':'')
