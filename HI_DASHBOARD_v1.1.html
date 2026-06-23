@@ -2720,6 +2720,20 @@ function renderDevLog(){
       '상단 바 그룹 고정 — 스크롤해도 상단 영역 유지',
       '새로고침 시 화면 상단으로 이동',
     ]},
+    { date:'2026-06-22', title:'거래구조(당사 위치·관계) 단계 신설 & 방향 정합성 가드', color:'#7c3aed', items:[
+      '분석을 2콜로 분리 — ①용어 정규화 → ②거래구조(당사 위치·관계) 확정 후 후보 선정(첫 분기 HI역할 오류 재발방지)',
+      '거래구조 단계 — 자료성격 4분기(거래형/내부형/논점·질의형/복합·기타) + 케이스 라이브러리, 근거 인용 문서 실존검증',
+      '방향 정합성 가드 — 당사가 고객(비용) 측이면 수익기준서(1115) 강등',
+      '정밀분석(API②)에 거래구조 컨텍스트 주입 — 광고비=1038 비용처리, 모순 결론 금지',
+      'AI감사 — 원천문서 성격(docKind) 전달, 회계용어 부재는 미흡 아님으로 정의 축소',
+      '후보 — 일반·구조 기준서(1001/1008) 억제, 비용처리 규정 기준서 상위',
+    ]},
+    { date:'2026-06-22', title:'보고실체 설정화 & 안정화', color:'#0891b2', items:[
+      '보고실체(당사) 설정화 — 회사명 변수화(localStorage), 기본 ㈜헥토이노베이션, 헤더 입력칸 / 모든 프롬프트·렌더 HI→당사',
+      '자동모드 모델당 재시도 5→2(churn 완화) + 재시도 메시지 실제 에러 분기(503 과부하/429 한도)',
+      '증빙 PDF 출력 시 빈 페이지 제거(인쇄 레이아웃 display:none 방식)',
+      "메뉴 명칭 '기준서 콜센터' → 'AI기준서'",
+    ]},
   ];
 
   var PROJECTS = [
@@ -6343,14 +6357,26 @@ function debugR1Compare(){
     var closing=''; for(k=st.length-1;k>=0;k--) closing+=st[k];
     return cut+closing;
   }
+  // 모델이 원화기호(₩)를 백슬래시로 깨뜨려 보내거나(\10,000,000) 잘못된 이스케이프를 섞으면
+  // JSON에서 \1 처럼 허용되지 않는 시퀀스가 되어 파싱이 실패함 → 유효하지 않은 백슬래시만 \\ 로 교정
+  function _fixJsonEscapes(str){
+    return str.replace(/\\([\s\S])/g, function(m, next){
+      if('"\\/bfnrtu'.indexOf(next) >= 0) return m;   // 유효한 이스케이프는 그대로
+      return '\\\\' + next;                            // 잘못된 백슬래시는 escape 처리
+    });
+  }
   KIFRS.parseJsonResponse = function(txt){
     if(!txt) return null;
     var s=txt.replace(/^[\s\S]*?```(?:json)?/,'').replace(/```[\s\S]*$/,'').trim();
     if(s.charAt(0)!=='{' && s.charAt(0)!=='[') s=txt.trim();
     try { return JSON.parse(s); } catch(e){}
     try { return JSON.parse(txt); } catch(e2){}
+    // 잘못된 백슬래시 이스케이프 교정 후 재시도(₩→\ 깨짐 등)
+    try { return JSON.parse(_fixJsonEscapes(s)); } catch(e3){}
     // 잘린 응답 복구 시도(완성된 항목까지 살림)
-    try { var rep=_closeTruncatedJson(s); if(rep){ var d=JSON.parse(rep); d.__truncated=true; return d; } } catch(e3){}
+    try { var rep=_closeTruncatedJson(s); if(rep){ var d=JSON.parse(rep); d.__truncated=true; return d; } } catch(e4){}
+    // 교정 + 절단 복구 동시 시도
+    try { var rep2=_closeTruncatedJson(_fixJsonEscapes(s)); if(rep2){ var d2=JSON.parse(rep2); d2.__truncated=true; return d2; } } catch(e5){}
     return null;
   };
   // 연결 테스트 (UI)
