@@ -7359,6 +7359,7 @@ function debugR1Compare(){
                   return { '조문번호':e.it['조문번호']||'', '판정':verd, '감사의견':j['감사의견']||'', '보완사항':j['보완사항']||'',
                     '판단불가사유':(downReason?downReason+' ':'')+(j['판단불가사유']||''), '근거인용':e.quotes, '환각제외':e.halluc, '교차':String(v['결과']||'유지') };
                 });
+                (KIFRS._lastAudit=KIFRS._lastAudit||{})[no]={ items:audited, std:{no:std.no, name:std.name}, ts:Date.now() };   // 9단계(객관식 보정)·증빙용 구조화 보관
                 slot.innerHTML=renderFinalAudit(std, items, audited, ((Date.now()-t0)/1000).toFixed(1));
               });
           });
@@ -7763,7 +7764,7 @@ function debugR1Compare(){
     if(!n) return;
     if(!window.confirm('업로드된 파일 '+n+'건을 모두 삭제할까요?')) return;
     KIFRS.state.files = [];
-    KIFRS._lastAi=null; KIFRS._lastPrecise={};
+    KIFRS._lastAi=null; KIFRS._lastPrecise={}; KIFRS._lastAudit={};
     ['kifrs-ai','kifrs-analysis'].forEach(function(id){ var el=document.getElementById(id); if(el){ el.innerHTML=''; el.style.display='none'; } });
     renderFileList();
   };
