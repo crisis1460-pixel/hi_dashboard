@@ -6568,12 +6568,13 @@ function debugR1Compare(){
   }
   // ── 9단계: 모호/저신뢰 항목을 스캔해 객관식 보정 팝업 큐 생성 (순수 로직, UI 없음) ──
   function _numNo(s){ return String(s||'').replace(/[^0-9]/g,''); }
-  function _buildClarifications(){
+  function _buildClarifications(stdNo){
     var ai=KIFRS._lastAi||{};
     var gs=ai['거래구조']||{};
     var cands=(ai.candidates||[]).slice();
     var audit=KIFRS._lastAudit||{};
     var precise=KIFRS._lastPrecise||{};
+    var scope=stdNo?_numNo(stdNo):null;   // 기준서 스코프(있으면 그 기준서의 확인필요만 + 전역 거래구조)
     var q=[];
 
     // ① 거래구조 확정 — 신뢰도 낮음 / 방향경고 / 복합·기타
@@ -6586,12 +6587,12 @@ function debugR1Compare(){
         상대방:gs['상대방']||'', 방향경고:gs['방향경고']||'' });
     }
 
-    // ② 적용 기준서 확정 — 후보 근접(1·2위 ≤15) / __dirflag 상위 / 0건
+    // ② 적용 기준서 확정 — 후보 근접(1·2위 ≤15) / __dirflag 상위 / 0건 (전역 모드에서만)
     var sorted=cands.sort(function(a,b){return (Number(b['관련성']||0))-(Number(a['관련성']||0));});
     var top=sorted[0], second=sorted[1];
     var close=!!(top&&second&&(Number(top['관련성']||0)-Number(second['관련성']||0))<=15);
     var flaggedTop=!!(top&&top.__dirflag);
-    if(sorted.length===0 || close || flaggedTop){
+    if(!scope && (sorted.length===0 || close || flaggedTop)){
       q.push({ type:'standard',
         reason: sorted.length===0?'후보 기준서 없음':(flaggedTop?'상위 후보 방향 불일치 경고':'상위 후보 관련성 근접'),
         candidates: sorted.map(function(c){ return { 기준서번호:c['기준서번호']||'', 명칭:c['명칭']||'', 관련성:Number(c['관련성']||0), 경고:!!c.__dirflag }; }) });
@@ -6600,7 +6601,8 @@ function debugR1Compare(){
     // ③ 확인필요 보정 — 현재 candidates의 기준서만, 판정='확인필요' 항목 (이전 문서/비후보 잔재 무시)
     var curNos={}; sorted.forEach(function(c){ curNos[_numNo(c['기준서번호'])]=true; });
     Object.keys(audit).forEach(function(no){
-      if(!curNos[_numNo(no)]) return;
+      if(scope){ if(_numNo(no)!==scope) return; }   // 기준서 스코프: 그 기준서만
+      else if(!curNos[_numNo(no)]) return;            // 전역: 현재 후보의 기준서만(잔재 무시)
       var rec=audit[no]||{}, items=rec.items||[], pitems=((precise[no]||{}).items)||[];
       items.forEach(function(it){
         if(it['판정']!=='확인필요') return;
@@ -6728,10 +6730,10 @@ function debugR1Compare(){
     var nFix=answers.filter(function(a){return a&&a.answer!=null;}).length;
     _clarToast(nFix?(nFix+'개 항목을 보정해 결과에 반영했습니다. (사용자 확정)'):'변경된 항목이 없습니다.');
   }
-  KIFRS.startClarify=function(){
+  KIFRS.startClarify=function(stdNo){
     if(!KIFRS._lastAi){ _clarToast('먼저 AI 분석을 실행하세요.'); return; }
-    var queue=_buildClarifications();
-    if(!queue.length){ _clarToast('보정할 모호·확인필요 항목이 없습니다 👍'); return; }
+    var queue=_buildClarifications(stdNo);
+    if(!queue.length){ _clarToast(stdNo?'이 기준서에 보정할 확인필요 항목이 없습니다 👍':'보정할 모호·확인필요 항목이 없습니다 👍'); return; }
     _clarStep(queue, 0, []);
   };
   // ── 9단계 4번: 보정된 거래구조를 전제로 후보 기준서 AI 재선정(온디맨드 1콜) ──
@@ -6976,8 +6978,7 @@ function debugR1Compare(){
   function renderAiResult(data, secs){
     var h='<div class="kifrs-an-head">🤖 AI 분석 결과 (거래구조·후보) <span>'+secs+'초 · '+esc(KIFRS.getModel())+'</span>'
       + '<button class="kifrs-help-btn" onclick="window.KIFRS.showLabelHelp()">ⓘ 신뢰도 라벨 설명</button>'
-      + '<button class="kifrs-help-btn" onclick="window.KIFRS.printEvidence()" title="현재 분석·검증 결과를 감사 대응용 PDF로 저장(브라우저 인쇄 → 대상에서 PDF로 저장)">📄 증빙 PDF 출력</button>'
-      + '<button class="kifrs-help-btn" onclick="window.KIFRS.startClarify()" title="거래구조·기준서·확인필요 등 모호/저신뢰 항목을 객관식으로 보정">❓ 모호항목 보정</button></div>';
+      + '<button class="kifrs-help-btn" onclick="window.KIFRS.printEvidence()" title="현재 분석·검증 결과를 감사 대응용 PDF로 저장(브라우저 인쇄 → 대상에서 PDF로 저장)">📄 증빙 PDF 출력</button></div>';
     if(data.__truncated){ h+='<div class="kifrs-api-stat err" style="margin:4px 0">⚠ 응답이 길어 일부가 잘렸습니다 — 후보는 보존되지만 정규화 용어 일부가 누락될 수 있습니다. (다시 분석 권장)</div>'; }
     var gs=data['거래구조']||data.context||{};   // 신규 거래구조 / 구버전 context 하위호환
     if(gs && (gs['자료성격']||gs['당사위치']||gs['HI위치']||gs['관계유형']||gs['핵심회계논점']||gs['경제적실질']||gs['문서유형']||gs['HI역할']||gs['거래요지'])){
@@ -7651,7 +7652,10 @@ function debugR1Compare(){
     }).join('');
     var summary='<div class="kifrs-pr-summary">✅ 충족 '+cnt['충족']+' · ❗ 미흡 '+cnt['미흡']+' · ⚠️ 확인필요(판단불가) '+cnt['확인필요']+' · ➖ 해당없음 '+cnt['해당없음']+'</div>';
     var note='<div class="kifrs-disclaimer">3단계 감사(①근거추출 → 코드로 인용 실존 검증 → ②검증근거로만 판정 → ③교차검증). 모든 판정은 <b>문서에서 코드로 검증된 인용</b>에만 근거하며, 근거가 없거나 불충분한 항목은 임의 판단 없이 <b>판단불가(확인필요)</b>로 표기하고 후속확인을 안내합니다.</div>';
-    return '<div class="kifrs-an-head" style="margin-top:8px;border-top:1px solid var(--border);padding-top:10px">✅ AI감사 결과 <span>'+secs+'초 · 3단계 근거기반 검증</span></div>'+summary+rows+note;
+    var clarBtn=(cnt['확인필요']>0)
+      ? '<button class="kifrs-btn kifrs-btn-sm" style="margin-left:auto" onclick="window.KIFRS.startClarify(\''+std.no+'\')" title="이 기준서의 확인필요 항목을 객관식으로 보정">❓ 모호항목 보정 ('+cnt['확인필요']+')</button>'
+      : '';
+    return '<div class="kifrs-an-head" style="margin-top:8px;border-top:1px solid var(--border);padding-top:10px;display:flex;align-items:center;gap:8px"><span>✅ AI감사 결과 <span style="font-weight:600;color:var(--txt3)">'+secs+'초 · 3단계 근거기반 검증</span></span>'+clarBtn+'</div>'+summary+rows+note;
   }
 
   // ── 7단계: 증빙 PDF 다운로드 (브라우저 인쇄 → "PDF로 저장") ──
