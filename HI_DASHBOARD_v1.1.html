@@ -6557,6 +6557,53 @@ function debugR1Compare(){
     });
     cands.sort(function(a,b){ return (Number(b['관련성']||0))-(Number(a['관련성']||0)); });
   }
+  // ── 9단계: 모호/저신뢰 항목을 스캔해 객관식 보정 팝업 큐 생성 (순수 로직, UI 없음) ──
+  function _numNo(s){ return String(s||'').replace(/[^0-9]/g,''); }
+  function _buildClarifications(){
+    var ai=KIFRS._lastAi||{};
+    var gs=ai['거래구조']||{};
+    var cands=(ai.candidates||[]).slice();
+    var audit=KIFRS._lastAudit||{};
+    var precise=KIFRS._lastPrecise||{};
+    var q=[];
+
+    // ① 거래구조 확정 — 신뢰도 낮음 / 방향경고 / 복합·기타
+    var lowConf=(gs['신뢰도']==='낮음'), dirWarn=!!gs['방향경고'], mixed=(gs['자료성격']==='복합·기타');
+    var hasPos=!!(gs['당사위치']||gs['HI위치']||gs['관계유형']);
+    if(hasPos && (lowConf||dirWarn||mixed)){
+      q.push({ type:'structure',
+        reason: dirWarn?'근거↔당사위치 불일치(방향경고)':(mixed?'자료성격 복합·기타':'거래구조 신뢰도 낮음'),
+        current:{ 당사위치:gs['당사위치']||gs['HI위치']||'', 관계유형:gs['관계유형']||'', 대금방향:gs['대금방향']||'' },
+        상대방:gs['상대방']||'', 방향경고:gs['방향경고']||'' });
+    }
+
+    // ② 적용 기준서 확정 — 후보 근접(1·2위 ≤15) / __dirflag 상위 / 0건
+    var sorted=cands.sort(function(a,b){return (Number(b['관련성']||0))-(Number(a['관련성']||0));});
+    var top=sorted[0], second=sorted[1];
+    var close=!!(top&&second&&(Number(top['관련성']||0)-Number(second['관련성']||0))<=15);
+    var flaggedTop=!!(top&&top.__dirflag);
+    if(sorted.length===0 || close || flaggedTop){
+      q.push({ type:'standard',
+        reason: sorted.length===0?'후보 기준서 없음':(flaggedTop?'상위 후보 방향 불일치 경고':'상위 후보 관련성 근접'),
+        candidates: sorted.map(function(c){ return { 기준서번호:c['기준서번호']||'', 명칭:c['명칭']||'', 관련성:Number(c['관련성']||0), 경고:!!c.__dirflag }; }) });
+    }
+
+    // ③ 확인필요 보정 — 현재 candidates의 기준서만, 판정='확인필요' 항목 (이전 문서/비후보 잔재 무시)
+    var curNos={}; sorted.forEach(function(c){ curNos[_numNo(c['기준서번호'])]=true; });
+    Object.keys(audit).forEach(function(no){
+      if(!curNos[_numNo(no)]) return;
+      var rec=audit[no]||{}, items=rec.items||[], pitems=((precise[no]||{}).items)||[];
+      items.forEach(function(it){
+        if(it['판정']!=='확인필요') return;
+        var p=pitems.filter(function(x){return String(x['조문번호']||'')===String(it['조문번호']||'');})[0]||{};
+        q.push({ type:'review', 기준서번호:no, 기준서명:(rec.std&&rec.std.name)||'', 조문번호:it['조문번호']||'',
+          검토포인트:p['검토포인트']||'', 감사의견:it['감사의견']||'', 판단불가사유:it['판단불가사유']||'' });
+      });
+    });
+
+    return q;
+  }
+  KIFRS._buildClarifications=_buildClarifications;   // 콘솔 검증·9단계 진입점용
   // ── 이미지 OCR (Gemini 비전) — 최초 분석 시점에 이미지를 텍스트화하여 같은 파이프라인 합류 ──
   KIFRS.OCR_PROMPT='이 이미지는 회계/계약 관련 업무 문서입니다. 보이는 텍스트를 빠짐없이 그대로 추출하세요. 표는 행/열을 알아볼 수 있게 정리하고, 설명·해석 없이 추출 텍스트만 출력하세요.';
   function _dataUrlPart(durl){ var m=/^data:([^;]+);base64,([\s\S]*)$/.exec(durl||''); return m?{mimeType:m[1], data:m[2]}:null; }
