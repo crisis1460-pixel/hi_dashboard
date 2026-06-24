@@ -381,7 +381,8 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
 .kifrs-clar-opt{display:flex;gap:9px;align-items:flex-start;padding:9px 11px;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:12px;color:var(--txt);line-height:1.5;}
 .kifrs-clar-opt:hover{background:var(--bg2);}
 .kifrs-clar-opt input{margin-top:2px;flex-shrink:0;}
-.kifrs-uchip{display:inline-block;background:#7c3aed;color:#fff;border-radius:4px;padding:0 6px;font-size:10px;font-weight:700;margin-left:5px;vertical-align:middle;}
+.kifrs-uchip{display:inline-block;background:#ede9fe;color:#6d28d9;border:1px solid #ddd6fe;border-radius:4px;padding:0 6px;font-size:10px;font-weight:700;margin-left:5px;vertical-align:middle;}
+.kifrs-uchip::before{content:"✎ ";}
 .kifrs-pw-input{width:100%;margin-top:14px;padding:10px 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px;background:var(--bg);color:var(--txt);box-sizing:border-box;}
 .kifrs-pw-input:focus{outline:none;border-color:var(--blue);}
 .kifrs-pw-err{font-size:11px;color:#b91c1c;margin-top:8px;min-height:14px;}
@@ -6912,7 +6913,7 @@ function debugR1Compare(){
       h+='<div style="margin:10px 0;padding:10px 13px;background:'+(low?'#fff7ed':'#eef6ff')+';border:1px solid '+(low?'#fed7aa':'#cfe2f5')+';border-radius:8px;font-size:12px;color:#234;line-height:1.7">'
         + '<b>🧭 거래구조 (당사 위치·관계)</b>'
         + (gs['자료성격']?' &nbsp;<span style="background:#1d4ed8;color:#fff;border-radius:4px;padding:1px 7px;font-size:11px">'+esc(gs['자료성격'])+'</span>':'')
-        + (hipos?'<div style="margin-top:4px">당사 위치: <b style="color:#1d4ed8">'+esc(hipos)+'</b>'
+        + (hipos?'<div style="margin-top:4px">당사 위치: <b style="color:#1d4ed8">'+esc(hipos)+'</b>'+(gs['__userFixed']?'<span class="kifrs-uchip">사용자확정</span>':'')
             +(gs['상대방']?' &nbsp;|&nbsp; 상대방: <b>'+esc(gs['상대방'])+'</b>':(gs['상대방있음']===false?' &nbsp;|&nbsp; 상대방: <b>없음(내부)</b>':''))+'</div>':'')
         + (gs['관계유형']?'<div>관계: <b>'+esc(gs['관계유형'])+'</b>'+(gs['대금방향']&&gs['대금방향']!=='해당없음'?' &nbsp;|&nbsp; 대금: '+esc(gs['대금방향']):'')+'</div>':'')
         + (gs['핵심회계논점']?'<div>핵심 논점: '+esc(gs['핵심회계논점'])+'</div>':'')
@@ -6935,7 +6936,7 @@ function debugR1Compare(){
       var key=std?std.no:rawNo.replace(/[^0-9]/g,'');
       var issues=(c['관련쟁점']||[]).map(function(x){return esc(x);}).join(', ');
       h+='<div class="kifrs-an-std">'
-        + '<div class="kifrs-an-std-h"><span class="kifrs-std-no">'+esc(rawNo||'?')+'</span><span class="kifrs-an-name">'+esc(c['명칭']||(std?std.name:''))+'</span><span class="kifrs-an-score">관련성 '+(c['관련성']||0)+'</span></div>'
+        + '<div class="kifrs-an-std-h"><span class="kifrs-std-no">'+esc(rawNo||'?')+'</span><span class="kifrs-an-name">'+esc(c['명칭']||(std?std.name:''))+(c['__userPick']?'<span class="kifrs-uchip">사용자확정</span>':'')+'</span><span class="kifrs-an-score">관련성 '+(c['관련성']||0)+'</span></div>'
         + (c.__dirflag?'<div class="kifrs-api-stat err" style="margin-top:4px">'+esc(c.__dirflag)+'</div>':'')
         + (c['사유']?'<div class="kifrs-an-para">'+esc(c['사유'])+'</div>':'')
         + (issues?'<div class="kifrs-an-para">쟁점: <span class="kifrs-an-hit">'+issues+'</span></div>':'')
@@ -7559,6 +7560,7 @@ function debugR1Compare(){
       var auStepBadge=auStep?'<span class="kifrs-audit-tag" style="background:#ede9fe;color:#6d28d9;border-color:#ddd6fe" title="수익인식 5단계">'+auStep.step+'단계 '+esc(auStep.name)+'</span> ':'';
       return '<div class="kifrs-pr-item kifrs-cfb-'+vm.cfb+'">'
         + '<div class="kifrs-pr-h">'+auStepBadge+_paraLink(std.no, auRange, '문단 '+esc(auLabel))+' <span class="kifrs-cf kifrs-cf-'+vm.cls+'">'+vm.ico+' '+esc(verd)+'</span>'
+          + (a['__userFixed']?'<span class="kifrs-uchip">사용자확정</span>':'')
           + (code.pinpoint?' <span class="kifrs-audit-tag" title="DB 범위문단 '+esc(auRange)+' 내에서 코드로 특정">범위 '+esc(auRange)+'</span>':'')
           + (a['교차']==='하향'?' <span class="kifrs-audit-tag">2차검증 하향</span>':'')
           + (code.level!=='green'?' <span class="kifrs-audit-tag">코드검증 '+(code.level==='red'?'확인불가':'미검증')+'</span>':'')+'</div>'
