@@ -410,6 +410,8 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
 .kifrs-an-head span{font-size:11px;font-weight:600;color:var(--txt3);margin-left:6px;}
 .kifrs-an-sec{font-size:12px;font-weight:700;color:var(--txt2);margin:14px 0 8px;padding-bottom:5px;border-bottom:1px solid var(--border);}
 .kifrs-an-sec span{font-size:10.5px;font-weight:600;color:var(--txt3);margin-left:4px;}
+.kifrs-sec-tog{cursor:pointer;user-select:none;}
+.kifrs-sec-tog .kifrs-sec-arr{float:right;margin-left:8px;}
 .kifrs-an-std{border:1px solid var(--border);border-radius:8px;background:var(--bg);padding:10px 12px;margin-bottom:8px;}
 .kifrs-an-std-h{display:flex;align-items:center;gap:9px;margin-bottom:6px;}
 .kifrs-an-name{font-size:13px;font-weight:700;color:var(--txt);}
@@ -6480,6 +6482,8 @@ function debugR1Compare(){
       '── 2단계: 당사 위치·관계 판정(가장 중요) ──',
       '- ⚠ 상대방(거래처) 관점 분석 금지. 반드시 당사 관점.',
       '- 거래형이면: 입금·청구·계좌 주체가 당사면 "공급자(수익)", 당사가 지급·취득하면 "고객(비용·자산)".',
+      '- ★세금계산서·청구서 발행 방향이 공급자–공급받는자를 가르는 가장 객관적 신호다. 상대방이 "당사에게" 세금계산서를 발행 → 상대방=공급자, 당사=공급받는자(고객·비용·지급). 당사가 "상대방에게" 발행 → 당사=공급자(수익·수취). "수익분배·제휴·공동사업·상품 노출·참여 유도" 같은 협업 어조가 있어도 이 방향 신호가 우선한다.',
+      '- ★현금을 "당사가 상대방에/에게 입금·지급"하면 당사=지급측(고객·비용)이다. 상대방이 사용자·제3자에게 포인트·리워드를 먼저 지급(적립)하고 그 금액을 당사가 사후 정산·보전(후청구 정산)하는 구조면, 그 사용자 지급액은 당사의 수취가 아니라 당사가 부담하는 비용(판촉·보상)이다 — 절대 수익으로 보지 말 것.',
       '- ⚠ 표면 단어("광고/게재/신청서" 등)만으로 비용 단정 금지 — 당사가 매체·플랫폼 제공자로서 대가를 수취하면 광고매출(수익)이다.',
       '- ⚠ 1115(수익)는 당사가 "공급자(대가 수취)"일 때만 후보에 넣을 것. 당사가 고객(지급) 측이면 1115는 적용 대상이 아니다 — 고객의 지급(비용)은 1115 범위 밖이며 "수익 기준서를 고객 관점에서 본다"는 식의 적용은 금지.',
       '',
@@ -6513,9 +6517,35 @@ function debugR1Compare(){
   }
   // 수익(공급자) 전용 기준서 — 고객(비용) 측 문서에 뜨면 강등
   var _REVENUE_ONLY={ '1115':true };
+  // 근거·문서 텍스트에서 세금계산서 발행 방향(발행자=공급자)으로 당사 측을 코드로 역추론 → LLM 당사위치 검증용
+  // 상대방(거래처) 이름을 앵커로 사용(거래구조에서 이미 확정). 충돌 시 근거가 LLM 판정을 이긴다.
+  function _sideFromEvidence(gs, docText){
+    var cp=String(gs['상대방']||'').replace(/㈜|\(주\)|주식회사/g,'').replace(/[\s()]/g,'');
+    if(cp.length<2) return null;
+    var ev=[].concat(gs['근거인용검증']||[], gs['근거인용']||[]).join('  ');
+    var hay=(ev+'  '+(docText||'')).replace(/\s+/g,' ');
+    if(!hay) return null;
+    var e=cp.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    var cpIssues=new RegExp(e+'[은는이가][^.。!?]{0,70}세금계산서[^.。!?]{0,30}발행').test(hay); // 상대방이 발행 → 상대방=공급자 → 당사=고객
+    var cpRecv  =new RegExp('세금계산서[를을]?[^.。!?]{0,8}'+e+'(에게|에다|에|으로|로)').test(hay);   // 당사가 상대방에 발행 → 당사=공급자
+    if(cpIssues && !cpRecv) return {side:'customer', why:'"'+(gs['상대방']||'상대방')+'"이(가) 세금계산서를 당사에 발행 → 발행자=공급자, 당사=공급받는자(비용·지급)'};
+    if(cpRecv && !cpIssues) return {side:'supplier', why:'당사가 세금계산서를 "'+(gs['상대방']||'상대방')+'"에 발행 → 당사=공급자(수익·수취)'};
+    return null;
+  }
   // 거래구조 방향과 어긋나는 후보 강등(예: HI가 고객인데 1115 수익이 높게 뜨는 오류 차단)
-  function _applyDirectionGuard(gs, cands){
-    var side=_hiSide(gs);
+  function _applyDirectionGuard(gs, cands, docText){
+    var llm=_hiSide(gs);
+    var inf=_sideFromEvidence(gs, docText);
+    var side=llm;
+    // 근거 텍스트가 명확한 방향을 가리키고 LLM 판정과 충돌 → 근거 우선·신뢰도 강등·경고(상류 위치 오판을 가드가 잡지 못하던 문제 보완)
+    if(inf && inf.side && inf.side!==llm){
+      side=inf.side;
+      gs['방향경고']='⚠ 근거↔당사위치 불일치: '+inf.why+'. AI가 제시한 당사 위치("'+(gs['당사위치']||gs['HI위치']||gs['HI역할']||'?')+'")와 어긋나 근거를 우선하고 신뢰도를 낮춥니다 — 당사 위치를 확인하세요.';
+      gs['신뢰도']='낮음';
+      gs['__sideInferred']=inf.side;
+    } else if(inf && inf.side && llm==='mixed'){
+      side=inf.side;   // LLM 불명 + 근거 명확 → 근거 채택(경고 없이 보강)
+    }
     if(side==='mixed' || !cands || !cands.length) return;
     cands.forEach(function(c){
       var no=String(c['기준서번호']||'').replace(/[^0-9]/g,'');
@@ -6637,7 +6667,7 @@ function debugR1Compare(){
               gs['근거인용원본수']=raw.length;
               gs['근거인용검증']=raw.filter(function(q){ return _quoteInDoc(q, docNorm); });   // 문서 실존분만 채택(할루시네이션 차단)
               var cands=st.candidates||[];
-              _applyDirectionGuard(gs, cands);   // 거래구조 방향과 어긋나는 수익/비용 기준서 강등
+              _applyDirectionGuard(gs, cands, text);   // 거래구조 방향과 어긋나는 수익/비용 기준서 강등 + 근거↔당사위치 교차검증
               var data={ '거래구조':gs, candidates:cands, normalizedTerms:norm.normalizedTerms||[], generalTerms:norm.generalTerms||[], __truncated:(norm.__truncated||st.__truncated) };
               KIFRS._lastAi=data;
               box.innerHTML=renderAiResult(data, ((Date.now()-t0)/1000).toFixed(1));
@@ -6733,6 +6763,7 @@ function debugR1Compare(){
             :(rawn?'<div style="color:#b45309;margin-top:4px"><b>문서 근거</b> 검증된 인용 없음(AI 제시 '+rawn+'건이 문서와 불일치)</div>':''))
         + '<div style="margin-top:5px">'+(gs['신뢰도']?'신뢰도: <b style="color:'+(low?'#c2410c':'#0f766e')+'">'+esc(gs['신뢰도'])+'</b> &nbsp;':'')
         + '<span class="kifrs-note">'+(low?'※ 당사 위치/분류가 모호합니다 — 아래 후보가 부적절하면 당사 위치를 정정해 알려주세요(재분석).':'※ 당사 위치가 틀리면 적용 기준서가 달라집니다 — 잘못됐으면 알려주세요.')+'</span></div>'
+        + (gs['방향경고']?'<div class="kifrs-api-stat err" style="margin-top:6px">'+esc(gs['방향경고'])+'</div>':'')
         + '</div>';
     }
     var cands=data.candidates||[];
@@ -6756,15 +6787,17 @@ function debugR1Compare(){
         + '</div>';
     });
     var nt=data.normalizedTerms||[];
-    h+='<div class="kifrs-an-sec">표준용어 정규화 <span>'+nt.length+'개</span></div>';
+    h+='<div class="kifrs-an-sec kifrs-sec-tog" onclick="window.KIFRS.toggleAiSec(\'kifrs-nt-body\',this)">표준용어 정규화 <span>'+nt.length+'개</span><span class="kifrs-toggle kifrs-sec-arr">펼치기 ▾</span></div>';
+    h+='<div id="kifrs-nt-body" style="display:none">';
     if(nt.length){
       h+='<table class="kifrs-nt"><thead><tr><th>원문</th><th>표준용어</th><th>기준서</th><th>신뢰도</th></tr></thead><tbody>';
       nt.forEach(function(t){ h+='<tr><td>'+esc(t['원문']||'')+'</td><td>'+esc(t['표준용어']||'')+'</td><td>'+esc(t['기준서번호']||'')+'</td><td>'+esc(t['신뢰도']||'')+'</td></tr>'; });
       h+='</tbody></table>';
     } else { h+='<div class="kifrs-note">정규화된 표준용어가 없습니다.</div>'; }
+    h+='</div>';
     if((data.generalTerms||[]).length){
-      h+='<div class="kifrs-an-sec">일반 업무 용어(분석 제외) <span>'+data.generalTerms.length+'개</span></div>';
-      h+='<div class="kifrs-an-chips">'+data.generalTerms.map(function(g){return '<span class="kifrs-chip-unc">'+esc(g)+'</span>';}).join('')+'</div>';
+      h+='<div class="kifrs-an-sec kifrs-sec-tog" onclick="window.KIFRS.toggleAiSec(\'kifrs-gt-body\',this)">일반 업무 용어(분석 제외) <span>'+data.generalTerms.length+'개</span><span class="kifrs-toggle kifrs-sec-arr">펼치기 ▾</span></div>';
+      h+='<div id="kifrs-gt-body" style="display:none"><div class="kifrs-an-chips">'+data.generalTerms.map(function(g){return '<span class="kifrs-chip-unc">'+esc(g)+'</span>';}).join('')+'</div></div>';
     }
     h+='<div class="kifrs-note" style="margin-top:12px">후보의 [🔬 정밀 분석]을 누르면 그 기준서 조문 범위로 상세 분석(API ②)합니다.</div>';
     return h;
@@ -7785,6 +7818,15 @@ function debugR1Compare(){
     if(open && !view._built){ view.innerHTML=buildDbHtml(); view._built=true; }
     view.style.display = open ? 'block' : 'none';
     if(tog) tog.textContent = open ? '접기 ▴' : '펼치기 ▾';
+  };
+  // AI 분석결과 하단 섹션(표준용어 정규화·일반 업무용어) 접기/펼치기
+  KIFRS.toggleAiSec = function(id, hdr){
+    var body=document.getElementById(id);
+    if(!body) return;
+    var open=(body.style.display==='none' || body.style.display==='');
+    body.style.display = open ? 'block' : 'none';
+    var arr=hdr && hdr.querySelector('.kifrs-sec-arr');
+    if(arr) arr.textContent = open ? '접기 ▴' : '펼치기 ▾';
   };
   KIFRS.toggleStd = function(i){
     var b=document.getElementById('kifrs-std-body-'+i);
