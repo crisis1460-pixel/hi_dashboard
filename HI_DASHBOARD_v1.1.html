@@ -6715,6 +6715,61 @@ function debugR1Compare(){
     if(!queue.length){ _clarToast('보정할 모호·확인필요 항목이 없습니다 👍'); return; }
     _clarStep(queue, 0, []);
   };
+  // ── 9단계 4번: 보정된 거래구조를 전제로 후보 기준서 AI 재선정(온디맨드 1콜) ──
+  function buildReselectPrompt(text, gs){
+    var ENT=KIFRS.getEntity();
+    var excerpt=_docExcerpt(text, 14000);
+    return [
+      '당신은 '+ENT+'(이하 당사)의 회계 분석가입니다. 보고실체는 항상 당사입니다.',
+      '아래 [확정된 거래구조]는 사용자가 검토·확정한 전제입니다. 이 전제를 절대 바꾸지 말고, 이 관점으로 적용 K-IFRS 후보 기준서만 다시 선정하세요.',
+      '',
+      '[확정된 거래구조 — 고정]',
+      '- 당사 위치: '+(gs['당사위치']||'?')+' / 관계: '+(gs['관계유형']||'?')+' / 대금: '+(gs['대금방향']||'?'),
+      '- 핵심 논점: '+(gs['핵심회계논점']||'?'),
+      '- 경제적 실질: '+(gs['경제적실질']||'?'),
+      '',
+      '[문서 발췌(앞·중간·뒤 샘플)]\n'+excerpt,
+      '',
+      '[검토 대상 K-IFRS 기준서 목록 — 반드시 이 번호만 사용]\n'+buildStandardsDigest(),
+      '',
+      '[선정 규칙]',
+      '- ⚠ 당사가 고객(지급·비용·자산) 측이면 수익기준서(1115)는 후보에서 제외하거나 최하위. 당사가 공급자(수취)일 때만 1115 포함.',
+      '- 광고·판촉비 지급(당사=광고주)은 1038 문단69 비용처리를 최상위 관련 기준서로 둘 것.',
+      '- 확정된 거래구조와 모순되는 자산화·수익화 후보 금지. 일반·구조 기준서(1001/1008)는 그 쟁점이 실제 있을 때만.',
+      '- candidates: 위 관점으로 관련성(0~100) 높은 순 최대 8개. 위 목록 번호만.',
+      '- ⚠ 다른 텍스트 없이 아래 JSON으로만:',
+      '{"candidates":[{"기준서번호":"","명칭":"","관련성":0,"사유":"","관련쟁점":[""]}]}'
+    ].join('\n');
+  }
+  KIFRS.reselectCandidates=function(){
+    if(!KIFRS._lastAi){ _clarToast('먼저 AI 분석을 실행하세요.'); return; }
+    if(KIFRS._reselBusy) return;
+    var gs=KIFRS._lastAi['거래구조']||{};
+    var text=gatherText();
+    if(!text){ _clarToast('문서 텍스트가 없습니다 — 먼저 분석을 실행하세요.'); return; }
+    if(!KIFRS.getApiKey()){ _clarToast('API 키가 필요합니다.'); return; }
+    var _rg=KIFRS.rateGuard(); if(!_rg.ok){ showRateWaitPopup(_rg.waitSec); return; }
+    var box=document.getElementById('kifrs-ai'); if(!box) return;
+    KIFRS._reselBusy=true;
+    var prev=box.innerHTML;
+    box.innerHTML='<div class="kifrs-ai-load"><span class="kifrs-spin"></span> 🔄 보정된 거래구조로 후보 기준서 재선정 중…</div>';
+    KIFRS.callGemini(buildReselectPrompt(text, gs), {json:true, temperature:0.1, retry:2, system:'당신은 K-IFRS 전문가입니다. 확정된 거래구조를 전제로 후보 기준서를 선정합니다. JSON으로만 답합니다.'})
+      .then(function(t){
+        KIFRS._reselBusy=false;
+        var r=KIFRS.parseJsonResponse(t)||{}; var cands=r.candidates||[];
+        if(!cands.length){ box.innerHTML=prev; _clarToast('재선정 결과가 비어 있어 기존 후보를 유지합니다.'); return; }
+        cands.forEach(function(c){ c.__reselected=true; });
+        _applyDirectionGuard(gs, cands, text);
+        KIFRS._lastAi.candidates=cands;
+        box.innerHTML=renderAiResult(KIFRS._lastAi, '');
+        _clarToast('보정된 거래구조로 후보 기준서를 재선정했습니다. (정밀분석·감사는 새 후보로 다시 실행하세요)');
+      })
+      .catch(function(e){
+        KIFRS._reselBusy=false; box.innerHTML=prev;
+        if(_isAbort(e)) return;
+        _clarToast('재선정 실패: '+((e&&e.message)||'오류'));
+      });
+  };
   // ── 이미지 OCR (Gemini 비전) — 최초 분석 시점에 이미지를 텍스트화하여 같은 파이프라인 합류 ──
   KIFRS.OCR_PROMPT='이 이미지는 회계/계약 관련 업무 문서입니다. 보이는 텍스트를 빠짐없이 그대로 추출하세요. 표는 행/열을 알아볼 수 있게 정리하고, 설명·해석 없이 추출 텍스트만 출력하세요.';
   function _dataUrlPart(durl){ var m=/^data:([^;]+);base64,([\s\S]*)$/.exec(durl||''); return m?{mimeType:m[1], data:m[2]}:null; }
@@ -6924,6 +6979,7 @@ function debugR1Compare(){
         + '<div style="margin-top:5px">'+(gs['신뢰도']?'신뢰도: <b style="color:'+(low?'#c2410c':'#0f766e')+'">'+esc(gs['신뢰도'])+'</b> &nbsp;':'')
         + '<span class="kifrs-note">'+(low?'※ 당사 위치/분류가 모호합니다 — 아래 후보가 부적절하면 당사 위치를 정정해 알려주세요(재분석).':'※ 당사 위치가 틀리면 적용 기준서가 달라집니다 — 잘못됐으면 알려주세요.')+'</span></div>'
         + (gs['방향경고']?'<div class="kifrs-api-stat err" style="margin-top:6px">'+esc(gs['방향경고'])+'</div>':'')
+        + (gs['__userFixed']?'<div style="margin-top:8px"><button class="kifrs-btn kifrs-btn-sm" onclick="window.KIFRS.reselectCandidates()" title="확정한 거래구조를 전제로 적용 기준서 후보를 AI가 다시 선정(API 1콜)">🔄 AI로 후보 재선정 (1콜)</button></div>':'')
         + '</div>';
     }
     var cands=data.candidates||[];
