@@ -6683,6 +6683,18 @@ function debugR1Compare(){
     var pitems=((KIFRS._lastPrecise||{})[no]||{}).items||[];
     if(slot && std && typeof renderFinalAudit==='function'){ slot.innerHTML=renderFinalAudit(std, pitems, rec.items, ''); }
   }
+  // 결과 전체 재렌더 후, 이미 받아둔 정밀분석·AI감사 결과를 슬롯에 다시 주입(보정 시 결과가 사라져 API 재호출하던 문제 방지)
+  function _restoreCachedResults(){
+    var pr=KIFRS._lastPrecise||{}, au=KIFRS._lastAudit||{};
+    Object.keys(pr).forEach(function(key){
+      var std=KIFRS.findStandard(key), slot=document.getElementById('kifrs-precise-'+key);
+      if(std && slot && pr[key] && typeof renderPreciseResult==='function'){ slot.innerHTML=renderPreciseResult(pr[key], std, ''); }   // 정밀분석 복원 + 빈 감사슬롯 재생성
+    });
+    Object.keys(au).forEach(function(key){
+      var std=KIFRS.findStandard(key), aslot=document.getElementById('kifrs-audit-'+key), pitems=((pr[key]||{}).items)||[];
+      if(std && aslot && au[key] && au[key].items && typeof renderFinalAudit==='function'){ aslot.innerHTML=renderFinalAudit(std, pitems, au[key].items, ''); }   // 감사 결과(사용자확정 반영) 복원
+    });
+  }
   function _applyClarifications(answers){
     var ai=KIFRS._lastAi||{}; var gs=ai['거래구조']||{}; var cands=ai.candidates||[];
     var structureChanged=false, standardChanged=false, auditChanged={};
@@ -6707,8 +6719,12 @@ function debugR1Compare(){
     });
     // 하이브리드 리플로우: 거래구조 보정 시 방향가드 재적용(로컬·무료) → 방향 바뀌면 1115 등 후보 재정렬
     if(structureChanged){ _applyDirectionGuard(gs, cands, gatherText()); }
-    if(structureChanged || standardChanged){ var box=document.getElementById('kifrs-ai'); if(box && typeof renderAiResult==='function'){ box.innerHTML=renderAiResult(ai, ''); } }
-    Object.keys(auditChanged).forEach(function(no){ _rerenderAudit(no); });
+    if(structureChanged || standardChanged){
+      var box=document.getElementById('kifrs-ai');
+      if(box && typeof renderAiResult==='function'){ box.innerHTML=renderAiResult(ai, ''); _restoreCachedResults(); }   // 재렌더 후 정밀분석·감사 결과 복원(재호출 불필요)
+    } else {
+      Object.keys(auditChanged).forEach(function(no){ _rerenderAudit(no); });   // 확인필요 보정만: 해당 감사 슬롯만 갱신
+    }
     var nFix=answers.filter(function(a){return a&&a.answer!=null;}).length;
     _clarToast(nFix?(nFix+'개 항목을 보정해 결과에 반영했습니다. (사용자 확정)'):'변경된 항목이 없습니다.');
   }
