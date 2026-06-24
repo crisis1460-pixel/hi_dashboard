@@ -5966,21 +5966,24 @@ function debugR1Compare(){
   function _paraNum(s){ var m=String(s).match(/\d+(?:\.\d+)*/); return m?m[0]:''; }
   function _cmpDotted(a,b){ var pa=a.split('.').map(Number), pb=b.split('.').map(Number); for(var i=0;i<Math.max(pa.length,pb.length);i++){ var x=pa[i]||0, y=pb[i]||0; if(x!==y) return x-y; } return 0; }
   function _hasAlpha(s){ return /[A-Za-z가-힣]/.test(s); }
+  // 조문번호를 표준화: 부록 접두(B/AG/IG/DV/C/D/한 — 숫자 바로 앞일 때만), 숫자목록, 범위여부 추출.
+  // '문단 68~71','68~71(광고·판촉비)','제1038호 68' 등 노이즈/설명이 섞여도 숫자만 안전하게 뽑음.
+  function _paraCanon(s){
+    s=String(s||'');
+    var m=s.match(/(한|AG|IG|DV|B|C|D)\s*(?=\d)/);   // 부록 접두는 숫자 직전에 올 때만 인정(임의 한글 설명은 무시)
+    return { pre:(m?m[1]:''), nums:(s.match(/\d+(?:\.\d+)*/g)||[]), range:/[~∼∽－—–\-]/.test(s) };
+  }
+  // 문단번호 매칭 — DB는 범위형('31~34','68~71','한2.1~2.3'), AI는 단일·범위·노이즈 혼재.
+  // 부록 접두가 같고 숫자 범위가 '겹치면' 매칭(첫 숫자만 보던 한계 + 한글 노이즈로 깨지던 문제 해결).
   KIFRS.paraMatch = function(dbNo, q){
     dbNo=String(dbNo); q=String(q);
     if(dbNo===q) return true;
-    var qn=_paraNum(q); if(!qn) return false;
-    var qa=_hasAlpha(q);
-    var parts=dbNo.split(/[~∼∽－—–\-]/);   // 범위 구분자(물결/하이픈류)
-    if(parts.length===2){
-      if(_hasAlpha(parts[0])!==qa) return false;   // 접두문자(B/AG/한 등) 불일치 제외
-      var lo=_paraNum(parts[0]), hi=_paraNum(parts[1]);
-      if(lo&&hi) return _cmpDotted(qn,lo)>=0 && _cmpDotted(qn,hi)<=0;
-      return false;
-    }
-    if(_hasAlpha(dbNo)!==qa) return false;
-    var dn=_paraNum(dbNo);
-    return !!dn && dn===qn;
+    var dc=_paraCanon(dbNo), qc=_paraCanon(q);
+    if(dc.pre!==qc.pre) return false;                 // 부록 접두(B/AG/한 등) 불일치 제외
+    if(!dc.nums.length || !qc.nums.length) return false;
+    var dlo=dc.nums[0], dhi=(dc.range&&dc.nums.length>1)?dc.nums[dc.nums.length-1]:dc.nums[0];
+    var qlo=qc.nums[0], qhi=(qc.range&&qc.nums.length>1)?qc.nums[qc.nums.length-1]:qc.nums[0];
+    return _cmpDotted(qlo,dhi)<=0 && _cmpDotted(qhi,dlo)>=0;   // [qlo~qhi] ∩ [dlo~dhi] 겹침
   };
   // AI가 조문번호에 기준서번호를 접두로 붙이는 경우('1038.68~71','제1038호 68~71') 제거 →
   // 안 그러면 _paraNum이 '1038.68'을 뽑아 범위매칭이 전부 깨져 코드검증이 싹다 '확인불가'가 됨
