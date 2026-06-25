@@ -452,8 +452,11 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
 .kifrs-nt th{background:var(--bg3);color:var(--txt2);font-weight:700;text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);}
 .kifrs-nt td{padding:6px 8px;border-bottom:1px solid var(--border);color:var(--txt2);}
 .kifrs-nt tr:hover td{background:var(--bg3);}
-.kifrs-pr-item{border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;background:var(--bg);padding:10px 12px;margin-bottom:8px;}
-.kifrs-pr-h{font-size:12px;font-weight:700;color:var(--txt);margin-bottom:5px;}
+.kifrs-pr-item{border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;background:var(--bg);padding:10px 12px;margin-bottom:8px;position:relative;}
+.kifrs-pr-h{font-size:12px;font-weight:700;color:var(--txt);margin-bottom:5px;padding-right:62px;}
+.kifrs-paralink{cursor:pointer;display:inline-flex;align-items:center;gap:3px;background:#eef6ff;border:1px solid #cfe2f5;color:#1d4ed8;border-radius:6px;padding:0 7px;font-weight:700;transition:background .12s,box-shadow .12s;}
+.kifrs-paralink:hover{background:#dbeafe;box-shadow:0 1px 4px rgba(29,78,216,.2);}
+.kifrs-paralink-cue{font-size:9px;font-weight:700;opacity:.72;margin-left:2px;}
 .kifrs-pr-row{display:flex;gap:8px;align-items:baseline;font-size:11.5px;color:var(--txt2);line-height:1.7;margin-top:4px;}
 .kifrs-pr-row>b:first-child{flex:0 0 92px;word-break:keep-all;overflow-wrap:break-word;}   /* 라벨 고정폭 열 — 본문 시작 위치 정렬 */
 .kifrs-pr-row b{color:var(--blue);font-weight:700;}
@@ -462,6 +465,10 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
 .kifrs-pr-warn{font-size:10px;font-weight:700;color:#b45309;background:#fef3c7;border-radius:6px;padding:1px 7px;margin-left:4px;}
 .kifrs-precise-slot:not(:empty){margin-top:10px;padding-top:10px;border-top:1px dashed var(--border2);}
 .kifrs-audit-tag{font-size:9.5px;font-weight:700;color:#6d28d9;background:#ede9fe;border-radius:6px;padding:1px 7px;margin-left:4px;}
+.kifrs-prio{position:absolute;top:8px;right:10px;z-index:1;font-size:9.5px;font-weight:700;border-radius:6px;padding:2px 8px;white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.07);}
+.kifrs-pr-fold{margin:6px 0 8px;border:1px dashed var(--border2);border-radius:8px;padding:0 10px;}
+.kifrs-pr-fold>summary{cursor:pointer;font-size:11px;color:var(--txt3);font-weight:700;padding:7px 2px;}
+.kifrs-pr-fold[open]>summary{color:var(--txt2);border-bottom:1px dashed var(--border2);margin-bottom:8px;}
 .kifrs-pr-summary{font-size:11.5px;font-weight:700;color:var(--txt2);margin:8px 0 10px;}
 /* 개발 이력 — 프로젝트 카드(가로 드래그) */
 .devlog-projrow{display:flex;gap:14px;overflow-x:auto;padding:4px 2px 12px;cursor:grab;}
@@ -7027,6 +7034,26 @@ function debugR1Compare(){
     ov.querySelector('.m-foot button').addEventListener('click', close);
     document.body.appendChild(ov);
   };
+  KIFRS.showPrioHelp = function(){
+    var ov=document.createElement('div'); ov.className='kifrs-modal-ov';
+    function chip(n,c,bg){ return '<span class="kifrs-prio" style="position:static;flex-shrink:0;color:'+c+';background:'+bg+'">'+n+'</span>'; }
+    ov.innerHTML='<div class="kifrs-modal" style="max-width:760px;width:94vw;text-align:left">'
+      + '<div class="m-ttl" style="text-align:center">🔢 검토 우선순위 설명</div>'
+      + '<div class="kifrs-help-body">'
+      +   '<p>각 조문이 <b>이 거래의 회계 “결론”을 바꾸는 판단 길목</b>인지를 AI가 1~100으로 평가한 값입니다(거래 맥락 기준·참고용). 우선순위 <b>내림차순</b>으로 정렬되고, <b>형식(&lt;40)</b> 문단은 자동으로 접힙니다.</p>'
+      +   '<p style="margin:10px 0 4px"><b>등급(모든 기준서 공통 기준)</b></p>'
+      +   '<div class="kifrs-help-row">'+chip('핵심 ≥70','#b91c1c','#fef2f2')+'<div>인식 여부·시점, 분류(자산/수익·자본화/비용화 등), 측정금액을 <b>결정</b>하는 핵심 판단 조문.</div></div>'
+      +   '<div class="kifrs-help-row">'+chip('검토 40~69','#b45309','#fffbeb')+'<div>결론에 영향은 있으나 부차적이거나, 조건부로 따져볼 조문.</div></div>'
+      +   '<div class="kifrs-help-row">'+chip('형식 &lt;40','#6b7280','#f3f4f6')+'<div>공시·주석, 이 거래에 변수 없는 조항, 적용 안 되는 예외(해당없음 가능성). 기본 접힘.</div></div>'
+      +   '<p style="margin:12px 0 4px"><b>정렬</b> — 우선순위↓, 동점이면 정밀분석은 <b>확인불가&gt;미검증&gt;통과</b>, 감사는 <b>확인필요&gt;미흡&gt;충족</b> 순.</p>'
+      +   '<p class="kifrs-note">※ AI 평가라 절대적이지 않습니다. <b>참고용 가이드일 뿐 어떤 조문도 검토 생략의 근거가 아니며</b>, 접힌 형식 문단도 펼쳐 모두 볼 수 있습니다.</p>'
+      + '</div>'
+      + '<div class="m-foot"><button class="kifrs-btn">확인</button></div></div>';
+    function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
+    ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
+    ov.querySelector('.m-foot button').addEventListener('click', close);
+    document.body.appendChild(ov);
+  };
   KIFRS.showApiKeyGuide = function(){
     var ov=document.createElement('div');
     ov.className='kifrs-modal-ov';
@@ -7054,6 +7081,7 @@ function debugR1Compare(){
   function renderAiResult(data, secs){
     var h='<div class="kifrs-an-head">🤖 AI 분석 결과 (거래구조·후보) <span>'+secs+'초 · '+esc(KIFRS.getModel())+'</span>'
       + '<button class="kifrs-help-btn" onclick="window.KIFRS.showLabelHelp()">ⓘ 신뢰도 라벨 설명</button>'
+      + '<button class="kifrs-help-btn" style="margin-left:6px" onclick="window.KIFRS.showPrioHelp()">ⓘ 검토 우선순위 설명</button>'
       + '<button class="kifrs-help-btn" onclick="window.KIFRS.printEvidence()" title="현재 분석·검증 결과를 감사 대응용 PDF로 저장(브라우저 인쇄 → 대상에서 PDF로 저장)">📄 증빙 PDF 출력</button></div>';
     if(data.__truncated){ h+='<div class="kifrs-api-stat err" style="margin:4px 0">⚠ 응답이 길어 일부가 잘렸습니다 — 후보는 보존되지만 정규화 용어 일부가 누락될 수 있습니다. (다시 분석 권장)</div>'; }
     var gs=data['거래구조']||data.context||{};   // 신규 거래구조 / 구버전 context 하위호환
@@ -7149,9 +7177,11 @@ function debugR1Compare(){
       '- ⚠ 1115 본인 vs 대리인: 당사가 고객에 이전하기 전 재화·용역을 통제하면 "본인" → 대가 "총액"을 수익으로 인식하고, 제3자(대행사·플랫폼)에 지급하는 수수료는 수익에서 차감하지 말고 별도 "비용(지급수수료·매출원가)"으로 인식한다. 통제 없이 주선만 하면 "대리인" → 수수료(순액)만 수익. ❌ "총액 인식"과 "수수료를 수익에서 차감"을 한 결론에 동시에 쓰면 자기모순이니 금지.',
       '- 본인(총액) 결론이면 분개예시에 매출 총액과 지급수수료 비용을 모두 표기(예: (차)현금 (차)지급수수료 / (대)매출 (대)부가세예수금). 표시방법에는 본인=\"총액\"·대리인=\"순액\"을 적고, 그 외 항목은 빈 문자열.',
       '- 근거조문원문요약은 위 조문 범위에 근거하여 1문장.',
+      '- 검토우선순위: 이 거래에서 해당 조문을 실제로 따져봐야 하는 정도를 1~100 정수로(★이 거래 맥락 기준). ★판단 기준(모든 기준서 공통): 회계처리 "결론"을 바꾸는 조문 = 높게(70~100) — 즉 (a)인식 여부·시점을 정하거나 (b)분류를 가르거나(자산/수익·부채/자본·자본화/비용화 등) (c)측정금액을 결정하는 조문. 공시·주석, 이 거래에 변수 없는 조항, 적용 안 되는 예외·특수규정(해당없음 가능성)은 낮게(1~39). (예: 1115면 본인/대리인·수익인식 시점이 높음.) ⚠ 참고용 가이드일 뿐, 어떤 조문도 검토 생략의 근거가 아니다.',
+      '- 우선순위사유: 그 점수의 근거를 1줄(예: "변동대가 없어 형식적", "본인/대리인 판단이 총액·순액을 가르는 핵심 쟁점").',
       '- ⚠ "조문번호"에는 위 목록의 문단번호만 그대로 적으세요(예: "68~71"). 기준서번호를 접두로 붙이지 마세요(❌"'+std.no+'.68~71" ❌"제'+std.no+'호 68").',
       '- 반드시 아래 JSON 형식으로만 응답(자유 서술 금지):',
-      '{"items":[{"기준서번호":"'+std.no+'","조문번호":"","체크항목":"","검토포인트":"","분개예시":"","표시방법":"","근거조문원문요약":""}]}'
+      '{"items":[{"기준서번호":"'+std.no+'","조문번호":"","체크항목":"","검토포인트":"","분개예시":"","표시방법":"","검토우선순위":50,"우선순위사유":"","근거조문원문요약":""}]}'
     ]).join('\n');
   }
   KIFRS._preciseBusy={};   // 기준서별 진행상태 → 여러 후보 동시 정밀분석 허용
@@ -7207,23 +7237,7 @@ function debugR1Compare(){
         box.innerHTML='<div class="kifrs-api-stat err">❌ '+esc(e.message)+'</div>'; });
   };
   KIFRS.cancelPrecise=function(no){ var c=KIFRS._preciseCtl&&KIFRS._preciseCtl[no]; if(c){ try{c.abort();}catch(e){} } };
-  // ── 수익인식 5단계(1115) 분류: 문단을 표준 5단계로 매핑(거래가격=3·배분=4·인식=5). DB 본문순 오번호(이행=3 등) 교정 ──
-  KIFRS.STEP_MAP = {
-    '1115': [
-      {step:1, name:'계약 식별', ranges:[[9,21]]},
-      {step:2, name:'수행의무 식별', ranges:[[22,30]]},
-      {step:3, name:'거래가격 산정', ranges:[[46,72]]},
-      {step:4, name:'거래가격 배분', ranges:[[73,90]]},
-      {step:5, name:'수익 인식(수행의무 이행)', ranges:[[31,45]]}
-    ]
-  };
-  KIFRS.classifyStep = function(stdNo, paraNo){
-    var std=KIFRS.findStandard(stdNo); if(!std) return null;
-    var map=KIFRS.STEP_MAP[std.no]; if(!map) return null;
-    var mm=String(paraNo).match(/\d+/); if(!mm) return null; var n=parseInt(mm[0],10);
-    for(var i=0;i<map.length;i++){ for(var j=0;j<map[i].ranges.length;j++){ if(n>=map[i].ranges[j][0] && n<=map[i].ranges[j][1]) return map[i]; } }
-    return null;
-  };
+  // (제거됨) 수익인식 5단계 배지: 문단번호→단계 하드코딩 매핑이 부록·범위에서 오분류가 잦아 제거. 핵심 분석엔 무관.
   // ── 세부 핀포인트: DB가 범위(예 68~71)로 뭉친 문단을 실제 문단·항목(69(3)) 단위로 분해(원문 K-IFRS/txt 기준) ──
   // kw 있으면 우선, 없으면 t에서 변별토큰 자동 도출 → AI 검토텍스트와 대조해 세부항목 특정.
   KIFRS.PARA_POINTS = {
@@ -7516,43 +7530,62 @@ function debugR1Compare(){
     document.body.appendChild(ov);
   };
   function _paraLink(stdNo, rangeNo, inner){
-    return '<span style="cursor:pointer;border-bottom:1px dotted currentColor" title="클릭 — 기준서 원문 보기" onclick="window.KIFRS.showParaText(\''+stdNo+'\',\''+rangeNo+'\')">'+inner+'</span>';
+    return '<span class="kifrs-paralink" title="클릭하면 이 문단의 기준서 원문(내장 DB)이 팝업으로 열립니다" onclick="window.KIFRS.showParaText(\''+stdNo+'\',\''+rangeNo+'\')">📖 '+inner+'<span class="kifrs-paralink-cue">원문보기</span></span>';
   }
+  // 검토 우선순위(1~100, 참고용). 없으면 50(중립=검토등급, 접힘 방지). AI가 0/음수 주면 1로.
+  function _clampPrio(v){ var n=Number(v); if(!isFinite(n)) return 50; return Math.max(1, Math.min(100, Math.round(n))); }
+  function _prioBadge(p, reason){
+    var t = p>=70?{n:'핵심',c:'#b91c1c',bg:'#fef2f2'} : (p>=40?{n:'검토',c:'#b45309',bg:'#fffbeb'} : {n:'형식',c:'#6b7280',bg:'#f3f4f6'});
+    return ' <span class="kifrs-prio" style="color:'+t.c+';background:'+t.bg+'" title="검토 우선순위(참고용·이 거래 기준): '+p+'/100'+(reason?' — '+esc(reason):'')+'">'+t.n+' '+p+'</span>';
+  }
+  // 우선순위 정렬 기준을 화면에 명시(불투명한 숫자 방지) — tie=동점 시 2차 정렬 설명
+  function _prioLegend(tie){
+    return '<div class="kifrs-note" style="margin:-2px 0 9px;line-height:1.65">🔢 <b>검토 우선순위</b>(참고용 · AI가 <u>이 거래 맥락</u>에서 쟁점이 큰 조문일수록 높게 평가) — '
+      + '<b style="color:#b91c1c">핵심 ≥70</b> · <b style="color:#b45309">검토 40~69</b> · <b style="color:#6b7280">형식 &lt;40</b>. '
+      + '우선순위 <b>내림차순</b> 정렬, 동점이면 <b>'+tie+'</b> 순. 각 항목의 점수 근거는 아래 "우선순위 근거"에 표시 — 참고용이며 어떤 조문도 검토 생략 사유가 아닙니다.</div>';
+  }
+  // 개별 항목의 우선순위 점수 근거 행(투명성)
+  function _prioReasonRow(reason){ return reason?'<div class="kifrs-pr-row" style="color:#64748b"><b>우선순위 근거</b> '+esc(reason)+'</div>':''; }
   function renderPreciseResult(data, std, secs){
     var items=data.items||[];
     var head='<div class="kifrs-an-head">🔬 정밀 분석 — 제'+esc(std.no)+'호 '+esc(std.name)+' <span>'+secs+'초 · 항목 '+items.length+'개</span></div>';
     if(data.__truncated){ head+='<div class="kifrs-api-stat err" style="margin:4px 0">⚠ 응답이 길어 일부 끝부분이 잘렸습니다 — 완성된 항목까지만 표시합니다. (마지막 항목은 내용이 누락될 수 있음 → 다시 정밀 분석 권장)</div>'; }
     if(!items.length){ return head+'<div class="kifrs-note">관련 조문 분석 결과가 없습니다.</div>'; }
-    var cnt={green:0,amber:0,red:0}, body='';
-    items.forEach(function(it){
+    var cnt={green:0,amber:0,red:0}, lvlRank={red:2,amber:1,green:0};
+    var rows=items.map(function(it){
       var v=KIFRS.verifyItem(std.no, it); cnt[v.level]++;
       if(v.recovered && v.para){ it['조문번호']=v.para.no; }   // 복원된 번호를 항목에 기록(문단 라벨·5단계·감사 정합)
+      var prio=_clampPrio(it['검토우선순위']);
       var artNo=String(it['조문번호']||'');
       var rangeNo=KIFRS.stripStdPrefix(std.no, artNo)||artNo||'-';
       var paraLabel=v.pinpoint?(v.pinpoint.no+v.pinpoint.idx):rangeNo;
-      var step=KIFRS.classifyStep(std.no, artNo);
-      var stepBadge=step?'<span class="kifrs-audit-tag" style="background:#ede9fe;color:#6d28d9;border-color:#ddd6fe" title="수익인식 5단계">'+step.step+'단계 '+esc(step.name)+'</span> ':'';
       var verifyLine='검증: 문단 '+(v.para?'실존':'불일치')+' · 화이트리스트 '+(v.whitelist?'OK':'밖')
         + (v.kwTotal? ' · 키워드 '+v.kwHit+'/'+v.kwTotal+(v.hit.length?'('+v.hit.map(esc).join(',')+')':'') : ' · 키워드 없음')
         + (v.srcHit? ' · 원문직접인용 ✓' : '')
         + (v.pinpoint? ' · 세부 '+esc(v.pinpoint.no+v.pinpoint.idx)+' DB일치 ✓' : '')
         + (v.reasons.length? ' · '+v.reasons.map(esc).join('; ') : '');
-      body+='<div class="kifrs-pr-item kifrs-cfb-'+v.level+'">'
-        + '<div class="kifrs-pr-h">'+stepBadge+_paraLink(std.no, rangeNo, '문단 '+esc(paraLabel))+' '+_cfLabel(v.level)
+      var html='<div class="kifrs-pr-item kifrs-cfb-'+v.level+'">'+_prioBadge(prio, it['우선순위사유'])
+        + '<div class="kifrs-pr-h">'+_paraLink(std.no, rangeNo, '문단 '+esc(paraLabel))+' '+_cfLabel(v.level)
           + (v.pinpoint?' <span class="kifrs-audit-tag" title="DB 범위문단 '+esc(rangeNo)+' 내에서 코드로 특정">범위 '+esc(rangeNo)+'</span>':'')+'</div>'
         + (v.pinpoint?'<div class="kifrs-pr-row kifrs-pr-src" style="color:#0f766e"><b>해당 세부조문(원문)</b> '+esc(v.pinpoint.no+v.pinpoint.idx)+' '+esc(v.pinpoint.t)+'</div>':'')
         + (it['체크항목']?'<div class="kifrs-pr-row"><b>체크항목</b> '+esc(it['체크항목'])+'</div>':'')
         + (it['검토포인트']?'<div class="kifrs-pr-row"><b>검토포인트</b> '+esc(it['검토포인트'])+'</div>':'')
         + (it['근거조문원문요약']?'<div class="kifrs-pr-row kifrs-pr-src"><b>근거조문</b> '+esc(it['근거조문원문요약'])+'</div>':'')
         + (it['분개예시']?'<div class="kifrs-art-jn">'+esc(it['분개예시'])+'</div>':'')
+        + _prioReasonRow(it['우선순위사유'])
         + '<div class="kifrs-pr-verify">'+verifyLine+'</div>'
         + '</div>';
+      return {prio:prio, level:v.level, html:html};
     });
+    rows.sort(function(a,b){ return (b.prio-a.prio) || (lvlRank[b.level]-lvlRank[a.level]); });   // 검토 우선순위↓, 동점이면 주의필요(확인불가>미검증>통과)↓
+    var hi=rows.filter(function(r){return r.prio>=40;}), lo=rows.filter(function(r){return r.prio<40;});
+    var body=hi.map(function(r){return r.html;}).join('');
+    if(lo.length){ body+='<details class="kifrs-pr-fold"'+(hi.length?'':' open')+'><summary>⚪ 형식·낮은 우선순위 문단 '+lo.length+'개 — 펼쳐 보기</summary>'+lo.map(function(r){return r.html;}).join('')+'</details>'; }   // 형식(<40) 기본 접기(항목은 보존)
     var summary='<div class="kifrs-pr-summary">🟢 코드검증 '+cnt.green+' · 🟠 미검증 '+cnt.amber+' · 🔴 확인불가 '+cnt.red
       + ' <button class="kifrs-btn kifrs-btn-sm" style="margin-left:8px" onclick="window.KIFRS.runFinalAudit(\''+std.no+'\')">✅ 최종 검증(AI감사인 재검토)</button></div>';
     var foot='<div class="kifrs-disclaimer">본 결과는 참고용이며, 최종 판단은 담당자 확인이 필요합니다. (코드검증 = 문단 실존·기준서 화이트리스트·문단 키워드(동의어 포함) 단서 대조 — <b>개념 부합은 [최종 검증]의 AI감사로 확정</b>)</div>';
     var auditSlot='<div class="kifrs-precise-slot" id="kifrs-audit-'+std.no+'"></div>';
-    return head+summary+body+auditSlot+foot;
+    return head+summary+_prioLegend('확인불가>미검증>통과')+body+auditSlot+foot;
   }
   // ── 최종 검증(3단계 근거기반 감사): 근거추출 → 코드검증 → 판정 → 교차검증 ──
   function _aopts(asig, sys, onRetry){ return {json:true, temperature:0, signal:asig, system:sys, onRetry:onRetry}; }
@@ -7725,6 +7758,7 @@ function debugR1Compare(){
       var verd=a['판정']||'확인필요'; if(cnt[verd]==null) verd='확인필요';
       cnt[verd]++;
       var vm=_auditVerd(verd);
+      var prio=_clampPrio(it['검토우선순위']);
       var code=KIFRS.verifyItem(std.no, it);   // 코드 신뢰도(존재성)는 보조 표시
       var quotes=a['근거인용']||[];
       var quoteHtml = quotes.length
@@ -7739,10 +7773,8 @@ function debugR1Compare(){
       var auBase=artNo||(code.para?code.para.no:'');   // 조문번호 누락 시 코드검증이 복원한 DB 문단번호로 표시
       var auRange=KIFRS.stripStdPrefix(std.no, auBase)||auBase||'-';
       var auLabel=code.pinpoint?(code.pinpoint.no+code.pinpoint.idx):auRange;
-      var auStep=KIFRS.classifyStep(std.no, auBase);
-      var auStepBadge=auStep?'<span class="kifrs-audit-tag" style="background:#ede9fe;color:#6d28d9;border-color:#ddd6fe" title="수익인식 5단계">'+auStep.step+'단계 '+esc(auStep.name)+'</span> ':'';
-      return '<div class="kifrs-pr-item kifrs-cfb-'+vm.cfb+'">'
-        + '<div class="kifrs-pr-h">'+auStepBadge+_paraLink(std.no, auRange, '문단 '+esc(auLabel))+' <span class="kifrs-cf kifrs-cf-'+vm.cls+'">'+vm.ico+' '+esc(verd)+'</span>'
+      var html='<div class="kifrs-pr-item kifrs-cfb-'+vm.cfb+'">'+_prioBadge(prio, it['우선순위사유'])
+        + '<div class="kifrs-pr-h">'+_paraLink(std.no, auRange, '문단 '+esc(auLabel))+' <span class="kifrs-cf kifrs-cf-'+vm.cls+'">'+vm.ico+' '+esc(verd)+'</span>'
           + (a['__userFixed']?'<span class="kifrs-uchip">사용자확정</span>':'')
           + (code.pinpoint?' <span class="kifrs-audit-tag" title="DB 범위문단 '+esc(auRange)+' 내에서 코드로 특정">범위 '+esc(auRange)+'</span>':'')
           + (a['교차']==='하향'?' <span class="kifrs-audit-tag">2차검증 하향</span>':'')
@@ -7753,14 +7785,19 @@ function debugR1Compare(){
         + (a['감사의견']?'<div class="kifrs-pr-row" style="color:#6d28d9"><b>AI감사의견</b> '+esc(a['감사의견'])+'</div>':'')
         + (verd!=='확인필요' && a['보완사항']?'<div class="kifrs-pr-row" style="color:#b45309"><b>보완·확인</b> '+esc(a['보완사항'])+'</div>':'')
         + unable + hallucNote
+        + _prioReasonRow(it['우선순위사유'])
         + '</div>';
-    }).join('');
+      return {prio:prio, verd:verd, html:html};
+    });
+    var vrank={'확인필요':3,'미흡':2,'해당없음':1,'충족':0};   // 동점이면 확인필요>미흡>해당없음>충족 먼저
+    rows.sort(function(a,b){ return (b.prio-a.prio) || ((vrank[b.verd]||0)-(vrank[a.verd]||0)); });
+    rows=rows.map(function(r){return r.html;}).join('');
     var summary='<div class="kifrs-pr-summary">✅ 충족 '+cnt['충족']+' · ❗ 미흡 '+cnt['미흡']+' · ⚠️ 확인필요(판단불가) '+cnt['확인필요']+' · ➖ 해당없음 '+cnt['해당없음']+'</div>';
     var note='<div class="kifrs-disclaimer">3단계 감사(①근거추출 → 코드로 인용 실존 검증 → ②검증근거로만 판정 → ③교차검증). 모든 판정은 <b>문서에서 코드로 검증된 인용</b>에만 근거하며, 근거가 없거나 불충분한 항목은 임의 판단 없이 <b>판단불가(확인필요)</b>로 표기하고 후속확인을 안내합니다.</div>';
     var clarBtn=(cnt['확인필요']>0)
       ? '<button class="kifrs-btn kifrs-btn-sm" style="margin-left:auto" onclick="window.KIFRS.startClarify(\''+std.no+'\')" title="이 기준서의 확인필요 항목을 객관식으로 보정">❓ 모호항목 보정 ('+cnt['확인필요']+')</button>'
       : '';
-    return '<div class="kifrs-an-head" style="margin-top:8px;border-top:1px solid var(--border);padding-top:10px;display:flex;align-items:center;gap:8px"><span>✅ AI감사 결과 <span style="font-weight:600;color:var(--txt3)">'+secs+'초 · 3단계 근거기반 검증</span></span>'+clarBtn+'</div>'+summary+rows+note;
+    return '<div class="kifrs-an-head" style="margin-top:8px;border-top:1px solid var(--border);padding-top:10px;display:flex;align-items:center;gap:8px"><span>✅ AI감사 결과 <span style="font-weight:600;color:var(--txt3)">'+secs+'초 · 3단계 근거기반 검증</span></span>'+clarBtn+'</div>'+summary+_prioLegend('확인필요>미흡>충족')+rows+note;
   }
 
   // ── 7단계: 증빙 PDF 다운로드 (브라우저 인쇄 → "PDF로 저장") ──
