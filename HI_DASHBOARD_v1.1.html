@@ -6200,11 +6200,16 @@ function debugR1Compare(){
   KIFRS._providerOf = function(m){ return String(m||'').indexOf('/')>=0 ? 'openrouter' : 'gemini'; };
   // 분석에 적합한 일반 instruct 모델 선호(코드·비전·작은모델 후순위) — 동적 무료목록 정렬용
   function _orRank(id){
-    id=String(id).toLowerCase(); var s=0, fam=['llama','qwen','mistral','gemma','deepseek','glm','phi','nemotron','gpt'];
-    for(var i=0;i<fam.length;i++){ if(id.indexOf(fam[i])>=0){ s+=10-i; break; } }
+    id=String(id).toLowerCase(); var s=0;
+    var fam=['gpt-oss','hermes','llama','qwen','deepseek','mistral','gemma','glm','nemotron','phi'];
+    for(var i=0;i<fam.length;i++){ if(id.indexOf(fam[i])>=0){ s+=12-i; break; } }
     if(/instruct|chat|-it[:\-]|-it$/.test(id)) s+=4;
     if(/coder|code/.test(id)) s-=6;
-    if(/70b|72b|32b|27b|24b|235b|480b/.test(id)) s+=2;
+    if(/(\bvl\b|-vl|vision|omni|audio|safety|guard)/.test(id)) s-=8;   // 멀티모달·안전모델 후순위(텍스트 분석 부적합)
+    if(/(405b|550b|235b|120b|80b|70b|72b)/.test(id)) s+=4;             // 대형(강력) 우선
+    else if(/(32b|30b|27b|24b)/.test(id)) s+=2;
+    if(/(1\.2b|\b1b|\b2b|\b3b|nano|mini|tiny|small)/.test(id)) s-=4;   // 소형 후순위
+    if(/thinking|reasoning/.test(id)) s-=1;                            // 추론모델(느림) 약간 후순위
     return s;
   }
   // OpenRouter 무료 모델을 실시간 조회해 갱신(무료 ID 수시 변동 대응). 텍스트 입력 가능 무료모델만 상위 5개.
@@ -8523,23 +8528,13 @@ function debugR1Compare(){
       + '</div>'
       + '<div class="kifrs-api-bar">'
       +   '<span class="kifrs-api-ico">⚙</span>'
-      +   '<span class="kifrs-api-label">Gemini API</span>'
-      +   '<input type="password" id="kifrs-api-key" class="kifrs-api-input" placeholder="API 키 붙여넣기 (AQ…)" autocomplete="off">'
+      +   '<span class="kifrs-api-label">Gemini API <span class="kifrs-note" style="font-weight:600">(주력·자동)</span></span>'
+      +   '<input type="password" id="kifrs-api-key" class="kifrs-api-input" style="flex:1;min-width:200px;max-width:300px" placeholder="API 키 (AQ…)" autocomplete="off">'
       +   '<button class="kifrs-btn kifrs-btn-sm" id="kifrs-api-save">저장</button>'
-      +   '<select id="kifrs-api-model" class="kifrs-api-model" title="분석 모델 — 자동: 호출 때 되는 모델을 우선순위대로 자동 선택·폴백">'
-      +     '<option value="auto">🔀 자동 (되는 모델 우선·권장)</option>'
-      +     '<option value="gemini-2.0-flash">2.0-flash · 무료 ~1500/일</option>'
-      +     '<option value="gemini-2.0-flash-lite">2.0-flash-lite · OCR·대량(빠름)</option>'
-      +     '<option value="gemini-2.5-flash-lite">2.5-flash-lite · 2.5추론+한도절충</option>'
-      +     '<option value="gemini-2.5-flash">2.5-flash · 최신·정밀(한도 적음 ~250/일)</option>'
-      +   '</select>'
       +   '<button class="kifrs-btn kifrs-btn-sm" id="kifrs-api-test">연결 테스트</button>'
-      +   '<button class="kifrs-btn kifrs-btn-ghost kifrs-btn-sm" id="kifrs-api-models" title="이 키로 generateContent 가능한 모델 조회">모델 목록</button>'
-      +   '<span class="kifrs-api-stat" id="kifrs-api-stat"></span>'
-      +   '<div class="kifrs-keyguide">'
-      +     '🆓 <b>무료 키 발급</b> &nbsp;① <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">AI Studio</a> 접속 → ② [API 키 만들기] → ③ <span class="kifrs-kg-warn">⚠ 반드시 “새 프로젝트에서 API 키 만들기”(신규 프로젝트)로 생성</span> → ④ 키(AQ…) 복사 후 위 칸에 붙여넣고 [저장] → ⑤ [연결 테스트]'
-      +     '<button class="kifrs-help-btn" id="kifrs-api-guide">자세히 보기</button>'
-      +   '</div>'
+      +   '<a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">🔑 키 발급</a>'
+      +   '<button class="kifrs-help-btn" id="kifrs-api-guide" title="무료 키 발급 가이드 — 반드시 신규 프로젝트로 생성">자세히</button>'
+      +   '<span class="kifrs-api-stat" id="kifrs-api-stat" style="flex-basis:100%;margin:0"></span>'
       +   '<div class="kifrs-keyguide" style="flex-basis:100%;display:flex;align-items:center;gap:9px;flex-wrap:wrap">'
       +     '<span title="Gemini 한도 소진 시 OpenRouter 무료 모델로만 자동 폴백(유료 자동 제외)">🔀 <b>OpenRouter</b>(예비·무료만) — 한도 소진 시 자동 폴백</span>'
       +     '<input type="password" id="kifrs-or-key" class="kifrs-api-input" style="flex:1;min-width:200px;max-width:300px" placeholder="OpenRouter 키 (sk-or-…)" autocomplete="off">'
@@ -8617,23 +8612,7 @@ function debugR1Compare(){
       if(entStat){ entStat.className='kifrs-api-stat ok'; entStat.textContent='✅ 보고실체: '+KIFRS.getEntity(); }
     });
     // 모델 선택 — 저장된 모델 복원 + 전환 시 저장(모델별 무료 한도가 달라 2.5↔2.0 교체용)
-    try{ var _sm=localStorage.getItem('kifrs-model'); if(_sm) KIFRS.setModel(_sm); }catch(e){}
-    var apiModel=document.getElementById('kifrs-api-model');
-    if(apiModel){
-      var _selVal=KIFRS.API.auto?'auto':KIFRS.getModel(), _has=false;
-      for(var _oi=0;_oi<apiModel.options.length;_oi++){ if(apiModel.options[_oi].value===_selVal){ _has=true; break; } }
-      if(!_has){ var _o=document.createElement('option'); _o.value=_selVal; _o.textContent=_selVal+' (현재)'; apiModel.appendChild(_o); }
-      apiModel.value=_selVal;
-      apiModel.addEventListener('change', function(){
-        KIFRS.setModel(apiModel.value);
-        if(apiStat){ apiStat.className='kifrs-api-stat';
-          apiStat.textContent = KIFRS.API.auto
-            ? '자동 모델 모드 — 호출 시 되는 모델을 우선순위대로 자동 선택합니다'
-            : ('모델 고정: '+KIFRS.getModel()+' · [연결 테스트]로 확인하세요'); }
-      });
-    }
-    var apiModelsBtn=document.getElementById('kifrs-api-models');
-    if(apiModelsBtn) apiModelsBtn.addEventListener('click', KIFRS.listModelsUI);
+    KIFRS.API.auto=true; try{ localStorage.setItem('kifrs-model','auto'); }catch(e){}   // 모델 드롭다운 제거 — 항상 자동(되는 모델 우선 폴백)
     function _applyApiInputs(){ KIFRS.setApiKey(apiKeyEl?apiKeyEl.value:''); }
     if(apiSave) apiSave.addEventListener('click', function(){
       _applyApiInputs();
