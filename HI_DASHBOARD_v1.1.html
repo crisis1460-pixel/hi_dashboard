@@ -7568,9 +7568,9 @@ function debugR1Compare(){
         + '<div class="kifrs-pr-h">'+_paraLink(std.no, rangeNo, '문단 '+esc(paraLabel))+' '+_cfLabel(v.level)
           + (v.pinpoint?' <span class="kifrs-audit-tag" title="DB 범위문단 '+esc(rangeNo)+' 내에서 코드로 특정">범위 '+esc(rangeNo)+'</span>':'')+'</div>'
         + (v.pinpoint?'<div class="kifrs-pr-row kifrs-pr-src" style="color:#0f766e"><b>해당 세부조문(원문)</b> '+esc(v.pinpoint.no+v.pinpoint.idx)+' '+esc(v.pinpoint.t)+'</div>':'')
-        + (it['체크항목']?'<div class="kifrs-pr-row"><b>체크항목</b> '+esc(it['체크항목'])+'</div>':'')
+        + (it['체크항목']?'<div class="kifrs-pr-row" style="color:#6d28d9"><b>체크항목</b> '+esc(it['체크항목'])+'</div>':'')
         + (it['검토포인트']?'<div class="kifrs-pr-row"><b>검토포인트</b> '+esc(it['검토포인트'])+'</div>':'')
-        + (it['근거조문원문요약']?'<div class="kifrs-pr-row kifrs-pr-src"><b>근거조문</b> '+esc(it['근거조문원문요약'])+'</div>':'')
+        + (it['근거조문원문요약']?'<div class="kifrs-pr-row kifrs-pr-src" style="color:#0f766e"><b>근거조문</b> '+esc(it['근거조문원문요약'])+'</div>':'')
         + (it['분개예시']?'<div class="kifrs-art-jn">'+esc(it['분개예시'])+'</div>':'')
         + _prioReasonRow(it['우선순위사유'])
         + '<div class="kifrs-pr-verify">'+verifyLine+'</div>'
