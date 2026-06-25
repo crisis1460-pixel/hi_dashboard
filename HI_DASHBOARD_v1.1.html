@@ -454,8 +454,9 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
 .kifrs-nt tr:hover td{background:var(--bg3);}
 .kifrs-pr-item{border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;background:var(--bg);padding:10px 12px;margin-bottom:8px;}
 .kifrs-pr-h{font-size:12px;font-weight:700;color:var(--txt);margin-bottom:5px;}
-.kifrs-pr-row{font-size:11.5px;color:var(--txt2);line-height:1.6;margin-top:3px;}
-.kifrs-pr-row b{color:var(--blue);font-weight:700;margin-right:4px;}
+.kifrs-pr-row{display:flex;gap:8px;align-items:baseline;font-size:11.5px;color:var(--txt2);line-height:1.7;margin-top:4px;}
+.kifrs-pr-row>b:first-child{flex:0 0 92px;word-break:keep-all;overflow-wrap:break-word;}   /* 라벨 고정폭 열 — 본문 시작 위치 정렬 */
+.kifrs-pr-row b{color:var(--blue);font-weight:700;}
 .kifrs-pr-src{color:var(--txt3);}
 .kifrs-pr-ok{font-size:10px;font-weight:700;color:#047857;background:#d1fae5;border-radius:6px;padding:1px 7px;margin-left:4px;}
 .kifrs-pr-warn{font-size:10px;font-weight:700;color:#b45309;background:#fef3c7;border-radius:6px;padding:1px 7px;margin-left:4px;}
@@ -6496,6 +6497,7 @@ function debugR1Compare(){
       '- ★현금을 "당사가 상대방에/에게 입금·지급"하면 당사=지급측(고객·비용)이다. 상대방이 사용자·제3자에게 포인트·리워드를 먼저 지급(적립)하고 그 금액을 당사가 사후 정산·보전(후청구 정산)하는 구조면, 그 사용자 지급액은 당사의 수취가 아니라 당사가 부담하는 비용(판촉·보상)이다 — 절대 수익으로 보지 말 것.',
       '- ⚠ 표면 단어("광고/게재/신청서" 등)만으로 비용 단정 금지 — 당사가 매체·플랫폼 제공자로서 대가를 수취하면 광고매출(수익)이다.',
       '- ⚠ 1115(수익)는 당사가 "공급자(대가 수취)"일 때만 후보에 넣을 것. 당사가 고객(지급) 측이면 1115는 적용 대상이 아니다 — 고객의 지급(비용)은 1115 범위 밖이며 "수익 기준서를 고객 관점에서 본다"는 식의 적용은 금지.',
+      '- ⚠ 본인(총액인식) 양면거래: 당사가 매체·재화를 직접 제공(통제=본인)하면서 대행사·플랫폼에 수수료를 지급하는 구조는 같은 거래에서 수익(총액 매출)과 비용(대행수수료)이 함께 발생한다. 이때 당사위치는 "공급자(주된 거래)"로 두되 회계영향측은 ["수익","비용"](복합)으로 표기하라 — 수수료가 있다고 1115를 강등하거나 당사를 고객으로 뒤집지 말 것.',
       '',
       '── 케이스 라이브러리(해당하면 참고, 없으면 일반 판단) ──',
       'A.수익·판매(당사 공급자, 대가 수취): 광고게재(매체=당사)→1115 광고매출 / 상품·서비스·구독 판매→1115 / 결제대행·정산(당사=PG)→1115 본인vs대리인(총액·순액), 예치금·미지급정산금·가맹점보증금→금융부채 1109 / 포인트·리워드→1115 / 보유 IP 라이선스 제공→1115+1038',
@@ -6988,12 +6990,13 @@ function debugR1Compare(){
       h+='<div style="margin:10px 0;padding:10px 13px;background:'+(low?'#fff7ed':'#eef6ff')+';border:1px solid '+(low?'#fed7aa':'#cfe2f5')+';border-radius:8px;font-size:12px;color:#234;line-height:1.7">'
         + '<b>🧭 거래구조 (당사 위치·관계)</b>'
         + (gs['자료성격']?' &nbsp;<span style="background:#1d4ed8;color:#fff;border-radius:4px;padding:1px 7px;font-size:11px">'+esc(gs['자료성격'])+'</span>':'')
-        + (hipos?'<div style="margin-top:4px">당사 위치: <b style="color:#1d4ed8">'+esc(hipos)+'</b>'+(gs['__userFixed']?'<span class="kifrs-uchip">사용자확정</span>':'')
-            +(gs['상대방']?' &nbsp;|&nbsp; 상대방: <b>'+esc(gs['상대방'])+'</b>':(gs['상대방있음']===false?' &nbsp;|&nbsp; 상대방: <b>없음(내부)</b>':''))+'</div>':'')
-        + (gs['관계유형']?'<div>관계: <b>'+esc(gs['관계유형'])+'</b>'+(gs['대금방향']&&gs['대금방향']!=='해당없음'?' &nbsp;|&nbsp; 대금: '+esc(gs['대금방향']):'')+'</div>':'')
-        + (gs['핵심회계논점']?'<div>핵심 논점: '+esc(gs['핵심회계논점'])+'</div>':'')
-        + (Array.isArray(gs['회계영향측'])&&gs['회계영향측'].length?'<div>영향 측면: '+gs['회계영향측'].map(function(x){return esc(x);}).join(' · ')+'</div>':(typeof gs['회계영향측']==='string'&&gs['회계영향측']?'<div>영향 측면: '+esc(gs['회계영향측'])+'</div>':''))
-        + (gs['경제적실질']||gs['거래요지']?'<div style="margin-top:3px;color:#45607a">'+esc(gs['경제적실질']||gs['거래요지'])+'</div>':'')
+        + (hipos?'<div class="kifrs-pr-row"><b>당사 위치</b><span>'+esc(hipos)+(gs['__userFixed']?' <span class="kifrs-uchip">사용자확정</span>':'')+'</span></div>':'')
+        + ((gs['상대방']||gs['상대방있음']===false)?'<div class="kifrs-pr-row"><b>상대방</b>'+(gs['상대방']?esc(gs['상대방']):'없음(내부)')+'</div>':'')
+        + (gs['관계유형']?'<div class="kifrs-pr-row"><b>관계</b>'+esc(gs['관계유형'])+'</div>':'')
+        + (gs['대금방향']&&gs['대금방향']!=='해당없음'?'<div class="kifrs-pr-row"><b>대금</b>'+esc(gs['대금방향'])+'</div>':'')
+        + (gs['핵심회계논점']?'<div class="kifrs-pr-row"><b>핵심 논점</b>'+esc(gs['핵심회계논점'])+'</div>':'')
+        + (Array.isArray(gs['회계영향측'])&&gs['회계영향측'].length?'<div class="kifrs-pr-row"><b>영향 측면</b>'+gs['회계영향측'].map(function(x){return esc(x);}).join(' · ')+'</div>':(typeof gs['회계영향측']==='string'&&gs['회계영향측']?'<div class="kifrs-pr-row"><b>영향 측면</b>'+esc(gs['회계영향측'])+'</div>':''))
+        + (gs['경제적실질']||gs['거래요지']?'<div class="kifrs-pr-row"><b>경제적 실질</b>'+esc(gs['경제적실질']||gs['거래요지'])+'</div>':'')
         + (ver.length?'<div class="kifrs-pr-row kifrs-pr-src" style="color:#0f766e;margin-top:4px"><b>문서 근거(검증됨)</b> '+ver.map(function(q){return '“'+esc(q)+'”';}).join(' &nbsp;/&nbsp; ')+'</div>'
             :(rawn?'<div style="color:#b45309;margin-top:4px"><b>문서 근거</b> 검증된 인용 없음(AI 제시 '+rawn+'건이 문서와 불일치)</div>':''))
         + '<div style="margin-top:5px">'+(gs['신뢰도']?'신뢰도: <b style="color:'+(low?'#c2410c':'#0f766e')+'">'+esc(gs['신뢰도'])+'</b> &nbsp;':'')
@@ -7069,10 +7072,12 @@ function debugR1Compare(){
       '- ⚠ 검토포인트는 위 거래구조(당사 위치·핵심 논점)와 일치해야 한다. 거래구조에 어긋나는 자산화·수익화 결론을 만들지 말 것.',
       '- 검토포인트는 핵심만 2~3문장(항목당 200자 이내)으로 간결히. 장황한 서술·반복 금지.',
       '- 분개예시는 해당하면 "(차) … / (대) …" 형식, 아니면 빈 문자열.',
+      '- ⚠ 1115 본인 vs 대리인: 당사가 고객에 이전하기 전 재화·용역을 통제하면 "본인" → 대가 "총액"을 수익으로 인식하고, 제3자(대행사·플랫폼)에 지급하는 수수료는 수익에서 차감하지 말고 별도 "비용(지급수수료·매출원가)"으로 인식한다. 통제 없이 주선만 하면 "대리인" → 수수료(순액)만 수익. ❌ "총액 인식"과 "수수료를 수익에서 차감"을 한 결론에 동시에 쓰면 자기모순이니 금지.',
+      '- 본인(총액) 결론이면 분개예시에 매출 총액과 지급수수료 비용을 모두 표기(예: (차)현금 (차)지급수수료 / (대)매출 (대)부가세예수금). 표시방법에는 본인=\"총액\"·대리인=\"순액\"을 적고, 그 외 항목은 빈 문자열.',
       '- 근거조문원문요약은 위 조문 범위에 근거하여 1문장.',
       '- ⚠ "조문번호"에는 위 목록의 문단번호만 그대로 적으세요(예: "68~71"). 기준서번호를 접두로 붙이지 마세요(❌"'+std.no+'.68~71" ❌"제'+std.no+'호 68").',
       '- 반드시 아래 JSON 형식으로만 응답(자유 서술 금지):',
-      '{"items":[{"기준서번호":"'+std.no+'","조문번호":"","체크항목":"","검토포인트":"","분개예시":"","근거조문원문요약":""}]}'
+      '{"items":[{"기준서번호":"'+std.no+'","조문번호":"","체크항목":"","검토포인트":"","분개예시":"","표시방법":"","근거조문원문요약":""}]}'
     ]).join('\n');
   }
   KIFRS._preciseBusy={};   // 기준서별 진행상태 → 여러 후보 동시 정밀분석 허용
@@ -7340,6 +7345,39 @@ function debugR1Compare(){
     for(i=0;i<pts.length;i++){ var n=0; for(j=0;j<toks[i].length;j++){ var w=toks[i][j]; if(df[w]===1 && aiNormText.indexOf(_normTerm(w))>=0) n++; } if(n>bestN){ bestN=n; best=pts[i]; tie=false; } else if(n===bestN && n>0){ tie=true; } }
     return (best && bestN>=1 && !tie) ? {no:best.no, idx:best.idx, t:best.t} : null;
   };
+  // 문단 점수: DB 문단 키워드(동의어 포함) 겹침 + 근거조문 원문직접인용 — verifyItem·recoverArticle 공용
+  function _scorePara(para, aiText, srcQuote){
+    var kwTotal=0, kwHit=0, hit=[], miss=[];
+    if(para && para.keywords){
+      para.keywords.forEach(function(k){
+        var w=_kwWeight(k); kwTotal+=w;                 // (C) 일반어 가중치 하향
+        var forms=_kwForms(k.t), got=false;             // (B) 키워드 + 동의어 형태
+        for(var fi=0;fi<forms.length;fi++){ if(forms[fi] && aiText.indexOf(forms[fi])>=0){ got=true; break; } }
+        if(got){ kwHit+=w; hit.push(k.t); } else miss.push(k.t);
+      });
+    }
+    // 보조검증: AI 근거조문요약이 DB 문단 원문(excerpt/summary)에 실재하면 '직접 인용'으로 통과 인정
+    var srcHit=false;
+    if(para){ var refNorm=_qnorm((para.excerpt||'')+(para.summary||'')); if(srcQuote && refNorm) srcHit=_quoteInDoc(srcQuote, refNorm); }
+    return {kwTotal:kwTotal, kwHit:kwHit, srcHit:srcHit, hit:hit, miss:miss};
+  }
+  // 조문번호가 비었거나(AI 누락) DB와 안 맞을 때, 근거조문·검토포인트 텍스트로 그 기준서 DB 문단을 역매칭해 번호 복원
+  KIFRS.recoverArticle = function(no, item){
+    var s=KIFRS.findStandard(no); if(!s||!s.paragraphs) return null;
+    var aiText=_normTerm((item['체크항목']||'')+' '+(item['검토포인트']||'')+' '+(item['근거조문원문요약']||''));
+    var srcQuote=item['근거조문원문요약']||'';
+    var best=null, bestSc=null, bestScore=0, second=0;
+    s.paragraphs.forEach(function(p){
+      var sc=_scorePara(p, aiText, srcQuote);
+      var ratio=sc.kwTotal?(sc.kwHit/sc.kwTotal):0;
+      var score=(sc.srcHit?2:0) + sc.kwHit + ratio;   // 원문직접인용 강신호 + 키워드 가중합(일반어↓) + 비율
+      if(score>bestScore){ second=bestScore; bestScore=score; best=p; bestSc=sc; }
+      else if(score>second){ second=score; }
+    });
+    // 비일반 키워드 1개 이상(가중 ≥1) 겹치거나 원문직접인용 + 2등 문단과 뚜렷이 벌어질 때만 복원(오복원 방지)
+    var solid = bestSc && (bestSc.srcHit || bestSc.kwHit>=1);
+    return (solid && (bestScore-second)>=0.4) ? best : null;
+  };
   // ── 6단계: 코드 기반 교차검증 (번호 실존 + 화이트리스트 + 키워드 교차검증) → 신뢰도 라벨 ──
   KIFRS.verifyItem = function(stdNo, item){
     var std0=KIFRS.findStandard(stdNo);
@@ -7351,25 +7389,16 @@ function debugR1Compare(){
     var para=artNo?KIFRS.findArticle(no, artNo):null;
     if(!artNo) reasons.push('조문번호 없음');
     else if(!para) reasons.push('문단번호 DB 불일치');
+    var recovered=false;
+    if(!para && wl){                                    // 번호 누락/불일치 → 텍스트로 DB 문단 역매칭 복원
+      var rp=KIFRS.recoverArticle(no, item);
+      if(rp){ para=rp; recovered=true; reasons.push('조문번호 복원(근거조문→DB문단 '+rp.no+')'); }
+    }
     // 키워드 교차검증: DB 문단 키워드가 AI 결과 텍스트에 개념적으로 겹치는지(글자 아닌 개념)
     var aiText=_normTerm((item['체크항목']||'')+' '+(item['검토포인트']||'')+' '+(item['근거조문원문요약']||''));
-    var kwTotal=0, kwHit=0, hit=[], miss=[];
-    if(para && para.keywords){
-      para.keywords.forEach(function(k){
-        var w=_kwWeight(k); kwTotal+=w;                 // (C) 일반어 가중치 하향
-        var forms=_kwForms(k.t), got=false;             // (B) 키워드 + 동의어 형태
-        for(var fi=0;fi<forms.length;fi++){ if(forms[fi] && aiText.indexOf(forms[fi])>=0){ got=true; break; } }
-        if(got){ kwHit+=w; hit.push(k.t); } else miss.push(k.t);
-      });
-    }
-    // 보조검증: DB 키워드가 '내부창출원가'처럼 압축 라벨이라 자연어와 substring 매칭이 구조적으로 안 되는 경우 대비.
-    // AI 근거조문요약이 DB 문단 원문(excerpt/summary)에 실재하면 '직접 인용'으로 보고 통과 인정(false 🟠 미검증 완화).
-    var srcHit=false;
-    if(para){
-      var refNorm=_qnorm((para.excerpt||'')+(para.summary||''));
-      var srcQuote=item['근거조문원문요약']||'';
-      if(srcQuote && refNorm) srcHit=_quoteInDoc(srcQuote, refNorm);
-    }
+    var srcQuote=item['근거조문원문요약']||'';
+    var sc=para?_scorePara(para, aiText, srcQuote):{kwTotal:0,kwHit:0,srcHit:false,hit:[],miss:[]};
+    var kwTotal=sc.kwTotal, kwHit=sc.kwHit, srcHit=sc.srcHit, hit=sc.hit, miss=sc.miss;
     // 세부 핀포인트: 매칭된 범위문단(예 68~71) 안에서 실제 세부항목(69(3))을 코드로 특정
     var pinpoint = para ? KIFRS.pinpointParagraph(no, para.no, aiText) : null;
     var level;
@@ -7378,7 +7407,7 @@ function debugR1Compare(){
     else if(srcHit){ level='green'; reasons.push('근거조문이 DB 문단 원문과 직접 일치(인용 실재)'); }
     else if(kwTotal===0){ level='amber'; reasons.push('DB 문단에 등록된 키워드 없음(교차검증 불가)'); }
     else { level='amber'; reasons.push('DB 문단 키워드와 겹침 약함('+kwHit+'/'+kwTotal+')'); }
-    return {level:level, para:para, whitelist:wl, kwTotal:kwTotal, kwHit:kwHit, srcHit:srcHit, pinpoint:pinpoint, hit:hit, miss:miss, reasons:reasons};
+    return {level:level, para:para, recovered:recovered, whitelist:wl, kwTotal:kwTotal, kwHit:kwHit, srcHit:srcHit, pinpoint:pinpoint, hit:hit, miss:miss, reasons:reasons};
   };
   function _cfLabel(level, audited){
     if(level==='green') return audited
@@ -7423,6 +7452,7 @@ function debugR1Compare(){
     var cnt={green:0,amber:0,red:0}, body='';
     items.forEach(function(it){
       var v=KIFRS.verifyItem(std.no, it); cnt[v.level]++;
+      if(v.recovered && v.para){ it['조문번호']=v.para.no; }   // 복원된 번호를 항목에 기록(문단 라벨·5단계·감사 정합)
       var artNo=String(it['조문번호']||'');
       var rangeNo=KIFRS.stripStdPrefix(std.no, artNo)||artNo||'-';
       var paraLabel=v.pinpoint?(v.pinpoint.no+v.pinpoint.idx):rangeNo;
@@ -7632,9 +7662,10 @@ function debugR1Compare(){
       var hallucNote = (a['환각제외']>0)
         ? '<div class="kifrs-pr-verify">⚠ AI가 제시한 근거 '+a['환각제외']+'건은 문서에서 확인되지 않아 제외함(할루시네이션 차단)</div>'
         : '';
-      var auRange=KIFRS.stripStdPrefix(std.no, artNo)||artNo||'-';
+      var auBase=artNo||(code.para?code.para.no:'');   // 조문번호 누락 시 코드검증이 복원한 DB 문단번호로 표시
+      var auRange=KIFRS.stripStdPrefix(std.no, auBase)||auBase||'-';
       var auLabel=code.pinpoint?(code.pinpoint.no+code.pinpoint.idx):auRange;
-      var auStep=KIFRS.classifyStep(std.no, artNo);
+      var auStep=KIFRS.classifyStep(std.no, auBase);
       var auStepBadge=auStep?'<span class="kifrs-audit-tag" style="background:#ede9fe;color:#6d28d9;border-color:#ddd6fe" title="수익인식 5단계">'+auStep.step+'단계 '+esc(auStep.name)+'</span> ':'';
       return '<div class="kifrs-pr-item kifrs-cfb-'+vm.cfb+'">'
         + '<div class="kifrs-pr-h">'+auStepBadge+_paraLink(std.no, auRange, '문단 '+esc(auLabel))+' <span class="kifrs-cf kifrs-cf-'+vm.cls+'">'+vm.ico+' '+esc(verd)+'</span>'
