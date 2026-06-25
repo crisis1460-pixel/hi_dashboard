@@ -6177,21 +6177,53 @@ function debugR1Compare(){
     ocrModel: '',                    // 비우면 분석 모델과 동일(자동모드면 자동선택 따라감)
     endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/'
   };
-  // 자동 모델 우선순위 — 무료 한도/품질 균형 순. 호출 때 위에서부터 되는 걸 사용.
-  // 모델ID에 '/'가 있으면 OpenRouter(OpenAI호환), 없으면 Gemini로 라우팅(_providerOf). OR 모델은 Gemini 한도 소진 시 폴백용으로 뒤에 배치.
-  KIFRS.MODEL_CHAIN = ['gemini-2.0-flash','gemini-2.5-flash-lite','gemini-2.0-flash-lite','gemini-2.5-flash',
-    'meta-llama/llama-3.3-70b-instruct:free','qwen/qwen3-coder:free','google/gemma-4-31b-it:free','deepseek/deepseek-r1:free'];
-  // OpenRouter 무료모델은 업스트림이 best-effort라 "Provider returned error"가 잦음 → 테스트·폴백에서 여러 후보를 순차 시도
-  KIFRS.OR_TEST_MODELS = ['meta-llama/llama-3.3-70b-instruct:free','qwen/qwen3-coder:free','google/gemma-4-31b-it:free','deepseek/deepseek-r1:free'];
+  // 자동 모델 우선순위. 모델ID에 '/'가 있으면 OpenRouter(OpenAI호환), 없으면 Gemini로 라우팅(_providerOf).
+  KIFRS.MODEL_CHAIN = ['gemini-2.0-flash','gemini-2.5-flash-lite','gemini-2.0-flash-lite','gemini-2.5-flash'];   // Gemini(주력)만 — OR 무료모델은 동적 조회로 채움
+  // ⚠ OpenRouter 무료모델 ID는 수시 변동(슬러그가 유료로 바뀌거나 사라짐) → refreshOrModels로 실시간 조회, 조회 실패 시 OR_FALLBACK 사용
+  KIFRS.OR_FALLBACK = ['meta-llama/llama-3.3-70b-instruct:free','mistralai/mistral-small-3.2-24b-instruct:free','google/gemma-3-27b-it:free'];
+  KIFRS._orFreeModels = null;        // refreshOrModels가 채우는 동적 무료모델 목록
   // 구글이 퇴역시킨 모델 — 선택/체인에 있으면 404(generateContent 미지원). 자동 마이그레이션 대상
   KIFRS._RETIRED = {'gemini-1.5-flash':1,'gemini-1.5-flash-latest':1,'gemini-1.5-flash-8b':1,'gemini-1.5-pro':1,'gemini-1.5-pro-latest':1,'gemini-1.0-pro':1,'gemini-pro':1};
   KIFRS._activeModel = null;         // 자동모드에서 최근 성공 모델(그날 계속 우선 시도)
   KIFRS._providerOf = function(m){ return String(m||'').indexOf('/')>=0 ? 'openrouter' : 'gemini'; };
+  // 분석에 적합한 일반 instruct 모델 선호(코드·비전·작은모델 후순위) — 동적 무료목록 정렬용
+  function _orRank(id){
+    id=String(id).toLowerCase(); var s=0, fam=['llama','qwen','mistral','gemma','deepseek','glm','phi','nemotron','gpt'];
+    for(var i=0;i<fam.length;i++){ if(id.indexOf(fam[i])>=0){ s+=10-i; break; } }
+    if(/instruct|chat|-it[:\-]|-it$/.test(id)) s+=4;
+    if(/coder|code/.test(id)) s-=6;
+    if(/70b|72b|32b|27b|24b|235b|480b/.test(id)) s+=2;
+    return s;
+  }
+  // OpenRouter 무료 모델을 실시간 조회해 갱신(무료 ID 수시 변동 대응). 텍스트 입력 가능 무료모델만 상위 5개.
+  KIFRS.refreshOrModels = function(cb){
+    var key=KIFRS.getOrKey(); var hdr={}; if(key) hdr['Authorization']='Bearer '+key;
+    fetch('https://openrouter.ai/api/v1/models',{headers:hdr})
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        var list=(j&&j.data)||[];
+        var free=list.filter(function(m){
+          var p=m.pricing||{}; var isFree=(String(m.id||'').slice(-5)===':free')||(Number(p.prompt||0)===0&&Number(p.completion||0)===0);
+          var mod=(m.architecture&&m.architecture.input_modalities)||[]; var textOk=!mod.length||mod.indexOf('text')>=0;
+          return isFree&&textOk&&!/(vision|guard|safety|embed|rerank|ocr|tts|stt|audio|image|moderation)/i.test(m.id||'');
+        });
+        free.sort(function(a,b){ return _orRank(b.id)-_orRank(a.id); });
+        KIFRS._orFreeModels = free.slice(0,5).map(function(m){return m.id;});
+        if(cb) cb(KIFRS._orFreeModels);
+      })
+      .catch(function(e){ if(cb) cb(null,e); });
+  };
+  KIFRS._orChain = function(){   // OR 폴백 목록(동적→없으면 정적), 키 없으면 빈 배열
+    if(!KIFRS.getOrKey()) return [];
+    var l=(KIFRS._orFreeModels&&KIFRS._orFreeModels.length)?KIFRS._orFreeModels:KIFRS.OR_FALLBACK;
+    return l.slice(0,5);
+  };
   KIFRS._modelTryOrder = function(){
-    var act=KIFRS._activeModel, chain=KIFRS.MODEL_CHAIN.slice();
-    var order = act ? [act].concat(chain.filter(function(m){return m!==act;})) : chain;
-    var hasOr=!!KIFRS.getOrKey(), hasGem=!!KIFRS.getApiKey();   // 키 없는 공급자 모델은 폴백 순회에서 제외
-    return order.filter(function(m){ return KIFRS._providerOf(m)==='openrouter' ? hasOr : hasGem; });
+    var gem=KIFRS.getApiKey()?KIFRS.MODEL_CHAIN.slice():[];
+    var all=gem.concat(KIFRS._orChain());                 // Gemini(주력) → OpenRouter(동적 무료, 폴백)
+    var act=KIFRS._activeModel;
+    if(act && all.indexOf(act)>=0){ all=[act].concat(all.filter(function(m){return m!==act;})); }   // 최근 성공 모델 우선
+    return all;
   };
   KIFRS.getApiKey = function(){
     if(KIFRS.API.key) return KIFRS.API.key;
@@ -6284,7 +6316,9 @@ function debugR1Compare(){
       body:JSON.stringify(body), signal:opts.signal
     })
       .then(function(r){ return r.json().catch(function(){ var e=new Error('HTTP '+r.status+' (응답 파싱 실패)'); e.status=r.status; throw e; }).then(function(j){
-        if(!r.ok){ var er=new Error((j&&j.error&&j.error.message) || ('HTTP '+r.status)); er.status=r.status; throw er; }
+        if(!r.ok){ var emsg=(j&&j.error&&j.error.message) || ('HTTP '+r.status); var er=new Error(emsg); er.status=r.status;
+          if(/unavailable for free|use this slug|paid version|not available on the free|requires (more )?credit|insufficient credit/i.test(emsg)) er.skipModel=true;   // 무료 종료/유료 전용 → 재시도 없이 다음 모델로
+          throw er; }
         return j;
       }); })
       .then(function(j){
@@ -6322,7 +6356,7 @@ function debugR1Compare(){
       if(signal) signal.addEventListener('abort', onAbort);
     });
   }
-  function _isTransient(e){ var m=((e&&e.message)||'')+''; var st=e&&e.status; return (st===503||st===429||st===500||st===502||st===504) || /high demand|overload|unavailable|try again later|rate limit|quota|exceeded|retry in|provider returned error|no (?:instances|endpoints|providers)|temporarily|\b50[0234]\b|\b429\b/i.test(m); }
+  function _isTransient(e){ if(e&&e.skipModel) return false; var m=((e&&e.message)||'')+''; var st=e&&e.status; return (st===503||st===429||st===500||st===502||st===504) || /high demand|overload|unavailable|try again later|rate limit|quota|exceeded|retry in|provider returned error|no (?:instances|endpoints|providers)|temporarily|\b50[0234]\b|\b429\b/i.test(m); }
   function _retryDelayMs(e){ var m=((e&&e.message)||'')+''; var mm=m.match(/retry in ([\d.]+)\s*s/i)||m.match(/retryDelay["':\s]+([\d.]+)s/i); return mm?Math.min(30000, Math.ceil(parseFloat(mm[1])*1000)+500):0; }
   // 재시도 사유를 실제 에러로 분류 — '분당 한도' 하드코딩 오인 표시 방지
   function _retryReason(e){
@@ -6482,32 +6516,36 @@ function debugR1Compare(){
         } else { stat.textContent='❌ '+msg; }
       });
   };
-  // OpenRouter 연결 테스트(UI) — 브라우저 직접호출(CORS) 가능 여부를 여기서 즉시 확인
+  // OpenRouter 연결 테스트(UI) — 무료 모델 목록을 실시간 조회 후, 되는 무료모델로 CORS·연결 확인(유료는 절대 시도 안 함)
   KIFRS.testOrUI = function(){
     var stat=document.getElementById('kifrs-or-stat'); if(!stat) return;
     if(!KIFRS.getOrKey()){ stat.className='kifrs-api-stat err'; stat.textContent='먼저 OpenRouter 키를 저장하세요.'; return; }
-    var cands=KIFRS.OR_TEST_MODELS.slice(), errs=[];
-    function tryNext(){
-      if(!cands.length){   // 후보 전부 실패(키·CORS는 정상이나 무료모델 업스트림이 모두 에러)
-        stat.className='kifrs-api-stat err';
-        stat.innerHTML='❌ 후보 무료모델이 모두 실패 — 키·CORS는 정상으로 보이나 무료모델 업스트림이 일시 오류입니다. 잠시 후 재시도하거나 [모델 목록]에서 다른 무료모델로 교체하세요. <br><span class="kifrs-note">'+esc(errs.map(function(x){return x.m+': '+x.msg;}).join(' / ')).slice(0,300)+'</span>';
-        return;
+    stat.className='kifrs-api-stat'; stat.innerHTML='<span class="kifrs-spin"></span> 무료 모델 목록 조회 중…';
+    KIFRS.refreshOrModels(function(list){
+      var cands=KIFRS._orChain(), errs=[];   // 동적 무료목록(조회 실패 시 폴백). 모두 무료(pricing=0)만.
+      if(!cands.length){ stat.className='kifrs-api-stat err'; stat.textContent='❌ 사용 가능한 무료 모델을 찾지 못했습니다.'; return; }
+      function tryNext(){
+        if(!cands.length){
+          stat.className='kifrs-api-stat err';
+          stat.innerHTML='❌ 후보 무료모델이 모두 실패 — 키·CORS는 정상이나 무료모델 업스트림이 일시 오류입니다. 잠시 후 재시도하세요. <br><span class="kifrs-note">'+esc(errs.map(function(x){return x.m+': '+x.msg;}).join(' / ')).slice(0,300)+'</span>';
+          return;
+        }
+        var m=cands.shift();
+        stat.className='kifrs-api-stat'; stat.innerHTML='<span class="kifrs-spin"></span> OpenRouter 무료모델 시도 중: '+esc(m)+' …';
+        return KIFRS.callGemini('연결 테스트입니다. 다른 말 없이 정확히 OK 라고만 출력하세요.', {temperature:0, retry:0, model:m})
+          .then(function(t){ stat.className='kifrs-api-stat ok'; stat.textContent='✅ OpenRouter 무료 연결 정상 ('+m+') · 응답: '+(t.trim().slice(0,20)||'(빈 응답)')+' — CORS 통과, 자동폴백 사용 가능'; })
+          .catch(function(e){
+            var msg=(e&&e.message)||'연결 실패';
+            if(!e.status && /Failed to fetch|NetworkError|load failed|CORS/i.test(msg)){   // CORS는 모델 무관 → 즉시 종료
+              stat.className='kifrs-api-stat err';
+              stat.innerHTML='❌ 브라우저 직접호출 차단(CORS/네트워크). 이 파일을 <b>file://</b>로 열었다면 로컬 웹서버(예: VS Code Live Server)로 열어 다시 시도하세요. 그래도 막히면 프록시가 필요합니다. <br><span class="kifrs-note">'+esc(msg)+'</span>';
+              return;
+            }
+            errs.push({m:m, msg:msg}); return tryNext();   // 유료전용·일시오류는 다음 무료모델로
+          });
       }
-      var m=cands.shift();
-      stat.className='kifrs-api-stat'; stat.innerHTML='<span class="kifrs-spin"></span> OpenRouter 시도 중: '+esc(m)+' …';
-      return KIFRS.callGemini('연결 테스트입니다. 다른 말 없이 정확히 OK 라고만 출력하세요.', {temperature:0, retry:0, model:m})
-        .then(function(t){ stat.className='kifrs-api-stat ok'; stat.textContent='✅ OpenRouter 연결 정상 ('+m+') · 응답: '+(t.trim().slice(0,20)||'(빈 응답)')+' — CORS 통과, 자동폴백 사용 가능'; })
-        .catch(function(e){
-          var msg=(e&&e.message)||'연결 실패';
-          if(!e.status && /Failed to fetch|NetworkError|load failed|CORS/i.test(msg)){   // CORS는 모델 무관 → 즉시 종료
-            stat.className='kifrs-api-stat err';
-            stat.innerHTML='❌ 브라우저 직접호출 차단(CORS/네트워크). 이 파일을 <b>file://</b>로 열었다면 로컬 웹서버(예: VS Code Live Server)로 열어 다시 시도하세요. 그래도 막히면 OpenRouter는 프록시가 필요합니다. <br><span class="kifrs-note">'+esc(msg)+'</span>';
-            return;
-          }
-          errs.push({m:m, msg:msg}); return tryNext();   // 모델 오류(Provider returned error 등)는 다음 후보로
-        });
-    }
-    return tryNext();
+      tryNext();
+    });
   };
 
   // ── API ①: 용어 정규화 + 후보 기준서 선정 ──
@@ -8355,8 +8393,6 @@ function debugR1Compare(){
       +     '<option value="gemini-2.0-flash-lite">2.0-flash-lite · OCR·대량(빠름)</option>'
       +     '<option value="gemini-2.5-flash-lite">2.5-flash-lite · 2.5추론+한도절충</option>'
       +     '<option value="gemini-2.5-flash">2.5-flash · 최신·정밀(한도 적음 ~250/일)</option>'
-      +     '<option value="meta-llama/llama-3.3-70b-instruct:free">OR · Llama 3.3 70B (무료·예비)</option>'
-      +     '<option value="deepseek/deepseek-r1:free">OR · DeepSeek R1 (무료·예비)</option>'
       +   '</select>'
       +   '<button class="kifrs-btn kifrs-btn-sm" id="kifrs-api-test">연결 테스트</button>'
       +   '<button class="kifrs-btn kifrs-btn-ghost kifrs-btn-sm" id="kifrs-api-models" title="이 키로 generateContent 가능한 모델 조회">모델 목록</button>'
@@ -8366,7 +8402,7 @@ function debugR1Compare(){
       +     '<button class="kifrs-help-btn" id="kifrs-api-guide">자세히 보기</button>'
       +   '</div>'
       +   '<div class="kifrs-keyguide" style="flex-basis:100%">'
-      +     '🔀 <b>OpenRouter</b>(선택·예비) — 키 하나로 무료모델 다종, Gemini 한도 소진 시 <b>자동 폴백</b>. &nbsp;'
+      +     '🔀 <b>OpenRouter</b>(선택·예비) — Gemini 한도 소진 시 <b>무료 모델로만 자동 폴백</b>(유료 자동 제외, 결제수단 없으면 과금 불가). &nbsp;'
       +     '<input type="password" id="kifrs-or-key" class="kifrs-api-input" style="max-width:240px" placeholder="OpenRouter 키 (sk-or-…)" autocomplete="off">'
       +     '<button class="kifrs-btn kifrs-btn-sm" id="kifrs-or-save">저장</button>'
       +     '<button class="kifrs-btn kifrs-btn-sm" id="kifrs-or-test" title="브라우저 직접호출(CORS)이 되는지 확인">연결·CORS 테스트</button> &nbsp;'
@@ -8469,9 +8505,9 @@ function debugR1Compare(){
     // OpenRouter(예비 공급자) 키 — 복원·저장·연결테스트
     var orKeyEl=document.getElementById('kifrs-or-key');
     var orStat=document.getElementById('kifrs-or-stat');
-    if(orKeyEl){ var _ork=KIFRS.getOrKey(); if(_ork){ orKeyEl.value=_ork; if(orStat){ orStat.className='kifrs-api-stat ok'; orStat.textContent='저장된 키 있음 · 연결·CORS 테스트로 확인'; } } }
+    if(orKeyEl){ var _ork=KIFRS.getOrKey(); if(_ork){ orKeyEl.value=_ork; if(orStat){ orStat.className='kifrs-api-stat ok'; orStat.textContent='저장된 키 있음 · 연결·CORS 테스트로 확인'; } KIFRS.refreshOrModels(); } }   // 저장된 키 있으면 무료모델 목록 미리 조회
     var orSave=document.getElementById('kifrs-or-save');
-    if(orSave) orSave.addEventListener('click', function(){ KIFRS.setOrKey(orKeyEl?orKeyEl.value:''); if(orStat){ orStat.className='kifrs-api-stat ok'; orStat.textContent=KIFRS.getOrKey()?'✅ OpenRouter 키 저장됨':'키가 비워졌습니다'; } });
+    if(orSave) orSave.addEventListener('click', function(){ KIFRS.setOrKey(orKeyEl?orKeyEl.value:''); if(KIFRS.getOrKey()) KIFRS.refreshOrModels(); if(orStat){ orStat.className='kifrs-api-stat ok'; orStat.textContent=KIFRS.getOrKey()?'✅ OpenRouter 키 저장됨 · 무료모델 목록 갱신':'키가 비워졌습니다'; } });
     var orTest=document.getElementById('kifrs-or-test');
     if(orTest) orTest.addEventListener('click', function(){ KIFRS.setOrKey(orKeyEl?orKeyEl.value:''); KIFRS.testOrUI(); });
 
