@@ -498,6 +498,18 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
 .kifrs-cfb-red{border-left-color:#ef4444;}
 .kifrs-pr-verify{font-size:10px;color:var(--txt3);margin-top:7px;font-family:'DM Mono',monospace;border-top:1px dotted var(--border);padding-top:6px;}
 .kifrs-disclaimer{margin-top:14px;font-size:11px;color:var(--txt3);background:var(--bg3);border-radius:8px;padding:10px 12px;line-height:1.6;}
+.kifrs-jn{width:100%;border-collapse:collapse;font-size:11.5px;margin:8px 0;}
+.kifrs-jn th{background:var(--bg3);color:var(--txt2);font-weight:700;text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);}
+.kifrs-jn td{padding:6px 8px;border-bottom:1px solid var(--border);color:var(--txt2);vertical-align:top;}
+.kifrs-jn td.num,.kifrs-jn th.num{text-align:right;font-family:'DM Mono',monospace;white-space:nowrap;}
+.kifrs-jn .kifrs-jn-step{font-weight:700;color:var(--txt);background:var(--bg);}
+.kifrs-jn .kifrs-jn-src{color:var(--txt3);font-size:10.5px;}
+.kifrs-jn-warn{color:#b91c1c;font-weight:700;background:#fef2f2;}
+.kifrs-jn-basis{font-size:10px;font-weight:700;border-radius:6px;padding:1px 7px;margin-left:4px;}
+.kifrs-jn-basis.real{color:#047857;background:#d1fae5;}
+.kifrs-jn-basis.ex{color:#b45309;background:#fef3c7;}
+.kifrs-jn-box{font-size:11.5px;color:var(--txt2);background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin:6px 0;line-height:1.6;}
+.kifrs-jn-box ul{margin:4px 0 0;padding-left:18px;}
 .kifrs-help-btn{margin-left:auto;font-size:11px;font-weight:600;color:var(--blue);background:var(--blue-d);border:none;border-radius:6px;padding:4px 10px;cursor:pointer;}
 .kifrs-help-btn:hover{background:var(--blue);color:#fff;}
 .kifrs-an-head{display:flex;align-items:center;gap:6px;}
@@ -2775,7 +2787,7 @@ function renderDevLog(){
         {n:7,t:'결과 출력·증빙 PDF 다운로드',s:'done'},
         {n:8,t:'로딩 UI(6단계 스텝퍼)',s:'done'},
         {n:9,t:'객관식 팝업 3종',s:'doing'},
-        {n:10,t:'회계처리안 자동작성·엑셀 다운로드(금액 없으면 예시금액)',s:'todo'},
+        {n:10,t:'회계처리안 자동작성·엑셀 다운로드(금액 없으면 예시금액)',s:'doing'},
       ] },
   ];
 
@@ -6317,7 +6329,7 @@ function debugR1Compare(){
     })
       .then(function(r){ return r.json().catch(function(){ var e=new Error('HTTP '+r.status+' (응답 파싱 실패)'); e.status=r.status; throw e; }).then(function(j){
         if(!r.ok){ var emsg=(j&&j.error&&j.error.message) || ('HTTP '+r.status); var er=new Error(emsg); er.status=r.status;
-          if(/unavailable for free|use this slug|paid version|not available on the free|requires (more )?credit|insufficient credit/i.test(emsg)) er.skipModel=true;   // 무료 종료/유료 전용 → 재시도 없이 다음 모델로
+          if(/unavailable for free|use this slug|paid version|not available on the free|requires (more )?credit|insufficient credit|per-day|free-models-per-day|unlock/i.test(emsg)) er.skipModel=true;   // 유료 전용·무료 일일한도 → 재시도 없이 다음 모델로
           throw er; }
         return j;
       }); })
@@ -6527,7 +6539,12 @@ function debugR1Compare(){
       function tryNext(){
         if(!cands.length){
           stat.className='kifrs-api-stat err';
-          stat.innerHTML='❌ 후보 무료모델이 모두 실패 — 키·CORS는 정상이나 무료모델 업스트림이 일시 오류입니다. 잠시 후 재시도하세요. <br><span class="kifrs-note">'+esc(errs.map(function(x){return x.m+': '+x.msg;}).join(' / ')).slice(0,300)+'</span>';
+          var allmsg=errs.map(function(x){return x.msg;}).join(' ');
+          if(/per-day|free-models-per-day|unlock|add \d+ credit/i.test(allmsg)){
+            stat.innerHTML='❌ <b>OpenRouter 무료 일일 한도(하루 50건) 소진</b> — 미국 태평양시 자정(한국 오후 4~5시경) 리셋 전까지 무료 호출 불가. 충전 없이는 50건/일이 상한입니다($10 충전 시 1000건/일). <br><span class="kifrs-note">✅ 키·CORS는 정상 — 한도만 찬 상태입니다.</span>';
+          } else {
+            stat.innerHTML='❌ 후보 무료모델이 모두 <b>업스트림 일시 오류</b>(다운/과부하) — 키·CORS는 정상입니다. 잠시 후 재시도하세요. <br><span class="kifrs-note">'+esc(errs.map(function(x){return x.m.split('/').pop()+': '+x.msg;}).join(' / ')).slice(0,260)+'</span>';
+          }
           return;
         }
         var m=cands.shift();
@@ -6974,6 +6991,8 @@ function debugR1Compare(){
     if(KIFRS._aiBusy) return;
     var box=document.getElementById('kifrs-ai'); if(!box) return;
     box.style.display='block';
+    ['kifrs-precise','kifrs-journal'].forEach(function(id){ var el=document.getElementById(id); if(el){ el.innerHTML=''; el.style.display='none'; } });   // 새 분석 시작 — 이전 정밀분석·회계처리안 숨김
+    KIFRS._lastJournal=null;
     if(!KIFRS.getApiKey()){ box.innerHTML='<div class="kifrs-note">먼저 위 ⚙ Gemini API 칸에 키를 저장·연결하세요.</div>'; return; }
     var done=KIFRS.state.files.filter(function(r){return r.status==='done'&&r.text;});
     var pending=KIFRS.state.files.filter(function(r){return !r.ocrDone && ((r.kind==='image'&&r.dataUrl)||r.needsOcr);});
@@ -7120,6 +7139,7 @@ function debugR1Compare(){
     var h='<div class="kifrs-an-head">🤖 AI 분석 결과 (거래구조·후보) <span>'+secs+'초 · '+esc(KIFRS.getModel())+'</span>'
       + '<button class="kifrs-help-btn" onclick="window.KIFRS.showLabelHelp()">ⓘ 신뢰도 라벨 설명</button>'
       + '<button class="kifrs-help-btn" style="margin-left:6px" onclick="window.KIFRS.showPrioHelp()">ⓘ 검토 우선순위 설명</button>'
+      + '<button class="kifrs-help-btn" onclick="window.KIFRS.runJournal()" title="확정 거래구조·정밀분석·감사 결과로 단계별 분개(회계처리안)를 작성하고 엑셀로 저장">📒 회계처리안</button>'
       + '<button class="kifrs-help-btn" onclick="window.KIFRS.printEvidence()" title="현재 분석·검증 결과를 감사 대응용 PDF로 저장(브라우저 인쇄 → 대상에서 PDF로 저장)">📄 증빙 PDF 출력</button></div>';
     if(data.__truncated){ h+='<div class="kifrs-api-stat err" style="margin:4px 0">⚠ 응답이 길어 일부가 잘렸습니다 — 후보는 보존되지만 정규화 용어 일부가 누락될 수 있습니다. (다시 분석 권장)</div>'; }
     var gs=data['거래구조']||data.context||{};   // 신규 거래구조 / 구버전 context 하위호환
@@ -7885,6 +7905,125 @@ function debugR1Compare(){
     window.print();
   };
 
+  // ── 10단계: 회계처리안 자동작성 + 엑셀 다운로드 ──
+  // 입력: 확정 거래구조 + 정밀분석(분개예시·표시방법) + AI감사(판정·의견) + 원천문서(금액). 산출: 단계별 분개 JSON → 표 + 엑셀 2시트.
+  KIFRS._lastJournal = null; KIFRS._journalCtl = null;
+  function _won(n){ var x=Number(n); return isFinite(x)?x.toLocaleString('en-US'):''; }
+  function _jnSum(arr){ var s=0; (arr||[]).forEach(function(x){ s+=Number(x['금액'])||0; }); return s; }
+  function _jnGather(){
+    var ai=KIFRS._lastAi||{}; var gs=ai['거래구조']||{}; var cands=(ai.candidates||[]).slice(0,6);
+    var pre=KIFRS._lastPrecise||{}, au=KIFRS._lastAudit||{}, lines=[];
+    cands.forEach(function(c){
+      var raw=String(c['기준서번호']||''); var std=KIFRS.findStandard(raw); var key=std?std.no:raw.replace(/[^0-9]/g,'');
+      var pit=((pre[key]||{}).items)||[]; var ait=((au[key]||{}).items)||[];
+      pit.forEach(function(it){
+        var a=ait.filter(function(x){return String(x['조문번호']||'')===String(it['조문번호']||'');})[0]||{};
+        lines.push('· ['+key+' 문단 '+(it['조문번호']||'-')+'] '+(it['체크항목']||'')+(it['표시방법']?' (표시:'+it['표시방법']+')':'')
+          + '\n   검토: '+String(it['검토포인트']||'').slice(0,200)
+          + (it['분개예시']?'\n   분개예시: '+it['분개예시']:'')
+          + (a['판정']?'\n   감사판정: '+a['판정']+(a['감사의견']?' — '+String(a['감사의견']).slice(0,160):''):''));
+      });
+    });
+    return {gs:gs, cands:cands, lines:lines};
+  }
+  function buildJournalPrompt(){
+    var ENT=KIFRS.getEntity(); var g=_jnGather(); var gs=g.gs;
+    var excerpt=_docExcerpt(gatherText(), 9000);
+    var candTxt=g.cands.map(function(c){return c['기준서번호']+' '+(c['명칭']||'');}).join(', ');
+    return [
+      '당신은 '+ENT+'(이하 당사)의 회계 담당자입니다. 아래 [확정 분석]만 근거로, 당사 관점의 K-IFRS 회계처리안(분개)을 단계별로 작성하세요.',
+      '보고실체는 항상 당사이며, 확정된 거래구조·감사 판정에 어긋나는 결론을 만들지 마세요(할루시네이션 금지). 분석에 없는 새 가정은 "전제"에만 적습니다.',
+      '',
+      '[확정 거래구조]',
+      '- 당사 위치: '+(gs['당사위치']||gs['HI위치']||'?')+' / 관계: '+(gs['관계유형']||'?')+' / 대금: '+(gs['대금방향']||'?'),
+      '- 핵심 논점: '+(gs['핵심회계논점']||'?')+' / 경제적 실질: '+(gs['경제적실질']||'?'),
+      '- 적용 기준서: '+(candTxt||'?'),
+      '',
+      '[정밀분석·감사 요약]\n'+(g.lines.join('\n')||'(정밀분석/감사 결과 없음 — 거래구조와 문서로 합리적 추정)'),
+      '',
+      '[원천 문서 발췌(금액 근거)]\n'+excerpt,
+      '',
+      '[작성 규칙]',
+      '- 거래의 회계처리를 인식 시점·순서대로 분개 단계로 나눠 작성. 각 단계는 차변/대변 계정과 금액, 인식 근거(기준서·조문)를 포함.',
+      '- 금액: 문서에 실제 금액이 있으면 그 금액 사용(금액기준="실제"). 없으면 합리적 예시금액을 쓰되 금액기준="예시"로 표기하고 전제에 "예시금액" 명시. 금액을 지어내 사실처럼 단정하지 말 것.',
+      '- ⚠ 1115 본인(총액): 매출은 총액으로 인식하고, 제3자(대행사 등)에 지급하는 수수료는 수익에서 차감하지 말고 별도 비용(지급수수료·매출원가)으로 분개. 대리인(순액)이면 수수료(순액)만 수익.',
+      '- 각 단계 차변 합계 = 대변 합계(분개 균형). 부가가치세 등은 예수금/대급금으로만 표기하고 세무신고 판단은 범위 밖.',
+      '- 계정과목은 일반적 K-IFRS·한국 실무 계정명(현금및현금성자산, 매출/광고수익, 지급수수료, 부가세예수금, 미수금 등).',
+      '- 반드시 아래 JSON으로만 응답:',
+      '{"제목":"","금액기준":"실제|예시","통화":"KRW","전제":["",""],"분개":[{"순번":1,"단계":"","적요":"","차변":[{"계정":"","금액":0}],"대변":[{"계정":"","금액":0}],"인식근거":"","비고":""}],"주의":""}'
+    ].join('\n');
+  }
+  KIFRS.cancelJournal=function(){ var c=KIFRS._journalCtl; if(c){ try{c.abort();}catch(e){} } };
+  KIFRS.runJournal = function(){
+    if(!KIFRS._lastAi){ alert('먼저 [🤖 AI 기준서 분석]을 실행하세요.'); return; }
+    var box=document.getElementById('kifrs-journal'); if(!box) return;
+    var _rg=KIFRS.rateGuard(); if(!_rg.ok){ showRateWaitPopup(_rg.waitSec); return; }
+    box.style.display='block'; box.scrollIntoView&&box.scrollIntoView({behavior:'smooth',block:'start'});
+    var ctl=(typeof AbortController!=='undefined')?new AbortController():null; KIFRS._journalCtl=ctl;
+    var t0=Date.now(), tid='kifrs-jn-timer';
+    var timer=setInterval(function(){ var el=document.getElementById(tid); if(el) el.textContent=((Date.now()-t0)/1000).toFixed(1)+'초'; },100);
+    function fin(){ clearInterval(timer); KIFRS._journalCtl=null; }
+    box.innerHTML='<div class="kifrs-an-head">📒 회계처리안 작성</div><div class="kifrs-ai-load"><span class="kifrs-spin"></span> 확정 분석으로 단계별 분개 작성 중… <b id="'+tid+'">0.0초</b>'+_cancelBtn("window.KIFRS.cancelJournal()", '작성 중단')+'</div>';
+    KIFRS.callGemini(buildJournalPrompt(), {json:true, temperature:0.1, signal:ctl?ctl.signal:undefined, system:'당신은 K-IFRS 회계 담당자입니다. 확정 분석에만 근거해 단계별 분개를 작성하고 반드시 JSON으로만 답합니다.'})
+      .then(function(txt){ fin();
+        var data=KIFRS.parseJsonResponse(txt);
+        if(!data||!data['분개']){ box.innerHTML='<div class="kifrs-an-head">📒 회계처리안</div><div class="kifrs-api-stat err">작성 결과 파싱 실패.</div><div style="margin-top:8px"><button class="kifrs-btn kifrs-btn-sm" onclick="window.KIFRS.runJournal()">🔄 다시 작성</button></div>'; return; }
+        KIFRS._lastJournal=data; box.innerHTML=renderJournal(data, ((Date.now()-t0)/1000).toFixed(1));
+      })
+      .catch(function(e){ fin();
+        if(_isAbort(e)){ box.innerHTML='<div class="kifrs-an-head">📒 회계처리안</div><div class="kifrs-api-stat">⏹ 작성을 중단했습니다.</div><div style="margin-top:8px"><button class="kifrs-btn kifrs-btn-sm" onclick="window.KIFRS.runJournal()">🔄 다시 작성</button></div>'; return; }
+        box.innerHTML='<div class="kifrs-an-head">📒 회계처리안</div><div class="kifrs-api-stat err">❌ '+esc(e.message)+'</div><div style="margin-top:8px"><button class="kifrs-btn kifrs-btn-sm" onclick="window.KIFRS.runJournal()">🔄 다시 시도</button></div>'; });
+  };
+  function renderJournal(d, secs){
+    var basis=(d['금액기준']==='실제')?'<span class="kifrs-jn-basis real">실제 금액</span>':'<span class="kifrs-jn-basis ex">예시 금액(실제로 교체 필요)</span>';
+    var head='<div class="kifrs-an-head">📒 회계처리안 <span>'+secs+'초 · '+esc(KIFRS.getModel())+'</span>'
+      + '<button class="kifrs-help-btn" onclick="window.KIFRS.downloadJournalExcel()" title="분개표+요약 2시트 엑셀로 저장">⬇ 엑셀 다운로드</button></div>'
+      + '<div style="margin:2px 0 7px">'+(d['제목']?'<b style="font-size:13px">'+esc(d['제목'])+'</b> ':'')+basis+'</div>';
+    var rows=(d['분개']||[]).map(function(j){
+      var dr=(j['차변']||[]), cr=(j['대변']||[]); var n=Math.max(dr.length, cr.length, 1), out='';
+      for(var i=0;i<n;i++){
+        var dd=dr[i]||{}, cc=cr[i]||{};
+        out+='<tr>'
+          + (i===0?'<td rowspan="'+n+'" class="kifrs-jn-step">'+esc(j['적요']||j['단계']||'')+'</td>':'')
+          + '<td>'+esc(dd['계정']||'')+'</td><td class="num">'+(dd['계정']!=null&&dd['계정']!==''?_won(dd['금액']):'')+'</td>'
+          + '<td>'+esc(cc['계정']||'')+'</td><td class="num">'+(cc['계정']!=null&&cc['계정']!==''?_won(cc['금액']):'')+'</td>'
+          + (i===0?'<td rowspan="'+n+'" class="kifrs-jn-src">'+esc(j['인식근거']||'')+(j['비고']?'<br><span class="kifrs-note">'+esc(j['비고'])+'</span>':'')+'</td>':'')
+          + '</tr>';
+      }
+      return out + ((_jnSum(dr)===_jnSum(cr))?'':'<tr><td colspan="6" class="kifrs-jn-warn">⚠ 차변·대변 합계 불일치 — 확인 필요</td></tr>');
+    }).join('');
+    var table='<table class="kifrs-jn"><thead><tr><th>단계·적요</th><th>차변 계정</th><th class="num">차변</th><th>대변 계정</th><th class="num">대변</th><th>인식 근거</th></tr></thead><tbody>'+rows+'</tbody></table>';
+    var pre=(d['전제']&&d['전제'].length)?'<div class="kifrs-jn-box"><b>전제</b><ul>'+d['전제'].map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></div>':'';
+    var warn=d['주의']?'<div class="kifrs-jn-box" style="color:#b45309"><b>주의</b> '+esc(d['주의'])+'</div>':'';
+    var disc='<div class="kifrs-disclaimer">본 회계처리안은 확정 분석·감사의견에 근거한 <b>참고용 자동 작성</b>입니다. 금액기준이 "예시"인 항목은 실제 금액으로 교체해야 하며, 최종 분개·계정·세무처리(부가세 신고 등)는 담당자·감사인의 확인이 필요합니다.</div>';
+    return head+table+pre+warn+disc;
+  }
+  KIFRS.downloadJournalExcel = function(){
+    var d=KIFRS._lastJournal; if(!d){ alert('먼저 회계처리안을 작성하세요.'); return; }
+    if(typeof XLSXStyle==='undefined'||!XLSXStyle.utils){ alert('엑셀 라이브러리 로드 실패 — 인터넷 연결 확인.'); return; }
+    var ENT=KIFRS.getEntity()||'당사'; var ai=KIFRS._lastAi||{}, gs=ai['거래구조']||{};
+    var now=new Date(), pad=function(n){return (n<10?'0':'')+n;}; var dstr=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate());
+    var cur=d['통화']||'KRW';
+    var aoa=[['순번','단계·적요','구분','계정과목','금액('+cur+')','인식근거','비고']];
+    var totD=0, totC=0;
+    (d['분개']||[]).forEach(function(j,idx){
+      (j['차변']||[]).forEach(function(x){ aoa.push([j['순번']||idx+1, j['적요']||j['단계']||'', '차변', x['계정']||'', Number(x['금액'])||0, j['인식근거']||'', j['비고']||'']); totD+=Number(x['금액'])||0; });
+      (j['대변']||[]).forEach(function(x){ aoa.push([j['순번']||idx+1, j['적요']||j['단계']||'', '대변', x['계정']||'', Number(x['금액'])||0, j['인식근거']||'', '']); totC+=Number(x['금액'])||0; });
+    });
+    aoa.push([]); aoa.push(['','합계 차변','','',totD,'','']); aoa.push(['','합계 대변','','',totC,'','']);
+    var wb=XLSXStyle.utils.book_new();
+    var ws=XLSXStyle.utils.aoa_to_sheet(aoa); ws['!cols']=[{wch:6},{wch:26},{wch:6},{wch:20},{wch:16},{wch:26},{wch:20}];
+    XLSXStyle.utils.book_append_sheet(wb, ws, '분개표');
+    var meta=[['회계처리안 요약'],[],['보고실체',ENT],['제목',d['제목']||''],['금액기준',d['금액기준']||''],['통화',cur],
+      ['당사 위치',gs['당사위치']||gs['HI위치']||''],['관계유형',gs['관계유형']||''],['대금방향',gs['대금방향']||''],['핵심 논점',gs['핵심회계논점']||''],[]];
+    (d['전제']||[]).forEach(function(x,i){ meta.push([i===0?'전제':'', x]); });
+    meta.push([]); if(d['주의']) meta.push(['주의',d['주의']]);
+    meta.push([]); meta.push(['※','참고용 자동 작성. 예시금액은 실제금액으로 교체하고, 최종 분개·계정·세무처리는 담당자·감사인 확인 필요.']);
+    var ws2=XLSXStyle.utils.aoa_to_sheet(meta); ws2['!cols']=[{wch:14},{wch:72}];
+    XLSXStyle.utils.book_append_sheet(wb, ws2, '요약');
+    XLSXStyle.writeFile(wb, '회계처리안_'+ENT+'_'+dstr+'.xlsx');
+  };
+
   // ══ 유틸 ══
   function getExt(name){ var i=name.lastIndexOf('.'); return i<0?'':name.slice(i+1).toLowerCase(); }
   function kindOf(e){
@@ -8185,8 +8324,8 @@ function debugR1Compare(){
     if(!n) return;
     if(!window.confirm('업로드된 파일 '+n+'건을 모두 삭제할까요?')) return;
     KIFRS.state.files = [];
-    KIFRS._lastAi=null; KIFRS._lastPrecise={}; KIFRS._lastAudit={};
-    ['kifrs-ai','kifrs-analysis'].forEach(function(id){ var el=document.getElementById(id); if(el){ el.innerHTML=''; el.style.display='none'; } });
+    KIFRS._lastAi=null; KIFRS._lastPrecise={}; KIFRS._lastAudit={}; KIFRS._lastJournal=null;
+    ['kifrs-ai','kifrs-precise','kifrs-journal','kifrs-analysis'].forEach(function(id){ var el=document.getElementById(id); if(el){ el.innerHTML=''; el.style.display='none'; } });
     renderFileList();
   };
 
@@ -8401,13 +8540,13 @@ function debugR1Compare(){
       +     '🆓 <b>무료 키 발급</b> &nbsp;① <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">AI Studio</a> 접속 → ② [API 키 만들기] → ③ <span class="kifrs-kg-warn">⚠ 반드시 “새 프로젝트에서 API 키 만들기”(신규 프로젝트)로 생성</span> → ④ 키(AQ…) 복사 후 위 칸에 붙여넣고 [저장] → ⑤ [연결 테스트]'
       +     '<button class="kifrs-help-btn" id="kifrs-api-guide">자세히 보기</button>'
       +   '</div>'
-      +   '<div class="kifrs-keyguide" style="flex-basis:100%">'
-      +     '🔀 <b>OpenRouter</b>(선택·예비) — Gemini 한도 소진 시 <b>무료 모델로만 자동 폴백</b>(유료 자동 제외, 결제수단 없으면 과금 불가). &nbsp;'
-      +     '<input type="password" id="kifrs-or-key" class="kifrs-api-input" style="max-width:240px" placeholder="OpenRouter 키 (sk-or-…)" autocomplete="off">'
+      +   '<div class="kifrs-keyguide" style="flex-basis:100%;display:flex;align-items:center;gap:9px;flex-wrap:wrap">'
+      +     '<span title="Gemini 한도 소진 시 OpenRouter 무료 모델로만 자동 폴백(유료 자동 제외)">🔀 <b>OpenRouter</b>(예비·무료만) — 한도 소진 시 자동 폴백</span>'
+      +     '<input type="password" id="kifrs-or-key" class="kifrs-api-input" style="flex:1;min-width:200px;max-width:300px" placeholder="OpenRouter 키 (sk-or-…)" autocomplete="off">'
       +     '<button class="kifrs-btn kifrs-btn-sm" id="kifrs-or-save">저장</button>'
-      +     '<button class="kifrs-btn kifrs-btn-sm" id="kifrs-or-test" title="브라우저 직접호출(CORS)이 되는지 확인">연결·CORS 테스트</button> &nbsp;'
+      +     '<button class="kifrs-btn kifrs-btn-sm" id="kifrs-or-test" title="브라우저 직접호출(CORS)이 되는지 확인">연결·CORS 테스트</button>'
       +     '<a href="https://openrouter.ai/keys" target="_blank" rel="noopener">🔑 키 발급</a>'
-      +     '<span class="kifrs-api-stat" id="kifrs-or-stat" style="margin-left:8px"></span>'
+      +     '<span class="kifrs-api-stat" id="kifrs-or-stat" style="flex-basis:100%;margin:0"></span>'
       +   '</div>'
       + '</div>'
       + '<div class="kifrs-section-title">📎 1) 검토할 파일 업로드</div>'
@@ -8430,6 +8569,7 @@ function debugR1Compare(){
       + '</div>'
       + '<div id="kifrs-ai" class="kifrs-analysis" style="display:none"></div>'
       + '<div id="kifrs-precise" class="kifrs-analysis" style="display:none"></div>'
+      + '<div id="kifrs-journal" class="kifrs-analysis" style="display:none"></div>'
       + '<div id="kifrs-analysis" class="kifrs-analysis" style="display:none"></div>'
       + '<div class="kifrs-result-head" style="margin-top:26px">'
       +   '<div class="kifrs-section-title" style="margin:0">🗄 내장 K-IFRS 기준서 DB</div>'
