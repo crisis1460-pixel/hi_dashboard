@@ -432,6 +432,8 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
 .kifrs-api-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;}
 .kifrs-api-ico{font-size:15px;}
 .kifrs-api-label{font-size:12px;font-weight:700;color:var(--txt2);}
+.kifrs-keylink{font-size:11px;font-weight:700;color:var(--blue);text-decoration:none;white-space:nowrap;}
+.kifrs-keylink:hover{text-decoration:underline;}
 .kifrs-api-input{flex:1;min-width:180px;padding:7px 11px;border:1px solid var(--border2);border-radius:7px;font-size:12px;background:var(--bg);color:var(--txt);box-sizing:border-box;}
 .kifrs-api-input:focus{outline:none;border-color:var(--blue);}
 .kifrs-api-model{width:160px;padding:7px 11px;border:1px solid var(--border2);border-radius:7px;font-size:12px;background:var(--bg);color:var(--txt);box-sizing:border-box;font-family:'DM Mono',monospace;}
@@ -499,11 +501,11 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
 .kifrs-pr-verify{font-size:10px;color:var(--txt3);margin-top:7px;font-family:'DM Mono',monospace;border-top:1px dotted var(--border);padding-top:6px;}
 .kifrs-disclaimer{margin-top:14px;font-size:11px;color:var(--txt3);background:var(--bg3);border-radius:8px;padding:10px 12px;line-height:1.6;}
 .kifrs-jn{width:100%;border-collapse:collapse;font-size:11.5px;margin:8px 0;}
-.kifrs-jn th{background:var(--bg3);color:var(--txt2);font-weight:700;text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);}
-.kifrs-jn td{padding:6px 8px;border-bottom:1px solid var(--border);color:var(--txt2);vertical-align:top;}
-.kifrs-jn td.num,.kifrs-jn th.num{text-align:right;font-family:'DM Mono',monospace;white-space:nowrap;}
+.kifrs-jn th{background:var(--bg3);color:var(--txt2);font-weight:700;text-align:center;padding:7px 8px;border:1px solid var(--border);}
+.kifrs-jn td{padding:7px 8px;border:1px solid var(--border);color:var(--txt2);vertical-align:top;font-size:11.5px;}
+.kifrs-jn td.num{text-align:right;white-space:nowrap;}
 .kifrs-jn .kifrs-jn-step{font-weight:700;color:var(--txt);background:var(--bg);}
-.kifrs-jn .kifrs-jn-src{color:var(--txt3);font-size:10.5px;}
+.kifrs-jn .kifrs-jn-src{color:var(--txt3);font-size:11.5px;}
 .kifrs-jn-warn{color:#b91c1c;font-weight:700;background:#fef2f2;}
 .kifrs-jn-basis{font-size:10px;font-weight:700;border-radius:6px;padding:1px 7px;margin-left:4px;}
 .kifrs-jn-basis.real{color:#047857;background:#d1fae5;}
@@ -7127,12 +7129,33 @@ function debugR1Compare(){
       +   '<p><b>3.</b> <span style="color:#b91c1c;font-weight:700">⚠ 반드시 “새 프로젝트에서 API 키 만들기”(신규 프로젝트) 선택</span><br>'
       +       '<span class="kifrs-note">기존 프로젝트로 만들면 무료 할당이 0(limit:0)으로 막혀 연결이 안 되는 경우가 많습니다. 꼭 <b>신규 프로젝트</b>로 생성하세요.</span></p>'
       +   '<p><b>4.</b> 생성된 키(<b>AQ…</b>로 시작)를 복사 → 왼쪽 <b>API 키 칸에 붙여넣고 [저장]</b></p>'
-      +   '<p><b>5.</b> <b>[연결 테스트]</b>로 확인 (모델 <b>gemini-2.5-flash</b> 권장). 연결 안 되면 <b>[모델 목록]</b>으로 사용 가능 모델 확인 후 <b>[모델] 칸</b>에 넣어 교체</p>'
+      +   '<p><b>5.</b> <b>[연결 테스트]</b>로 확인. 모델은 <b>자동 선택</b>(되는 모델 우선 폴백)이라 따로 고를 필요 없고, 한도 소진 시 OpenRouter(예비)로 자동 전환됩니다.</p>'
       +   '<div class="kifrs-disclaimer" style="margin-top:10px"><b>특이사항</b><br>'
       +       '· 무료 티어라 분당·일일 호출 한도가 있습니다. <b>“retry in N초”</b>는 일시적 분당 초과로 <b>자동 재시도</b>되니 데이터 소진이 아닙니다.<br>'
-      +       '· 자주 막히면 <b>모델을 gemini-2.0-flash</b>로 바꾸면 한도가 더 큽니다.<br>'
+      +       '· 모델은 자동(되는 모델 우선)으로 폴백되니 따로 고를 필요 없습니다.<br>'
       +       '· 잔여 한도 확인: <a href="https://aistudio.google.com/app/usage" target="_blank" rel="noopener">aistudio.google.com/app/usage</a><br>'
       +       '· 키는 이 브라우저(localStorage)에만 저장되며 <b>외부 공유 금지</b>. 다른 PC에선 각자 발급·입력해야 합니다.</div>'
+      + '</div>'
+      + '<div class="m-foot"><button class="kifrs-btn">확인</button></div></div>';
+    function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
+    ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
+    ov.querySelector('.m-foot button').addEventListener('click', close);
+    document.body.appendChild(ov);
+  };
+  KIFRS.showOrKeyGuide = function(){
+    var ov=document.createElement('div'); ov.className='kifrs-modal-ov';
+    ov.innerHTML='<div class="kifrs-modal" style="max-width:560px;text-align:left">'
+      + '<div class="m-ttl" style="text-align:center">🔀 OpenRouter 무료 키 발급 (예비 공급자)</div>'
+      + '<div class="kifrs-help-body">'
+      +   '<p><b>역할:</b> Gemini 무료 한도가 떨어지면 자동으로 넘어가는 <b>백업</b>입니다. <b>무료 모델만</b> 사용하며(유료 자동 제외), 결제수단이 없으면 과금되지 않습니다.</p>'
+      +   '<p><b>1.</b> <a href="https://openrouter.ai/" target="_blank" rel="noopener">openrouter.ai</a> 가입(구글 계정 가능 · 카드 불필요)</p>'
+      +   '<p><b>2.</b> <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">openrouter.ai/keys</a> → <b>[Create Key]</b> → 키(<b>sk-or-…</b>) 복사</p>'
+      +   '<p><b>3.</b> 위 칸에 붙여넣고 <b>[저장]</b> → <b>[연결·CORS 테스트]</b>로 확인</p>'
+      +   '<div class="kifrs-disclaimer" style="margin-top:10px"><b>특이사항</b><br>'
+      +       '· 무료 한도: <b>하루 50건</b>(모든 무료모델 공유). 미국 태평양시 자정(한국 오후 4~5시경) 리셋. 충전 없이는 50건/일이 상한입니다.<br>'
+      +       '· 어차피 <b>Gemini가 주력</b>이라 백업으로만 쓰이며, 모델은 무료 목록에서 자동 선택됩니다.<br>'
+      +       '· 이 파일을 <b>file://</b>로 직접 열면 브라우저 보안(CORS)으로 막힐 수 있어 <b>로컬 웹서버</b>로 여는 것을 권장합니다.<br>'
+      +       '· 키는 이 브라우저(localStorage)에만 저장되며 <b>외부 공유 금지</b>.</div>'
       + '</div>'
       + '<div class="m-foot"><button class="kifrs-btn">확인</button></div></div>';
     function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
@@ -7992,7 +8015,7 @@ function debugR1Compare(){
           + (i===0?'<td rowspan="'+n+'" class="kifrs-jn-step">'+esc(j['적요']||j['단계']||'')+'</td>':'')
           + '<td>'+esc(dd['계정']||'')+'</td><td class="num">'+(dd['계정']!=null&&dd['계정']!==''?_won(dd['금액']):'')+'</td>'
           + '<td>'+esc(cc['계정']||'')+'</td><td class="num">'+(cc['계정']!=null&&cc['계정']!==''?_won(cc['금액']):'')+'</td>'
-          + (i===0?'<td rowspan="'+n+'" class="kifrs-jn-src">'+esc(j['인식근거']||'')+(j['비고']?'<br><span class="kifrs-note">'+esc(j['비고'])+'</span>':'')+'</td>':'')
+          + (i===0?'<td rowspan="'+n+'" class="kifrs-jn-src">'+esc(j['인식근거']||'')+(j['비고']?'<br><span style="color:var(--txt3)">'+esc(j['비고'])+'</span>':'')+'</td>':'')
           + '</tr>';
       }
       return out + ((_jnSum(dr)===_jnSum(cr))?'':'<tr><td colspan="6" class="kifrs-jn-warn">⚠ 차변·대변 합계 불일치 — 확인 필요</td></tr>');
@@ -8003,29 +8026,65 @@ function debugR1Compare(){
     var disc='<div class="kifrs-disclaimer">본 회계처리안은 확정 분석·감사의견에 근거한 <b>참고용 자동 작성</b>입니다. 금액기준이 "예시"인 항목은 실제 금액으로 교체해야 하며, 최종 분개·계정·세무처리(부가세 신고 등)는 담당자·감사인의 확인이 필요합니다.</div>';
     return head+table+pre+warn+disc;
   }
+  // HTML 화면(제목→표→전제→주의)을 xlsx-js-style 셀서식으로 그대로 재현
   KIFRS.downloadJournalExcel = function(){
     var d=KIFRS._lastJournal; if(!d){ alert('먼저 회계처리안을 작성하세요.'); return; }
-    if(typeof XLSXStyle==='undefined'||!XLSXStyle.utils){ alert('엑셀 라이브러리 로드 실패 — 인터넷 연결 확인.'); return; }
-    var ENT=KIFRS.getEntity()||'당사'; var ai=KIFRS._lastAi||{}, gs=ai['거래구조']||{};
-    var now=new Date(), pad=function(n){return (n<10?'0':'')+n;}; var dstr=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate());
-    var cur=d['통화']||'KRW';
-    var aoa=[['순번','단계·적요','구분','계정과목','금액('+cur+')','인식근거','비고']];
-    var totD=0, totC=0;
-    (d['분개']||[]).forEach(function(j,idx){
-      (j['차변']||[]).forEach(function(x){ aoa.push([j['순번']||idx+1, j['적요']||j['단계']||'', '차변', x['계정']||'', Number(x['금액'])||0, j['인식근거']||'', j['비고']||'']); totD+=Number(x['금액'])||0; });
-      (j['대변']||[]).forEach(function(x){ aoa.push([j['순번']||idx+1, j['적요']||j['단계']||'', '대변', x['계정']||'', Number(x['금액'])||0, j['인식근거']||'', '']); totC+=Number(x['금액'])||0; });
+    if(typeof XLSXStyle==='undefined'||!XLSXStyle.utils){ alert('엑셀 라이브러리 로드 실패.'); return; }
+    var ENT=KIFRS.getEntity()||'당사';
+    var now=new Date(), pad=function(n){return (n<10?'0':'')+n;}, dstr=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate());
+    var U=XLSXStyle.utils, F='맑은 고딕', NC=6;
+    var bd={style:'thin',color:{rgb:'D1D5DB'}}, BORD={top:bd,bottom:bd,left:bd,right:bd};
+    var S={
+      title:{font:{name:F,sz:12,bold:true,color:{rgb:'1D4ED8'}},alignment:{horizontal:'center',vertical:'center',wrapText:true},fill:{fgColor:{rgb:'EEF2FF'}},border:BORD},
+      head :{font:{name:F,sz:10,bold:true,color:{rgb:'374151'}},alignment:{horizontal:'center',vertical:'center',wrapText:true},fill:{fgColor:{rgb:'F3F4F6'}},border:BORD},
+      step :{font:{name:F,sz:10,bold:true,color:{rgb:'111827'}},alignment:{horizontal:'left',vertical:'top',wrapText:true},fill:{fgColor:{rgb:'FFFFFF'}},border:BORD},
+      acct :{font:{name:F,sz:10,color:{rgb:'374151'}},alignment:{horizontal:'left',vertical:'top',wrapText:true},border:BORD},
+      num  :{font:{name:F,sz:10,color:{rgb:'374151'}},alignment:{horizontal:'right',vertical:'top'},border:BORD},
+      src  :{font:{name:F,sz:9.5,color:{rgb:'6B7280'}},alignment:{horizontal:'left',vertical:'top',wrapText:true},border:BORD},
+      secL :{font:{name:F,sz:10,bold:true,color:{rgb:'374151'}},alignment:{horizontal:'left',vertical:'center'},fill:{fgColor:{rgb:'F3F4F6'}},border:BORD},
+      sec  :{font:{name:F,sz:10,color:{rgb:'374151'}},alignment:{horizontal:'left',vertical:'top',wrapText:true},border:BORD},
+      warn :{font:{name:F,sz:10,color:{rgb:'B45309'}},alignment:{horizontal:'left',vertical:'top',wrapText:true},border:BORD}
+    };
+    var ws={}, merges=[], rows=[], R=0;
+    function put(r,c,v,s,num){ var ref=U.encode_cell({r:r,c:c}); var o={v:(v==null?'':v),t:num?'n':'s',s:s}; if(num){o.z='#,##0';} ws[ref]=o; }
+    function fill(r,s){ for(var c=1;c<NC;c++) put(r,c,'',s); }   // 병합 셀 테두리용 빈칸
+    function mergeRow(r,s){ merges.push({s:{r:r,c:0},e:{r:r,c:NC-1}}); fill(r,s); }
+    function wrapH(txt,chars,base){ var n=Math.ceil((String(txt||'').length||1)/chars); return Math.max(base||18, Math.min(120, n*14+6)); }
+    // 1) 제목(병합)
+    var title=(d['제목']||'회계처리안')+'   ['+((d['금액기준']==='실제')?'실제 금액':'예시 금액 — 실제로 교체 필요')+']';
+    put(R,0,title,S.title); mergeRow(R,S.title); rows[R]={hpt:24}; R++;
+    // 2) 헤더
+    ['단계·적요','차변 계정','차변','대변 계정','대변','인식 근거'].forEach(function(h,ci){ put(R,ci,h,S.head); }); rows[R]={hpt:20}; R++;
+    // 3) 분개 행
+    (d['분개']||[]).forEach(function(j){
+      var dr=j['차변']||[], cr=j['대변']||[], n=Math.max(dr.length,cr.length,1), s0=R;
+      for(var i=0;i<n;i++){
+        var dd=dr[i]||{}, cc=cr[i]||{};
+        put(R,0, i===0?(j['적요']||j['단계']||''):'', S.step);
+        put(R,1, dd['계정']||'', S.acct);
+        var hasD=(dd['계정']!=null&&dd['계정']!==''); put(R,2, hasD?(Number(dd['금액'])||0):'', S.num, hasD);
+        put(R,3, cc['계정']||'', S.acct);
+        var hasC=(cc['계정']!=null&&cc['계정']!==''); put(R,4, hasC?(Number(cc['금액'])||0):'', S.num, hasC);
+        put(R,5, i===0?((j['인식근거']||'')+(j['비고']?'\n('+j['비고']+')':'')):'', S.src);
+        rows[R]={hpt: i===0?Math.max(wrapH(j['적요'],14,22), wrapH((j['인식근거']||'')+(j['비고']||''),34,22)):22};
+        R++;
+      }
+      if(n>1){ merges.push({s:{r:s0,c:0},e:{r:R-1,c:0}}); merges.push({s:{r:s0,c:5},e:{r:R-1,c:5}}); }
     });
-    aoa.push([]); aoa.push(['','합계 차변','','',totD,'','']); aoa.push(['','합계 대변','','',totC,'','']);
-    var wb=XLSXStyle.utils.book_new();
-    var ws=XLSXStyle.utils.aoa_to_sheet(aoa); ws['!cols']=[{wch:6},{wch:26},{wch:6},{wch:20},{wch:16},{wch:26},{wch:20}];
-    XLSXStyle.utils.book_append_sheet(wb, ws, '분개표');
-    var meta=[['회계처리안 요약'],[],['보고실체',ENT],['제목',d['제목']||''],['금액기준',d['금액기준']||''],['통화',cur],
-      ['당사 위치',gs['당사위치']||gs['HI위치']||''],['관계유형',gs['관계유형']||''],['대금방향',gs['대금방향']||''],['핵심 논점',gs['핵심회계논점']||''],[]];
-    (d['전제']||[]).forEach(function(x,i){ meta.push([i===0?'전제':'', x]); });
-    meta.push([]); if(d['주의']) meta.push(['주의',d['주의']]);
-    meta.push([]); meta.push(['※','참고용 자동 작성. 예시금액은 실제금액으로 교체하고, 최종 분개·계정·세무처리는 담당자·감사인 확인 필요.']);
-    var ws2=XLSXStyle.utils.aoa_to_sheet(meta); ws2['!cols']=[{wch:14},{wch:72}];
-    XLSXStyle.utils.book_append_sheet(wb, ws2, '요약');
+    // 4) 전제
+    if(d['전제']&&d['전제'].length){
+      put(R,0,'전제',S.secL); mergeRow(R,S.secL); rows[R]={hpt:18}; R++;
+      d['전제'].forEach(function(x){ put(R,0,'· '+x,S.sec); mergeRow(R,S.sec); rows[R]={hpt:wrapH(x,80,18)}; R++; });
+    }
+    // 5) 주의
+    if(d['주의']){
+      put(R,0,'주의',S.secL); mergeRow(R,S.secL); rows[R]={hpt:18}; R++;
+      put(R,0,d['주의'],S.warn); mergeRow(R,S.warn); rows[R]={hpt:wrapH(d['주의'],80,18)}; R++;
+    }
+    ws['!ref']=U.encode_range({s:{r:0,c:0},e:{r:R-1,c:NC-1}});
+    ws['!cols']=[{wch:30},{wch:16},{wch:14},{wch:16},{wch:14},{wch:46}];
+    ws['!merges']=merges; ws['!rows']=rows;
+    var wb=U.book_new(); U.book_append_sheet(wb, ws, '회계처리안');
     XLSXStyle.writeFile(wb, '회계처리안_'+ENT+'_'+dstr+'.xlsx');
   };
 
@@ -8532,7 +8591,7 @@ function debugR1Compare(){
       +   '<input type="password" id="kifrs-api-key" class="kifrs-api-input" style="flex:1;min-width:200px;max-width:300px" placeholder="API 키 (AQ…)" autocomplete="off">'
       +   '<button class="kifrs-btn kifrs-btn-sm" id="kifrs-api-save">저장</button>'
       +   '<button class="kifrs-btn kifrs-btn-sm" id="kifrs-api-test">연결 테스트</button>'
-      +   '<a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">🔑 키 발급</a>'
+      +   '<a class="kifrs-keylink" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">🔑 키 발급</a>'
       +   '<button class="kifrs-help-btn" id="kifrs-api-guide" title="무료 키 발급 가이드 — 반드시 신규 프로젝트로 생성">자세히</button>'
       +   '<span class="kifrs-api-stat" id="kifrs-api-stat" style="flex-basis:100%;margin:0"></span>'
       +   '<div class="kifrs-keyguide" style="flex-basis:100%;display:flex;align-items:center;gap:9px;flex-wrap:wrap">'
@@ -8540,7 +8599,8 @@ function debugR1Compare(){
       +     '<input type="password" id="kifrs-or-key" class="kifrs-api-input" style="flex:1;min-width:200px;max-width:300px" placeholder="OpenRouter 키 (sk-or-…)" autocomplete="off">'
       +     '<button class="kifrs-btn kifrs-btn-sm" id="kifrs-or-save">저장</button>'
       +     '<button class="kifrs-btn kifrs-btn-sm" id="kifrs-or-test" title="브라우저 직접호출(CORS)이 되는지 확인">연결·CORS 테스트</button>'
-      +     '<a href="https://openrouter.ai/keys" target="_blank" rel="noopener">🔑 키 발급</a>'
+      +     '<a class="kifrs-keylink" href="https://openrouter.ai/keys" target="_blank" rel="noopener">🔑 키 발급</a>'
+      +     '<button class="kifrs-help-btn" onclick="window.KIFRS.showOrKeyGuide()" title="OpenRouter 무료 키 발급·한도 안내">자세히</button>'
       +     '<span class="kifrs-api-stat" id="kifrs-or-stat" style="flex-basis:100%;margin:0"></span>'
       +   '</div>'
       + '</div>'
