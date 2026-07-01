@@ -471,6 +471,13 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
 .kifrs-pr-fold{margin:6px 0 8px;border:1px dashed var(--border2);border-radius:8px;padding:0 10px;}
 .kifrs-pr-fold>summary{cursor:pointer;font-size:11px;color:var(--txt3);font-weight:700;padding:7px 2px;}
 .kifrs-pr-fold[open]>summary{color:var(--txt2);border-bottom:1px dashed var(--border2);margin-bottom:8px;}
+.kifrs-pr-detail{margin:2px 0 8px;border:1px dashed var(--border2);border-radius:8px;padding:0 10px;}
+.kifrs-pr-detail>summary{cursor:pointer;font-size:11.5px;color:var(--txt2);font-weight:700;padding:8px 2px;list-style:none;}
+.kifrs-pr-detail>summary::-webkit-details-marker{display:none;}
+.kifrs-pr-detail>summary::before{content:'▶ ';font-size:9px;color:var(--txt3);}
+.kifrs-pr-detail[open]>summary::before{content:'▼ ';}
+.kifrs-pr-detail[open]>summary{border-bottom:1px dashed var(--border2);margin-bottom:8px;}
+.kifrs-pr-detail-body{margin-bottom:4px;}
 .kifrs-pr-summary{font-size:11.5px;font-weight:700;color:var(--txt2);margin:8px 0 10px;}
 /* 개발 이력 — 프로젝트 카드(가로 드래그) */
 .devlog-projrow{display:flex;gap:14px;overflow-x:auto;padding:4px 2px 12px;cursor:grab;}
@@ -546,6 +553,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
     --txt:#111;--txt2:#222;--txt3:#555;--bg:#fff;--bg2:#fff;--bg3:#f7f7f8;--border:#dcdfe4;--border2:#cbd0d6;--blue:#1d4ed8;--blue-d:#eef2ff;}
   #kifrs-print-area, #kifrs-print-area *{visibility:visible !important;}
   #kifrs-print-area button,#kifrs-print-area .kifrs-help-btn{display:none !important;}
+  #kifrs-print-area .kifrs-pr-detail-body{display:none !important;}   /* 정밀분석 상세(문단별)는 증빙 인쇄에서 제외 — 브라우저가 details를 강제로 펼쳐도 본문 숨김 */
   .kifrs-prt-header{border-bottom:2px solid #1d4ed8;padding-bottom:10px;margin-bottom:14px;}
   .kifrs-pr-item,.kifrs-an-std,.kifrs-pr-summary,.kifrs-prt-legend,.kifrs-prt-foot,.kifrs-nt,table,tr{page-break-inside:avoid;break-inside:avoid;}
   .kifrs-an-head,.kifrs-an-sec{break-after:avoid;page-break-after:avoid;}
@@ -6644,7 +6652,7 @@ function debugR1Compare(){
       '',
       '── 케이스 라이브러리(해당하면 참고, 없으면 일반 판단) ──',
       'A.수익·판매(당사 공급자, 대가 수취): 광고게재(매체=당사)→1115 광고매출 / 상품·서비스·구독 판매→1115 / 결제대행·정산(당사=PG)→1115 본인vs대리인(총액·순액), 예치금·미지급정산금·가맹점보증금→금융부채 1109 / 포인트·리워드→1115 / 보유 IP 라이선스 제공→1115+1038',
-      'B.매입·비용·취득(당사 고객, 대가 지급 — 1115 아님): 광고·판촉비 지급(당사=광고주)→1038 문단69 발생시 비용처리(자산 불인정) / 마케팅·콘텐츠 대행 위탁→비용, 산출물 저작권 당사 귀속 시 1038 자산화 검토 / 용역·외주→비용 / 설비·SW 구입→1016·1038 / 임차·리스(당사 이용)→1116 / 차입(당사)→1109·1023 / 보증·담보·이행보증→충당·우발부채 1037',
+      'B.매입·비용·취득(당사 고객, 대가 지급 — 1115 아님): 광고·판촉비 지급(당사=광고주)→1038 문단69 발생시 비용처리(자산 불인정) / 마케팅·콘텐츠 대행 위탁→비용, 산출물 저작권 당사 귀속 시 1038 자산화 검토 / 용역·외주→비용 / 설비·기기·부품·디바이스 등 실물 구입→1016(또는 소모품비) · SW·라이선스·IP·개발비 등 무형→1038 / 임차·리스(당사 이용)→1116 / 차입(당사)→1109·1023 / 보증·담보·이행보증→충당·우발부채 1037',
       'C.내부 평가·결산(상대방 없음): 감가상각·내용연수→1016·추정변경 1008 / 무형 상각·개발비 자산화→1038 / 자산손상→1036 / 재고 실사·저가법→1002 / 충당부채 추정→1037 / 외화환산→1021 / 기대신용손실→1109',
       'D.인사·자본·세무: 급여·퇴직급여→1019 / 주식보상→1102 / 법인세·이연법인세→1012 / 증자·배당·자기주식·RCPS(부채분류)→1032 / 정부보조금→1020',
       'E.구조·특수: 사업결합→1103 / 지분투자·관계기업→1027·1028 / 매각예정·중단영업→1105 / 리스제공자(당사가 빌려줌)→1116',
@@ -6654,6 +6662,7 @@ function debugR1Compare(){
       '- 근거인용: 거래구조 판정의 근거가 된 문서 "원문 그대로의 구절"만 1~4개(요약·창작 금지 — 코드가 문서 실존을 검증함). 없으면 빈 배열·신뢰도 낮음.',
       '- candidates: 위 판정 관점으로 관련성(0~100) 높은 순 최대 8개. 낮아도 검토가치 있으면 포함(누락보다 포괄). 위 목록 번호만.',
       '- ⚠ 광고·판촉비처럼 별도 "비용" 기준서가 없는 지출은, 그 비용처리를 규정한 기준서(광고비=1038 문단69)를 최상위 관련 기준서로 둘 것 — 자산화하지 않더라도 그것이 회계처리 근거이므로 관련성을 높게(자산화 안 한다고 1038을 강등하지 말 것).',
+      '- ⚠ 물리적 실체가 있는 재화(디바이스·기기·설비·부품·실물 샘플) 취득은 유형자산(1016) 또는 비용(소모품비)이 1차 후보다. 무형자산(1038)은 실체 없는 자산(SW·라이선스·IP·개발비·콘텐츠 저작권)일 때만 상위로 두고, 실물 재화를 1038을 1016보다 높은 관련성으로 두지 말 것. 취득 목적이 "신규사업 검토·테스트·평가·시제품"이면 자산 정의 미충족 가능성이 크므로 비용(소모품비·경상연구비) 관련성도 함께 높게 둘 것("AI·신규사업" 같은 단어를 무형·개발비로 과대해석 금지).',
       '- ⚠ 일반·구조 기준서(1001 재무제표 표시, 1008 회계정책·추정변경·오류, 개념체계 등)는 문서에 그 특정 쟁점(표시·분류 다툼, 회계정책/추정 변경, 오류수정)이 실제로 있을 때만 후보에 넣고, 단순 거래에서는 상위로 올리지 말 것.',
       '- 당사 위치가 모호하거나 근거가 약하면 신뢰도 "낮음".',
       '- ⚠ 출력이 잘려도 보존되도록 거래구조와 candidates를 먼저 출력. 반드시 아래 JSON 순서로만(다른 텍스트 금지):',
@@ -6828,7 +6837,7 @@ function debugR1Compare(){
     var rec=(KIFRS._lastAudit||{})[no]; if(!rec) return;
     var std=KIFRS.findStandard(no)||rec.std; var slot=document.getElementById('kifrs-audit-'+no);
     var pitems=((KIFRS._lastPrecise||{})[no]||{}).items||[];
-    if(slot && std && typeof renderFinalAudit==='function'){ slot.innerHTML=renderFinalAudit(std, pitems, rec.items, ''); }
+    if(slot && std && typeof renderFinalAudit==='function'){ slot.innerHTML=renderFinalAudit(std, pitems, rec.items, ''); _collapsePreciseDetail(no); }
   }
   // 결과 전체 재렌더 후, 이미 받아둔 정밀분석·AI감사 결과를 슬롯에 다시 주입(보정 시 결과가 사라져 API 재호출하던 문제 방지)
   function _restoreCachedResults(){
@@ -7258,6 +7267,7 @@ function debugR1Compare(){
       '[지시]',
       '- 이 문서에 실제로 관련된 조문만 분석하세요(억지 매칭 금지). 항목은 최대 6개.',
       '- ⚠ 검토포인트는 위 거래구조(당사 위치·핵심 논점)와 일치해야 한다. 거래구조에 어긋나는 자산화·수익화 결론을 만들지 말 것.',
+      '- ⚠ 자산화 판단 시 물리적 실체·구입 사실만으로 자산 인식을 단정하지 말고, 아래 정의 게이트를 반드시 검토항목에 포함해 먼저 통과 여부를 따져라. ▷유형자산(1016): 정의(1016.6) — (a)영업활동(생산·제공·임대·관리)에 "사용"할 목적 보유 + (b)한 기간 초과 사용 예상, 그다음 인식(효익 유입 가능성 높음·원가 신뢰측정). ▷무형자산(1038): 정의(1038.8~17) — (a)식별가능성(분리가능 또는 계약·법적권리에서 발생) + (b)통제(효익을 통제) + (c)효익 유입 가능성. 내부창출이면 연구단계 지출은 비용(1038.54), 개발단계는 6요건(기술적 실현가능성·완성 의도·사용/판매 능력·효익 창출 방법·자원 확보·원가 신뢰측정) 모두 충족 시에만 자산화(1038.57). 광고·창업비·교육훈련·이전/재배치 지출은 발생시점 비용(1038.69). ▷공통: 문서에 "검토용·테스트·평가·샘플·파일럿·PoC·시제품·사전검토" 등 목적이 나타나면, 위 정의 요건이 문서로 뒷받침되지 않는 한 자산화로 단정하지 말고 "비용(소모품비·경상연구비 등) 우선 + 정의 미충족 가능성"을 검토포인트로 제시하라.',
       '- 검토포인트는 핵심만 2~3문장(항목당 200자 이내)으로 간결히. 장황한 서술·반복 금지.',
       '- 분개예시는 해당하면 "(차) … / (대) …" 형식, 아니면 빈 문자열.',
       '- ⚠ 1115 본인 vs 대리인: 당사가 고객에 이전하기 전 재화·용역을 통제하면 "본인" → 대가 "총액"을 수익으로 인식하고, 제3자(대행사·플랫폼)에 지급하는 수수료는 수익에서 차감하지 말고 별도 "비용(지급수수료·매출원가)"으로 인식한다. 통제 없이 주선만 하면 "대리인" → 수수료(순액)만 수익. ❌ "총액 인식"과 "수수료를 수익에서 차감"을 한 결론에 동시에 쓰면 자기모순이니 금지.',
@@ -7671,8 +7681,13 @@ function debugR1Compare(){
       + ' <button class="kifrs-btn kifrs-btn-sm" style="margin-left:8px" onclick="window.KIFRS.runFinalAudit(\''+std.no+'\')">✅ 최종 검증(AI감사인 재검토)</button></div>';
     var foot='<div class="kifrs-disclaimer">본 결과는 참고용이며, 최종 판단은 담당자 확인이 필요합니다. (코드검증 = 문단 실존·기준서 화이트리스트·문단 키워드(동의어 포함) 단서 대조 — <b>개념 부합은 [최종 검증]의 AI감사로 확정</b>)</div>';
     var auditSlot='<div class="kifrs-precise-slot" id="kifrs-audit-'+std.no+'"></div>';
-    return head+summary+_prioLegend('확인불가>미검증>통과')+body+auditSlot+foot;
+    // 정밀분석 상세: 최종 검증(AI감사) 결과가 이미 있으면 접힌 상태로 시작, 없으면 펼침. 접혀도 클릭해 다시 볼 수 있음.
+    var hasAudit=!!(KIFRS._lastAudit&&KIFRS._lastAudit[std.no]);
+    var bodyWrap='<details class="kifrs-pr-detail" id="kifrs-prdetail-'+std.no+'"'+(hasAudit?'':' open')+'><summary>🔬 정밀분석 상세 '+items.length+'개 — 클릭하여 펼치기/접기</summary><div class="kifrs-pr-detail-body">'+body+'</div></details>';
+    return head+summary+_prioLegend('확인불가>미검증>통과')+bodyWrap+auditSlot+foot;
   }
+  // 감사 결과가 뜨면 정밀분석 상세를 접는다(펼치기로 다시 볼 수 있음)
+  function _collapsePreciseDetail(no){ var d=document.getElementById('kifrs-prdetail-'+no); if(d) d.open=false; }
   // ── 최종 검증(3단계 근거기반 감사): 근거추출 → 코드검증 → 판정 → 교차검증 ──
   function _aopts(asig, sys, onRetry){ return {json:true, temperature:0, signal:asig, system:sys, onRetry:onRetry}; }
   function _alignByArt(list, art, idx){
@@ -7731,6 +7746,7 @@ function debugR1Compare(){
       '※ 검토포인트의 결론(예: "비용으로 인식", "자산화 불가", "인식요건 미충족")은 기준서를 적용한 회계적 결론이며, 원천 문서에 그대로 적혀 있지 않은 것이 정상이다. 당신의 임무는 "문서가 그 결론의 전제가 되는 거래의 성격·사실관계를 보여주는가"를 판단하는 것이다(기준서 적용은 검토자가 수행한다).',
       '- 충족: 문서 근거가 검토포인트가 기초하는 거래의 성격·사실(예: 광고·판촉 목적의 대가 지급, 용역을 제공받음, 당사자 권리·의무)을 확인해 주고, 그 사실에 제'+std.no+'호 조문을 적용하면 검토포인트의 결론이 도출된다. → 결론·회계용어가 문서에 명시될 필요 없음.',
       '  ⚠ 단, 근거는 검토포인트의 핵심 사실을 직접 보여줘야 한다. 검토포인트와 막연히 관련될 뿐이거나 논점이 다른 조항을 끌어다 충족으로 단정하지 말 것(예: 일반적 「권리·의무 양도금지」 조항으로 무형자산의 "분리가능성 없음"을 단정 — 분리가능성은 자산을 본래 분리·매각·라이선스할 수 있는지의 문제이지 계약상 양도금지와 다름). 이런 경우는 확인필요.',
+      '  ⚠ 자산화 모순 체크: 검토포인트가 자산화(유형자산·무형자산 인식·취득원가 산입·감가상각 등)를 전제하는데, 검증된 근거가 그 자산의 "영업 사용 목적·한 기간 초과 사용"(무형자산이면 "식별가능성·통제")을 보여주지 못하거나 오히려 "검토용·테스트·평가·샘플·파일럿·시제품" 목적을 보여주면, 정의요건 미충족이므로 충족으로 판정하지 말 것 → 미흡(문서 사실이 자산화 결론과 배치) 또는 확인필요(사용목적·보유기간·식별가능성·통제가 문서 밖).',
       '- 해당없음: 그 조문·요건이 이 거래에 적용되지 않음. (검토포인트 스스로 "직접 적용되지 않는다/무관하다"고 하면 대개 해당없음)',
       '- 미흡: 문서의 사실관계가 기준서 요건에 명백히 배치되어 그대로면 회계처리에 문제가 됨.',
       '- 확인필요: 문서가 거래의 기본 성격·사실조차 보여주지 못하거나(검증된 근거 없음), 결론을 좌우하는 핵심 수치·조건이 문서 밖에 있어야 함.',
@@ -7821,6 +7837,7 @@ function debugR1Compare(){
                 });
                 (KIFRS._lastAudit=KIFRS._lastAudit||{})[no]={ items:audited, std:{no:std.no, name:std.name}, ts:Date.now() };   // 9단계(객관식 보정)·증빙용 구조화 보관
                 slot.innerHTML=renderFinalAudit(std, items, audited, ((Date.now()-t0)/1000).toFixed(1));
+                _collapsePreciseDetail(std.no);   // 감사 결과 뜨면 정밀분석 상세 자동 접기(펼치기로 다시 볼 수 있음)
               });
           });
       })
@@ -7917,6 +7934,18 @@ function debugR1Compare(){
     }
     var notes=bodyClone.querySelectorAll('.kifrs-note');   // '정밀 분석을 누르면…' 안내문구 제거
     for(var ni=0;ni<notes.length;ni++){ if(/누르면/.test(notes[ni].textContent||'') && notes[ni].parentNode) notes[ni].parentNode.removeChild(notes[ni]); }
+    // ── 증빙엔 AI감사 결과까지 받은 기준서만 노출: 감사 미완료(정밀분석만/미분석) 후보 카드 제외 ──
+    var stds=bodyClone.querySelectorAll('.kifrs-an-std'), keptStd=0;
+    for(var ti=0;ti<stds.length;ti++){
+      var card=stds[ti];
+      var aslot=card.querySelector('[id^="kifrs-audit-"]');
+      if(!(aslot && /AI감사 결과/.test(aslot.textContent||''))){ if(card.parentNode) card.parentNode.removeChild(card); continue; }   // 감사 성공 결과 없으면 제외
+      keptStd++;
+      var pds=card.querySelectorAll('.kifrs-pr-detail');   // 정밀분석 상세(문단별)는 증빙에서 접힌 채 유지 → 인쇄 시 문단 미출력
+      for(var pi=0;pi<pds.length;pi++){ pds[pi].removeAttribute('open'); var sm=pds[pi].querySelector('summary'); if(sm) sm.textContent='🔬 정밀분석 상세(문단별)는 증빙에서 제외 — 화면에서 확인'; }
+    }
+    var cS=bodyClone.querySelectorAll('.kifrs-an-sec');   // '후보 기준서' 카운트를 실제 노출 종수로 갱신
+    for(var csi=0;csi<cS.length;csi++){ if((cS[csi].textContent||'').indexOf('후보 기준서')>=0){ var csp=cS[csi].querySelector('span'); if(csp) csp.textContent=keptStd+'종(AI감사 완료)'; } }
     var head0=bodyClone.querySelector('.kifrs-an-head');   // 첫 헤드(API①) → 제목 교체(초·모델 제거)
     if(head0) head0.innerHTML='분석 대상 기준서 검토 결과';
     var header='<div class="kifrs-prt-header">'
