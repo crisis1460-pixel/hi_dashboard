@@ -203,6 +203,58 @@ a:hover { text-decoration: underline; }
 
 /* ── File Cards ── */
 .aifrs-filelist { max-width:960px; margin:0 auto; }
+.aifrs-file {
+  background:var(--bg2); border:1px solid var(--border); border-radius:14px;
+  margin:10px 0; padding:12px 16px;
+}
+.aifrs-file-head { display:flex; align-items:center; gap:12px; }
+.aifrs-file-ico { font-size:22px; flex-shrink:0; }
+.aifrs-file-meta { flex:1; min-width:0; }
+.aifrs-file-name { font-size:14px; font-weight:600; color:var(--txt); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.aifrs-file-stat { font-size:12px; color:var(--txt3); margin-top:2px; }
+.aifrs-file-x { color:var(--txt3); cursor:pointer; font-size:14px; padding:4px 6px; border-radius:6px; flex-shrink:0; }
+.aifrs-file-x:hover { color:#f87171; background:var(--bg4); }
+.aifrs-file-badge { font-size:11px; font-weight:600; padding:3px 10px; border-radius:9999px; flex-shrink:0; }
+.aifrs-b-wait { background:var(--bg4); color:var(--txt3); }
+.aifrs-b-proc { background:var(--blue-d); color:var(--blue-sky); }
+.aifrs-b-done { background:rgba(52,211,153,.12); color:#34d399; }
+.aifrs-b-img  { background:rgba(251,191,36,.12); color:#fbbf24; }
+.aifrs-b-err  { background:rgba(248,113,113,.12); color:#f87171; }
+.aifrs-bar { height:3px; background:var(--bg4); border-radius:2px; margin-top:6px; overflow:hidden; }
+.aifrs-bar-fill { height:100%; width:0; background:var(--blue); transition:width .2s; }
+.aifrs-file-body { display:none; }
+.aifrs-file-body.open { display:block; margin-top:10px; border-top:1px solid var(--border); padding-top:10px; }
+.aifrs-thumb { max-width:320px; max-height:240px; border-radius:8px; border:1px solid var(--border); }
+.aifrs-preview {
+  font-family:inherit; font-size:12.5px; color:var(--txt2); line-height:1.7;
+  white-space:pre-wrap; word-break:break-word; overflow-wrap:anywhere;
+  background:var(--bg3); border:1px solid var(--border); border-radius:10px;
+  padding:12px 14px; margin:6px 0 0; max-height:320px; overflow-y:auto;
+}
+
+/* ── 분석 결과 공통 헤더·후보 기준서 카드 ── */
+.aifrs-an-head {
+  font-size:15px; font-weight:700; color:var(--txt); margin:18px 0 10px;
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+}
+.aifrs-an-head > span { font-size:12px; font-weight:600; color:var(--txt3); }
+.aifrs-an-std {
+  background:var(--bg2); border:1px solid var(--border); border-radius:12px;
+  padding:12px 16px; margin:8px 0;
+}
+.aifrs-an-std-h { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+.aifrs-an-name { font-size:14px; font-weight:600; color:var(--txt); flex:1; min-width:0; }
+.aifrs-an-score {
+  font-size:11.5px; font-weight:700; color:var(--blue-sky); background:var(--blue-d);
+  border-radius:9999px; padding:3px 10px; flex-shrink:0;
+}
+.aifrs-an-para { font-size:12.5px; color:var(--txt2); line-height:1.7; padding:2px 0 2px 4px; }
+.aifrs-an-para b { color:var(--blue-sky); }
+.aifrs-an-hit { color:var(--txt3); font-size:12px; }
+.aifrs-an-chips { display:flex; flex-wrap:wrap; gap:5px; margin:8px 0; }
+.aifrs-chip-neg { font-size:11px; font-weight:600; padding:2px 9px; border-radius:9999px; background:rgba(248,113,113,.12); color:#f87171; }
+.aifrs-chip-unc { font-size:11px; font-weight:600; padding:2px 9px; border-radius:9999px; background:var(--bg4); color:var(--txt3); }
+.aifrs-chip-unc sup { font-size:9px; margin-left:2px; }
 
 /* ── Analysis Results — Dark Theme ── */
 .aifrs-analysis { max-width:960px; margin:16px auto; }
@@ -3088,18 +3140,44 @@ a:hover { text-decoration: underline; }
     var b=m[rec.status]||m.waiting;
     return '<span class="aifrs-file-badge '+b[0]+'">'+b[1]+'</span>';
   }
+  // 미리보기 전용 자동 정형화 — 내용은 그대로, 표시만 정리(문장·헤더·목록 단위 줄바꿈)
+  function _fmtPreview(t){
+    if(!t) return t;
+    var s = t.replace(/[ \t]+/g, ' ');
+    // 날짜(2026. 8. 18.) 내부 공백 보호 — 목록 규칙에 쪼개지지 않게 마커로 치환 후 마지막에 복원
+    s = s.replace(/(\d{4}\.)\s+(\d{1,2}\.)\s+(\d{1,2}\.)/g, '$1$2$3');
+    s = s.replace(/(\d{1,2}\.)\s+(\d{1,2}\.)/g, '$1$2');
+    // 메일 헤더·구분선 앞에서 줄바꿈
+    s = s.replace(/\s*(-{3,}\s*Original Message\s*-{3,})\s*/gi, '\n\n$1\n');
+    s = s.replace(/\s(?=(From|To|Cc|Sent|Subject)\s*:)/gi, '\n');
+    s = s.replace(/\s(?=(보낸사람|받는사람|참조|제목|작성일자|공급자|품목|금액)\s*[:\s])/g, '\n');
+    // 번호·기호 목록 앞에서 줄바꿈
+    s = s.replace(/\s(?=\d{1,2}\.\s)/g, '\n\n');
+    s = s.replace(/\s(?=[⑴⑵⑶⑷⑸⑹⑺⑻⑼⑽①②③④⑤⑥⑦⑧⑨⑩]\s?)/g, '\n');
+    s = s.replace(/\s(?=[>·▶■□-]\s)/g, '\n');
+    // 문장 종결 후 줄바꿈 (한국어 종결어미 + 마침표)
+    s = s.replace(/((?:습니다|입니다|합니다|드립니다|바랍니다|됩니다|있습니다|없습니다|주십시오|부탁드립니다)\s*\.)\s+/g, '$1\n');
+    s = s.replace(/(다\.)\s+(?=[가-힣A-Za-z0-9("'‘“])/g, '$1\n');
+    s = s.replace(/([가-힣][.?!])\s+(?=[가-힣])/g, '$1\n');
+    s = s.replace(/([.!?])\s+(?=[A-Z][a-z])/g, '$1\n');
+    // 정리: 줄 앞뒤 공백, 3줄 이상 연속 빈 줄 축소
+    s = s.split('\n').map(function(x){ return x.trim(); }).join('\n');
+    s = s.replace(/\n{3,}/g, '\n\n');
+    s = s.replace(//g, ' ');   // 날짜 보호 마커 복원
+    return s.trim();
+  }
   function bodyHtml(rec){
     if(rec.status==='image'){
       var img = rec.dataUrl ? '<img class="aifrs-thumb" src="'+rec.dataUrl+'" alt="미리보기">' : '<span class="aifrs-note">미리보기 로딩 중…</span>';
-      if(rec.ocrText){ var t=rec.ocrText.length>8000?rec.ocrText.slice(0,8000)+'\n\n…(일부)':rec.ocrText; return img+'<div class="aifrs-note" style="margin-top:8px"><b>OCR 추출 텍스트</b></div><pre class="aifrs-preview">'+esc(t)+'</pre>'; }
+      if(rec.ocrText){ var t=rec.ocrText.length>8000?rec.ocrText.slice(0,8000)+'\n\n…(일부)':rec.ocrText; return img+'<div class="aifrs-note" style="margin-top:8px"><b>OCR 추출 텍스트</b></div><pre class="aifrs-preview">'+esc(_fmtPreview(t))+'</pre>'; }
       return img;
     }
     if(rec.status==='done'){
       var t=rec.text||'';
-      if(!t && rec.ocrText){ var ot=rec.ocrText.length>8000?rec.ocrText.slice(0,8000)+'\n\n…(일부)':rec.ocrText; return '<div class="aifrs-note"><b>OCR 추출 텍스트</b></div><pre class="aifrs-preview">'+esc(ot)+'</pre>'; }
+      if(!t && rec.ocrText){ var ot=rec.ocrText.length>8000?rec.ocrText.slice(0,8000)+'\n\n…(일부)':rec.ocrText; return '<div class="aifrs-note"><b>OCR 추출 텍스트</b></div><pre class="aifrs-preview">'+esc(_fmtPreview(ot))+'</pre>'; }
       if(!t) return '<span class="aifrs-note">추출된 텍스트가 없습니다 — 스캔 PDF로 보입니다. [🤖 AI 기준서 분석] 시 자동 OCR합니다.</span>';
       var clip = t.length>8000 ? t.slice(0,8000)+'\n\n…(미리보기 일부만 표시 · 전체 '+t.length.toLocaleString()+'자)' : t;
-      return '<pre class="aifrs-preview">'+esc(clip)+'</pre>';
+      return '<pre class="aifrs-preview">'+esc(_fmtPreview(clip))+'</pre>';
     }
     return '';
   }
