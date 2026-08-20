@@ -716,19 +716,97 @@ a:hover { text-decoration: underline; }
   };
 
   // 오프라인 분석 실행 (업로드된 done 파일 텍스트 대상)
-  AiFRS.runOfflineAnalysis = function(){
-    var box=document.getElementById('aifrs-analysis'); if(!box) return;
-    var done=AiFRS.state.files.filter(function(r){return r.status==='done' && r.text;});
-    var imgs=AiFRS.state.files.filter(function(r){return r.status==='image';}).length;
-    box.style.display='block';
-    if(!done.length){
-      box.innerHTML='<div class="aifrs-note">추출된 텍스트가 없습니다.'+(imgs?' (이미지 '+imgs+'건은 6단계 Gemini API 분석 대상입니다)':'')+'</div>';
-      return;
+  // ══ 복수 파일 정합성 가드 (오프라인·사전 단계) ══
+  // 파일별로 따로 키워드 매칭을 돌려, 서로 다른 거래의 문서가 섞였을 가능성을 AI 호출 전에 감지.
+  function _fileSignature(r){
+    var t=r.text||r.ocrText||'';
+    var res=AiFRS.analyze(t);
+    var top=(res.matches||[]).slice(0,3).map(function(m){return m.no;});
+    var topName=(res.matches&&res.matches[0])?(res.matches[0].no+' '+res.matches[0].name):'매칭 없음';
+    var terms={}; (res.keptTerms||[]).forEach(function(e){ terms[e.std]=1; });
+    var biz={}; (t.match(/\d{3}-\d{2}-\d{5}/g)||[]).forEach(function(b){ biz[b]=1; });
+    return {name:r.name, top:top, topName:topName, terms:terms, biz:Object.keys(biz),
+            termArr:Object.keys(terms)};
+  }
+  function _jaccard(a,b){
+    var inter=0, uni={}; var k;
+    for(k in a){ uni[k]=1; if(b[k]) inter++; }
+    for(k in b){ uni[k]=1; }
+    var u=Object.keys(uni).length;
+    return u?inter/u:1;
+  }
+  function _detectMixedFiles(done){
+    if(done.length<2) return null;
+    var sigs=done.map(_fileSignature);
+    var pairs=[];
+    for(var i=0;i<sigs.length;i++) for(var j=i+1;j<sigs.length;j++){
+      var A=sigs[i], B=sigs[j];
+      // 신호 1(강): 두 파일 모두 사업자번호가 있는데 하나도 안 겹침
+      var bizDisjoint = A.biz.length && B.biz.length && !A.biz.some(function(x){return B.biz.indexOf(x)>=0;});
+      // 신호 2(약): 상위 3 기준서가 전혀 안 겹치고, 회계용어 유사도도 낮음(용어가 충분할 때만)
+      var topDisjoint = A.top.length && B.top.length && !A.top.some(function(x){return B.top.indexOf(x)>=0;});
+      var lowSim = A.termArr.length>=3 && B.termArr.length>=3 && _jaccard(A.terms,B.terms)<0.15;
+      if(bizDisjoint || (topDisjoint && lowSim)){
+        pairs.push({a:i, b:j, reason: bizDisjoint?'사업자번호 불일치':'매칭 기준서·용어 상이'});
+      }
     }
-    var text=done.map(function(r){return r.text;}).join('\n');
-    var res=AiFRS.analyze(text);
-    AiFRS._lastAnalysis=res;
-    box.innerHTML=renderAnalysis(res, done.length, imgs);
+    return pairs.length ? {sigs:sigs, pairs:pairs} : null;
+  }
+  function _showMixWarning(warn, proceed){
+    var ov=document.createElement('div'); ov.className='aifrs-modal-ov';
+    var rows=warn.sigs.map(function(s){
+      return '<div class="aifrs-clar-opt" style="cursor:default">'
+        + '<i>📄</i><span><b>'+esc(s.name)+'</b><br>'
+        + '<span class="aifrs-note">대표 기준서: '+esc(s.topName)
+        + (s.termArr.length?' · 주요 용어: '+esc(s.termArr.slice(0,4).join(', ')):'')
+        + (s.biz.length?' · 사업자번호: '+esc(s.biz.join(', ')):'')+'</span></span></div>';
+    }).join('');
+    var reasons={}; warn.pairs.forEach(function(p){ reasons[p.reason]=1; });
+    ov.innerHTML='<div class="aifrs-modal" style="max-width:560px;text-align:left">'
+      + '<div class="m-ico">⚠️</div>'
+      + '<div class="m-ttl">서로 다른 거래의 문서가 섞여 있을 수 있습니다</div>'
+      + '<div class="m-msg">파일별 사전 매칭 결과가 서로 달라('+esc(Object.keys(reasons).join(' · '))+') 안내드립니다.<br>'
+      + 'AiFRS는 첨부된 문서 전체를 <b>하나의 거래</b>로 분석하므로, 무관한 문서가 섞이면 판단이 왜곡될 수 있습니다.</div>'
+      + '<div class="aifrs-clar-opts" style="margin-top:12px">'+rows+'</div>'
+      + '<div class="m-foot">'
+      +   '<button class="aifrs-btn aifrs-btn-ghost" data-act="cancel">파일 정리하기</button>'
+      +   '<button class="aifrs-btn" data-act="go">같은 거래 맞음 — 함께 분석</button>'
+      + '</div></div>';
+    function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
+    ov.addEventListener('click', function(e){
+      if(e.target===ov){ close(); return; }
+      var act=e.target && e.target.getAttribute && e.target.getAttribute('data-act');
+      if(act==='cancel'){ close(); }
+      else if(act==='go'){ AiFRS._mixOkSig=AiFRS.state.files.map(function(r){return r.id;}).join(','); close(); proceed(); }
+    });
+    document.body.appendChild(ov);
+  }
+  // 두 분석 진입점 공통 가드: 섞임 의심 시 팝업, 아니면 그대로 진행
+  function _guardMixedThen(proceed){
+    var done=AiFRS.state.files.filter(function(r){return r.status==='done' && r.text;});
+    var sig=AiFRS.state.files.map(function(r){return r.id;}).join(',');
+    if(done.length>=2 && AiFRS._mixOkSig!==sig){
+      var warn=_detectMixedFiles(done);
+      if(warn){ _showMixWarning(warn, proceed); return; }
+    }
+    proceed();
+  }
+
+  AiFRS.runOfflineAnalysis = function(){
+    _guardMixedThen(function(){
+      var box=document.getElementById('aifrs-analysis'); if(!box) return;
+      var done=AiFRS.state.files.filter(function(r){return r.status==='done' && r.text;});
+      var imgs=AiFRS.state.files.filter(function(r){return r.status==='image';}).length;
+      box.style.display='block';
+      if(!done.length){
+        box.innerHTML='<div class="aifrs-note">추출된 텍스트가 없습니다.'+(imgs?' (이미지 '+imgs+'건은 6단계 Gemini API 분석 대상입니다)':'')+'</div>';
+        return;
+      }
+      var text=done.map(function(r){return r.text;}).join('\n');
+      var res=AiFRS.analyze(text);
+      AiFRS._lastAnalysis=res;
+      box.innerHTML=renderAnalysis(res, done.length, imgs);
+    });
   };
 
   function _chips(arr, cls, fmt){ return arr.map(function(e){ return '<span class="'+cls+'">'+fmt(e)+'</span>'; }).join(''); }
@@ -1585,6 +1663,10 @@ a:hover { text-decoration: underline; }
   AiFRS._aiBusy=false;
   AiFRS.runAiAnalysis = function(){
     if(AiFRS._aiBusy) return;
+    if(!AiFRS._mixBypass){   // 복수 파일 섞임 의심 시 API 호출 전에 팝업으로 차단(비용 절약)
+      _guardMixedThen(function(){ AiFRS._mixBypass=true; try{ AiFRS.runAiAnalysis(); } finally { AiFRS._mixBypass=false; } });
+      return;
+    }
     var box=document.getElementById('aifrs-ai'); if(!box) return;
     box.style.display='block';
     ['aifrs-precise','aifrs-journal'].forEach(function(id){ var el=document.getElementById(id); if(el){ el.innerHTML=''; el.style.display='none'; } });   // 새 분석 시작 — 이전 정밀분석·회계처리안 숨김
