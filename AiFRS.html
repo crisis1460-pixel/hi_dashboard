@@ -3842,7 +3842,7 @@ a:hover { text-decoration: underline; }
     var tourBtn = document.getElementById('aifrs-tour-btn');
     if(tourBtn) tourBtn.addEventListener('click', AiFRS.startTour);
     var brand = root.querySelector('.af-brand');
-    if(brand) brand.addEventListener('click', function(){ if(AiFRS.state.files.length){ if(window.confirm('초기 화면으로 돌아갈까요? 업로드된 파일과 분석 결과가 초기화됩니다.')) AiFRS.goHome(); } });
+    if(brand) brand.addEventListener('click', function(){ if(AiFRS.state.files.length){ if(window.confirm('초기 화면으로 돌아갈까요? 업로드된 파일과 분석 결과가 초기화됩니다.')) AiFRS.goHome(); } else { AiFRS.goHome(); } });
 
     // Settings toggle
     var settingsToggle = document.getElementById('aifrs-settings-toggle');
