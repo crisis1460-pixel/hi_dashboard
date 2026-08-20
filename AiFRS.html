@@ -776,6 +776,26 @@ a:hover { text-decoration: underline; }
     while((m=reLabel.exec(t))){ var v3=_normEntity(m[1]); if(v3 && !AiFRS.SELF_ENTITY_RE.test(v3)){ AiFRS.SELF_ENTITY_RE.lastIndex=0; out[v3]=1; } }
     return Object.keys(out);
   }
+  // 파일명에서 상대방 단서 추출(OCR 전에도 즉시 사용 가능) — 문서종류·날짜 등 일반 토큰은 제외
+  AiFRS.FN_STOP = {'계약서':1,'계약':1,'내역':1,'파일':1,'문서':1,'사본':1,'수정':1,'최종':1,'버전':1,'양식':1,'템플릿':1,
+    '견적서':1,'청구서':1,'명세서':1,'세금계산서':1,'공문':1,'안내문':1,'첨부':1,'붙임':1,'별첨':1,
+    'nda':1,'mou':1,'pdf':1,'docx':1,'doc':1,'hwp':1,'xlsx':1,'png':1,'jpg':1,'jpeg':1,'zip':1,'v':1,'ver':1};
+  var FN_DOC_SUFFIX = /(계약서|약정서|합의서|동의서|명세서|청구서|안내문|증명서|계산서|보고서|신청서)$/;
+  function _extractFilenameEntities(name){
+    var base = String(name||'').replace(/\.[A-Za-z0-9]{2,5}$/, '');   // 확장자 제거(이중 확장자는 다음 split이 처리)
+    var toks = base.split(/[_\-\s.()（）［］\[\]]+/).filter(Boolean);
+    var out=[];
+    toks.forEach(function(tk){
+      var norm=_normEntity(tk);
+      if(!norm || norm.length<2) return;
+      if(/^\d+$/.test(norm)) return;                          // 순수 숫자(날짜·번호)
+      if(AiFRS.FN_STOP[norm]) return;
+      if(FN_DOC_SUFFIX.test(tk)) return;                       // '~계약서' 등 문서종류 접미
+      if(AiFRS.SELF_ENTITY_RE.test(norm)){ AiFRS.SELF_ENTITY_RE.lastIndex=0; return; }
+      out.push(norm);
+    });
+    return out;
+  }
   function _fileSignature(r){
     var t=r.text||r.ocrText||'';
     var res=AiFRS.analyze(t);
@@ -783,9 +803,9 @@ a:hover { text-decoration: underline; }
     var topName=(res.matches&&res.matches[0])?(res.matches[0].no+' '+res.matches[0].name):'매칭 없음';
     var terms={}; (res.keptTerms||[]).forEach(function(e){ terms[e.std]=1; });
     var biz={}; (t.match(/\d{3}-\d{2}-\d{5}/g)||[]).forEach(function(b){ biz[b]=1; });
-    var entities=_extractEntities(t);
+    var entities={}; _extractEntities(t).forEach(function(x){entities[x]=1;}); _extractFilenameEntities(r.name).forEach(function(x){entities[x]=1;});
     return {name:r.name, top:top, topName:topName, terms:terms, biz:Object.keys(biz),
-            termArr:Object.keys(terms), entities:entities};
+            termArr:Object.keys(terms), entities:Object.keys(entities)};
   }
   function _jaccard(a,b){
     var inter=0, uni={}; var k;
@@ -844,15 +864,26 @@ a:hover { text-decoration: underline; }
     });
     document.body.appendChild(ov);
   }
+  // 정합성 검사 대상: 추출완료·이미지 상태 파일(텍스트 유무 무관 — 파일명 단서만으로도 검사 가능)
+  function _mixEligible(){ return AiFRS.state.files.filter(function(r){return (r.status==='done'||r.status==='image') && r.kind!=='archive';}); }
   // 두 분석 진입점 공통 가드: 섞임 의심 시 팝업, 아니면 그대로 진행
   function _guardMixedThen(proceed){
-    var done=AiFRS.state.files.filter(function(r){return r.status==='done' && r.text;});
+    var done=_mixEligible();
     var sig=AiFRS.state.files.map(function(r){return r.id;}).join(',');
     if(done.length>=2 && AiFRS._mixOkSig!==sig){
       var warn=_detectMixedFiles(done);
       if(warn){ _showMixWarning(warn, proceed); return; }
     }
     proceed();
+  }
+  // 파일 목록이 바뀔 때마다(추가·삭제·추출완료) 버튼 클릭 없이 자동으로 선제 검사 — 같은 파일 구성엔 한 번만 팝업
+  function _autoCheckMixedFiles(){
+    var done=_mixEligible();
+    var sig=AiFRS.state.files.map(function(r){return r.id;}).join(',');
+    if(done.length<2 || AiFRS._mixOkSig===sig || AiFRS._mixWarnedSig===sig) return;
+    if(AiFRS.state.files.some(function(r){return r.status==='processing'||r.status==='waiting';})) return;   // 추출 끝나면 다시 호출됨
+    var warn=_detectMixedFiles(done);
+    if(warn){ AiFRS._mixWarnedSig=sig; _showMixWarning(warn, function(){}); }
   }
 
   // 오프라인 매칭 실제 실행부(팝업 없음) — 버튼 클릭과 자동 새로고침이 공유
@@ -3161,6 +3192,10 @@ a:hover { text-decoration: underline; }
     // 오프라인 키워드 매칭(Keywords)은 renderFileList → _autoRefreshOffline에서 조용히 자동 갱신됨
     AiFRS._lastAi=null; AiFRS._lastPrecise={}; AiFRS._lastAudit={}; AiFRS._lastJournal=null; AiFRS._mixOkSig=null;
     ['aifrs-ai','aifrs-precise','aifrs-journal'].forEach(function(id){ var el=document.getElementById(id); if(el){ el.innerHTML=''; el.style.display='none'; } });
+    if(!AiFRS.state.files.length){
+      var hero=document.getElementById('af-hero');
+      if(hero){ hero.classList.remove('hidden'); hero.style.display=''; }
+    }
     renderFileList();
   };
   AiFRS.clearAll = function(){
@@ -3372,6 +3407,7 @@ a:hover { text-decoration: underline; }
     if(list) list.innerHTML = AiFRS.state.files.map(fileRow).join('');
     updateActions();
     _autoRefreshOffline();
+    _autoCheckMixedFiles();
   }
   function updateActions(){
     var info=document.getElementById('aifrs-ready-info');

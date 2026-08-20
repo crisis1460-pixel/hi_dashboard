@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -315,6 +315,114 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
 .r2-tbl tbody tr td:first-child { position: sticky; left: 0; z-index: 1; background: inherit; }
 
 /* ══════════════════════════════════════════════════════════
+   AI세무도우미 — 신규 모듈 전용 스타일 (.tax- 접두사로 완전 격리)
+   ══════════════════════════════════════════════════════════ */
+.tax-ntab-disabled{display:flex;align-items:center;gap:0;padding:10px 18px;font-size:12px;font-weight:500;color:var(--txt3);cursor:not-allowed;white-space:nowrap;opacity:.6;}
+.tax-ntab-disabled .ni{display:inline-block;width:20px;text-align:center;flex-shrink:0;}
+.tax-badge{display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;background:#e5e7eb;color:#6b7280;margin-left:6px;vertical-align:middle;}
+.tax-wrap{max-width:960px;margin:0 auto;padding:0 4px;}
+/* 헤더 */
+.tax-header{display:flex;align-items:center;gap:14px;padding:20px 22px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;margin-bottom:18px;}
+.tax-header-icon{width:46px;height:46px;border-radius:10px;background:linear-gradient(135deg,#059669,#047857);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.tax-header-title{font-size:16px;font-weight:700;color:var(--txt);}
+.tax-header-sub{font-size:12px;color:var(--txt3);margin-top:3px;line-height:1.5;}
+.tax-phase-tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;background:#d1fae5;color:#065f46;margin-left:8px;}
+/* 서브탭 */
+.tax-subtabs{display:flex;gap:6px;margin-bottom:18px;}
+.tax-subtab{padding:7px 18px;border-radius:8px;border:1px solid var(--border);font-size:12px;font-weight:600;cursor:pointer;color:var(--txt3);background:var(--bg2);transition:all .15s;}
+.tax-subtab.active{background:#059669;color:#fff;border-color:#059669;}
+.tax-subtab.disabled{opacity:.45;cursor:not-allowed;}
+/* API 설정바 */
+.tax-api-bar{display:flex;align-items:center;gap:8px;padding:12px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:16px;flex-wrap:wrap;}
+.tax-api-bar label{font-size:11px;font-weight:600;color:var(--txt3);white-space:nowrap;}
+.tax-api-input{flex:1;min-width:180px;max-width:340px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--bg);color:var(--txt);}
+.tax-api-btn{padding:6px 14px;border-radius:6px;border:none;font-size:11px;font-weight:600;cursor:pointer;background:#059669;color:#fff;}
+.tax-api-btn:hover{background:#047857;}
+.tax-api-status{font-size:11px;color:var(--txt3);}
+.tax-keylink{font-size:11px;font-weight:600;color:#059669;text-decoration:none;white-space:nowrap;}
+.tax-keylink:hover{text-decoration:underline;}
+.tax-help-btn{padding:4px 10px;border-radius:6px;border:1px solid var(--border);font-size:11px;font-weight:600;cursor:pointer;background:var(--bg);color:var(--txt3);white-space:nowrap;}
+.tax-help-btn:hover{border-color:#059669;color:#059669;}
+.tax-api-stat{font-size:11px;color:var(--txt3);display:flex;align-items:center;gap:6px;}
+.tax-api-stat.ok{color:#065f46;}
+.tax-api-stat.err{color:#991b1b;}
+.tax-spin{display:inline-block;width:11px;height:11px;border:2px solid var(--border);border-top-color:#059669;border-radius:50%;animation:tax-spin .7s linear infinite;}
+.tax-note{font-size:10.5px;color:var(--txt3);}
+/* 안내 모달 (.tax- 격리, KIFRS 모달과 별개) */
+.tax-modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;}
+.tax-modal{background:var(--bg);border-radius:12px;padding:24px;max-width:420px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.25);}
+.tax-modal-ttl{font-size:14px;font-weight:700;color:var(--txt);}
+.tax-modal-body{font-size:12px;color:var(--txt2);margin-top:10px;line-height:1.6;}
+.tax-modal-body p{margin-bottom:8px;}
+.tax-modal-body a{color:#059669;}
+.tax-modal-foot{margin-top:18px;display:flex;justify-content:center;gap:8px;}
+.tax-modal-btn{padding:8px 24px;border-radius:7px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:#059669;color:#fff;}
+.tax-disclaimer{font-size:11px;color:var(--txt3);line-height:1.7;background:var(--bg3);border-radius:8px;padding:10px 12px;}
+/* 질문 입력 영역 */
+.tax-query-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:16px;}
+.tax-query-label{font-size:12px;font-weight:600;color:var(--txt);margin-bottom:10px;}
+.tax-query-textarea{width:100%;min-height:80px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--bg);color:var(--txt);resize:vertical;font-family:inherit;line-height:1.6;}
+.tax-query-textarea:focus{outline:none;border-color:#059669;}
+.tax-query-actions{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;}
+.tax-file-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border:1px dashed var(--border2);border-radius:7px;font-size:12px;color:var(--txt3);cursor:pointer;background:var(--bg);transition:border-color .15s;}
+.tax-file-btn:hover{border-color:#059669;color:#059669;}
+.tax-file-list{font-size:11px;color:var(--txt3);}
+.tax-submit-btn{margin-left:auto;padding:9px 24px;border-radius:8px;border:none;font-size:13px;font-weight:700;cursor:pointer;background:#059669;color:#fff;transition:background .15s;}
+.tax-submit-btn:hover{background:#047857;}
+.tax-submit-btn:disabled{background:#9ca3af;cursor:not-allowed;}
+/* 로딩 */
+.tax-loading{display:none;padding:32px;text-align:center;color:var(--txt3);}
+.tax-loading.show{display:block;}
+.tax-spinner{display:inline-block;width:28px;height:28px;border:3px solid var(--border);border-top-color:#059669;border-radius:50%;animation:tax-spin .7s linear infinite;margin-bottom:10px;}
+@keyframes tax-spin{to{transform:rotate(360deg)}}
+.tax-loading-msg{font-size:13px;color:var(--txt3);}
+/* 결과 영역 */
+.tax-result-wrap{display:none;}
+.tax-result-wrap.show{display:flex;flex-direction:column;gap:12px;}
+/* 결과 카드 공통 */
+.tax-card{border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.tax-card-header{display:flex;align-items:center;gap:10px;padding:13px 18px;background:var(--bg2);cursor:pointer;user-select:none;}
+.tax-card-header:hover{background:var(--bg3);}
+.tax-card-icon{font-size:18px;}
+.tax-card-title{font-size:13px;font-weight:700;color:var(--txt);flex:1;}
+.tax-card-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;}
+.tax-badge-taxable{background:#dbeafe;color:#1d4ed8;}
+.tax-badge-exempt{background:#f3f4f6;color:#4b5563;}
+.tax-badge-zero{background:#d1fae5;color:#065f46;}
+.tax-badge-nodeduct{background:#fef3c7;color:#92400e;}
+.tax-card-toggle{font-size:12px;color:var(--txt3);}
+.tax-card-body{padding:16px 18px;border-top:1px solid var(--border);display:none;}
+.tax-card-body.open{display:block;}
+/* 과세판단 카드 내용 */
+.tax-judgment-row{display:flex;gap:8px;margin-bottom:10px;align-items:flex-start;}
+.tax-judgment-label{font-size:11px;font-weight:600;color:var(--txt3);min-width:70px;margin-top:2px;}
+.tax-judgment-value{font-size:13px;color:var(--txt);line-height:1.6;}
+.tax-article-chip{display:inline-block;font-size:10px;padding:2px 8px;border-radius:5px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;margin:2px 3px 2px 0;}
+.tax-confidence{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;}
+.tax-conf-green{background:#d1fae5;color:#065f46;}
+.tax-conf-yellow{background:#fef9c3;color:#713f12;}
+.tax-conf-red{background:#fee2e2;color:#991b1b;}
+/* 체크리스트 카드 내용 */
+.tax-checklist{list-style:none;display:flex;flex-direction:column;gap:6px;}
+.tax-checklist li{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--txt);line-height:1.6;}
+.tax-check-icon{flex-shrink:0;margin-top:2px;font-size:13px;}
+/* 분개 카드 내용 */
+.tax-journal-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.tax-journal-tbl th{padding:7px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--txt3);border-bottom:2px solid var(--border);background:var(--bg3);}
+.tax-journal-tbl td{padding:8px 12px;border-bottom:1px solid var(--border);color:var(--txt);}
+.tax-journal-tbl tr:last-child td{border-bottom:none;}
+.tax-journal-tbl .debit{color:#1d4ed8;}
+.tax-journal-tbl .credit{color:#059669;padding-left:24px;}
+.tax-journal-actions{display:flex;gap:8px;margin-top:12px;}
+.tax-dl-btn{padding:7px 16px;border-radius:7px;border:1px solid var(--border);font-size:12px;font-weight:600;cursor:pointer;background:var(--bg2);color:var(--txt);}
+.tax-dl-btn:hover{border-color:#059669;color:#059669;}
+/* 재질문 */
+.tax-requery{margin-top:8px;padding:12px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;display:flex;gap:8px;align-items:center;}
+.tax-requery input{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:7px;font-size:12px;background:var(--bg);color:var(--txt);}
+.tax-requery input:focus{outline:none;border-color:#059669;}
+.tax-requery-btn{padding:8px 16px;border-radius:7px;border:none;font-size:12px;font-weight:600;cursor:pointer;background:#059669;color:#fff;}
+
+/* ══════════════════════════════════════════════════════════
    AI기준서 (K-IFRS) — 신규 모듈 전용 스타일 (.kifrs- 접두사로 완전 격리)
    ══════════════════════════════════════════════════════════ */
 .kifrs-ntab-disabled{display:flex;align-items:center;gap:0;padding:10px 18px;font-size:12px;font-weight:500;color:var(--txt3);cursor:not-allowed;white-space:nowrap;opacity:.6;}
@@ -598,6 +706,16 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
     </div>
   </div>
 
+  <!-- AI세무도우미 (신규 모듈 — TAX 네임스페이스로 격리) -->
+  <div class="nmenu">
+    <div class="nmenu-label" id="label-tax">🧾 AI세무도우미 <span class="arr">▼</span></div>
+    <div class="ndrop">
+      <div class="ntab" id="ntab-tax-vat" onclick="switchTab('tax-vat')"><span class="ni">💰</span>부가세</div>
+      <div class="tax-ntab-disabled" title="Phase 2 — 준비 중입니다"><span class="ni">👤</span>소득세<span class="tax-badge">준비 중</span></div>
+      <div class="tax-ntab-disabled" title="Phase 3 — 준비 중입니다"><span class="ni">🏢</span>법인세<span class="tax-badge">준비 중</span></div>
+    </div>
+  </div>
+
   <!-- AI기준서 (신규 모듈 — KIFRS 네임스페이스로 격리) -->
   <div class="nmenu">
     <div class="nmenu-label" id="label-kifrs">📞 AI기준서 <span class="arr">▼</span></div>
@@ -626,6 +744,11 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans KR',sans-serif
 </div>
 
 <div class="main">
+
+<!-- ══ TAB: AI세무도우미 — 부가세 (TAX 네임스페이스로 격리) ══ -->
+<div class="tab" id="tab-tax-vat">
+  <div id="tax-vat-root"></div>
+</div>
 
 <!-- ══ TAB: AI기준서 (K-IFRS) — 신규 모듈, KIFRS 네임스페이스로 렌더 ══ -->
 <div class="tab" id="tab-kifrs">
@@ -903,7 +1026,13 @@ function switchTab(name){
   } else if(name==='kifrs'){
     var lblk = document.getElementById('label-kifrs');
     if(lblk) lblk.classList.add('active');
+  } else if(name==='tax-vat'){
+    var lblt = document.getElementById('label-tax');
+    if(lblt) lblt.classList.add('active');
   }
+
+  // AI세무도우미 — 부가세
+  if(name==='tax-vat' && window.TAX && typeof window.TAX.render==='function') window.TAX.render();
 
   // AI기준서(K-IFRS) — 신규 모듈 (격리된 KIFRS 네임스페이스)
   if(name==='kifrs' && window.KIFRS && typeof window.KIFRS.render==='function') window.KIFRS.render();
@@ -2772,6 +2901,83 @@ function renderDevLog(){
       '증빙 PDF 출력 시 빈 페이지 제거(인쇄 레이아웃 display:none 방식)',
       "메뉴 명칭 '기준서 콜센터' → 'AI기준서'",
     ]},
+    { date:'2026-06-24', title:'9단계 — 객관식 보정 팝업 3종 신설', color:'#7c3aed', items:[
+      '모호·저신뢰·판단보류 항목을 객관식으로 확정하는 보정 팝업 3종(①거래구조 ②적용 기준서 ③확인필요 항목)',
+      '트리거 엔진 _buildClarifications — 신뢰도·방향경고·관련성 근접·확인필요를 스캔해 팝업 큐 생성',
+      '하이브리드 리플로우 — ①거래구조 보정은 로컬 방향가드로 후보 재정렬(무료), ‘🔄 AI로 후보 재선정(1콜)’은 온디맨드',
+      '사용자확정 뱃지(✎) — 보정값을 AI 판정과 구분, 결과·증빙PDF 공통 표기',
+      '진입점 — 기준서별 AI감사 결과 헤더의 ❓모호항목 보정(N) 버튼(확인필요 N>0일 때만)',
+      '보정 후 결과 유지 — _restoreCachedResults로 재렌더 시 정밀분석·감사 캐시 재주입(API 재호출 없음)',
+    ]},
+    { date:'2026-06-24', title:'정밀분석·감사 정확도 수정', color:'#db2777', items:[
+      'AI감사 전부 ‘확인필요’ 재발 수정 — 근거추출을 회계결론→거래사실 원문으로 재조준',
+      '정밀분석 문단검증 대부분 ‘확인불가’ 수정 — paraMatch 견고화(노이즈 무시·범위 겹침 허용)',
+      '1115 DB 5단계 번호 오류 수정 — 문단 순서→공식 모델(산정3·배분4·수익인식5)',
+    ]},
+    { date:'2026-06-25', title:'OpenRouter 멀티공급자 API(무료 폴백)', color:'#0891b2', items:[
+      '멀티공급자 — Gemini(주력) + OpenRouter 예비, 모델ID ‘/’ 유무로 라우팅·한도 소진 시 자동 폴백(CORS 통과 확인)',
+      'OpenRouter 유료 전면 배제 — 무료모델 동적 조회(refreshOrModels, pricing=0 필터)',
+      '무료모델 랭킹(_orRank) — 대형 instruct 우선, 유료 슬러그는 즉시 스킵',
+      'API 설정바 정리 — Gemini=OR 레이아웃 통일, 모델 드롭다운 제거→항상 자동',
+    ]},
+    { date:'2026-06-25', title:'검토 우선순위 & 가독성·정합성', color:'#2563eb', items:[
+      '검토 우선순위(참고용) — 쟁점이 큰 조문일수록 높게(핵심≥70/검토40~69/형식<40), 내림차순 정렬',
+      '문단 원문칩 + 조문번호 복원 폴백 — 조문번호 누락 시 근거조문 텍스트로 DB문단 역매칭',
+      '정밀분석 항목별 글씨색 구분(감사 팔레트와 통일) + 가독성 2열 정렬, 5단계 배지 제거',
+      '본인/대리인 총액·순액 교정 — 본인은 총액 매출 + 지급수수료 별도 비용',
+    ]},
+    { date:'2026-06-25', title:'10단계 — 회계처리안 자동작성 + 엑셀', color:'#059669', items:[
+      '확정 거래구조·정밀분석·감사 결과를 종합해 단계별 분개(회계처리안)를 자동 작성(📒)',
+      '금액 기준 — 문서에 실제 금액 있으면 실제, 없으면 예시금액(배지로 구분)',
+      '엑셀 다운로드 — 화면 표를 xlsx-js-style 셀서식으로 재현(제목병합·헤더음영·rowspan병합·천단위·테두리)',
+      '차변·대변 합계 불일치 경고, 본인(총액) 분개 규칙 반영',
+    ]},
+    { date:'2026-07-01', title:'자산화 오분류 방지 & 증빙 정비', color:'#4338ca', items:[
+      '자산화 정의 게이트 — 정밀분석·감사 프롬프트에 유형(1016)/무형(1038) 기준서별 분기, 검토·테스트 물품 오자산화 방지',
+      '후보선정 구분자 — 실물 재화→1016 우선/무형→1038, ‘AI·신규사업’ 무형 과대해석 금지',
+      '정밀분석 상세 자동 접기 — AI감사 결과가 뜨면 접힘(펼치기로 재확인)',
+      '증빙 PDF — AI감사 완료 기준서만 노출, 정밀분석 문단은 인쇄에서 제외',
+    ]},
+  ];
+
+  var logs_taxvat = [
+    { date:'2026-07-16', title:'AI세무도우미(부가세) 신규 모듈 착수', color:'#059669', items:[
+      '최상위 카테고리 "AI세무도우미" 신설 — 부가세(Phase 1) → 소득세·법인세(차례로 확장 예정)',
+      '메뉴/CSS/JS 뼈대 — window.TAX 네임스페이스로 완전 격리(.tax- 접두사), 기존 탭 무영향',
+      'UX는 기준서 콜센터와 다르게 설계 — 질문 텍스트 입력이 메인, 파일 첨부는 선택',
+      '결과는 3종 카드(과세판단·체크리스트·분개)로 접이식 표시, 재질문 가능',
+    ]},
+    { date:'2026-07-16', title:'부가세 내장 DB(vatDB) 구축', color:'#2563eb', items:[
+      '부가가치세법 본법·시행령·시행규칙·기본통칙 원문 PDF 전수 추출',
+      '조문 113개 레코드화(법률 85·시행령 11·기본통칙 9·시행규칙 8) — 과세·면세·영세율·불공제·세금계산서·신고납부·간이과세 7개 카테고리',
+      '레코드에 keywords·negKeywords(부정어 필터)·rulings(예규 요약)·weight(쟁점 빈도) 포함',
+      '정확도 우선 원칙 — 조문 발췌가 아닌 원문 전체 내장(할루시네이션 방지 목적)',
+    ]},
+    { date:'2026-07-16', title:'분석 파이프라인 & API 연동', color:'#0d9488', items:[
+      '오프라인 키워드 매칭(_matchDB) → Gemini/OpenRouter API 호출 → JSON 판단·체크리스트·분개 응답',
+      'AI기준서 저장 키(kifrs-apikey/kifrs-orkey) 폴백 재사용 — 별도 재입력 불필요',
+      'Gemini 모델 체인 자동 폴백(2.0-flash→2.5-flash-lite→2.0-flash-lite→2.5-flash), 429 시 OpenRouter 자동 전환',
+      'JSON 파싱 견고화 — 마크다운 코드블록·<think> 태그 제거, 실패 시 원문 콘솔 노출',
+    ]},
+    { date:'2026-07-16', title:'파일 텍스트 추출 & 스캔 PDF 대응', color:'#b45309', items:[
+      'PDF·Excel·CSV·Word 첨부 시 실제 텍스트 추출 후 분석에 반영(PDF.js/SheetJS/Mammoth 재사용)',
+      'PDF.js 4.x부터 ESM 전용 배포로 전환된 것 확인 — TAX 전용 6.1.200 동적 import 로더 신설(AI기준서의 3.11.174 UMD와 완전 분리, 상호 영향 없음)',
+      '텍스트 추출 실패/스캔 이미지 PDF → 원본을 Gemini 비전에 직접 전달(자동, 팝업 없이 진행)',
+      '추출 실패 파일은 콘솔 로그로만 남기고 분석은 계속 진행',
+    ]},
+    { date:'2026-07-16', title:'회계처리 가드 & 코드 검증 레이어', color:'#7c3aed', items:[
+      '분개 정확도 버그 수정 — 불공제 판단인데 부가세대급금으로 분리 계상되던 문제, 프롬프트 가드로 차단',
+      '거래 상대방 사업자등록 여부 선행확인 가드 신설 — 미확인 시 신뢰도 하향 + 체크리스트 최우선 항목 강제, 개인(프리랜서) 추정 시 원천징수 검토 필요 경고',
+      '코드 검증 레이어(_verifyJudgment) — AI가 인용한 조문을 vatDB 113개와 대조해 🟢(DB일치)/🟡(미검증)/🔴(확인불가) 판정',
+      'AI 자기보고 신뢰도를 그대로 쓰지 않고 코드가 재산정 — 확인불가 조문·사업자여부 미확인 중 하나라도 있으면 무조건 신뢰도 낮음으로 하향',
+      '체크리스트 필수/권장/주의 구분 기준 명시 — 판단을 바꾸는 사항만 필수, 행정 확인은 권장으로 하향(전부 필수로 몰리던 문제 수정)',
+    ]},
+    { date:'2026-07-16', title:'엑셀 다운로드 & 파일 인코딩 마무리', color:'#059669', items:[
+      '엑셀 다운로드 실제 구현 — xlsx-js-style 재사용(제목·헤더·분개·판단근거·주의사항 셀서식)',
+      'CSV EUC-KR 인코딩 대응 — 국내 회계프로그램 CSV가 UTF-8 아닌 경우 자동 재디코딩(TAX 모듈 자체 구현)',
+      'Excel·CSV·Word 파일 첨부 실사용 테스트 통과, OpenRouter 단독 경로(Gemini 키 없이) 테스트 통과',
+      'Phase 1(부가세) 로드맵 전 항목 완료',
+    ]},
   ];
 
   var PROJECTS = [
@@ -2796,8 +3002,21 @@ function renderDevLog(){
         {n:6,t:'검증·신뢰도 라벨(AI감사인)',s:'done'},
         {n:7,t:'결과 출력·증빙 PDF 다운로드',s:'done'},
         {n:8,t:'로딩 UI(6단계 스텝퍼)',s:'done'},
-        {n:9,t:'객관식 팝업 3종',s:'doing'},
-        {n:10,t:'회계처리안 자동작성·엑셀 다운로드(금액 없으면 예시금액)',s:'doing'},
+        {n:9,t:'객관식 팝업 3종',s:'done'},
+        {n:10,t:'회계처리안 자동작성·엑셀 다운로드(금액 없으면 예시금액)',s:'done'},
+      ] },
+    { id:'taxvat', name:'AI세무도우미', desc:'부가세 자동 검토(AI) — Phase 1, 이후 소득세·법인세 확장 예정', start:'2026-07-16', end:null, color:'#059669', logs:logs_taxvat,
+      steps:[
+        {n:1,t:'메뉴 탭·CSS·JS 뼈대(TAX 네임스페이스)',s:'done'},
+        {n:2,t:'내장 부가세 DB(vatDB, 조문 113개)',s:'done'},
+        {n:3,t:'질문 입력·파일 첨부 UI',s:'done'},
+        {n:4,t:'오프라인 키워드 매칭(DB 후보 선정)',s:'done'},
+        {n:5,t:'Gemini/OpenRouter API 연동(자동 폴백)',s:'done'},
+        {n:6,t:'파일 텍스트 추출·스캔 PDF 대응',s:'done'},
+        {n:7,t:'결과 카드(과세판단·체크리스트·분개)·재질문',s:'done'},
+        {n:8,t:'코드 검증 레이어(조문 대조·신뢰도 재산정)',s:'done'},
+        {n:9,t:'엑셀 다운로드 실제 구현',s:'done'},
+        {n:10,t:'Excel·CSV·Word 첨부 실사용 테스트',s:'done'},
       ] },
   ];
 
@@ -6194,18 +6413,19 @@ function debugR1Compare(){
   // ══════════════════════════════════════════════════════════════
   KIFRS.API = {
     key: '',                         // ← 비워둠. 화면에서 입력(또는 여기에 직접 넣어도 됨)
-    model: 'gemini-2.0-flash',       // 수동 선택 시 사용할 모델. 화면 드롭다운에서 변경 가능
+    model: 'gemini-2.5-flash-lite',  // 수동 선택 시 사용할 모델. 화면 드롭다운에서 변경 가능
     auto: true,                      // 자동 모델 모드(기본): 호출 시 되는 모델을 우선순위대로 자동 선택·폴백
     ocrModel: '',                    // 비우면 분석 모델과 동일(자동모드면 자동선택 따라감)
     endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/'
   };
   // 자동 모델 우선순위. 모델ID에 '/'가 있으면 OpenRouter(OpenAI호환), 없으면 Gemini로 라우팅(_providerOf).
-  KIFRS.MODEL_CHAIN = ['gemini-2.0-flash','gemini-2.5-flash-lite','gemini-2.0-flash-lite','gemini-2.5-flash'];   // Gemini(주력)만 — OR 무료모델은 동적 조회로 채움
+  // 2026-07-16: gemini-2.0-flash·2.0-flash-lite 완전 종료(shut down) 확인 → 2.5/3.6 세대로 교체
+  KIFRS.MODEL_CHAIN = ['gemini-2.5-flash-lite','gemini-2.5-flash','gemini-3.6-flash','gemini-3.5-flash-lite'];   // Gemini(주력)만 — OR 무료모델은 동적 조회로 채움
   // ⚠ OpenRouter 무료모델 ID는 수시 변동(슬러그가 유료로 바뀌거나 사라짐) → refreshOrModels로 실시간 조회, 조회 실패 시 OR_FALLBACK 사용
   KIFRS.OR_FALLBACK = ['meta-llama/llama-3.3-70b-instruct:free','mistralai/mistral-small-3.2-24b-instruct:free','google/gemma-3-27b-it:free'];
   KIFRS._orFreeModels = null;        // refreshOrModels가 채우는 동적 무료모델 목록
-  // 구글이 퇴역시킨 모델 — 선택/체인에 있으면 404(generateContent 미지원). 자동 마이그레이션 대상
-  KIFRS._RETIRED = {'gemini-1.5-flash':1,'gemini-1.5-flash-latest':1,'gemini-1.5-flash-8b':1,'gemini-1.5-pro':1,'gemini-1.5-pro-latest':1,'gemini-1.0-pro':1,'gemini-pro':1};
+  // 구글이 퇴역시킨 모델 — 선택/체인에 있으면 404/모델없음. 자동 마이그레이션 대상
+  KIFRS._RETIRED = {'gemini-1.5-flash':1,'gemini-1.5-flash-latest':1,'gemini-1.5-flash-8b':1,'gemini-1.5-pro':1,'gemini-1.5-pro-latest':1,'gemini-1.0-pro':1,'gemini-pro':1,'gemini-2.0-flash':1,'gemini-2.0-flash-lite':1};
   KIFRS._activeModel = null;         // 자동모드에서 최근 성공 모델(그날 계속 우선 시도)
   KIFRS._providerOf = function(m){ return String(m||'').indexOf('/')>=0 ? 'openrouter' : 'gemini'; };
   // 분석에 적합한 일반 instruct 모델 선호(코드·비전·작은모델 후순위) — 동적 무료목록 정렬용
@@ -8729,6 +8949,926 @@ function debugR1Compare(){
 
 </script>
 
+<!-- ══ AI세무도우미 — TAX 네임스페이스 (부가세 Phase 1) ══ -->
+<script>
+(function(){
+'use strict';
+
+/* ── 내장 DB (에이전트 완료 후 교체 예정) ── */
+var vatDB = [{"id":"vat-1-1","category":"과세","source":"law","article":"제1조","title":"목적","text":"이 법은 부가가치세의 과세 요건 및 절차를 규정함으로써 부가가치세의 공정한 과세, 납세의무의 적정한 이행 확보 및 재정수입의 원활한 조달에 이바지함을 목적으로 한다.","keywords":["목적","과세요건","납세의무"],"negKeywords":[],"rulings":[],"relatedIds":[],"weight":2},{"id":"vat-2-1","category":"과세","source":"law","article":"제2조","title":"정의(재화·용역·사업자·간이과세자)","text":"1.재화: 재산 가치가 있는 물건 및 권리. 2.용역: 재화 외에 재산 가치가 있는 모든 역무와 그 밖의 행위. 3.사업자: 사업 목적이 영리이든 비영리이든 관계없이 사업상 독립적으로 재화 또는 용역을 공급하는 자. 4.간이과세자: 직전 연도 공급대가 합계액이 대통령령으로 정하는 금액에 미달하는 개인사업자. 5.일반과세자: 간이과세자가 아닌 사업자. 6.과세사업: 부가가치세가 과세되는 재화 또는 용역을 공급하는 사업. 7.면세사업: 부가가치세가 면제되는 재화 또는 용역을 공급하는 사업.","keywords":["재화","용역","사업자","간이과세자","일반과세자","과세사업","면세사업","정의"],"negKeywords":[],"rulings":[{"ref":"기본통칙 2-2…1","summary":"재화란 재산 가치가 있는 물건 및 권리이므로 물·흙·퇴비 등 포함, 재산 가치 없는 것은 제외","conclusion":"과세대상"},{"ref":"기본통칙 2-4…1","summary":"사업자가 제조·가공 인적·물적 설비를 갖춘 장소에서 계속적으로 행하는 경우 제조업 해당","conclusion":"제조업 과세"}],"relatedIds":["vat-4-1","vat-9-1"],"weight":5},{"id":"vat-3-1","category":"과세","source":"law","article":"제3조","title":"납세의무자","text":"다음 각 호의 어느 하나에 해당하는 자로서 개인, 법인(국가·지방자치단체 포함), 법인격 없는 사단·재단 또는 그 밖의 단체는 부가가치세를 납부할 의무가 있다. 1.사업자 2.재화를 수입하는 자. 신탁재산 관련 재화 또는 용역을 공급하는 때에는 수탁자가 신탁재산별로 각각 별도의 납세의무자가 됨.","keywords":["납세의무자","사업자","수입","신탁","수탁자","위탁자"],"negKeywords":[],"rulings":[{"ref":"기본통칙 3-0…1","summary":"부가가치를 창출할 수 있는 정도의 사업형태를 갖추고 계속적·반복적으로 공급하는 자는 사업자","conclusion":"납세의무 있음"},{"ref":"기본통칙 3-0…2","summary":"과세의 귀속이 명의일 뿐 사실상 귀속자가 있으면 사실상 귀속자에게 부가세법 적용","conclusion":"실질귀속자 납세의무"},{"ref":"기본통칙 3-0…4","summary":"새마을금고가 사업상 독립적으로 과세 재화를 공급하면 납세의무 있음. 입주자대표회의가 단지 내 주차장 운영 시 외부인 이용료는 납세의무","conclusion":"납세의무 있음"}],"relatedIds":["vat-2-1","vat-4-1"],"weight":6},{"id":"vat-4-1","category":"과세","source":"law","article":"제4조","title":"과세대상","text":"부가가치세는 다음 각 호의 거래에 대하여 과세한다. 1.사업자가 행하는 재화 또는 용역의 공급 2.재화의 수입","keywords":["과세대상","재화공급","용역공급","수입"],"negKeywords":[],"rulings":[{"ref":"기본통칙 4-0…1","summary":"소유재화 파손·훼손·도난 등으로 받는 손해배상금, 지체상금, 위약금은 과세대상 아님. 임대계약 만료 후 실질적 임대용역 제공 시 대가는 과세대상","conclusion":"손해배상금은 비과세, 임대용역대가는 과세"},{"ref":"기본통칙 4-0…2","summary":"협회비·찬조비·특별회비 등 재화공급 대가관계 없이 받는 것은 과세대상 아님","conclusion":"비과세"},{"ref":"기본통칙 4-0…3","summary":"수표·어음 등 화폐대용증권, 유가증권, 상품권, 가상자산은 과세대상 아님","conclusion":"비과세"},{"ref":"기본통칙 4-0…4","summary":"농산물 등 면세재화를 운반·가공·판매대행하는 용역 제공 대가는 과세대상","conclusion":"과세"}],"relatedIds":["vat-9-1","vat-11-1","vat-13-1"],"weight":7},{"id":"vat-5-1","category":"과세","source":"law","article":"제5조","title":"과세기간","text":"사업자에 대한 부가가치세의 과세기간: 1.간이과세자: 1월1일~12월31일 2.일반과세자: 제1기(1.1~6.30), 제2기(7.1~12.31). 신규사업자의 최초 과세기간은 사업개시일부터 그 날이 속하는 과세기간 종료일까지. 폐업 시 과세기간은 그 기간 개시일부터 폐업일까지.","keywords":["과세기간","1기","2기","간이과세자","일반과세자","신규","폐업"],"negKeywords":[],"rulings":[{"ref":"기본통칙 5-7…1","summary":"합병으로 소멸법인의 최종 과세기간은 과세기간 개시일부터 합병등기일까지","conclusion":"과세기간 종료"}],"relatedIds":["vat-48-1","vat-49-1","vat-61-1"],"weight":5},{"id":"vat-6-1","category":"과세","source":"law","article":"제6조","title":"납세지","text":"사업자의 부가가치세 납세지는 각 사업장의 소재지로 한다. 사업장: 사업자가 사업을 하기 위하여 거래의 전부 또는 일부를 하는 고정된 장소. 사업자 단위 과세 사업자는 본점 또는 주사무소 소재지가 납세지. 하치장, 임시사업장은 사업장으로 보지 않음.","keywords":["납세지","사업장","본점","주사무소","하치장","임시사업장"],"negKeywords":[],"rulings":[{"ref":"기본통칙 6-8…1","summary":"인접하여 연속되지 않더라도 일괄하여 총괄적으로 관리하는 경우 동일한 사업장으로 봄","conclusion":"동일 사업장"},{"ref":"기본통칙 6-8…3","summary":"총괄납부 사업자의 수정신고·경정청구는 사유 발생 사업장 관할 세무서장에게 제출","conclusion":"절차"}],"relatedIds":["vat-8-1","vat-51-1"],"weight":4},{"id":"vat-8-1","category":"과세","source":"law","article":"제8조","title":"사업자등록","text":"사업자는 사업장마다 사업 개시일부터 20일 이내에 사업자등록을 신청하여야 한다. 신규 사업자는 사업 개시일 이전에도 신청 가능. 사업자 단위 과세 등록 가능. 휴업·폐업 또는 등록사항 변경 시 신고 의무. 사실상 폐업 시 직권 말소.","keywords":["사업자등록","등록신청","20일","사업단위과세","폐업","휴업","변경"],"negKeywords":[],"rulings":[{"ref":"기본통칙 8-11…1","summary":"과세사업 법인이 지점의 등기 여부와 무관하게 사업자등록 신청 가능","conclusion":"등록 가능"},{"ref":"기본통칙 8-14…1","summary":"공동사업 시 대표자 명의로 신청, 구성원 변경 시 정정 신고","conclusion":"절차"}],"relatedIds":["vat-39-1","vat-60-1"],"weight":6},{"id":"vat-9-1","category":"과세","source":"law","article":"제9조","title":"재화의 공급","text":"재화의 공급은 계약상 또는 법률상의 모든 원인에 따라 재화를 인도하거나 양도하는 것으로 한다.","keywords":["재화공급","인도","양도","계약","법률"],"negKeywords":[],"rulings":[{"ref":"기본통칙 9-18…1","summary":"사업자 간 재화를 차용 후 동종·이종 재화를 반환하는 소비대차의 경우 차용·반환 각각 재화공급 해당","conclusion":"과세"},{"ref":"기본통칙 9-18…4","summary":"재고자산을 폐품처리하여 장부외 자산으로 소유하는 경우 재화의 공급 아님. 단, 법9조에 해당하는 경우 예외","conclusion":"비과세"},{"ref":"기본통칙 9-18…5","summary":"수재·화재·도난·파손·재고감모손 등으로 재화 멸실 시 재화공급 아님","conclusion":"비과세"},{"ref":"기본통칙 9-18…8","summary":"기부채납 후 무상사용수익권 얻는 경우 과세대상. 인허가 조건에 의한 사회기반시설 기부채납은 면세. 무상 기부채납은 면세","conclusion":"유상 기부채납은 과세, 조건부·무상은 면세"}],"relatedIds":["vat-10-1","vat-4-1"],"weight":7},{"id":"vat-10-1","category":"과세","source":"law","article":"제10조","title":"재화 공급의 특례(자가공급·개인적 공급·사업상 증여·폐업시 잔존재화)","text":"①자기생산·취득재화를 면세사업등에 직접 사용·소비하는 것은 재화공급으로 봄. ②자가생산·취득재화를 개소세법상 자동차로 사용 또는 유지에 사용 시 공급으로 봄. ③사업장이 둘 이상인 사업자가 판매 목적으로 다른 사업장에 반출 시 공급으로 봄. ④사업과 직접 관계없이 개인적 사용·소비하거나 사용인이 사용하고 대가를 받지 않는 경우 공급으로 봄. ⑤자기 고객이나 불특정 다수에게 증여 시 공급으로 봄. ⑥폐업 시 남아있는 재화는 자기에게 공급으로 봄. ⑨재화를 담보로 제공, 사업 양도, 조세 물납, 신탁재산 소유권 이전은 공급으로 보지 않음.","keywords":["자가공급","개인적공급","사업상증여","폐업잔존재화","면세사업","사업양도","담보제공","물납","신탁"],"negKeywords":["복리후생","실비변상"],"rulings":[{"ref":"기본통칙 10-0…1","summary":"자기 사업을 위해 사용·소비하는 경우(원료·시험용·수선비·사후서비스·광고선전·불량품교환 등)는 재화공급으로 보지 않음","conclusion":"비과세"},{"ref":"기본통칙 10-0…4","summary":"광고선전용 재화를 불특정 다수에게 무상 배포하는 경우 재화공급 아님","conclusion":"비과세"},{"ref":"기본통칙 10-23…1","summary":"개인사업자 법인설립 현물출자, 과세사업 포괄 양도, 사업장 전체 권리의무 포괄 양도 등은 사업의 양도로 공급 아님","conclusion":"비과세"}],"relatedIds":["vat-9-1","vat-39-1","vat-29-1"],"weight":7},{"id":"vat-11-1","category":"과세","source":"law","article":"제11조","title":"용역의 공급","text":"용역의 공급은 계약상 또는 법률상의 모든 원인에 따른 것으로서 ①역무를 제공하는 것 ②시설물, 권리 등 재화를 사용하게 하는 것. 고용관계에 따른 근로 제공은 용역 공급으로 보지 않음.","keywords":["용역공급","역무","시설물","근로","고용"],"negKeywords":[],"rulings":[{"ref":"기본통칙 11-0…1","summary":"테니스장·냉장창고·자동차정류장 등 시설물·권리를 사용하게 하고 대가를 받는 것은 용역 공급으로 과세","conclusion":"과세"}],"relatedIds":["vat-12-1","vat-4-1"],"weight":6},{"id":"vat-12-1","category":"과세","source":"law","article":"제12조","title":"용역 공급의 특례","text":"①사업자가 자신의 용역을 자기 사업을 위해 무상 공급함으로써 다른 사업자와 과세형평이 침해되는 경우 자기에게 용역을 공급하는 것으로 봄. ②무상 타인 용역 공급은 원칙 비과세. 다만 특수관계인에게 사업용 부동산 임대용역 등 공급 시 과세. ③고용관계에 따른 근로 제공은 용역의 공급으로 보지 않음.","keywords":["용역자가공급","무상용역","특수관계인","부동산임대","근로"],"negKeywords":[],"rulings":[{"ref":"기본통칙 12-0…1","summary":"사업장 내 사용인에게 음식용역 무상 제공, 직무상 부상·질병 무상 치료, 필수 부수 용역 자기 다른 사업장 제공은 자가공급으로 과세 않음","conclusion":"비과세"}],"relatedIds":["vat-11-1","vat-26-1"],"weight":5},{"id":"vat-13-1","category":"과세","source":"law","article":"제13조","title":"재화의 수입","text":"재화의 수입은 다음 물품을 국내에 반입하는 것(보세구역을 거치는 것은 보세구역에서 반입). 1.외국으로부터 국내에 도착한 물품(외국선박 공해 채집·포획 수산물 포함)으로서 수입신고 수리 전의 것. 2.수출신고 수리된 물품.","keywords":["수입","보세구역","수입신고","외국물품"],"negKeywords":[],"rulings":[{"ref":"기본통칙 9-18…7","summary":"외국에서 보세구역으로 반입하는 것은 재화의 수입 아님. 동일 보세구역 내 거래는 재화공급. 보세구역 외 국내로 공급 시 관세 과세 부분은 세관장이 수입세금계산서 발급","conclusion":"구분 과세"}],"relatedIds":["vat-35-1","vat-50-1"],"weight":6},{"id":"vat-14-1","category":"과세","source":"law","article":"제14조","title":"부수 재화 및 부수 용역의 공급","text":"①주된 재화 또는 용역의 공급에 부수되는 것으로서 해당 대가가 주된 공급 대가에 통상적으로 포함되거나, 거래 관행상 주된 공급에 부수하여 공급되는 재화·용역은 주된 공급에 포함. ②주된 사업에 부수되는 우연적·일시적 공급 또는 주된 재화 생산 과정에서 필연적으로 생기는 재화는 별도 공급으로 보되, 과세·면세 여부는 주된 사업을 따름.","keywords":["부수재화","부수용역","주된공급","일시공급","부산물"],"negKeywords":[],"rulings":[],"relatedIds":["vat-9-1","vat-26-1"],"weight":6},{"id":"vat-15-1","category":"과세","source":"law","article":"제15조","title":"재화의 공급시기","text":"재화의 공급시기: 1.이동 필요 시: 재화가 인도되는 때 2.이동 불필요 시: 재화가 이용가능하게 되는 때 3.위 둘을 적용할 수 없는 경우: 재화의 공급이 확정되는 때. 할부·조건부 공급 등의 경우는 대통령령으로 정함.","keywords":["공급시기","인도","할부","조건부"],"negKeywords":[],"rulings":[{"ref":"기본통칙 15-28…1","summary":"현물출자의 공급시기는 현물출자 이행 완료 시(인도 시 또는 서류 완비 발급 시)","conclusion":"공급시기"},{"ref":"기본통칙 15-28…2","summary":"상품권에 의해 현물과 교환하는 경우 재화가 실제 인도되는 때를 공급시기로 봄","conclusion":"공급시기"},{"ref":"기본통칙 15-28…3","summary":"계약금·착수금·선수금 등을 받기로 한 때를 공급시기로 봄","conclusion":"공급시기"}],"relatedIds":["vat-17-1","vat-34-1"],"weight":6},{"id":"vat-16-1","category":"과세","source":"law","article":"제16조","title":"용역의 공급시기","text":"용역의 공급시기: 1.역무의 제공이 완료되는 때 2.시설물, 권리 등 재화가 사용되는 때. 할부·조건부 공급 등의 경우는 대통령령으로 정함.","keywords":["용역공급시기","역무완료","시설물사용","할부"],"negKeywords":[],"rulings":[],"relatedIds":["vat-17-1","vat-34-1"],"weight":5},{"id":"vat-17-1","category":"세금계산서","source":"law","article":"제17조","title":"공급시기의 특례(선발급세금계산서)","text":"①사업자가 공급시기 전에 대가를 받고 세금계산서 또는 영수증을 발급하면 발급하는 때를 공급시기로 봄. ②공급시기 전에 세금계산서를 발급하고 7일 이내에 대가를 받으면 발급한 때를 공급시기로 봄. ③계약서상 청구시기와 지급시기가 30일 이내 또는 같은 과세기간 내에 도래하는 경우 7일 후 대가를 받더라도 발급한 때를 공급시기로 봄.","keywords":["공급시기특례","선발급","세금계산서","7일","대가","조기발급"],"negKeywords":[],"rulings":[],"relatedIds":["vat-15-1","vat-34-1","vat-32-1"],"weight":7},{"id":"vat-21-1","category":"영세율","source":"law","article":"제21조","title":"재화의 수출(영세율)","text":"재화의 공급이 수출에 해당하면 영(0)퍼센트의 세율(영세율)을 적용한다. 수출의 범위: 1.내국물품을 외국으로 반출 2.중계무역 등 국내 사업장에서 계약·대가 수령 등 거래가 이루어지는 것 3.내국신용장 또는 구매확인서에 의해 재화(금지금 제외)를 공급하는 것 등.","keywords":["수출","영세율","내국물품","내국신용장","구매확인서","중계무역"],"negKeywords":["금지금"],"rulings":[],"relatedIds":["vat-22-1","vat-23-1","vat-24-1","vat-56-1"],"weight":9},{"id":"vat-22-1","category":"영세율","source":"law","article":"제22조","title":"용역의 국외공급(영세율)","text":"국외에서 공급하는 용역에 대하여는 영세율을 적용한다.","keywords":["용역국외공급","영세율","국외","해외"],"negKeywords":[],"rulings":[],"relatedIds":["vat-21-1","vat-25-1"],"weight":8},{"id":"vat-23-1","category":"영세율","source":"law","article":"제23조","title":"외국항행용역의 공급(영세율)","text":"선박 또는 항공기에 의한 외국항행용역의 공급에 대하여는 영세율을 적용한다. 외국항행용역: 여객이나 화물을 국내↔국외 또는 국외↔국외로 수송하는 것 및 외국항행사업자가 부수하여 공급하는 재화·용역.","keywords":["외국항행","영세율","선박","항공기","여객","화물","국제운송"],"negKeywords":[],"rulings":[],"relatedIds":["vat-21-1","vat-22-1"],"weight":7},{"id":"vat-24-1","category":"영세율","source":"law","article":"제24조","title":"외화 획득 재화·용역의 공급(영세율)","text":"외화를 획득하기 위한 재화·용역의 공급으로서 다음에 해당하면 영세율 적용: 1.우리나라에 상주하는 외교공관·영사기관·국제연합 등에 공급 2.외교관 소속 직원 중 내국인이 아닌 자에게 공급 3.그 밖에 외화 획득 재화·용역으로서 대통령령으로 정하는 것.","keywords":["외화획득","영세율","외교공관","영사기관","국제연합","외교관"],"negKeywords":[],"rulings":[],"relatedIds":["vat-21-1","vat-25-1"],"weight":7},{"id":"vat-25-1","category":"영세율","source":"law","article":"제25조","title":"영세율에 대한 상호주의 적용","text":"비거주자 또는 외국법인인 사업자에 대해 영세율을 적용할 때에는 해당 국가에서 대한민국의 거주자 또는 내국법인에 대하여 동일하게 면세하는 경우에만 영세율을 적용한다.","keywords":["상호주의","영세율","비거주자","외국법인","면세"],"negKeywords":[],"rulings":[],"relatedIds":["vat-24-1"],"weight":6},{"id":"vat-26-1","category":"면세","source":"law","article":"제26조제1항","title":"재화·용역의 공급에 대한 면세(전체 면세 항목)","text":"다음 재화·용역의 공급에 대하여는 부가가치세를 면제함: 1.가공되지 않은 식료품(농산물·축산물·수산물·임산물 포함) 2.수돗물 3.연탄과 무연탄 4.여성용 생리처리 위생용품 5.의료보건 용역(수의사 포함)과 혈액 6.교육 용역 7.여객운송 용역(항공기·고속버스·전세버스·택시·특수자동차·고속철도·삭도·유람선 등은 제외) 8.도서·신문·잡지·관보·뉴스통신·방송(광고 제외) 9.우표·인지·증지·복권·공중전화 10.담배(일정 판매가격 이하 또는 특수용담배) 11.금융·보험 용역 12.주택과 부수토지 임대 용역 13.공동주택 어린이집 임대 용역 14.토지 15.저술가·작곡가 등 인적 용역 16.예술창작품·예술행사·문화행사·아마추어운동경기 17.도서관·과학관·박물관·미술관·동물원·식물원 등 입장 18.종교·자선·학술·구호 등 공익단체 공급 재화·용역 19.국가·지방자치단체가 공급하는 재화·용역 20.국가·지방자치단체·공익단체에 무상 공급하는 재화·용역.","keywords":["면세","미가공식료품","수돗물","연탄","무연탄","의료보건","교육","여객운송","도서","신문","잡지","방송","금융","보험","주택임대","토지","저술가","예술","박물관","종교","자선","국가","지방자치단체"],"negKeywords":["가공","과세"],"rulings":[],"relatedIds":["vat-27-1","vat-28-1","vat-38-1","vat-39-1"],"weight":10},{"id":"vat-26-2","category":"면세","source":"law","article":"제26조제1항제1호","title":"미가공 식료품 면세","text":"가공되지 아니한 식료품(식용으로 제공되는 농산물, 축산물, 수산물과 임산물을 포함) 및 우리나라에서 생산되어 식용으로 제공되지 아니하는 농산물, 축산물, 수산물과 임산물로서 대통령령으로 정하는 것의 공급에 대하여 면세.","keywords":["미가공","식료품","농산물","축산물","수산물","임산물","면세","식용"],"negKeywords":["가공","제조","조리"],"rulings":[],"relatedIds":["vat-26-1","vat-27-1","vat-42-1"],"weight":9},{"id":"vat-26-3","category":"면세","source":"law","article":"제26조제1항제5호","title":"의료보건 용역 면세","text":"의료보건 용역(수의사의 용역을 포함)으로서 대통령령으로 정하는 것과 혈액(치료·예방·진단 목적으로 조제한 동물의 혈액 포함)의 공급에 대하여 면세.","keywords":["의료보건","의료","수의사","혈액","면세","병원","의원","치료","예방","진단"],"negKeywords":["미용","성형"],"rulings":[],"relatedIds":["vat-26-1"],"weight":9},{"id":"vat-26-4","category":"면세","source":"law","article":"제26조제1항제6호","title":"교육 용역 면세","text":"교육 용역으로서 대통령령으로 정하는 것의 공급에 대하여 면세. (학교·학원·유치원·어린이집 등 대통령령으로 정하는 교육 용역)","keywords":["교육","학교","학원","유치원","어린이집","강습","면세"],"negKeywords":["과외","개인교습"],"rulings":[],"relatedIds":["vat-26-1"],"weight":8},{"id":"vat-26-5","category":"면세","source":"law","article":"제26조제1항제7호","title":"여객운송 용역 면세(과세 제외 항목 포함)","text":"여객운송 용역은 면세. 단, 다음은 제외(과세): 가.항공기·고속버스·전세버스·택시·특수자동차·특종선박·고속철도에 의한 여객운송 나.삭도·유람선 등 관광·유흥 목적 운송수단에 의한 여객운송.","keywords":["여객운송","면세","시내버스","지하철","택시","고속버스","항공기","고속철도","삭도","유람선"],"negKeywords":[],"rulings":[],"relatedIds":["vat-26-1"],"weight":8},{"id":"vat-26-6","category":"면세","source":"law","article":"제26조제1항제11호","title":"금융·보험 용역 면세","text":"금융·보험 용역으로서 대통령령으로 정하는 것의 공급에 대하여 면세.","keywords":["금융","보험","은행","증권","대출","예금","이자","보험료","면세"],"negKeywords":[],"rulings":[],"relatedIds":["vat-26-1"],"weight":8},{"id":"vat-26-7","category":"면세","source":"law","article":"제26조제1항제12호","title":"주택 임대 용역 면세","text":"주택과 이에 부수되는 토지의 임대 용역으로서 대통령령으로 정하는 것의 공급에 대하여 면세.","keywords":["주택임대","면세","주거용","아파트","오피스텔","전세","월세","임대"],"negKeywords":["상가","업무용","오피스"],"rulings":[],"relatedIds":["vat-26-1","vat-28-1"],"weight":9},{"id":"vat-26-8","category":"면세","source":"law","article":"제26조제1항제14호","title":"토지 공급 면세","text":"토지의 공급에 대하여 면세.","keywords":["토지","면세","토지공급","양도"],"negKeywords":["건물","구축물"],"rulings":[],"relatedIds":["vat-26-1","vat-39-1"],"weight":9},{"id":"vat-27-1","category":"면세","source":"law","article":"제27조","title":"재화의 수입에 대한 면세","text":"다음 재화의 수입에 대하여 면세: 1.가공되지 않은 식료품 2.도서·신문·잡지 3.학술연구단체·교육기관·한국교육방송공사·문화단체가 과학용·교육용·문화용으로 수입하는 재화 4.종교·자선·구호 목적으로 기증되는 재화 5.외국에서 국가·지방자치단체에 기증되는 재화 6.소액물품으로 관세 면제되는 재화 7.이사·이민·상속으로 수입하는 재화 8.여행자 휴대품·별송·우송 물품으로 관세 면제 9.수입 견본·광고용 물품 10.박람회 등 출품용 무상수입 물품 11.조약·국제관습에 따라 관세 면제되는 재화 12.수출 후 재수입 재화 13.다시 수출 조건 일시수입 재화 14.담배(면세 담배) 15.관세 무세·감면 재화.","keywords":["수입면세","미가공식료품","도서","관세면제","기증","여행자","소액물품","이사"],"negKeywords":[],"rulings":[],"relatedIds":["vat-26-1"],"weight":7},{"id":"vat-28-1","category":"면세","source":"law","article":"제28조","title":"면세의 포기","text":"사업자는 영세율 적용 대상인 것, 제26조제1항제12호(주택임대)·제15호(인적용역)·제18호(공익단체)에 따른 재화·용역의 공급에 대하여 면세 포기를 신고할 수 있다. 면세 포기 신고 후 3년간 면세 받지 못함. 3년 후 면세 재적용하려면 면세적용신고서를 제출하여야 하며, 미제출 시 계속 면세 포기로 봄.","keywords":["면세포기","영세율","주택임대","인적용역","공익단체","3년"],"negKeywords":[],"rulings":[],"relatedIds":["vat-21-1","vat-26-1"],"weight":7},{"id":"vat-29-1","category":"과세","source":"law","article":"제29조","title":"과세표준","text":"재화·용역의 공급에 대한 과세표준은 해당 과세기간에 공급한 재화·용역의 공급가액 합계액. 공급가액에 포함하지 않는 것: 1.에누리액 2.환입된 재화의 가액 3.공급받기 전 파손·멸실 재화 가액 4.국고·공공보조금 5.연체이자 6.조기결제 할인액. 특수관계인 공급에서 부당한 조세 감소가 있는 경우 시가를 공급가액으로 봄. 토지와 건물 함께 공급 시 실지거래가액(불분명 또는 30% 이상 차이 시 안분). 부가세 포함 불분명 시 110분의 100 곱하여 공급가액 계산.","keywords":["과세표준","공급가액","에누리","환입","보조금","연체이자","시가","토지건물안분","110분의100"],"negKeywords":[],"rulings":[],"relatedIds":["vat-30-1","vat-37-1","vat-29-1"],"weight":8},{"id":"vat-30-1","category":"과세","source":"law","article":"제30조","title":"세율","text":"부가가치세의 세율은 10퍼센트로 한다.","keywords":["세율","10%","10퍼센트"],"negKeywords":[],"rulings":[],"relatedIds":["vat-29-1","vat-37-1"],"weight":4},{"id":"vat-31-1","category":"세금계산서","source":"law","article":"제31조","title":"거래징수","text":"사업자가 재화 또는 용역을 공급하는 경우 공급가액에 세율을 적용하여 계산한 부가가치세를 공급받는 자로부터 징수하여야 한다.","keywords":["거래징수","세액","공급가액","세율"],"negKeywords":[],"rulings":[],"relatedIds":["vat-29-1","vat-30-1","vat-32-1"],"weight":5},{"id":"vat-32-1","category":"세금계산서","source":"law","article":"제32조","title":"세금계산서 등","text":"사업자가 재화·용역을 공급(면세 제외)하는 경우 세금계산서를 발급하여야 함. 필요적 기재사항: 1.공급자 등록번호·성명 2.공급받는 자의 등록번호 3.공급가액과 세액 4.작성 연월일. 법인사업자 및 대통령령으로 정하는 개인사업자는 전자세금계산서를 발급하여야 하며, 국세청장에게 전송 의무 있음. 수정세금계산서 발급 가능.","keywords":["세금계산서","전자세금계산서","필요적기재사항","공급자등록번호","공급가액","세액","작성연월일","발급","수정세금계산서"],"negKeywords":[],"rulings":[],"relatedIds":["vat-33-1","vat-34-1","vat-39-1","vat-60-1"],"weight":9},{"id":"vat-33-1","category":"세금계산서","source":"law","article":"제33조","title":"세금계산서 발급의무의 면제","text":"①발급이 어렵거나 불필요한 경우 등 대통령령으로 정하는 경우 세금계산서 발급 불필요. ②대통령령으로 정하는 사업자가 신용카드매출전표등을 발급한 경우 세금계산서를 발급하지 않음.","keywords":["세금계산서면제","신용카드매출전표","간이과세자","소매업"],"negKeywords":[],"rulings":[],"relatedIds":["vat-32-1","vat-36-1","vat-46-1"],"weight":7},{"id":"vat-34-1","category":"세금계산서","source":"law","article":"제34조","title":"세금계산서 발급시기","text":"①세금계산서는 공급시기에 발급. ②공급시기 전 제17조에 따른 때에 발급 가능. ③월합계 세금계산서: 해당 달의 말일을 작성 연월일로 하여 다음달 10일까지 발급 가능. 임의 기간 합계 세금계산서도 기간 종료일을 작성 연월일로 하여 다음달 10일까지 발급 가능.","keywords":["세금계산서발급시기","월합계","다음달10일","공급시기","선발급"],"negKeywords":[],"rulings":[],"relatedIds":["vat-32-1","vat-17-1","vat-60-1"],"weight":8},{"id":"vat-34-2","category":"세금계산서","source":"law","article":"제34조의2","title":"매입자발행세금계산서에 따른 매입세액 공제 특례","text":"공급자가 세금계산서를 발급하지 않은 경우(부도·폐업·계약해제 포함) 공급받은 자는 관할 세무서장의 확인을 받아 세금계산서를 발행할 수 있음. 매입자발행세금계산서의 부가가치세액은 매입세액으로 공제 가능.","keywords":["매입자발행세금계산서","발급미비","부도","폐업","매입세액공제"],"negKeywords":[],"rulings":[],"relatedIds":["vat-32-1","vat-38-1","vat-39-1"],"weight":7},{"id":"vat-35-1","category":"세금계산서","source":"law","article":"제35조","title":"수입세금계산서","text":"세관장은 수입되는 재화에 대하여 부가가치세를 징수할 때 수입세금계산서를 수입하는 자에게 발급하여야 함. 세관장은 관세 과세표준 또는 세액을 결정·경정하는 경우 수정수입세금계산서를 발급. 단, 불성실 신고(관세법 위반 등) 시 수정세금계산서 미발급.","keywords":["수입세금계산서","세관장","수정수입세금계산서","관세","수입"],"negKeywords":[],"rulings":[],"relatedIds":["vat-13-1","vat-39-1"],"weight":7},{"id":"vat-36-1","category":"세금계산서","source":"law","article":"제36조","title":"영수증 등","text":"①주로 사업자가 아닌 자에게 재화·용역을 공급하는 사업자로서 대통령령으로 정하는 사업자, 직전 연도 공급대가 4,800만원 미만 간이과세자는 세금계산서 대신 영수증을 발급. ③공급받는 자가 사업자등록증 제시 및 세금계산서 발급을 요구하면 발급하여야 함. ⑤신용카드매출전표등은 영수증으로 봄.","keywords":["영수증","간이과세자","4800만원","소비자","신용카드매출전표","세금계산서요구"],"negKeywords":[],"rulings":[],"relatedIds":["vat-32-1","vat-33-1","vat-46-1"],"weight":7},{"id":"vat-37-1","category":"불공제","source":"law","article":"제37조","title":"납부세액 등의 계산","text":"①매출세액: 과세표준 × 세율. ②납부세액: 매출세액(대손세액 차감) - 매입세액(공제 가능한 것). 매출세액 초과 매입세액은 환급세액.","keywords":["납부세액","매출세액","매입세액","환급","대손세액"],"negKeywords":[],"rulings":[],"relatedIds":["vat-38-1","vat-39-1","vat-45-1"],"weight":7},{"id":"vat-38-1","category":"과세","source":"law","article":"제38조","title":"공제하는 매입세액","text":"매출세액에서 공제하는 매입세액: 1.사업자가 자기의 사업을 위해 사용하였거나 사용할 목적으로 공급받은 재화·용역에 대한 부가가치세액 2.사업자가 자기의 사업을 위해 사용하였거나 사용할 목적으로 수입하는 재화의 수입에 대한 부가가치세액.","keywords":["매입세액공제","사업관련","공급받은","수입","매입세액"],"negKeywords":["비사업용","개인적"],"rulings":[],"relatedIds":["vat-39-1","vat-37-1","vat-40-1"],"weight":9},{"id":"vat-39-1","category":"불공제","source":"law","article":"제39조제1항","title":"공제하지 아니하는 매입세액(전체)","text":"제38조에도 불구하고 다음 매입세액은 공제하지 않음: 1.매입처별세금계산서합계표 미제출 또는 부실기재 매입세액 2.세금계산서·수입세금계산서 미수취 또는 필요적기재사항 불비 매입세액 3.(삭제) 4.사업과 직접 관련이 없는 지출 매입세액 5.개별소비세법상 자동차의 구입·임차·유지 매입세액(운수업·자동차판매업 등 직접 영업 제외) 6.기업업무추진비(접대비) 관련 매입세액 7.면세사업등 관련 매입세액 및 토지 관련 매입세액 8.사업자등록 신청 전 매입세액(등록 신청일로부터 역산 과세기간 기산일까지는 제외).","keywords":["불공제","매입세액불공제","세금계산서미수취","접대비","기업업무추진비","자동차","면세사업","토지","사업자등록전","합계표미제출"],"negKeywords":[],"rulings":[],"relatedIds":["vat-38-1","vat-32-1","vat-40-1"],"weight":10},{"id":"vat-39-2","category":"불공제","source":"law","article":"제39조제1항제4호","title":"사업과 직접 관련 없는 지출 매입세액 불공제","text":"사업과 직접 관련이 없는 지출로서 대통령령으로 정하는 것에 대한 매입세액은 공제하지 아니한다.","keywords":["사업무관지출","불공제","업무무관","개인적지출","사적지출"],"negKeywords":[],"rulings":[],"relatedIds":["vat-39-1"],"weight":9},{"id":"vat-39-3","category":"불공제","source":"law","article":"제39조제1항제5호","title":"비영업용 자동차 관련 매입세액 불공제","text":"개별소비세법 제1조제2항제3호에 따른 자동차(운수업, 자동차판매업 등 대통령령으로 정하는 업종에 직접 영업으로 사용되는 것은 제외)의 구입과 임차 및 유지에 관한 매입세액은 공제하지 아니한다.","keywords":["자동차","불공제","비영업용","승용차","구입","임차","유지","렌트","리스"],"negKeywords":["운수업","자동차판매업","택시","버스"],"rulings":[],"relatedIds":["vat-39-1"],"weight":10},{"id":"vat-39-4","category":"불공제","source":"law","article":"제39조제1항제6호","title":"기업업무추진비(접대비) 관련 매입세액 불공제","text":"기업업무추진비 및 이와 유사한 비용으로서 대통령령으로 정하는 비용의 지출에 관련된 매입세액은 공제하지 아니한다.","keywords":["기업업무추진비","접대비","접대","불공제","업무추진비","경조사","골프"],"negKeywords":["복리후생","회의비","교육훈련"],"rulings":[],"relatedIds":["vat-39-1"],"weight":10},{"id":"vat-39-5","category":"불공제","source":"law","article":"제39조제1항제7호","title":"면세사업 및 토지 관련 매입세액 불공제","text":"면세사업등에 관련된 매입세액(면세사업등을 위한 투자에 관련된 매입세액 포함)과 대통령령으로 정하는 토지에 관련된 매입세액은 공제하지 아니한다.","keywords":["면세사업","토지","불공제","매입세액","토지관련","면세투자"],"negKeywords":[],"rulings":[],"relatedIds":["vat-39-1","vat-40-1","vat-43-1"],"weight":10},{"id":"vat-39-6","category":"불공제","source":"law","article":"제39조제1항제8호","title":"사업자등록 신청 전 매입세액 불공제","text":"제8조에 따른 사업자등록을 신청하기 전의 매입세액은 공제하지 아니함. 다만, 공급시기가 속하는 과세기간이 끝난 후 20일 이내에 등록을 신청한 경우 등록신청일부터 공급시기가 속하는 과세기간 기산일까지 역산한 기간 내의 것은 공제 가능.","keywords":["사업자등록전","불공제","등록신청전","매입세액","20일이내","과세기간기산일"],"negKeywords":[],"rulings":[],"relatedIds":["vat-39-1","vat-8-1"],"weight":8},{"id":"vat-40-1","category":"불공제","source":"law","article":"제40조","title":"공통매입세액의 안분","text":"사업자가 과세사업과 면세사업등을 겸영하는 경우 매입세액의 계산은 실지귀속에 따르되, 실지귀속 구분 불가능한 공통매입세액은 총공급가액에 대한 면세공급가액 비율 등 안분기준을 적용하여 안분 계산한다.","keywords":["공통매입세액","안분","겸영","면세비율","실지귀속","공통"],"negKeywords":[],"rulings":[],"relatedIds":["vat-39-1","vat-41-1","vat-38-1"],"weight":9},{"id":"vat-41-1","category":"불공제","source":"law","article":"제41조","title":"공통매입세액 재계산","text":"감가상각자산에 대하여 공통매입세액 안분계산으로 매입세액이 공제된 후, 공통매입세액 안분기준 비율과 취득일이 속하는 과세기간에 적용된 비율이 5% 이상 차이 나면 확정신고 시 납부(환급)세액을 다시 계산하여 신고·납부하여야 한다.","keywords":["공통매입세액재계산","감가상각자산","5%","안분","재계산","정산"],"negKeywords":[],"rulings":[],"relatedIds":["vat-40-1","vat-49-1"],"weight":8},{"id":"vat-42-1","category":"과세","source":"law","article":"제42조","title":"면세농산물등 의제매입세액 공제특례","text":"사업자가 면세 농산물·축산물·수산물·임산물(면세농산물등)을 원재료로 하여 제조·가공한 재화 또는 용역의 공급에 부가가치세가 과세되는 경우, 면세농산물등의 가액에 일정 율을 곱하여 계산한 금액을 매입세액으로 공제 가능. 신고 시 공급받은 사실 증명 서류 제출 필요.","keywords":["의제매입세액","면세농산물","축산물","수산물","임산물","원재료","제조","가공","공제"],"negKeywords":[],"rulings":[],"relatedIds":["vat-26-1","vat-38-1"],"weight":8},{"id":"vat-43-1","category":"불공제","source":"law","article":"제43조","title":"면세사업용 감가상각자산의 과세사업 전환 시 매입세액공제 특례","text":"사업자는 제39조제1항제7호에 따라 매입세액이 공제되지 않은 면세사업등을 위한 감가상각자산을 과세사업에 사용·소비하는 경우 일정 금액을 매입세액으로 공제 가능.","keywords":["면세사업","과세사업전환","감가상각자산","매입세액공제","전환"],"negKeywords":[],"rulings":[],"relatedIds":["vat-39-1","vat-40-1"],"weight":7},{"id":"vat-44-1","category":"간이과세","source":"law","article":"제44조","title":"일반과세자로 변경 시 재고품등에 대한 매입세액 공제특례","text":"간이과세자가 일반과세자로 변경되면 변경 당시의 재고품, 건설 중인 자산 및 감가상각자산에 대하여 일정 금액을 매입세액으로 공제 가능.","keywords":["간이과세자","일반과세자전환","재고품","매입세액공제","전환"],"negKeywords":[],"rulings":[],"relatedIds":["vat-61-1","vat-62-1"],"weight":6},{"id":"vat-45-1","category":"과세","source":"law","article":"제45조","title":"대손세액의 공제특례","text":"사업자는 과세 재화·용역 공급 후 매출채권의 전부 또는 일부가 파산·강제집행 등의 사유로 대손되어 회수할 수 없는 경우 대손금액×110분의10을 매출세액에서 공제 가능. 대손금액의 전부·일부 회수 시 회수한 날이 속하는 과세기간 매출세액에 가산. 공급받은 자(매입자)는 대손세액 확정일이 속하는 과세기간에 매입세액에서 해당 금액 차감.","keywords":["대손세액","대손","파산","강제집행","매출채권","회수불가","공제","대손공제"],"negKeywords":[],"rulings":[],"relatedIds":["vat-37-1","vat-38-1"],"weight":8},{"id":"vat-46-1","category":"세금계산서","source":"law","article":"제46조","title":"신용카드 등의 사용에 따른 세액공제","text":"①주로 사업자가 아닌 자에게 재화·용역을 공급하는 개인사업자(직전 연도 공급가액 기준 이하, 법인 제외) 및 간이과세자 중 일부가 신용카드매출전표·현금영수증 등을 발급하거나 전자적 결제수단으로 결제받는 경우: 발급금액의 1%(~2026.12.31.까지 1.3%), 연간 한도 500만원(~2026.12.31.까지 1,000만원)을 납부세액에서 공제. ③사업자가 대통령령으로 정하는 사업자로부터 재화·용역을 공급받고 부가세액이 별도 구분되는 신용카드매출전표등을 발급받은 경우 매입세액으로 공제 가능.","keywords":["신용카드매출전표","세액공제","현금영수증","1%","1.3%","매입세액공제","카드"],"negKeywords":[],"rulings":[],"relatedIds":["vat-32-1","vat-36-1","vat-38-1"],"weight":8},{"id":"vat-47-1","category":"세금계산서","source":"law","article":"제47조","title":"전자세금계산서 발급 전송에 대한 세액공제 특례","text":"대통령령으로 정하는 개인사업자가 전자세금계산서를 2027년 12월 31일까지 발급하고 국세청장에게 전송한 경우 발급 건수 등을 기준으로 계산한 금액을 납부세액에서 공제. 연간 한도 100만원.","keywords":["전자세금계산서","세액공제","개인사업자","100만원","전송","2027년"],"negKeywords":[],"rulings":[],"relatedIds":["vat-32-1"],"weight":6},{"id":"vat-48-1","category":"신고납부","source":"law","article":"제48조","title":"예정신고와 납부","text":"사업자는 각 과세기간 중 예정신고기간(제1기: 1.1~3.31, 제2기: 7.1~9.30)이 끝난 후 25일 이내에 과세표준과 납부세액·환급세액을 신고·납부. 개인사업자 및 일정 법인사업자는 관할 세무서장이 직전 과세기간 납부세액의 50%로 결정하여 예정고지. 예정고지 금액 50만원 미만 시 징수 않음.","keywords":["예정신고","납부","25일","예정고지","50%","예정신고기간","1기","2기"],"negKeywords":[],"rulings":[],"relatedIds":["vat-49-1","vat-5-1"],"weight":8},{"id":"vat-49-1","category":"신고납부","source":"law","article":"제49조","title":"확정신고와 납부","text":"사업자는 각 과세기간에 대한 과세표준과 납부세액·환급세액을 과세기간이 끝난 후 25일(폐업 시 폐업일이 속한 달의 다음달 25일) 이내에 납세지 관할 세무서장에게 신고. 예정신고 사업자는 이미 신고한 과세표준과 납부한 세액은 제외.","keywords":["확정신고","납부","25일","과세기간","폐업","환급"],"negKeywords":[],"rulings":[],"relatedIds":["vat-48-1","vat-5-1","vat-57-1"],"weight":8},{"id":"vat-50-1","category":"신고납부","source":"law","article":"제50조","title":"재화의 수입에 대한 신고·납부","text":"재화 수입에 대하여 관세법에 따라 관세를 세관장에게 신고하고 납부하는 경우 재화의 수입에 대한 부가가치세를 함께 신고하고 납부하여야 한다.","keywords":["수입신고","납부","세관장","관세","수입부가세"],"negKeywords":[],"rulings":[],"relatedIds":["vat-13-1","vat-35-1"],"weight":6},{"id":"vat-50-2","category":"신고납부","source":"law","article":"제50조의2","title":"재화의 수입에 대한 부가가치세 납부의 유예","text":"세관장은 중소·중견사업자가 원재료 등을 수입하는 경우 납부유예를 미리 신청하면 수입 시 부가가치세 납부를 유예할 수 있다. 납부유예된 세액은 예정신고 또는 확정신고 시 정산·납부.","keywords":["납부유예","수입","중소기업","중견기업","원재료","세관장"],"negKeywords":[],"rulings":[],"relatedIds":["vat-50-1","vat-48-1","vat-49-1"],"weight":6},{"id":"vat-51-1","category":"신고납부","source":"law","article":"제51조","title":"주사업장 총괄 납부","text":"사업장이 둘 이상인 사업자가 주된 사업장 관할 세무서장에게 신청한 경우 납부할 세액을 주된 사업장에서 총괄하여 납부할 수 있다.","keywords":["주사업장","총괄납부","복수사업장","본점"],"negKeywords":[],"rulings":[],"relatedIds":["vat-6-1","vat-49-1"],"weight":6},{"id":"vat-52-1","category":"신고납부","source":"law","article":"제52조","title":"대리납부(국외사업자 용역 수령 시)","text":"국내사업장 없는 비거주자·외국법인(국외사업자)으로부터 국내에서 용역·권리를 공급받는 자(과세사업 제공 제외, 불공제 용역은 포함)는 대가 지급 시 부가가치세를 징수하여 대리납부하여야 함. 사업 양도·양수 시 양수자는 대가 지급 시 부가가치세를 징수하여 납부 가능.","keywords":["대리납부","국외사업자","비거주자","외국법인","용역수령","역무수입"],"negKeywords":[],"rulings":[],"relatedIds":["vat-53-1","vat-53-2"],"weight":7},{"id":"vat-53-2","category":"신고납부","source":"law","article":"제53조의2","title":"전자적 용역을 공급하는 국외사업자의 특례","text":"국외사업자가 정보통신망을 통해 이동통신단말장치·컴퓨터 등으로 전자적 용역(게임·음성·동영상파일·소프트웨어, 광고, 클라우드컴퓨팅, 중개 용역 등)을 국내에 제공하는 경우 사업 개시일부터 20일 이내에 간편사업자등록을 하여야 함. 신고·납부는 대통령령으로 정하는 방법에 따름.","keywords":["전자적용역","국외사업자","간편사업자등록","구글","넷플릭스","유튜브","클라우드","앱스토어"],"negKeywords":[],"rulings":[],"relatedIds":["vat-52-1"],"weight":7},{"id":"vat-54-1","category":"세금계산서","source":"law","article":"제54조","title":"세금계산서합계표의 제출","text":"사업자는 세금계산서 또는 수입세금계산서를 발급하였거나 발급받은 경우 매출·매입처별 세금계산서합계표를 예정신고 또는 확정신고 시 제출하여야 함. 전자세금계산서 발급·전송 시 합계표 제출 면제.","keywords":["세금계산서합계표","매출처별","매입처별","제출","전자세금계산서"],"negKeywords":[],"rulings":[],"relatedIds":["vat-32-1","vat-39-1","vat-60-1"],"weight":7},{"id":"vat-56-1","category":"영세율","source":"law","article":"제56조","title":"영세율 첨부서류의 제출","text":"영세율 적용 재화·용역을 공급하는 사업자는 예정신고 및 확정신고 시 수출실적명세서 등 대통령령으로 정하는 서류를 첨부하여 제출하여야 한다. 서류 미첨부 시 해당 부분은 신고로 보지 않음.","keywords":["영세율첨부서류","수출실적명세서","첨부서류","영세율신고"],"negKeywords":[],"rulings":[],"relatedIds":["vat-21-1","vat-48-1","vat-49-1"],"weight":7},{"id":"vat-57-1","category":"신고납부","source":"law","article":"제57조","title":"결정과 경정","text":"납세지 관할 세무서장 등은 사업자가 ①예정·확정신고 미이행 ②신고 내용 오류·누락 ③합계표 미제출·부실기재 ④부가가치세 포탈 우려 등의 경우에만 과세표준과 납부·환급세액을 조사하여 결정 또는 경정한다. 장부·세금계산서 등 근거 없으면 추계 가능.","keywords":["결정","경정","추계","과세표준","누락","오류","포탈"],"negKeywords":[],"rulings":[],"relatedIds":["vat-48-1","vat-49-1","vat-60-1"],"weight":6},{"id":"vat-59-1","category":"신고납부","source":"law","article":"제59조","title":"환급","text":"납세지 관할 세무서장은 각 과세기간별로 환급세액을 확정신고한 사업자에게 확정신고기한이 지난 후 30일 이내(조기환급 15일 이내)에 환급하여야 함. 조기환급: 영세율 적용, 사업 설비 신설·취득·확장·증축, 재무구조개선계획 이행 중인 경우.","keywords":["환급","30일","15일","조기환급","영세율","설비투자","재무구조개선"],"negKeywords":[],"rulings":[],"relatedIds":["vat-49-1","vat-37-1"],"weight":7},{"id":"vat-60-1","category":"신고납부","source":"law","article":"제60조","title":"가산세","text":"주요 가산세: ①미등록: 공급가액 1%, 타인명의등록: 2% ②지연발급(확정신고기한 전): 1%, 미발급: 2%(전자 미발급 시 1%) ③전자세금계산서 지연전송: 0.3%, 미전송: 0.5% ④필요적기재사항 부실기재: 1% ⑤가공세금계산서 수수: 3% ⑥위장세금계산서 수수: 2% ⑦합계표 미제출·부실기재: 0.5%(매출), 지연제출: 0.3%.","keywords":["가산세","미등록","지연발급","미발급","가공세금계산서","위장세금계산서","전자미전송","합계표미제출"],"negKeywords":[],"rulings":[],"relatedIds":["vat-32-1","vat-8-1","vat-54-1"],"weight":9},{"id":"vat-61-1","category":"간이과세","source":"law","article":"제61조","title":"간이과세의 적용 범위","text":"직전 연도 공급대가 합계액이 대통령령으로 정하는 금액(현행 1억400만원) 미달하는 개인사업자는 간이과세 적용. 다만 ①간이과세 배제 다른 사업장 보유 ②업종·규모·지역 고려 대통령령으로 정하는 사업자 ③부동산임대업·과세유흥장소로서 해당 업종 직전 연도 공급대가 4,800만원 이상 ④둘 이상 사업장 공급대가 합계 기준초과 사업자는 적용 배제.","keywords":["간이과세","1억400만원","개인사업자","공급대가","배제업종","부동산임대","과세유흥"],"negKeywords":["법인"],"rulings":[],"relatedIds":["vat-62-1","vat-63-1","vat-69-1"],"weight":8},{"id":"vat-62-1","category":"간이과세","source":"law","article":"제62조","title":"간이과세와 일반과세의 적용기간","text":"간이과세자에 관한 규정이 적용되거나 적용되지 않게 되는 기간은 해의 1.1~12.31의 공급대가 합계액이 기준금액 미달 또는 이상이 되는 해의 다음 해의 7.1부터 그 다음 해의 6.30까지. 신규 사업자는 최초 개시한 해의 다음 해의 7.1부터 그 다음 해의 6.30까지.","keywords":["간이과세전환","7월1일","6월30일","적용기간","일반과세전환"],"negKeywords":[],"rulings":[],"relatedIds":["vat-61-1","vat-63-1","vat-5-1"],"weight":7},{"id":"vat-63-1","category":"간이과세","source":"law","article":"제63조","title":"간이과세자의 과세표준과 세액","text":"①간이과세자의 과세표준: 해당 과세기간의 공급대가 합계액. ②납부세액: 공급대가 × 업종별 부가가치율 × 10%. 둘 이상 업종 겸영 시 업종별 합계. ③다른 사업자로부터 세금계산서등을 발급받고 합계표 또는 수령명세서를 제출하는 경우: 해당 과세기간에 세금계산서등 발급받은 재화·용역 공급대가 × 0.5%를 납부세액에서 공제.","keywords":["간이과세","과세표준","공급대가","업종별부가가치율","납부세액","0.5%","매입세액공제"],"negKeywords":[],"rulings":[],"relatedIds":["vat-61-1","vat-66-1","vat-67-1"],"weight":8},{"id":"vat-64-1","category":"간이과세","source":"law","article":"제64조","title":"간이과세자로 변경되는 경우의 재고품등 매입세액 가산","text":"일반과세자가 간이과세자로 변경되면 변경 당시의 재고품, 건설 중인 자산 및 감가상각자산(매입세액 공제받은 경우)에 대하여 일정 금액을 납부세액에 더하여야 한다.","keywords":["간이과세전환","재고품","감가상각자산","납부세액가산","일반→간이","정산"],"negKeywords":[],"rulings":[],"relatedIds":["vat-61-1","vat-62-1"],"weight":7},{"id":"vat-66-1","category":"간이과세","source":"law","article":"제66조","title":"예정부과와 납부(간이과세자)","text":"사업장 관할세무서장은 간이과세자에 대하여 직전 과세기간 납부세액의 50%(1.1~6.30 예정부과기간 종료 후 25일까지)로 결정하여 징수. 50만원 미만 시 징수 않음. 간이과세자도 예정부과기간 과세표준·납부세액을 스스로 신고 가능(세금계산서 발급 간이과세자는 신고 의무).","keywords":["간이과세","예정부과","50%","25일","6월30일","신고"],"negKeywords":[],"rulings":[],"relatedIds":["vat-61-1","vat-63-1","vat-67-1"],"weight":7},{"id":"vat-67-1","category":"간이과세","source":"law","article":"제67조","title":"간이과세자의 신고와 납부","text":"간이과세자는 과세기간의 과세표준과 납부세액을 과세기간 끝난 후 25일(폐업 시 다음달 25일) 이내에 확정신고 및 납부하여야 한다.","keywords":["간이과세","확정신고","25일","납부","폐업"],"negKeywords":[],"rulings":[],"relatedIds":["vat-63-1","vat-66-1","vat-69-1"],"weight":7},{"id":"vat-69-1","category":"간이과세","source":"law","article":"제69조","title":"간이과세자에 대한 납부의무의 면제","text":"간이과세자의 해당 과세기간 공급대가 합계액이 4,800만원 미만이면 납부의무를 면제한다. 단, 재고품등에 대한 납부세액 가산액은 면제 않음.","keywords":["납부의무면제","4800만원","간이과세자","소규모","면제"],"negKeywords":[],"rulings":[],"relatedIds":["vat-61-1","vat-67-1"],"weight":8},{"id":"vat-70-1","category":"간이과세","source":"law","article":"제70조","title":"간이과세의 포기 및 재적용","text":"간이과세자가 일반과세자에 관한 규정을 적용받으려면 적용받으려는 달의 전달 마지막 날까지 신고하여야 함. 포기 신고 후 3년간 간이과세 규정 적용 받지 못함. 다만 일정 요건의 개인사업자는 3년 이전 재적용 가능.","keywords":["간이과세포기","일반과세선택","3년","재적용"],"negKeywords":[],"rulings":[],"relatedIds":["vat-61-1","vat-62-1"],"weight":6},{"id":"vat-71-1","category":"신고납부","source":"law","article":"제71조","title":"장부의 작성·보관","text":"사업자는 납부·환급세액과 관계되는 모든 거래사실을 장부에 기록하여 사업장에 갖추어 두어야 함. 장부 및 세금계산서·수입세금계산서·영수증은 확정신고 기한 후 5년간 보존. 전자세금계산서 발급명세를 국세청장에게 전송한 경우 세금계산서 보존 불요.","keywords":["장부작성","장부보관","5년보존","세금계산서보존","기록의무"],"negKeywords":[],"rulings":[],"relatedIds":["vat-32-1","vat-54-1"],"weight":6},{"id":"vat-72-1","category":"신고납부","source":"law","article":"제72조","title":"부가가치세의 세액 등에 관한 특례(지방소비세)","text":"납부세액에서 감면세액·공제세액을 빼고 가산세를 더한 세액의 1,000분의 747을 부가가치세로, 1,000분의 253을 지방소비세로 한다. 부가가치세와 지방소비세를 합한 금액을 신고·납부·경정 및 환급한다.","keywords":["지방소비세","74.7%","25.3%","지방세","부가가치세"],"negKeywords":[],"rulings":[],"relatedIds":["vat-37-1"],"weight":4},{"id":"vat-decree-77-1","category":"불공제","source":"decree","article":"시행령 제77조","title":"사업과 직접 관련이 없는 지출(불공제 사업무관)","text":"법 제39조제1항제4호에서 \u0027사업과 직접 관련이 없는 지출로서 대통령령으로 정하는 것\u0027이란 다음 각 호의 것을 말함: 1.사업자가 그 사업에 직접 사용하지 아니하는 토지·건물 등의 구입 및 임차에 관한 것 2.사업자가 그 업무와 관련이 없는 자산(주주·출자자·임원·사용인이 사용하는 것)의 구입·임차에 관한 것 3.사업과 직접 관련이 없는 기증품 등의 구입에 관한 것.","keywords":["사업무관","불공제","업무무관자산","주주","임원","기증품","비업무용"],"negKeywords":[],"rulings":[],"relatedIds":["vat-39-2"],"weight":9},{"id":"vat-decree-78-1","category":"불공제","source":"decree","article":"시행령 제78조","title":"불공제 자동차 관련 업종(운수업 등) 예외","text":"법 제39조제1항제5호에서 \u0027운수업, 자동차판매업 등 대통령령으로 정하는 업종\u0027이란 운수업, 자동차판매업, 자동차임대업, 운전학원업, 기계장비 및 소비용품 수리업 중 자동차 수리업 등을 말한다.","keywords":["자동차불공제예외","운수업","자동차판매업","자동차임대업","운전학원","매입세액공제"],"negKeywords":[],"rulings":[],"relatedIds":["vat-39-3"],"weight":8},{"id":"vat-decree-79-1","category":"불공제","source":"decree","article":"시행령 제79조","title":"기업업무추진비 등(접대비 범위)","text":"법 제39조제1항제6호에서 \u0027기업업무추진비 및 이와 유사한 비용으로서 대통령령으로 정하는 비용\u0027이란 기업업무추진비와 법인세법·소득세법상 기업업무추진비로 처리된 비용을 말한다.","keywords":["기업업무추진비","접대비","법인세법","소득세법","불공제"],"negKeywords":[],"rulings":[],"relatedIds":["vat-39-4"],"weight":9},{"id":"vat-decree-80-1","category":"불공제","source":"decree","article":"시행령 제80조","title":"토지에 관련된 매입세액 불공제 범위","text":"법 제39조제1항제7호에서 \u0027대통령령으로 정하는 토지에 관련된 매입세액\u0027이란 토지의 조성 등을 위한 자본적 지출에 관련된 매입세액(절토·성토·조경공사비 등) 및 토지 구입 관련 매입세액을 말함. 단, 토지에 정착된 건물·구축물 취득 관련 매입세액은 공제 대상.","keywords":["토지관련불공제","토지조성","절토","성토","조경공사","자본적지출","토지취득"],"negKeywords":["건물","구축물"],"rulings":[],"relatedIds":["vat-39-5"],"weight":9},{"id":"vat-decree-34-1","category":"면세","source":"decree","article":"시행령 제34조","title":"면세하는 미가공식료품 등의 범위","text":"법 제26조제1항제1호에 따른 미가공식료품 등의 범위: 쌀·보리·밀 등 곡류, 육류(냉동 포함), 수산물(냉동 포함), 채소류, 과실류 등. 단순 세척·선별·포장 등 원재료 원형을 유지하는 정도의 처리 포함. 식용 소금, 사료 등 포함. 단, 제조·가공한 것은 제외.","keywords":["미가공식료품","면세범위","쌀","보리","육류","수산물","채소","과실","냉동","세척","선별","포장"],"negKeywords":["가공","조리","제조"],"rulings":[],"relatedIds":["vat-26-2","vat-42-1"],"weight":9},{"id":"vat-decree-35-1","category":"면세","source":"decree","article":"시행령 제35조","title":"면세하는 의료보건 용역의 범위","text":"법 제26조제1항제5호에 따른 의료보건 용역의 범위: 의사·치과의사·한의사·조산사·간호사·임상병리사·물리치료사·작업치료사·방사선사·치과기공사·치과위생사·의무기록사·안경사·영양사 등이 제공하는 의료보건 용역. 안경원·약국에서의 용역 포함. 단, 미용목적 성형수술, 피부미용, 미용치료 등은 과세.","keywords":["의료보건면세","의사","치과","한의사","조산사","간호사","약국","안경원","미용성형제외"],"negKeywords":["미용","성형","피부미용","마사지"],"rulings":[],"relatedIds":["vat-26-3"],"weight":9},{"id":"vat-decree-36-1","category":"면세","source":"decree","article":"시행령 제36조","title":"면세하는 교육 용역의 범위","text":"법 제26조제1항제6호에 따른 교육 용역의 범위: 주무관청의 허가·인가·등록·신고를 받은 학교·학원·강습소·훈련원·교습소 또는 기타 비영리단체가 제공하는 교육 용역. 단, 무도학원·자동차운전학원의 교육 용역은 과세.","keywords":["교육면세","학교","학원","강습소","훈련원","교습소","허가","인가","등록"],"negKeywords":["무도학원","자동차운전학원"],"rulings":[],"relatedIds":["vat-26-4"],"weight":8},{"id":"vat-decree-40-1","category":"면세","source":"decree","article":"시행령 제40조","title":"면세하는 금융·보험 용역의 범위","text":"법 제26조제1항제11호에 따른 금융·보험 용역의 범위: 은행법 등에 따른 금융기관이 제공하는 금융 용역(예금·적금·대출·환전·어음할인 등), 보험업법에 따른 보험 용역, 자본시장법에 따른 집합투자·신탁업·증권업의 고유 업무. 단, 보험대리점 수수료는 과세.","keywords":["금융면세","보험면세","은행","대출","예금","보험","증권","집합투자","신탁"],"negKeywords":["보험대리점","수수료"],"rulings":[],"relatedIds":["vat-26-6"],"weight":8},{"id":"vat-decree-41-1","category":"면세","source":"decree","article":"시행령 제41조","title":"주택 임대 용역 면세 범위","text":"법 제26조제1항제12호에 따른 주택 임대 용역: 주거용으로만 사용되는 건물의 임대 용역. 단, 일정 규모 이상 고가주택(기준시가 9억원 초과) 임대는 과세대상이 될 수 있음. 오피스텔 등 업무용 겸용 주택은 실제 주거 사용 여부에 따라 판단.","keywords":["주택임대면세","주거용","오피스텔","고가주택","기준시가"],"negKeywords":["상가","사무실","업무용"],"rulings":[],"relatedIds":["vat-26-7","vat-28-1"],"weight":9},{"id":"vat-decree-109-1","category":"간이과세","source":"decree","article":"시행령 제109조","title":"간이과세의 적용 범위(기준금액 등)","text":"법 제61조제1항에서 \u0027대통령령으로 정하는 금액\u0027이란 1억400만원을 말함(2024년 7월 1일 이후 적용). 간이과세 배제 업종: 광업, 제조업(음식료품·의복 등 일부 제외), 도매업(부동산 매매업 포함), 부동산임대업(4,800만원 이상), 과세유흥업(4,800만원 이상) 등.","keywords":["간이과세기준금액","1억400만원","배제업종","광업","제조업","도매업","부동산임대"],"negKeywords":[],"rulings":[],"relatedIds":["vat-61-1"],"weight":8},{"id":"vat-decree-111-1","category":"간이과세","source":"decree","article":"시행령 제111조","title":"간이과세자의 업종별 부가가치율","text":"간이과세자의 납부세액 계산 시 업종별 부가가치율: 소매업, 재생용 재료 수집·판매업 15%, 농업·임업·어업, 숙박업, 음식점업 20%, 제조업, 전기·가스·증기·수도업 20%, 건설업, 운수 및 통신업, 금융 및 보험업 30%, 기타 30%.","keywords":["업종별부가가치율","간이과세","소매업","음식점업","제조업","건설업","운수업","15%","20%","30%"],"negKeywords":[],"rulings":[],"relatedIds":["vat-63-1","vat-61-1"],"weight":8},{"id":"vat-ruling-15-28-6","category":"영세율","source":"ruling","article":"기본통칙 15-28…6","title":"내국신용장에 의한 재화의 공급시기","text":"내국신용장 또는 구매확인서에 의하여 공급하는 재화의 공급시기는 재화를 인도하는 때이다.","keywords":["내국신용장","구매확인서","공급시기","인도"],"negKeywords":[],"rulings":[],"relatedIds":["vat-21-1","vat-15-1"],"weight":7},{"id":"vat-ruling-15-28-7","category":"과세","source":"ruling","article":"기본통칙 15-28…7","title":"온라인쇼핑몰 구매확정 기한 내 결제 시 공급시기","text":"사업자가 온라인쇼핑몰을 통하여 고객에게 재화를 공급하는 경우로서 해당 쇼핑몰의 개별 약관에 따라 동의조건이나 기한을 약정한 경우에는 해당 조건의 성취나 기한이 지나 판매가 확정되는 때를 공급시기로 한다.","keywords":["온라인쇼핑몰","공급시기","구매확정","전자상거래"],"negKeywords":[],"rulings":[],"relatedIds":["vat-15-1"],"weight":7},{"id":"vat-ruling-20-0-1","category":"영세율","source":"ruling","article":"기본통칙 20-0…1","title":"공급장소가 국외인 경우 비과세","text":"다음 용역은 해당 부동산 또는 광고매체가 사용되는 장소가 국외이므로 부가가치세가 과세되지 아니한다: 1.국외에 있는 부동산의 임대용역 2.외국의 광고매체에 광고게재를 의뢰하고 지급하는 광고료.","keywords":["국외부동산임대","국외광고료","비과세","공급장소국외"],"negKeywords":[],"rulings":[],"relatedIds":["vat-22-1","vat-20-1"],"weight":7},{"id":"vat-ruling-21-31-2","category":"영세율","source":"ruling","article":"기본통칙 21-31…2","title":"수출품 생산업자의 수출대행계약에 의한 영세율 적용","text":"수출품 생산업자가 수출업자와 수출대행계약을 체결하여 수출업자 명의로 수출하는 경우 수출품 생산업자가 외국으로 반출하는 재화는 영세율 적용. 완제품 내국신용장 개설 받는 경우 포함. 실제 수출 여부는 거래의 실질내용에 따라 판단.","keywords":["수출품생산업자","수출대행계약","영세율","내국신용장","수출대행"],"negKeywords":[],"rulings":[],"relatedIds":["vat-21-1"],"weight":8},{"id":"vat-ruling-21-31-4","category":"영세율","source":"ruling","article":"기본통칙 21-31…4","title":"재화의 무상수출","text":"사업자가 재화를 국외로 무상으로 반출하는 경우에는 영세율 적용. 단, 자기 사업을 위해 대가 없이 국외 사업자에게 견본품을 반출하는 경우에는 재화의 공급으로 보지 않음.","keywords":["무상수출","영세율","견본품","국외반출"],"negKeywords":[],"rulings":[],"relatedIds":["vat-21-1","vat-10-1"],"weight":7},{"id":"vat-ruling-21-31-5","category":"영세율","source":"ruling","article":"기본통칙 21-31…5","title":"국제공항 보세구역 외국인전용판매장 등 영세율","text":"국제공항보세구역 내 외국인전용판매장에서 재화를 공급하거나 세관장 승선·탑승 허가를 받아 외국항행 선박·항공기 내에서 공급하는 재화는 수출하는 재화로 봄.","keywords":["보세판매장","외국인전용판매장","기내면세점","영세율","선박","항공기"],"negKeywords":[],"rulings":[],"relatedIds":["vat-21-1"],"weight":7},{"id":"vat-ruling-26-41-1","category":"면세","source":"ruling","article":"기본통칙 관련(면세 교육용역 판단)","title":"면세 교육용역과 과세 교육용역 구분","text":"주무관청의 허가·인가·등록·신고를 받은 학교·학원·강습소·훈련원·교습소 등이 제공하는 교육 용역은 면세. 무도학원·자동차운전학원의 교육 용역은 과세. 허가 없이 제공하는 과외교습 등은 과세.","keywords":["교육용역","면세","과세","학원","강습소","무도학원","자동차운전학원","과외"],"negKeywords":[],"rulings":[],"relatedIds":["vat-26-4","vat-decree-36-1"],"weight":9},{"id":"vat-rule-21-1","category":"영세율","source":"rule","article":"시행규칙 제21조","title":"내국신용장·구매확인서의 범위","text":"내국신용장: 수출용 원자재·완제품·수출재화임가공용역 공급을 위해 외국환은행의 장이 공급시기가 속하는 과세기간 종료 후 25일 이내에 개설하는 신용장. 구매확인서: 대외무역법령에 따라 외국환은행 또는 전자무역기반사업자가 동일 기한 내 발급하는 확인서.","keywords":["내국신용장","구매확인서","외국환은행","25일","수출용원자재","수출재화"],"negKeywords":[],"rulings":[],"relatedIds":["vat-21-1"],"weight":8},{"id":"vat-rule-22-1","category":"영세율","source":"rule","article":"시행규칙 제22조","title":"영세율 적용 대가 지급방법(외화 수령 방법)","text":"영세율 적용을 위한 외화 수령 방법: 1.국외 비거주자·외국법인으로부터 외화를 직접 송금받아 외국환은행에 매각 2.지급할 금액에서 빼는 방법(NET) 3.국외 발급 신용카드로 결제 4.국외 금융기관 발행 개인수표를 외국환은행에 매각 5.외화예금 계좌 예치(외화입금증명서 확인).","keywords":["영세율","외화수령","송금","외국환은행","신용카드결제","외화입금"],"negKeywords":[],"rulings":[],"relatedIds":["vat-24-1","vat-21-1"],"weight":7},{"id":"vat-rule-24-1","category":"면세","source":"rule","article":"시행규칙 제24조","title":"면세하는 미가공식료품의 범위(시행규칙)","text":"면세 미가공식료품 범위: 쌀·현미·보리·밀·옥수수 등 곡물류, 육류(소·돼지·닭 등, 냉동·냉장 포함), 수산물(생선·패류·갑각류 등, 냉동 포함), 채소류(냉동 포함), 과실류, 해조류, 식용 소금(천일염 포함), 사료, 비식용 농·축·수·임산물 등. 단, 가공된 식품은 제외.","keywords":["미가공식료품","면세","쌀","육류","수산물","채소","과실","소금","사료","냉동"],"negKeywords":["가공","조리","제조","통조림","소시지"],"rulings":[],"relatedIds":["vat-26-2","vat-decree-34-1"],"weight":9},{"id":"vat-rule-24-2","category":"면세","source":"rule","article":"시행규칙 제24조의2","title":"면세하는 의료보건 용역의 범위(시행규칙)","text":"면세 의료보건 용역 범위: 의사·치과의사·한의사·조산사·간호사·임상병리사·물리치료사·작업치료사·방사선사·치과기공사·치과위생사·의무기록사·안경사·영양사 등이 제공하는 의료보건 용역. 안경원·약국 포함. 단, 미용목적 성형수술·피부미용·마사지 등은 과세.","keywords":["의료보건면세","의사","치과의사","한의사","조산사","간호사","임상병리사","물리치료","안경사","영양사","약국","안경원"],"negKeywords":["미용성형","피부미용","마사지","에스테틱"],"rulings":[],"relatedIds":["vat-26-3","vat-decree-35-1"],"weight":9},{"id":"vat-rule-28-1","category":"면세","source":"rule","article":"시행규칙 제28조","title":"금융·보험 용역에서 제외되어 면세하지 않는 용역 범위","text":"금융·보험 용역 면세에서 제외되는 용역: 1.집합투자기구의 투자자문 용역 2.보험대리점이 제공하는 보험모집 용역(수수료) 3.보험중개사가 제공하는 보험중개 용역 4.기타 금융·보험 용역에서 제외되는 용역. 이 용역들은 과세 대상.","keywords":["금융보험과세제외","보험대리점","보험중개사","투자자문","수수료","과세"],"negKeywords":[],"rulings":[],"relatedIds":["vat-26-6","vat-decree-40-1"],"weight":8},{"id":"vat-rule-52-1","category":"세금계산서","source":"rule","article":"시행규칙 제52조","title":"세금계산서 발급의무 면제 대상 사업(소비자 대상 업종)","text":"세금계산서 발급의무 면제: 소매업, 음식점업, 숙박업, 미용·욕탕·유사서비스업, 여객운송업, 입장권을 발행하여 영위하는 사업, 전기통신사업(비사업자 대상), 방송업, 기타 소비자 상대 업종 등. 이 경우 영수증을 발급하거나 신용카드매출전표 등으로 대체.","keywords":["세금계산서발급면제","소매업","음식점업","숙박업","소비자대상","영수증"],"negKeywords":[],"rulings":[],"relatedIds":["vat-33-1","vat-36-1"],"weight":7},{"id":"vat-rule-56-1","category":"과세","source":"rule","article":"시행규칙 제16조","title":"사업과 직접 관련 없는 토지·건물 등의 범위(사업무관자산)","text":"사업양도와 관련하여 사업과 직접 관련 없는 자산의 범위: 법인사업자는 법인세법 시행령 제49조제1항에 따른 업무무관자산(비업무용 토지, 서화·골동품, 업무무관 부동산, 업무무관 동산 등). 법인 아닌 사업자는 이에 준하는 자산.","keywords":["사업무관자산","업무무관자산","비업무용토지","서화","골동품","법인세법"],"negKeywords":[],"rulings":[],"relatedIds":["vat-39-2","vat-decree-77-1"],"weight":7},{"id":"vat-rule-69-1","category":"영세율","source":"rule","article":"시행규칙 제69조","title":"영세율 첨부서류의 범위","text":"영세율 적용 시 첨부서류: 수출의 경우 수출실적명세서(세금계산서와 함께 또는 단독), 내국신용장·구매확인서 공급 시 내국신용장 사본 또는 구매확인서 사본, 외국항행용역은 용역 제공 명세서, 외교공관 공급 시 외교관 신분 확인서류 등.","keywords":["영세율첨부서류","수출실적명세서","내국신용장사본","구매확인서사본","외교공관"],"negKeywords":[],"rulings":[],"relatedIds":["vat-56-1","vat-21-1"],"weight":7},{"id":"vat-ruling-39-1","category":"불공제","source":"ruling","article":"기본통칙 39조 관련","title":"불공제 매입세액 - 주요 실무 판단 기준","text":"매입세액 불공제 주요 판단: 1.사업과 직접 관련없는 지출: 개인적 사용, 임원·주주 전용 사용, 업무와 무관한 자산 구입 2.접대비 관련: 거래처 접대, 선물, 경조사, 골프 등 접대 목적 지출 3.비영업용 자동차: 개별소비세법상 승용차(1,000cc 초과) 구입·임차·유지비(렌트·리스료 포함) 4.면세사업 관련: 면세 재화·용역 공급에 사용되는 원재료·고정자산 5.토지 관련: 토지 취득 및 조성 비용(절토·성토·포장 등).","keywords":["불공제판단","접대비","승용차","비영업용자동차","면세관련","토지관련","임원전용"],"negKeywords":[],"rulings":[],"relatedIds":["vat-39-1","vat-39-3","vat-39-4","vat-39-5"],"weight":10},{"id":"vat-ruling-46-1","category":"세금계산서","source":"ruling","article":"신용카드매출전표 매입세액 공제 요건","title":"신용카드매출전표 등으로 매입세액 공제 요건","text":"신용카드매출전표등으로 매입세액 공제를 받으려면: 1.매입처가 일반과세자(법인·직전 연도 공급가액 일정액 초과 개인사업자 또는 세금계산서 발급 의무자)여야 함 2.부가가치세액이 별도 구분 기재된 신용카드매출전표등일 것 3.신용카드매출전표등 수령명세서를 제출할 것 4.증명 자료를 규정에 따라 보관할 것 5.간이과세자(영수증 발급 의무기간)가 발급한 것은 제외.","keywords":["신용카드매출전표","매입세액공제","부가세별도구분","수령명세서","일반과세자"],"negKeywords":["간이과세자","영수증발급의무기간"],"rulings":[],"relatedIds":["vat-46-1","vat-38-1"],"weight":9},{"id":"vat-practice-auto-1","category":"불공제","source":"law","article":"제39조제1항제5호 + 시행령 제78조","title":"비영업용 승용차 매입세액 불공제 실무 판단","text":"개별소비세법 제1조제2항제3호에 따른 자동차(배기량 1,000cc 초과 승용차·캠핑카·밴 등)의 구입·임차(리스·렌트 포함)·유지(주유비·보험료·수리비 등)에 관련된 매입세액은 불공제. 단, 운수업·자동차판매업·자동차임대업·운전학원업·자동차수리업 등에서 직접 영업용으로 사용하는 경우 공제 가능. 9인승 이상 승합차·화물차·특수목적차량 등은 해당 없음(공제 가능).","keywords":["승용차","비영업용자동차","불공제","리스","렌트","주유비","수리비","보험료","1000cc","9인승","화물차"],"negKeywords":["운수업","택시","버스","렌터카업","자동차판매업"],"rulings":[],"relatedIds":["vat-39-3","vat-decree-78-1"],"weight":10},{"id":"vat-practice-taxinv-1","category":"세금계산서","source":"law","article":"제32조 + 제39조 + 제60조","title":"세금계산서 관련 매입세액 공제·불공제 및 가산세 종합","text":"세금계산서 관련 매입세액 공제 요건: 1.사업관련 재화·용역 공급받을 것 2.세금계산서(또는 수입세금계산서) 수취 3.필요적 기재사항(공급자 등록번호·성명, 공급받는 자 등록번호, 공급가액·세액, 작성 연월일) 정확 기재. 공급가액 상이 시 차액분 불공제. 가공·위장세금계산서 수취 시 매입세액 불공제 + 가산세 2%(위장)~3%(가공). 합계표 미제출·부실기재 시 불공제 + 0.5% 가산세.","keywords":["세금계산서공제요건","필요적기재사항","가공세금계산서","위장세금계산서","합계표","불공제","가산세"],"negKeywords":[],"rulings":[],"relatedIds":["vat-32-1","vat-39-1","vat-54-1","vat-60-1"],"weight":10},{"id":"vat-practice-mixedbiz-1","category":"불공제","source":"law","article":"제38조 + 제40조 + 제41조","title":"과세·면세 겸업사업자 매입세액 처리(공통매입세액 안분)","text":"과세·면세 겸업 시 매입세액 처리: 1.과세사업 전용: 전액 공제 2.면세사업 전용: 전액 불공제 3.공통사용: 공통매입세액으로 분리하여 총공급가액 대비 면세공급가액 비율로 안분. 공통매입세액 중 면세분만큼 불공제. 감가상각자산은 취득년도 비율과 5% 이상 차이 시 재계산.","keywords":["겸업사업자","과세면세겸영","공통매입세액","안분","면세비율","재계산","실지귀속"],"negKeywords":[],"rulings":[],"relatedIds":["vat-38-1","vat-40-1","vat-41-1"],"weight":9},{"id":"vat-practice-land-1","category":"불공제","source":"law","article":"제39조제1항제7호 + 시행령 제80조","title":"토지 관련 매입세액 불공제 실무 판단","text":"토지 관련 불공제 매입세액: 1.토지 취득 관련(토지 매입비에 포함된 부가세) - 토지는 면세이므로 관련 비용 불공제 2.토지 조성 비용(절토·성토·잔디식재·조경공사·포장공사 등) 3.토지 위에 있던 건물 철거 비용(신규 건물 신축 위한 경우). 단, 토지에 정착된 건물·구축물 취득 관련 매입세액은 공제 가능. 토지와 건물을 함께 취득 시 건물 귀속 매입세액만 공제.","keywords":["토지관련불공제","절토","성토","조경","포장","건물철거","토지조성","자본적지출"],"negKeywords":["건물","구축물취득"],"rulings":[],"relatedIds":["vat-39-5","vat-decree-80-1"],"weight":10},{"id":"vat-practice-exempt-1","category":"면세","source":"law","article":"제26조 실무판단","title":"주요 면세·과세 구분 실무 판단표","text":"면세: 미가공 농산물·수산물·축산물(냉동 포함), 수돗물, 연탄, 여성 생리대, 의료보건용역(병원·의원·한의원·약국), 교육용역(인가 학원), 시내버스·지하철 운임, 도서·신문(광고 제외), 토지, 주택임대, 금융·보험. 과세: 가공식품, 음료수, 아이스크림, 미용·성형수술, 무도학원·자동차운전학원, 택시·항공·고속버스, 잡지(광고), 상가·오피스 임대, 골프장·스키장 입장료, 보험대리점 수수료.","keywords":["면세과세구분","농산물","수산물","병원","학원","버스","지하철","주택임대","상가임대","보험대리점"],"negKeywords":[],"rulings":[],"relatedIds":["vat-26-1"],"weight":10},{"id":"vat-practice-prereg-1","category":"불공제","source":"law","article":"제39조제1항제8호","title":"사업자등록 전 매입세액 공제 허용 범위","text":"사업자등록 신청 전 매입세액은 원칙 불공제. 예외(공제 가능): 공급시기가 속하는 과세기간이 끝난 후 20일 이내에 등록을 신청한 경우 - 등록신청일부터 공급시기가 속하는 과세기간 기산일까지 역산한 기간 내의 매입세액은 공제 가능. 예: 공급시기 6월 20일(1기)인데 8월 1일(1기 종료 후 20일 이내) 등록 신청 시 1월1일~6월20일 사이 매입세액 공제.","keywords":["사업자등록전","불공제","20일이내","과세기간기산일","역산","예외공제"],"negKeywords":[],"rulings":[],"relatedIds":["vat-39-6","vat-8-1"],"weight":9},{"id":"vat-practice-simplytax-1","category":"간이과세","source":"law","article":"제61조~제70조 종합","title":"간이과세 제도 종합(기준금액·세율·공제·납부면제)","text":"간이과세: 직전 연도 공급대가 1억400만원 미만 개인사업자. 배제업종: 광업·제조업(일부 제외)·도매업·부동산임대(4,800만원 이상)·과세유흥(4,800만원 이상) 등. 과세표준: 공급대가. 납부세액: 공급대가 × 업종별 부가가치율 × 10%. 매입세금계산서 수취 시 공급대가×0.5% 공제. 공급대가 4,800만원 미만 시 납부의무 면제. 과세기간 종료 후 25일 이내 확정신고·납부. 간이과세 포기 후 3년간 일반과세 유지.","keywords":["간이과세","1억400만원","4800만원","부가가치율","납부면제","공급대가","업종별","배제업종"],"negKeywords":["법인"],"rulings":[],"relatedIds":["vat-61-1","vat-63-1","vat-69-1","vat-70-1","vat-decree-109-1","vat-decree-111-1"],"weight":9}];
+
+/* ── 상태 ── */
+var _state = {
+  apiKey: localStorage.getItem('tax-gemini-key') || localStorage.getItem('kifrs-apikey') || '',
+  orKey:  localStorage.getItem('tax-or-key')    || localStorage.getItem('kifrs-orkey')   || '',
+  query: '',
+  files: [],
+  lastResult: null,
+  loading: false
+};
+
+/* ── 렌더 진입점 ── */
+function render(){
+  var root = document.getElementById('tax-vat-root');
+  if(!root) return;
+  root.innerHTML = _buildHTML();
+  _bindEvents();
+  _restoreApiBar();
+}
+
+/* ── HTML 빌드 ── */
+function _buildHTML(){
+  return '<div class="tax-wrap">'
+    + _headerHTML()
+    + _apiBarHTML()
+    + _queryHTML()
+    + _loadingHTML()
+    + _resultHTML()
+    + '</div>';
+}
+
+function _headerHTML(){
+  return '<div class="tax-header">'
+    + '<div class="tax-header-icon">🧾</div>'
+    + '<div>'
+    + '<div class="tax-header-title">AI세무도우미<span class="tax-phase-tag">부가세 · Phase 1</span></div>'
+    + '<div class="tax-header-sub">부가가치세법 조문 기반 과세판단 · 체크리스트 · 분개 자동작성<br>'
+    + '질문을 입력하거나 증빙 파일을 첨부하세요. API 키는 Gemini 또는 OpenRouter 중 하나면 됩니다.</div>'
+    + '</div></div>';
+}
+
+function _apiBarHTML(){
+  return '<div class="tax-api-bar">'
+    + '<label>⚙ Gemini API <span style="font-weight:600;color:var(--txt3)">(주력·자동)</span></label>'
+    + '<input class="tax-api-input" id="tax-gemini-key" type="password" placeholder="AIza..." value="">'
+    + '<button class="tax-api-btn" onclick="TAX._saveKeys()">저장</button>'
+    + '<button class="tax-api-btn" style="background:var(--bg3);color:var(--txt)" onclick="TAX._testGeminiUI()">연결 테스트</button>'
+    + '<a class="tax-keylink" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">🔑 키 발급</a>'
+    + '<button class="tax-help-btn" onclick="TAX._showGeminiGuide()" title="무료 키 발급 가이드">자세히</button>'
+    + '<span class="tax-api-stat" id="tax-gemini-stat" style="flex-basis:100%"></span>'
+    + '<div style="flex-basis:100%;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px;padding-top:8px;border-top:1px dashed var(--border)">'
+    +   '<label>🔀 OpenRouter <span style="font-weight:600;color:var(--txt3)">(예비·무료만)</span></label>'
+    +   '<input class="tax-api-input" id="tax-or-key" type="password" placeholder="sk-or-..." value="">'
+    +   '<button class="tax-api-btn" onclick="TAX._saveKeys()">저장</button>'
+    +   '<button class="tax-api-btn" style="background:var(--bg3);color:var(--txt)" onclick="TAX._testOrUI()">연결 테스트</button>'
+    +   '<a class="tax-keylink" href="https://openrouter.ai/keys" target="_blank" rel="noopener">🔑 키 발급</a>'
+    +   '<button class="tax-help-btn" onclick="TAX._showOrGuide()" title="OpenRouter 무료 키 발급 안내">자세히</button>'
+    +   '<span class="tax-api-stat" id="tax-or-stat" style="flex-basis:100%"></span>'
+    + '</div>'
+    + '<span class="tax-api-status" id="tax-api-status" style="flex-basis:100%"></span>'
+    + '</div>';
+}
+
+function _queryHTML(){
+  return '<div class="tax-query-wrap">'
+    + '<div class="tax-query-label">어떤 세무 문제가 궁금하신가요?</div>'
+    + '<textarea class="tax-query-textarea" id="tax-query-input" placeholder="예: 거래처 접대비로 지출한 식대가 매입세액 공제 대상인가요?\n예: 해외 용역 수출이 영세율 적용 대상인지 확인해주세요."></textarea>'
+    + '<div class="tax-query-actions">'
+    + '<label class="tax-file-btn" for="tax-file-input">📎 파일 첨부 <span style="font-size:10px;margin-left:4px">(PDF·Excel·이미지)</span></label>'
+    + '<input type="file" id="tax-file-input" style="display:none" multiple accept=".pdf,.xlsx,.xls,.csv,.docx,.jpg,.jpeg,.png,.bmp">'
+    + '<span class="tax-file-list" id="tax-file-list"></span>'
+    + '<button class="tax-submit-btn" id="tax-submit-btn" onclick="TAX._submit()">분석 시작 →</button>'
+    + '</div></div>';
+}
+
+function _loadingHTML(){
+  return '<div class="tax-loading" id="tax-loading">'
+    + '<div class="tax-spinner"></div>'
+    + '<div class="tax-loading-msg" id="tax-loading-msg">분석 중입니다...</div>'
+    + '</div>';
+}
+
+function _resultHTML(){
+  return '<div class="tax-result-wrap" id="tax-result-wrap">'
+    + '<!-- 결과 카드 3종이 여기에 동적 삽입됨 -->'
+    + '<div class="tax-requery">'
+    + '<input type="text" id="tax-requery-input" placeholder="추가 질문을 입력하세요...">'
+    + '<button class="tax-requery-btn" onclick="TAX._requery()">재질문</button>'
+    + '</div>'
+    + '</div>';
+}
+
+/* ── 이벤트 바인딩 ── */
+function _bindEvents(){
+  var fi = document.getElementById('tax-file-input');
+  if(fi) fi.addEventListener('change', function(e){
+    _state.files = Array.from(e.target.files);
+    var fl = document.getElementById('tax-file-list');
+    if(fl) fl.textContent = _state.files.map(function(f){return f.name;}).join(', ');
+  });
+}
+
+function _restoreApiBar(){
+  var g = document.getElementById('tax-gemini-key');
+  var o = document.getElementById('tax-or-key');
+  if(g) g.value = _state.apiKey ? '•'.repeat(_state.apiKey.length) : '';
+  if(o) o.value = _state.orKey  ? '•'.repeat(_state.orKey.length)  : '';
+}
+
+/* ── API 키 저장 ── */
+function _saveKeys(){
+  var g = document.getElementById('tax-gemini-key');
+  var o = document.getElementById('tax-or-key');
+  var st = document.getElementById('tax-api-status');
+  // • 문자가 포함된 값은 마스킹 표시이므로 저장하지 않음
+  function isMasked(v){ return /•/.test(v); }
+  if(g && g.value && !isMasked(g.value)){
+    _state.apiKey = g.value.replace(/[^\x20-\x7E]/g,'').trim();
+    localStorage.setItem('tax-gemini-key', _state.apiKey);
+  }
+  if(o && o.value && !isMasked(o.value)){
+    _state.orKey = o.value.replace(/[^\x20-\x7E]/g,'').trim();
+    localStorage.setItem('tax-or-key', _state.orKey);
+  }
+  if(st) { st.textContent = '✓ 저장됨'; setTimeout(function(){ st.textContent=''; }, 2000); }
+}
+
+/* ── 연결 테스트 ── */
+// 연결 테스트는 실제 분석과 동일한 모델 체인(_tryGeminiChain/_tryOrChain)을 써서 하나만 막혀도 다음 모델로 자동 폴백 —
+// 단일 모델만 시도하면 "실제로는 되는데 테스트만 실패"로 오인될 수 있음(하드코딩된 모델이 우연히 막혔을 뿐인 경우)
+var TEST_PROMPT = '연결 테스트입니다. 다른 말 없이 정확히 OK 라고만 출력하세요.';
+
+function _testGeminiUI(){
+  var stat = document.getElementById('tax-gemini-stat');
+  if(!stat) return;
+  if(!_state.apiKey){ stat.className='tax-api-stat err'; stat.textContent='키를 입력하고 저장하세요.'; return; }
+  stat.className='tax-api-stat'; stat.innerHTML='<span class="tax-spin"></span> 연결 확인 중…';
+  _tryGeminiChain(GEMINI_CHAIN, TEST_PROMPT, [], function(m){
+    stat.innerHTML = '<span class="tax-spin"></span> ' + m + ' 시도 중…';
+  }, true).then(function(text){
+    stat.className='tax-api-stat ok';
+    stat.textContent='✅ 연결 정상 · 응답: ' + (String(text||'').trim().slice(0,20) || '(빈 응답)');
+  }).catch(function(e){
+    var msg = (e && e.message) || '연결 실패';
+    stat.className='tax-api-stat err';
+    if(/quota|exceeded|RESOURCE_EXHAUSTED|429/i.test(msg)){
+      stat.innerHTML = '❌ 시도한 모델(' + GEMINI_CHAIN.join(', ') + ') 모두 무료 한도 소진으로 보입니다. 다른 키로 교체하거나 잠시 후 재시도하세요.<br><span class="tax-note">원문: ' + msg + '</span>';
+    } else {
+      stat.textContent = '❌ ' + msg;
+    }
+  });
+}
+
+function _testOrUI(){
+  var stat = document.getElementById('tax-or-stat');
+  if(!stat) return;
+  if(!_state.orKey){ stat.className='tax-api-stat err'; stat.textContent='먼저 OpenRouter 키를 저장하세요.'; return; }
+  stat.className='tax-api-stat'; stat.innerHTML='<span class="tax-spin"></span> 무료 모델 목록 조회 중…';
+  function runTest(){
+    var chain = _orChainTax();
+    _tryOrChain(chain, TEST_PROMPT, function(m){
+      stat.innerHTML = '<span class="tax-spin"></span> ' + m + ' 시도 중…';
+    }, true).then(function(text){
+      stat.className='tax-api-stat ok';
+      stat.textContent='✅ OpenRouter 연결 정상 · 응답: ' + (String(text||'').trim().slice(0,20) || '(빈 응답)');
+    }).catch(function(e){
+      var msg = (e && e.message) || '연결 실패';
+      stat.className='tax-api-stat err';
+      if(/per-day|rate.?limit|429/i.test(msg)){
+        stat.innerHTML = '❌ 후보 무료모델(' + chain.join(', ') + ') 모두 일일 한도 소진으로 보입니다.<br><span class="tax-note">원문: ' + msg + '</span>';
+      } else {
+        stat.innerHTML = '❌ 후보 무료모델(' + chain.join(', ') + ')이 모두 실패했습니다 — 업스트림 일시 오류일 수 있습니다.<br><span class="tax-note">원문: ' + msg + '</span>';
+      }
+    });
+  }
+  // AI기준서가 실시간 조회해둔 최신 무료모델 목록이 있으면 갱신 시도(best-effort, 실패해도 정적 폴백으로 진행)
+  if(window.KIFRS && typeof window.KIFRS.refreshOrModels === 'function'){
+    window.KIFRS.refreshOrModels(function(){ runTest(); });
+  } else {
+    runTest();
+  }
+}
+
+/* ── 키 발급 가이드 팝업 ── */
+function _showGeminiGuide(){
+  var ov = document.createElement('div'); ov.className = 'tax-modal-ov';
+  ov.innerHTML = '<div class="tax-modal" style="max-width:540px;text-align:left">'
+    + '<div class="tax-modal-ttl" style="text-align:center">🔑 Gemini API 무료 키 발급 가이드</div>'
+    + '<div class="tax-modal-body">'
+    +   '<p><b>1.</b> <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">aistudio.google.com/app/apikey</a> 접속 → 구글 계정 로그인</p>'
+    +   '<p><b>2.</b> <b>[API 키 만들기]</b> 클릭</p>'
+    +   '<p><b>3.</b> <span style="color:#b91c1c;font-weight:700">⚠ 반드시 "새 프로젝트에서 API 키 만들기"(신규 프로젝트) 선택</span><br>'
+    +       '<span class="tax-note">기존 프로젝트로 만들면 무료 할당이 0(limit:0)으로 막혀 연결이 안 되는 경우가 많습니다.</span></p>'
+    +   '<p><b>4.</b> 생성된 키를 복사 → 왼쪽 API 키 칸에 붙여넣고 <b>[저장]</b></p>'
+    +   '<p><b>5.</b> <b>[연결 테스트]</b>로 확인하세요.</p>'
+    +   '<div class="tax-disclaimer"><b>참고</b><br>'
+    +       '· 무료 티어라 분당·일일 호출 한도가 있습니다.<br>'
+    +       '· 이 키는 <b>AI기준서 메뉴와 자동 공유</b>됩니다 — 거기서 이미 저장했다면 여기서 다시 입력할 필요 없습니다.<br>'
+    +       '· 키는 이 브라우저(localStorage)에만 저장되며 외부 공유 금지.</div>'
+    + '</div>'
+    + '<div class="tax-modal-foot"><button class="tax-modal-btn">확인</button></div></div>';
+  function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
+  ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
+  ov.querySelector('.tax-modal-foot button').addEventListener('click', close);
+  document.body.appendChild(ov);
+}
+
+function _showOrGuide(){
+  var ov = document.createElement('div'); ov.className = 'tax-modal-ov';
+  ov.innerHTML = '<div class="tax-modal" style="max-width:560px;text-align:left">'
+    + '<div class="tax-modal-ttl" style="text-align:center">🔀 OpenRouter 무료 키 발급 (예비 공급자)</div>'
+    + '<div class="tax-modal-body">'
+    +   '<p><b>역할:</b> Gemini 무료 한도가 떨어지면 자동으로 넘어가는 백업입니다. 무료 모델만 사용하며, 결제수단이 없으면 과금되지 않습니다.</p>'
+    +   '<p><b>1.</b> <a href="https://openrouter.ai/" target="_blank" rel="noopener">openrouter.ai</a> 가입(구글 계정 가능 · 카드 불필요)</p>'
+    +   '<p><b>2.</b> <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">openrouter.ai/keys</a> → <b>[Create Key]</b> → 키(sk-or-…) 복사</p>'
+    +   '<p><b>3.</b> 위 칸에 붙여넣고 <b>[저장]</b> → <b>[연결 테스트]</b>로 확인</p>'
+    +   '<div class="tax-disclaimer"><b>참고</b><br>'
+    +       '· 무료 한도: 하루 50건(모든 무료모델 공유), 미국 태평양시 자정(한국 오후 4~5시경) 리셋.<br>'
+    +       '· 이 키는 <b>AI기준서 메뉴와 자동 공유</b>됩니다 — 거기서 이미 저장했다면 여기서 다시 입력할 필요 없습니다.<br>'
+    +       '· 스캔 이미지 PDF는 OpenRouter로 분석 불가(텍스트 전용 모델) — 이 경우 Gemini 키가 필요합니다.<br>'
+    +       '· 키는 이 브라우저(localStorage)에만 저장되며 외부 공유 금지.</div>'
+    + '</div>'
+    + '<div class="tax-modal-foot"><button class="tax-modal-btn">확인</button></div></div>';
+  function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
+  ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
+  ov.querySelector('.tax-modal-foot button').addEventListener('click', close);
+  document.body.appendChild(ov);
+}
+
+/* ── 분석 제출 ── */
+function _submit(){
+  var input = document.getElementById('tax-query-input');
+  if(!input) return;
+  var q = input.value.trim();
+  if(!q){ alert('질문을 입력해주세요.'); return; }
+  if(!_state.apiKey && !_state.orKey){ alert('Gemini 또는 OpenRouter API 키를 먼저 저장해주세요.'); return; }
+  _state.query = q;
+  _setLoading(true, '파일 텍스트 추출 중...');
+  _extractFileTexts(_state.files)
+    .then(function(fileText){
+      var msgs = [];
+      if(_state.rawFileFallbacks && _state.rawFileFallbacks.length){
+        console.log('[TAX] 텍스트 추출 어려움 → 원본 직접 전달: ' + _state.rawFileFallbacks.map(function(f){return f.name;}).join(', '));
+      }
+      if(_state.extractErrors && _state.extractErrors.length){
+        msgs.push('⚠ 다음 파일은 처리하지 못했습니다:\n' + _state.extractErrors.join('\n')
+          + '\n해당 파일 내용 없이 분석을 진행합니다.');
+      }
+      if(msgs.length) alert(msgs.join('\n\n'));
+      _runPipeline(q, _state.files, fileText);
+    })
+    .catch(function(e){
+      _setLoading(false);
+      alert('파일 처리 중 오류가 발생했습니다: ' + e.message);
+    });
+}
+
+/* ── 파일 텍스트 추출 (오프라인, PDF.js/SheetJS/Mammoth 재사용) ── */
+function _extractFileTexts(files){
+  var textFiles = (files||[]).filter(function(f){ return !f.type.startsWith('image/'); });
+  _state.extractErrors = [];
+  _state.rawFileFallbacks = [];   // 텍스트 추출 실패 시 원본을 Gemini에 직접 전달할 파일(스캔 PDF 등)
+  if(!textFiles.length) return Promise.resolve('');
+  var chain = Promise.resolve();
+  var out = [];
+  textFiles.forEach(function(f){
+    var ext = (f.name.split('.').pop() || '').toLowerCase();
+    chain = chain.then(function(){
+      return _extractOne(f).then(function(t){
+        if(t && t.trim()){
+          out.push('### ' + f.name + '\n' + t);
+        } else if(ext === 'pdf'){
+          // 텍스트 레이어 없음(스캔 이미지 PDF 추정) → 원본 PDF를 Gemini 비전으로 직접 전달
+          _state.rawFileFallbacks.push(f);
+          out.push('### ' + f.name + ' (텍스트 없음 — 원본을 AI에 직접 전달)');
+        } else {
+          _state.extractErrors.push(f.name + ' — 추출된 텍스트가 없습니다');
+        }
+      }).catch(function(e){
+        console.warn('[TAX] 파일 추출 실패(' + f.name + '): ' + e.message);
+        if(ext === 'pdf'){
+          // 파싱 실패도 원본 직접 전달로 폴백(암호화·비표준 구조 등)
+          _state.rawFileFallbacks.push(f);
+          out.push('### ' + f.name + ' (파싱 실패 — 원본을 AI에 직접 전달)');
+        } else {
+          _state.extractErrors.push(f.name + ' — ' + e.message);
+        }
+      });
+    });
+  });
+  return chain.then(function(){ return out.join('\n\n').slice(0, 8000); });
+}
+
+function _extractOne(file){
+  var ext = (file.name.split('.').pop() || '').toLowerCase();
+  if(ext === 'pdf')  return _readAsBuffer(file).then(_extractPdfBuf);
+  if(ext === 'xlsx' || ext === 'xls') return _readAsBuffer(file).then(_extractExcelBuf);
+  if(ext === 'csv')  return _readAsBuffer(file).then(_decodeCsvBuf);
+  if(ext === 'docx') return _readAsBuffer(file).then(_extractWordBuf);
+  return Promise.reject(new Error('지원하지 않는 형식(.' + ext + ')'));
+}
+
+// 더존 등 국내 회계 프로그램 CSV는 EUC-KR로 내려받는 경우가 많음 — UTF-8 우선 시도, 깨지면 EUC-KR 재시도
+function _decodeCsvBuf(buf){
+  var bytes = new Uint8Array(buf);
+  var txt = new TextDecoder('utf-8').decode(bytes);
+  if(txt.indexOf('�') >= 0){
+    try { txt = new TextDecoder('euc-kr').decode(bytes); } catch(e){}
+  }
+  return txt.trim();
+}
+function _readAsBuffer(file){
+  return new Promise(function(res,rej){
+    var r = new FileReader();
+    r.onload  = function(){ res(r.result); };
+    r.onerror = function(){ rej(r.error || new Error('파일 읽기 실패')); };
+    r.readAsArrayBuffer(file);
+  });
+}
+/* TAX 전용 pdf.js 로더 — KIFRS(window.pdfjsLib, 3.11.174 UMD)와 완전 격리.
+   pdf.js는 4.x부터 ESM(.mjs) 전용 배포라 동적 import로 로드, 최신(6.1.200) 사용 —
+   구버전보다 암호화·비표준 구조 PDF 파싱 내성이 높음. */
+var _pdfjsTaxCache = null;
+function _ensurePdfJsTax(){
+  if(_pdfjsTaxCache) return Promise.resolve(_pdfjsTaxCache);
+  var base = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.1.200/';
+  return import(/* webpackIgnore: true */ base + 'pdf.min.mjs').then(function(mod){
+    mod.GlobalWorkerOptions.workerSrc = base + 'pdf.worker.min.mjs';
+    _pdfjsTaxCache = mod;
+    return mod;
+  });
+}
+function _extractPdfBuf(buf){
+  return _ensurePdfJsTax().then(function(pdfjsLib){
+    return pdfjsLib.getDocument({data:buf}).promise.then(function(pdf){
+      var chain = Promise.resolve(), chunks = [];
+      for(var i=1;i<=pdf.numPages;i++){
+        (function(pg){
+          chain = chain.then(function(){
+            return pdf.getPage(pg).then(function(page){
+              return page.getTextContent().then(function(tc){
+                chunks.push(tc.items.map(function(it){ return it.str; }).join(' '));
+              });
+            });
+          });
+        })(i);
+      }
+      return chain.then(function(){ return chunks.join('\n').trim(); });
+    });
+  });
+}
+function _extractExcelBuf(buf){
+  var X = window.XLSX || window.XLSXStyle;
+  if(!X) return Promise.reject(new Error('XLSX 라이브러리 없음'));
+  var wb = X.read(buf, {type:'array'});
+  var out = [];
+  wb.SheetNames.forEach(function(sn){ out.push('[' + sn + ']'); out.push(X.utils.sheet_to_csv(wb.Sheets[sn])); });
+  return Promise.resolve(out.join('\n').trim());
+}
+function _extractWordBuf(buf){
+  if(!window.KIFRS || typeof window.KIFRS.ensureMammoth !== 'function') return Promise.reject(new Error('Mammoth 로더 없음'));
+  return window.KIFRS.ensureMammoth().then(function(mammoth){
+    if(!mammoth) throw new Error('Mammoth.js 사용 불가');
+    return mammoth.extractRawText({arrayBuffer:buf}).then(function(r){ return (r.value||'').trim(); });
+  });
+}
+
+/* ── 재질문 ── */
+function _requery(){
+  var inp = document.getElementById('tax-requery-input');
+  if(!inp || !inp.value.trim()) return;
+  var prevQuery = _state.query;
+  _state.query = '[이전 질문: ' + prevQuery + '] 추가 질문: ' + inp.value.trim();
+  var qi = document.getElementById('tax-query-input');
+  if(qi) qi.value = _state.query;
+  inp.value = '';
+  _submit();
+}
+
+/* ── 파이프라인 ── */
+function _runPipeline(query, files, fileText){
+  // 1단계: 키워드 추출 + DB 매칭 (오프라인)
+  _setLoadingMsg('조문 DB 매칭 중...');
+  var candidates = _matchDB(query + ' ' + (fileText||''));
+
+  // 2단계: API 호출
+  _setLoadingMsg('AI 과세 판단 중... (API 호출)');
+  _callApi(query, candidates, files, fileText)
+    .then(function(result){
+      _state.lastResult = result;
+      _setLoading(false);
+      _renderResult(result);
+    })
+    .catch(function(err){
+      _setLoading(false);
+      alert('분석 중 오류가 발생했습니다: ' + _translateApiError(err));
+    });
+}
+
+// API 에러 메시지를 사용자가 이해할 수 있는 한글로 번역(상태코드·문구 기반)
+function _translateApiError(err){
+  var msg = (err && err.message) || String(err || '');
+  var status = err && err.status;
+  if(status === 503 || /high demand|overloaded|UNAVAILABLE/i.test(msg)){
+    return '서버가 일시적으로 혼잡합니다(503). 시도한 모델이 모두 붐빈 상태입니다 — 잠시 후(1~2분) 다시 시도해주세요.\n\n원문: ' + msg;
+  }
+  if(status === 429 || /quota|exceeded|RESOURCE_EXHAUSTED/i.test(msg)){
+    return '무료 호출 한도를 초과했습니다(429). 잠시 후 다시 시도하거나 다른 키로 교체해주세요.\n\n원문: ' + msg;
+  }
+  if(status === 401 || /API key not valid|Unauthorized/i.test(msg)){
+    return 'API 키가 유효하지 않습니다(401). 키를 다시 확인·저장 후 연결 테스트를 눌러보세요.\n\n원문: ' + msg;
+  }
+  if(status === 404 || /not found|is not supported/i.test(msg)){
+    return '요청한 모델을 찾을 수 없습니다(404) — 모델이 퇴역되었을 수 있습니다.\n\n원문: ' + msg;
+  }
+  if(/JSON 파싱 실패|API 응답이 비어있습니다/i.test(msg)){
+    return msg;   // 이미 한글 메시지
+  }
+  return msg;
+}
+
+/* ── 오프라인 DB 매칭 ── */
+function _matchDB(query){
+  if(!vatDB || vatDB.length === 0) return [];
+  var words = query.replace(/[^\w가-힣]/g,' ').split(/\s+/).filter(Boolean);
+  var scored = vatDB.map(function(rec){
+    var score = 0;
+    words.forEach(function(w){
+      if(rec.keywords && rec.keywords.some(function(k){ return k.includes(w) || w.includes(k); })) score += 3;
+      if(rec.title && rec.title.includes(w)) score += 2;
+      if(rec.text  && rec.text.includes(w))  score += 1;
+      if(rec.negKeywords && rec.negKeywords.some(function(k){ return k.includes(w) || w.includes(k); })) score -= 5;
+    });
+    score += (rec.weight || 0) * 0.1;
+    return { rec: rec, score: score };
+  });
+  return scored
+    .filter(function(x){ return x.score > 0; })
+    .sort(function(a,b){ return b.score - a.score; })
+    .slice(0, 8)
+    .map(function(x){ return x.rec; });
+}
+
+/* ══════════════════════════════════════════════════════════
+   코드 검증 레이어 — AI가 인용한 조문을 vatDB와 대조(할루시네이션 방지)
+   AI 자기보고 confidence를 그대로 믿지 않고, 코드가 재산정
+   ══════════════════════════════════════════════════════════ */
+var _articleIndex = null;
+function _normArticleKey(s){
+  return String(s||'')
+    .replace(/\s+/g,'')
+    .replace(/^부가가치세법시행규칙/,'').replace(/^부가가치세법시행령/,'').replace(/^부가가치세법/,'')
+    .replace(/^시행규칙/,'').replace(/^시행령/,'').replace(/^기본통칙/,'');
+}
+function _buildArticleIndex(){
+  if(_articleIndex) return _articleIndex;
+  _articleIndex = { full:{}, base:{} };
+  (vatDB||[]).forEach(function(r){
+    var key = _normArticleKey(r.article);
+    if(key) _articleIndex.full[key] = r;
+    var m = key.match(/^제(\d+)조/);
+    if(m) _articleIndex.base['제'+m[1]+'조'] = true;
+  });
+  return _articleIndex;
+}
+// 조문 1개 검증 → green(DB 완전일치) | yellow(조번호는 그럴듯하나 세부 미검증) | red(형식이상·범위밖 — 확인불가)
+function _verifyArticle(a){
+  var idx = _buildArticleIndex();
+  var key = _normArticleKey(a);
+  if(!key) return { level:'red', article:a };
+  if(idx.full[key]) return { level:'green', article:a, rec: idx.full[key] };
+  var m = key.match(/^제(\d+)조/);
+  if(m){
+    var num = parseInt(m[1],10);
+    if(idx.base['제'+m[1]+'조']) return { level:'yellow', article:a };
+    if(num >= 1 && num <= 120) return { level:'yellow', article:a };  // 부가세법 조번호 그럴듯한 범위
+  }
+  return { level:'red', article:a };
+}
+// judgment 전체 재검증 — 하나라도 red면 전체 낮음, red 없고 전부 green이면 AI confidence 유지, 나머지는 보통 이하로 제한
+function _verifyJudgment(j, checklist){
+  var arts = (j && j.articles) || [];
+  var results = arts.map(_verifyArticle);
+  var hasRed = results.some(function(x){ return x.level === 'red'; });
+  var allGreen = results.length > 0 && results.every(function(x){ return x.level === 'green'; });
+  // 거래 상대방 사업자등록 여부가 "필수 확인" 체크리스트로 남아있다면(=미확인) 신뢰도 강제 하향
+  var partyUnconfirmed = (checklist||[]).some(function(c){
+    return c && c.type === '필수' && /사업자\s*등록/.test(c.item || '');
+  });
+  var order = { '낮음':0, '보통':1, '높음':2 };
+  var aiLevel = (j && j.confidence) || '낮음';
+  var codeLevel;
+  if(!arts.length) codeLevel = '낮음';
+  else if(hasRed || partyUnconfirmed) codeLevel = '낮음';
+  else if(allGreen) codeLevel = aiLevel;
+  else codeLevel = (order[aiLevel] > order['보통']) ? '보통' : aiLevel;
+  return { results: results, level: codeLevel, downgraded: order[codeLevel] < order[aiLevel], partyUnconfirmed: partyUnconfirmed };
+}
+
+/* ── 모델 체인 (연결테스트와 실제 분석이 동일 로직 공유 — 하나만 막혀도 나머지로 폴백) ── */
+// 2026-07-16: gemini-2.0-flash·2.0-flash-lite 완전 종료(shut down) 확인 → 2.5/3.6 세대로 교체(AI기준서 MODEL_CHAIN과 동일 목록)
+var GEMINI_CHAIN = ['gemini-2.5-flash-lite','gemini-2.5-flash','gemini-3.6-flash','gemini-3.5-flash-lite'];
+var OR_FALLBACK  = ['meta-llama/llama-3.3-70b-instruct:free','mistralai/mistral-small-3.2-24b-instruct:free','google/gemma-3-27b-it:free'];
+// OpenRouter 무료모델 ID는 수시 변동 — AI기준서(KIFRS)가 이미 실시간 조회해둔 목록이 있으면 재사용, 없으면 정적 폴백
+function _orChainTax(){
+  if(window.KIFRS && typeof window.KIFRS._orChain === 'function'){
+    var l = window.KIFRS._orChain();
+    if(l && l.length) return l;
+  }
+  return OR_FALLBACK.slice();
+}
+function _tryGeminiChain(models, prompt, files, onStep, raw){
+  var m = models[0];
+  return _callGemini(prompt, files, m, raw).catch(function(e){
+    // 429(한도초과)뿐 아니라 503/502/504(일시 과부하)도 다음 모델로 폴백 — 한 모델만 붐벼도 전체가 막히지 않게
+    var transient = e.status === 429 || e.status === 503 || e.status === 502 || e.status === 504;
+    if(transient && models.length > 1){
+      console.warn('[TAX] ' + m + ' 실패(' + e.message + ') → ' + models[1] + ' 시도');
+      if(onStep) onStep(models[1]);
+      return _tryGeminiChain(models.slice(1), prompt, files, onStep, raw);
+    }
+    throw e;
+  });
+}
+function _tryOrChain(models, prompt, onStep, raw){
+  if(!models.length) return Promise.reject(new Error('시도 가능한 OpenRouter 무료 모델이 없습니다.'));
+  var m = models[0];
+  if(onStep) onStep(m);
+  return _callOpenRouter(prompt, m, raw).catch(function(e){
+    if(models.length > 1 && (e.status === 429 || e.status === 502 || e.status === 504 || e.skipModel)){
+      console.warn('[TAX] ' + m + ' 실패(' + e.message + ') → 다음 모델 시도');
+      return _tryOrChain(models.slice(1), prompt, onStep, raw);
+    }
+    throw e;
+  });
+}
+
+/* ── API 호출 ── */
+function _callApi(query, candidates, files, fileText){
+  var prompt = _buildPrompt(query, candidates, fileText);
+  var hasImg = (files && files.some(function(f){ return f.type.startsWith('image/'); }))
+    || (_state.rawFileFallbacks && _state.rawFileFallbacks.length > 0);
+
+  if(_state.apiKey){
+    return _tryGeminiChain(GEMINI_CHAIN, prompt, files, function(m){ _setLoadingMsg(m + ' 시도 중...'); })
+      .catch(function(e){
+        // 429 한도초과 또는 일시 오류 → OR 폴백
+        if(_state.orKey && !hasImg){
+          console.warn('[TAX] Gemini 실패(' + e.message + ') → OpenRouter 폴백');
+          _setLoadingMsg('Gemini 한도 초과 → OpenRouter 폴백 중...');
+          return _tryOrChain(_orChainTax(), prompt);
+        }
+        throw e;
+      });
+  } else if(_state.orKey){
+    return _tryOrChain(_orChainTax(), prompt);
+  }
+  return Promise.reject(new Error('API 키가 없습니다.'));
+}
+
+function _buildPrompt(query, candidates, fileText){
+  var dbCtx = candidates.length > 0
+    ? '## 관련 조문\n' + candidates.map(function(r){
+        return '[' + r.article + '] ' + r.title + '\n' + r.text
+          + (r.rulings && r.rulings.length ? '\n예규: ' + r.rulings.map(function(rl){ return rl.ref + ' — ' + rl.summary; }).join(' / ') : '');
+      }).join('\n\n')
+    : '(DB 매칭 결과 없음 — 법령 일반 지식으로 판단)';
+
+  var fileCtx = fileText ? ('\n\n## 첨부 파일 내용\n' + fileText) : '';
+
+  var journalGuard = '\n\n## 회계처리 규칙 (반드시 준수)\n'
+    + '- 매입세액이 "불공제"(전체 또는 일부)인 경우, 그 매입세액은 "부가세대급금" 등 별도 자산 계정으로 분리하지 말고 관련 비용/자산 계정 금액에 합산하여 반영하세요.\n'
+    + '- 매입세액이 "공제" 가능한 경우에만 "부가세대급금" 계정으로 별도 분개하세요.\n'
+    + '- "영세율"·"면세" 거래는 매출세액이 발생하지 않으므로 "부가세예수금" 계정을 사용하지 마세요.\n'
+    + '- judgment.result가 "불공제"이면 journal에는 부가세대급금 계정이 등장해서는 안 됩니다.';
+
+  var partyGuard = '\n\n## 거래 상대방 사업자 여부 — 판단 전 필수 선행 확인\n'
+    + '1. 부가가치세는 "사업자"(사업자등록을 한 자)가 공급하는 재화·용역에만 적용됩니다. 먼저 거래 상대방이 사업자등록을 한 사업자인지, 사업자등록이 없는 개인(프리랜서·인적용역 제공자)인지 판단하세요.\n'
+    + '2. **법인은 사업자등록번호가 문서에 없어도 사업자로 확정하세요.** 상대방 명칭에 "주식회사"·"㈜"·"(주)"·"유한회사"·"사단법인"·"재단법인"·"협동조합" 등 법인 형태 표시가 있으면, 그 자체로 사업자등록이 사실상 전제된 것으로 간주하고 "사업자 여부 불명"으로 취급하지 마세요. 사업자등록번호가 명시 안 됐다는 이유만으로 법인의 사업자 여부를 의심하지 마세요.\n'
+    + '3. "사업자 여부 불명" 취급은 상대방이 **법인 표시 없이 개인 성명만** 있는 경우(예: 프리랜서·인적용역 제공자로 보이는 계약)에만 적용하세요. 이 경우 자료에 사업자등록번호·사업자등록증·세금계산서 언급이 없다면 이를 판단의 최우선 불확실 요소로 취급하고 절대 사업자 거래로 단정하지 마세요.\n'
+    + '4. 개인(법인 표시 없음)이 사업자등록이 없는 것으로 추정되는 경우: 이 거래는 세금계산서 발급·부가가치세 과세 대상 거래가 아닐 가능성이 높고, 대신 소득세법상 사업소득 원천징수(3.3% 등, 부가세가 아닌 소득세 영역 — 이 모듈의 Phase 2 범위)를 검토해야 함을 warning 필드에 반드시 명시하세요. 이 경우 judgment.result는 "불명확", vatRate는 "해당없음"으로 하세요.\n'
+    + '5. 개인 상대방의 사업자 여부가 확인되지 않은 채 과세/불공제 등을 판단했다면 confidence는 "낮음"으로 하고, checklist의 첫 번째 항목으로 "거래 상대방(개인) 사업자등록 여부 확인(사업자등록번호·사업자등록증)"을 "필수"로 반드시 포함하세요. 법인 상대방에게는 이 체크리스트 항목을 넣지 마세요.';
+
+  return '당신은 대한민국 부가가치세 전문 세무사입니다. 아래 질문을 분석하여 반드시 JSON으로만 응답하세요.\n\n'
+    + '## 질문\n' + query + fileCtx + '\n\n'
+    + dbCtx + partyGuard + journalGuard + '\n\n'
+    + '## 응답 JSON 형식 (이 형식 외 텍스트 절대 금지)\n'
+    + '{\n'
+    + '  "judgment": {\n'
+    + '    "result": "과세|면세|영세율|불공제|혼합|불명확",\n'
+    + '    "vatRate": "10%|0%|면세|해당없음",\n'
+    + '    "reason": "판단 근거 서술 (2~4문장)",\n'
+    + '    "articles": ["제38조제1항", ...],\n'
+    + '    "confidence": "높음|보통|낮음"\n'
+    + '  },\n'
+    + '  "checklist": [\n'
+    + '    {"item": "확인할 사항", "type": "필수|권장|주의"},\n'
+    + '    ...\n'
+    + '  ],  // type 구분 기준(반드시 준수, 전부 "필수"로 몰아넣지 말 것):\n'
+    + '      // 필수 = 이 사실이 바뀌면 과세판단(과세/면세/영세율/불공제) 자체가 달라지는 사항(사업자등록 여부, 세금계산서 발급·수취 여부 등)\n'
+    + '      // 권장 = 절차·행정상 확인하면 좋은 사항이나 판단 자체를 바꾸지는 않는 사항(지급방법·시점, 인적사항 정확성 등)\n'
+    + '      // 주의 = 잠재 리스크성 사항(제3자 권리, 향후 세무조사 대비 등)\n'
+    + '  "journal": [\n'
+    + '    {"side": "차변", "account": "계정과목", "amount": "금액 또는 예시금액", "note": "비고"},\n'
+    + '    {"side": "대변", "account": "계정과목", "amount": "금액 또는 예시금액", "note": "비고"},\n'
+    + '    ...\n'
+    + '  ],\n'
+    + '  "warning": "주의사항 (선택, 없으면 null)"\n'
+    + '}';
+}
+
+function _callGemini(prompt, files, model, raw){
+  var key = _state.apiKey;
+  var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + key;
+  var parts = [{ text: prompt }];
+  // 이미지 파일 + 텍스트 추출 실패한 원본 PDF(스캔본 등)는 inline_data로 Gemini 비전에 직접 전달(연결테스트 시 files=[]이므로 해당 없음)
+  var imgFiles = (files||[]).filter(function(f){ return f.type.startsWith('image/'); });
+  var binFiles = raw ? [] : imgFiles.concat(_state.rawFileFallbacks || []);
+  var binPromises = binFiles.map(function(f){
+    return new Promise(function(res){
+      var reader = new FileReader();
+      reader.onload = function(e){
+        var b64 = e.target.result.split(',')[1];
+        var mime = f.type || 'application/pdf';
+        res({ inline_data: { mime_type: mime, data: b64 } });
+      };
+      reader.readAsDataURL(f);
+    });
+  });
+  return Promise.all(binPromises).then(function(imgParts){
+    imgParts.forEach(function(p){ parts.push(p); });
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: parts }] })
+    });
+  }).then(function(r){
+    return r.json().then(function(d){
+      if(!r.ok){
+        var msg = (d.error && d.error.message) ? d.error.message : ('HTTP ' + r.status);
+        var err = new Error('[Gemini ' + r.status + '] ' + msg);
+        err.status = r.status;
+        throw err;
+      }
+      return d;
+    });
+  }).then(function(d){
+    var text = d.candidates && d.candidates[0] && d.candidates[0].content
+      ? d.candidates[0].content.parts[0].text : '';
+    return raw ? text : _parseJson(text);
+  });
+}
+
+function _callOpenRouter(prompt, model, raw){
+  // ASCII 범위 밖 문자 제거 (복붙 시 유니코드 오염 방지)
+  var safeKey = _state.orKey.replace(/[^\x20-\x7E]/g, '').trim();
+  return fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + safeKey
+    },
+    body: JSON.stringify({
+      model: model || OR_FALLBACK[0],
+      messages: [{ role: 'user', content: prompt }]
+    })
+  }).then(function(r){
+    return r.json().then(function(d){
+      if(!r.ok){
+        var msg = (d.error && d.error.message) ? d.error.message : ('HTTP ' + r.status);
+        var err = new Error('[OpenRouter ' + r.status + '] ' + msg);
+        err.status = r.status;
+        // 유료 전환·슬러그 소실 등은 재시도 없이 즉시 다음 모델로(과금 방지)
+        if(/unavailable for free|use this slug|paid version|requires credit|not a valid model/i.test(msg)) err.skipModel = true;
+        throw err;
+      }
+      return d;
+    });
+  }).then(function(d){
+    var text = d.choices && d.choices[0] ? d.choices[0].message.content : '';
+    return raw ? text : _parseJson(text);
+  });
+}
+
+function _parseJson(text){
+  if(!text) throw new Error('API 응답이 비어있습니다.');
+  // <think>...</think> 제거 (추론모델 대응)
+  text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+  // 마크다운 코드블록 제거
+  text = text.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+  // 가장 바깥 { } 추출
+  var start = text.indexOf('{');
+  var end   = text.lastIndexOf('}');
+  if(start === -1 || end === -1) {
+    console.error('[TAX] 파싱 실패 — 원문:', text);
+    throw new Error('JSON 파싱 실패 (중괄호 없음). 콘솔(F12)에서 원문 확인 가능');
+  }
+  try {
+    return JSON.parse(text.slice(start, end + 1));
+  } catch(e){
+    console.error('[TAX] JSON.parse 실패 — 원문:', text);
+    throw new Error('JSON 파싱 실패: ' + e.message + '. 콘솔(F12)에서 원문 확인 가능');
+  }
+}
+
+/* ── 결과 렌더링 ── */
+function _renderResult(r){
+  var wrap = document.getElementById('tax-result-wrap');
+  if(!wrap) return;
+  wrap.classList.add('show');
+
+  var cards = _judgmentCardHTML(r.judgment, r.checklist)
+    + _checklistCardHTML(r.checklist)
+    + _journalCardHTML(r.journal, r.judgment)
+    + '<div class="tax-requery">'
+    + '<input type="text" id="tax-requery-input" placeholder="추가 질문을 입력하세요...">'
+    + '<button class="tax-requery-btn" onclick="TAX._requery()">재질문</button>'
+    + '</div>';
+  wrap.innerHTML = cards;
+
+  // 판단 카드 기본 열기
+  var firstBody = wrap.querySelector('.tax-card-body');
+  if(firstBody) firstBody.classList.add('open');
+}
+
+function _judgmentCardHTML(j, checklist){
+  if(!j) return '';
+  var verify = _verifyJudgment(j, checklist);
+  var resultMap = { '과세':'taxable', '면세':'exempt', '영세율':'zero', '불공제':'nodeduct', '혼합':'taxable', '불명확':'nodeduct' };
+  var badgeClass = 'tax-badge-' + (resultMap[j.result] || 'taxable');
+  var confClass  = verify.level === '높음' ? 'tax-conf-green' : verify.level === '보통' ? 'tax-conf-yellow' : 'tax-conf-red';
+  var artIconMap = { green:'🟢', yellow:'🟡', red:'🔴' };
+  var arts = verify.results.length
+    ? verify.results.map(function(v){
+        return '<span class="tax-article-chip">' + artIconMap[v.level] + ' ' + v.article + '</span>';
+      }).join('')
+    : '';
+  var confLabel = '신뢰도 ' + verify.level + (verify.downgraded ? ' (코드검증 하향)' : '');
+  return '<div class="tax-card">'
+    + '<div class="tax-card-header" onclick="TAX._toggleCard(this)">'
+    + '<span class="tax-card-icon">⚖️</span>'
+    + '<span class="tax-card-title">과세 판단</span>'
+    + '<span class="tax-card-badge ' + badgeClass + '">' + (j.result||'') + ' ' + (j.vatRate||'') + '</span>'
+    + '<span class="tax-confidence ' + confClass + '" style="margin-left:8px">' + confLabel + '</span>'
+    + '<span class="tax-card-toggle" style="margin-left:8px">▼</span>'
+    + '</div>'
+    + '<div class="tax-card-body open">'
+    + '<div class="tax-judgment-row"><span class="tax-judgment-label">판단 결과</span><span class="tax-judgment-value"><strong>' + (j.result||'') + '</strong> (' + (j.vatRate||'') + ')</span></div>'
+    + '<div class="tax-judgment-row"><span class="tax-judgment-label">근거 조문</span><span class="tax-judgment-value">' + (arts || '—') + '</span></div>'
+    + '<div class="tax-judgment-row"><span class="tax-judgment-label">판단 근거</span><span class="tax-judgment-value">' + (j.reason||'') + '</span></div>'
+    + (verify.downgraded ? '<div class="tax-judgment-row"><span class="tax-judgment-label">⚠ 검증 안내</span><span class="tax-judgment-value" style="color:var(--txt3)">'
+        + (verify.partyUnconfirmed
+            ? '거래 상대방의 사업자등록 여부가 확인되지 않아 신뢰도를 낮췄습니다. 사업자가 아닌 개인(프리랜서)이면 부가세가 아닌 원천징수 대상일 수 있습니다 — 아래 체크리스트를 먼저 확인하세요.'
+            : 'AI가 인용한 조문 중 일부가 내장 DB(부가세법 113개 조문)에서 확인되지 않아 신뢰도를 낮췄습니다. 🟢=DB 완전일치 · 🟡=조번호는 있으나 세부 미검증 · 🔴=확인불가')
+        + '</span></div>' : '')
+    + '</div></div>';
+}
+
+function _checklistCardHTML(list){
+  if(!list || !list.length) return '';
+  var iconMap = { '필수':'🔴', '권장':'🟡', '주의':'⚠️' };
+  var items = list.map(function(c){
+    return '<li><span class="tax-check-icon">' + (iconMap[c.type]||'•') + '</span>' + c.item + '</li>';
+  }).join('');
+  return '<div class="tax-card">'
+    + '<div class="tax-card-header" onclick="TAX._toggleCard(this)">'
+    + '<span class="tax-card-icon">✅</span>'
+    + '<span class="tax-card-title">처리 체크리스트</span>'
+    + '<span class="tax-card-badge" style="background:#f0fdf4;color:#166534">' + list.length + '개 항목</span>'
+    + '<span class="tax-card-toggle" style="margin-left:auto">▼</span>'
+    + '</div>'
+    + '<div class="tax-card-body">'
+    + '<ul class="tax-checklist">' + items + '</ul>'
+    + '</div></div>';
+}
+
+function _journalCardHTML(journal, judgment){
+  if(!journal || !journal.length) return '';
+  var rows = journal.map(function(j){
+    return '<tr><td class="' + (j.side==='차변'?'debit':'credit') + '">' + j.side + '</td>'
+      + '<td class="' + (j.side==='차변'?'debit':'credit') + '">' + (j.side==='대변'?'&nbsp;&nbsp;&nbsp;':'') + j.account + '</td>'
+      + '<td>' + j.amount + '</td>'
+      + '<td style="color:var(--txt3)">' + (j.note||'') + '</td></tr>';
+  }).join('');
+  return '<div class="tax-card">'
+    + '<div class="tax-card-header" onclick="TAX._toggleCard(this)">'
+    + '<span class="tax-card-icon">📒</span>'
+    + '<span class="tax-card-title">분개 자동작성</span>'
+    + '<span class="tax-card-badge" style="background:#eff6ff;color:#1d4ed8">회계처리</span>'
+    + '<span class="tax-card-toggle" style="margin-left:auto">▼</span>'
+    + '</div>'
+    + '<div class="tax-card-body">'
+    + '<table class="tax-journal-tbl">'
+    + '<thead><tr><th>구분</th><th>계정과목</th><th>금액</th><th>비고</th></tr></thead>'
+    + '<tbody>' + rows + '</tbody></table>'
+    + '<div class="tax-journal-actions">'
+    + '<button class="tax-dl-btn" onclick="TAX._downloadExcel()">📥 엑셀 다운로드</button>'
+    + '</div></div></div>';
+}
+
+/* ── 카드 토글 ── */
+function _toggleCard(header){
+  var body = header.nextElementSibling;
+  if(!body) return;
+  body.classList.toggle('open');
+  var tog = header.querySelector('.tax-card-toggle');
+  if(tog) tog.textContent = body.classList.contains('open') ? '▲' : '▼';
+}
+
+/* ── 로딩 제어 ── */
+function _setLoading(on, msg){
+  _state.loading = on;
+  var ld  = document.getElementById('tax-loading');
+  var rw  = document.getElementById('tax-result-wrap');
+  var btn = document.getElementById('tax-submit-btn');
+  if(ld)  ld.className  = 'tax-loading' + (on ? ' show' : '');
+  if(rw)  rw.className  = 'tax-result-wrap' + (!on && _state.lastResult ? ' show' : '');
+  if(btn) btn.disabled  = on;
+  if(on && msg) _setLoadingMsg(msg);
+}
+
+function _setLoadingMsg(msg){
+  var el = document.getElementById('tax-loading-msg');
+  if(el) el.textContent = msg;
+}
+
+/* ── 엑셀 다운로드 (화면 분개표를 xlsx-js-style 셀서식으로 재현, AI기준서와 동일 라이브러리 재사용) ── */
+function _downloadExcel(){
+  var r = _state.lastResult;
+  if(!r || !r.journal || !r.journal.length){ alert('분개 데이터가 없습니다.'); return; }
+  if(typeof XLSXStyle === 'undefined' || !XLSXStyle.utils){ alert('엑셀 라이브러리 로드 실패.'); return; }
+
+  var U = XLSXStyle.utils, F = '맑은 고딕', NC = 4;
+  var bd = {style:'thin', color:{rgb:'D1D5DB'}}, BORD = {top:bd,bottom:bd,left:bd,right:bd};
+  var S = {
+    title : {font:{name:F,sz:12,bold:true,color:{rgb:'065F46'}},alignment:{horizontal:'center',vertical:'center',wrapText:true},fill:{fgColor:{rgb:'D1FAE5'}},border:BORD},
+    head  : {font:{name:F,sz:10,bold:true,color:{rgb:'374151'}},alignment:{horizontal:'center',vertical:'center'},fill:{fgColor:{rgb:'F3F4F6'}},border:BORD},
+    debit : {font:{name:F,sz:10,color:{rgb:'1D4ED8'}},alignment:{horizontal:'left',vertical:'top',wrapText:true},border:BORD},
+    credit: {font:{name:F,sz:10,color:{rgb:'059669'}},alignment:{horizontal:'left',vertical:'top',wrapText:true},border:BORD},
+    num   : {font:{name:F,sz:10,color:{rgb:'374151'}},alignment:{horizontal:'right',vertical:'top'},border:BORD},
+    note  : {font:{name:F,sz:9.5,color:{rgb:'6B7280'}},alignment:{horizontal:'left',vertical:'top',wrapText:true},border:BORD},
+    secL  : {font:{name:F,sz:10,bold:true,color:{rgb:'374151'}},alignment:{horizontal:'left',vertical:'center'},fill:{fgColor:{rgb:'F3F4F6'}},border:BORD},
+    sec   : {font:{name:F,sz:10,color:{rgb:'374151'}},alignment:{horizontal:'left',vertical:'top',wrapText:true},border:BORD}
+  };
+  var ws = {}, merges = [], rows = [], R = 0;
+  function put(rr,c,v,s,num){ var ref=U.encode_cell({r:rr,c:c}); var o={v:(v==null?'':v),t:num?'n':'s',s:s}; if(num){o.z='#,##0';} ws[ref]=o; }
+  function fillRow(rr,s){ for(var c=1;c<NC;c++) put(rr,c,'',s); }
+  function mergeRow(rr,s){ merges.push({s:{r:rr,c:0},e:{r:rr,c:NC-1}}); fillRow(rr,s); }
+  function wrapH(txt,chars,base){ var n=Math.ceil((String(txt||'').length||1)/chars); return Math.max(base||18, Math.min(120, n*14+6)); }
+
+  var now = new Date(), pad = function(n){ return (n<10?'0':'')+n; };
+  var dstr = now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate());
+  var j = r.judgment || {};
+
+  // 1) 제목
+  var title = '부가세 회계처리안 — ' + (j.result||'') + (j.vatRate ? ' (' + j.vatRate + ')' : '');
+  put(R,0,title,S.title); mergeRow(R,S.title); rows[R]={hpt:24}; R++;
+
+  // 2) 분개 헤더
+  ['구분','계정과목','금액','비고'].forEach(function(h,ci){ put(R,ci,h,S.head); }); rows[R]={hpt:20}; R++;
+
+  // 3) 분개 행
+  r.journal.forEach(function(entry){
+    var isDebit = entry.side === '차변';
+    var st = isDebit ? S.debit : S.credit;
+    put(R,0, entry.side||'', st);
+    put(R,1, (isDebit?'':'   ') + (entry.account||''), st);
+    var raw = String(entry.amount||'').replace(/[^\d.\-]/g,'');
+    var amt = raw ? Number(raw) : 0;
+    if(amt && String(amt) === raw){ put(R,2, amt, S.num, true); }
+    else { put(R,2, entry.amount||'', S.num, false); }
+    put(R,3, entry.note||'', S.note);
+    rows[R] = {hpt: wrapH(entry.note,26,20)};
+    R++;
+  });
+
+  // 4) 판단 근거
+  if(j.reason){
+    put(R,0,'판단 근거',S.secL); mergeRow(R,S.secL); rows[R]={hpt:18}; R++;
+    put(R,0,j.reason,S.sec); mergeRow(R,S.sec); rows[R]={hpt:wrapH(j.reason,70,20)}; R++;
+  }
+  // 5) 주의사항
+  if(r.warning){
+    put(R,0,'주의사항',S.secL); mergeRow(R,S.secL); rows[R]={hpt:18}; R++;
+    put(R,0,r.warning,S.sec); mergeRow(R,S.sec); rows[R]={hpt:wrapH(r.warning,70,20)}; R++;
+  }
+  // 6) 면책 문구
+  put(R,0,'본 결과는 참고용이며, 최종 판단은 담당자 확인이 필요합니다.',S.note); mergeRow(R,S.note); rows[R]={hpt:18}; R++;
+
+  ws['!ref'] = U.encode_range({s:{r:0,c:0},e:{r:R-1,c:NC-1}});
+  ws['!cols'] = [{wch:10},{wch:30},{wch:16},{wch:44}];
+  ws['!merges'] = merges; ws['!rows'] = rows;
+  var wb = U.book_new(); U.book_append_sheet(wb, ws, '회계처리안');
+  XLSXStyle.writeFile(wb, '부가세_회계처리안_' + dstr + '.xlsx');
+}
+
+/* ── 전역 노출 ── */
+window.TAX = {
+  render: render,
+  _saveKeys: _saveKeys,
+  _testGeminiUI: _testGeminiUI,
+  _testOrUI: _testOrUI,
+  _showGeminiGuide: _showGeminiGuide,
+  _showOrGuide: _showOrGuide,
+  _submit: _submit,
+  _requery: _requery,
+  _toggleCard: _toggleCard,
+  _downloadExcel: _downloadExcel
+};
+
+})();
+</script>
+
 <!-- ══ 브레이크타임: 메인 페이지 도트 캐릭터 (독립 모듈 · .kifrs-char- 격리) ══ -->
 <style>
 .kifrs-char-stage{position:fixed;top:0;left:0;right:0;bottom:0;overflow:hidden;pointer-events:none;z-index:150;}
@@ -9024,3 +10164,4 @@ function debugR1Compare(){
 </script>
 </body>
 </html>
+
