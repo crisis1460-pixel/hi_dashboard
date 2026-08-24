@@ -202,7 +202,7 @@ a:hover { text-decoration: underline; }
 }
 .aifrs-tour-tip {
   position:fixed; background:var(--bg2); border:1px solid var(--border2); border-radius:13px;
-  padding:15px 17px; width:340px; font-size:12.5px; line-height:1.65; color:var(--txt2);
+  padding:15px 17px; width:max-content; min-width:300px; max-width:500px; font-size:12.5px; line-height:1.65; color:var(--txt2);
   transition:all .35s ease; box-shadow:0 16px 44px rgba(0,0,0,.55); z-index:10501;
 }
 .aifrs-tour-tip .tli { display:flex; gap:6px; margin:2px 0; }
@@ -3492,7 +3492,7 @@ a:hover { text-decoration: underline; }
     {sel:'#aifrs-db-toggle',       title:'⑨ K-IFRS DB',    msg:'- 내장 기준서 50종·1,439문단 직접 열람\n- 모든 분석 근거가 여기서 검증됨'},
     {sel:'#aifrs-db-q',            title:'⑩ DB 검색',      msg:'- 기준서번호·명칭·문단·키워드·원문 전문 검색\n- 결과 클릭 시 해당 기준서로 바로 이동',
       pre:function(){ var v=document.getElementById('aifrs-db-view'); if(v && (v.style.display==='none'||v.style.display==='')){ AiFRS.toggleDbView(); AiFRS._tourOpenedDb=true; } }},
-    {sel:'#aifrs-tour-btn',        title:'⑪ 언제든 다시',   msg:'- [둘러보기]를 누르면 처음부터 다시 안내\n- 이제 키를 등록하고 문서를 올려 시작해 보세요!',
+    {sel:'#aifrs-tour-btn',        title:'⑪ 언제든 다시',   msg:'- [사용 가이드]를 누르면 처음부터 다시 안내\n- 이제 키를 등록하고 문서를 올려 시작해 보세요!',
       pre:_tourCloseDb}
   ];
   AiFRS.startTour = function(){
@@ -3545,12 +3545,7 @@ a:hover { text-decoration: underline; }
     var hl=document.getElementById('aifrs-tour-hl'), tip=document.getElementById('aifrs-tour-tip');
     hl.style.left=(r.left-6)+'px'; hl.style.top=(r.top-6)+'px';
     hl.style.width=(r.width+12)+'px'; hl.style.height=(r.height+12)+'px';
-    var W=340, vw=window.innerWidth, vh=window.innerHeight;
-    var tx=Math.min(Math.max(r.left+r.width/2-W/2, 14), vw-W-14);
-    var above = (r.top+r.height/2) > vh/2;   // 하단 대상이면 위에, 상단 대상이면 아래에 표시
-    tip.style.left=tx+'px';
-    if(above){ tip.style.top='auto'; tip.style.bottom=(vh-r.top+16)+'px'; }
-    else { tip.style.bottom='auto'; tip.style.top=(r.bottom+16)+'px'; }
+    // 콘텐츠 먼저 설정 → 실제 폭 측정 → 위치 계산 (텍스트 자동 줄내림 방지)
     tip.querySelector('b').textContent=s.title;
     // '- ' 개조식 줄은 hanging indent(줄내림 시 시작열 유지), 그 외 줄은 소제목 처리
     tip.querySelector('.tmsg').innerHTML = s.msg.split('\n').map(function(ln){
@@ -3561,6 +3556,12 @@ a:hover { text-decoration: underline; }
     tip.querySelector('.tcnt').textContent=(i+1)+' / '+steps.length;
     tip.querySelector('.tnext').textContent = i===steps.length-1?'완료':'다음';
     var pv=tip.querySelector('.tprev'); if(pv) pv.style.display = i===0?'none':'';
+    var W=tip.offsetWidth||380, vw=window.innerWidth, vh=window.innerHeight;
+    var tx=Math.min(Math.max(r.left+r.width/2-W/2, 14), vw-W-14);
+    var above = (r.top+r.height/2) > vh/2;   // 하단 대상이면 위에, 상단 대상이면 아래에 표시
+    tip.style.left=tx+'px';
+    if(above){ tip.style.top='auto'; tip.style.bottom=(vh-r.top+16)+'px'; }
+    else { tip.style.bottom='auto'; tip.style.top=(r.bottom+16)+'px'; }
   }
   // 검색 결과 헤더 클릭 → 검색 해제 후 전체 목록에서 해당 기준서 펼쳐서 이동
   AiFRS.dbJump = function(i){
@@ -3808,7 +3809,7 @@ a:hover { text-decoration: underline; }
       +   '<div class="af-drop" id="aifrs-drop"><span class="af-drop-text">Drop files here or click &mdash; PDF, Excel, CSV, Word, PPT, Image, ZIP</span></div>'
       +   '<button class="af-btn af-btn-primary" id="aifrs-ai-btn" disabled>Analyze</button>'
       +   '<button class="af-btn af-btn-ghost af-btn-sm" id="aifrs-next-btn" disabled title="Offline keyword analysis">Keywords</button>'
-      +   '<button class="af-btn af-btn-ghost af-btn-sm" id="aifrs-tour-btn" title="주요 기능을 순서대로 안내합니다">&#129517; 둘러보기</button>'
+      +   '<button class="af-btn af-btn-ghost af-btn-sm" id="aifrs-tour-btn" title="주요 기능을 순서대로 안내합니다">&#129517; 사용 가이드</button>'
       +   '<button class="af-btn af-btn-ghost af-btn-sm" id="aifrs-clear-btn" style="display:none" title="Clear all">&#10005;</button>'
       + '</div>'
       + '<span class="af-bottom-info" id="aifrs-ready-info"></span>'
