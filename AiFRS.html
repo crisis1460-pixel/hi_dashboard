@@ -202,14 +202,16 @@ a:hover { text-decoration: underline; }
 .af-sc:hover .tip { opacity:1; transform:translateX(-50%) translateY(0); }
 /* 사용 가이드 버튼 — 미사용자 유도 글로우(투어 1회 실행 시 해제) */
 #aifrs-tour-btn.af-guide-glow {
-  border-color:rgba(41,151,255,.5); color:var(--blue-sky);
-  animation:af-guide-pulse 2.4s ease-in-out infinite;
+  border-color:rgba(140,205,255,.75); color:#8ccdff;
+  animation:af-guide-pulse 1.8s ease-in-out infinite;
 }
 @keyframes af-guide-pulse {
-  0%,100% { box-shadow:0 0 0 0 rgba(41,151,255,0); border-color:rgba(41,151,255,.35); }
-  50%     { box-shadow:0 0 12px 2px rgba(41,151,255,.35); border-color:rgba(41,151,255,.85); }
+  0%,100% { box-shadow:0 0 8px 2px rgba(160,215,255,.5), 0 0 20px 6px rgba(41,151,255,.3);
+            border-color:rgba(180,225,255,.8); background:rgba(41,151,255,.1); }
+  50%     { box-shadow:0 0 14px 4px rgba(210,238,255,.95), 0 0 38px 14px rgba(70,170,255,.6);
+            border-color:rgba(240,250,255,1); background:rgba(41,151,255,.25); }
 }
-@media (prefers-reduced-motion: reduce) { #aifrs-tour-btn.af-guide-glow { animation:none; box-shadow:0 0 8px 1px rgba(41,151,255,.3); } }
+@media (prefers-reduced-motion: reduce) { #aifrs-tour-btn.af-guide-glow { animation:none; box-shadow:0 0 8px 2px rgba(190,228,255,.5), 0 0 20px 6px rgba(41,151,255,.3); } }
 /* 코치마크 투어 — 스포트라이트(하이라이트 박스의 거대 그림자로 주변 암전) */
 .aifrs-tour-ov { position:fixed; inset:0; z-index:10500; }
 .aifrs-tour-hl {
@@ -3512,8 +3514,7 @@ a:hover { text-decoration: underline; }
       pre:_tourCloseDb}
   ];
   AiFRS.startTour = function(){
-    // 최초 실행 시 유도 글로우 해제(재방문에도 유지되도록 저장)
-    try{ localStorage.setItem('aifrs_tour_seen','1'); }catch(e){}
+    // 실행 시 유도 글로우 해제(현재 세션 한정 — 새로고침하면 다시 표시)
     var tb=document.getElementById('aifrs-tour-btn'); if(tb) tb.classList.remove('af-guide-glow');
     AiFRS.endTour();
     var ov=document.createElement('div'); ov.className='aifrs-tour-ov'; ov.id='aifrs-tour-ov';
@@ -3828,7 +3829,7 @@ a:hover { text-decoration: underline; }
       +   '<div class="af-drop" id="aifrs-drop"><span class="af-drop-text">Drop files here or click &mdash; PDF, Excel, CSV, Word, PPT, Image, ZIP</span></div>'
       +   '<button class="af-btn af-btn-primary" id="aifrs-ai-btn" disabled>Analyze</button>'
       +   '<button class="af-btn af-btn-ghost af-btn-sm" id="aifrs-next-btn" disabled title="Offline keyword analysis">Keywords</button>'
-      +   '<button class="af-btn af-btn-ghost af-btn-sm" id="aifrs-tour-btn" title="주요 기능을 순서대로 안내합니다"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;vertical-align:-1.5px;margin-right:4px"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>사용 가이드</button>'
+      +   '<button class="af-btn af-btn-ghost af-btn-sm" id="aifrs-tour-btn" title="주요 기능을 순서대로 안내합니다">사용 가이드</button>'
       +   '<button class="af-btn af-btn-ghost af-btn-sm" id="aifrs-clear-btn" style="display:none" title="Clear all">&#10005;</button>'
       + '</div>'
       + '<span class="af-bottom-info" id="aifrs-ready-info"></span>'
@@ -3862,8 +3863,7 @@ a:hover { text-decoration: underline; }
     var tourBtn = document.getElementById('aifrs-tour-btn');
     if(tourBtn){
       tourBtn.addEventListener('click', AiFRS.startTour);
-      var seen=false; try{ seen=localStorage.getItem('aifrs_tour_seen')==='1'; }catch(e){}
-      if(!seen) tourBtn.classList.add('af-guide-glow');
+      tourBtn.classList.add('af-guide-glow');   // 로드 시 항상 표시, 클릭하면 해제
     }
     var brand = root.querySelector('.af-brand');
     if(brand) brand.addEventListener('click', function(){ if(AiFRS.state.files.length){ if(window.confirm('초기 화면으로 돌아갈까요? 업로드된 파일과 분석 결과가 초기화됩니다.')) AiFRS.goHome(); } else { AiFRS.goHome(); } });
