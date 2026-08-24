@@ -182,7 +182,14 @@ a:hover { text-decoration: underline; }
   padding:16px 12px; text-align:center; position:relative; cursor:default; transition:all .18s;
 }
 .af-sc:hover { border-color:var(--blue); transform:translateY(-3px); box-shadow:0 10px 26px rgba(0,0,0,.35); }
-.af-sc .ic { font-size:24px; }
+.af-sc .ic {
+  width:42px; height:42px; margin:0 auto; border-radius:11px;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(41,151,255,.08); border:1px solid rgba(41,151,255,.2);
+  color:var(--blue-sky); transition:all .18s;
+}
+.af-sc .ic svg { width:20px; height:20px; display:block; }
+.af-sc:hover .ic { background:rgba(41,151,255,.13); border-color:rgba(41,151,255,.45); }
 .af-sc .n { font-size:10.5px; font-weight:700; color:var(--blue-sky); margin-top:8px; letter-spacing:.5px; }
 .af-sc .t { font-size:13px; font-weight:700; color:var(--txt); margin-top:3px; }
 .af-sc .tip {
@@ -193,6 +200,16 @@ a:hover { text-decoration: underline; }
   box-shadow:0 10px 26px rgba(0,0,0,.45); z-index:5;
 }
 .af-sc:hover .tip { opacity:1; transform:translateX(-50%) translateY(0); }
+/* 사용 가이드 버튼 — 미사용자 유도 글로우(투어 1회 실행 시 해제) */
+#aifrs-tour-btn.af-guide-glow {
+  border-color:rgba(41,151,255,.5); color:var(--blue-sky);
+  animation:af-guide-pulse 2.4s ease-in-out infinite;
+}
+@keyframes af-guide-pulse {
+  0%,100% { box-shadow:0 0 0 0 rgba(41,151,255,0); border-color:rgba(41,151,255,.35); }
+  50%     { box-shadow:0 0 12px 2px rgba(41,151,255,.35); border-color:rgba(41,151,255,.85); }
+}
+@media (prefers-reduced-motion: reduce) { #aifrs-tour-btn.af-guide-glow { animation:none; box-shadow:0 0 8px 1px rgba(41,151,255,.3); } }
 /* 코치마크 투어 — 스포트라이트(하이라이트 박스의 거대 그림자로 주변 암전) */
 .aifrs-tour-ov { position:fixed; inset:0; z-index:10500; }
 .aifrs-tour-hl {
@@ -3479,23 +3496,25 @@ a:hover { text-decoration: underline; }
   }
   function _tourCloseDb(){ if(AiFRS._tourOpenedDb){ AiFRS.toggleDbView(); AiFRS._tourOpenedDb=false; } }
   AiFRS.TOUR_STEPS = [
-    {sel:'.af-steps',              title:'① 사용 흐름 한눈에', msg:'- 전체 4단계 흐름 요약 카드\n- 카드에 마우스를 올리면 단계별 TIP 표시'},
-    {sel:'#aifrs-settings-toggle', title:'② 시작 전 준비 — 설정', msg:'- AI 분석·정밀분석·최종검증은 API 키 필요\n- ⚙ 버튼으로 설정 패널 열기\n- 최초 1회만 등록하면 끝 (3가지 항목을 이어서 안내)'},
-    {sel:'#aifrs-entity',          expand:'.af-set-group', title:'③ Reporting Entity (당사 명칭)', msg:'왜 필요한가요?\n- AiFRS는 "당사가 누구인가"를 기준으로 거래 방향(수취/지급)과 적용 기준서를 판정합니다\n- 문서 속 자사명을 거래 상대방으로 오인하지 않게 제외하는 데도 사용\n\n사용법\n- 기본값은 헥토이노베이션 — (주)·주식회사 등 접두어 없이 핵심 명칭만 입력\n- 다른 법인이 쓰면 회사명 변경 후 [Save]',
+    {sel:'#aifrs-settings-toggle', title:'① 시작 전 준비 — 설정', msg:'- AI 분석·정밀분석·최종검증은 API 키 필요\n- ⚙ 버튼으로 설정 패널 열기\n- 최초 1회만 등록하면 끝 (3가지 항목을 이어서 안내)'},
+    {sel:'#aifrs-entity',          expand:'.af-set-group', title:'② Reporting Entity (당사 명칭)', msg:'왜 필요한가요?\n- AiFRS는 "당사가 누구인가"를 기준으로 거래 방향(수취/지급)과 적용 기준서를 판정합니다\n- 문서 속 자사명을 거래 상대방으로 오인하지 않게 제외하는 데도 사용\n\n사용법\n- 기본값은 헥토이노베이션 — (주)·주식회사 등 접두어 없이 핵심 명칭만 입력\n- 다른 법인이 쓰면 회사명 변경 후 [Save]',
       pre:_tourOpenSettings},
-    {sel:'#aifrs-api-key',         expand:'.af-set-group', title:'④ Gemini API (주 엔진)', msg:'왜 필요한가요?\n- AI 분석·OCR·정밀분석·최종검증을 구동하는 핵심 엔진\n- 무료 티어로 충분히 사용 가능 (비용 0원)\n\n사용법\n- [🔑 Get Key] → 무료 키 생성 → 붙여넣고 [Save] → [Test]\n- 키는 이 브라우저에만 저장 — 외부 전송·공유되지 않음\n- 상세 절차는 [Guide] 참고'},
-    {sel:'#aifrs-or-key',          expand:'.af-set-group', title:'⑤ OpenRouter (예비 엔진)', msg:'왜 필요한가요?\n- Gemini 무료 한도 소진·일시 오류 시 자동 전환되는 백업 라인\n- 분석이 중간에 끊기지 않게 하는 안전장치 (무료 모델만 사용)\n\n사용법\n- 선택사항 — 없어도 동작하며, 있으면 안정성이 올라갑니다\n- 발급·등록 방법은 Gemini와 동일 ([Get Key] → [Save] → [Test])'},
-    {sel:'#aifrs-drop',            title:'⑥ 파일 업로드',   msg:'- 계약서·문서를 드래그 또는 클릭해 첨부\n- PDF·엑셀·이미지·ZIP·스캔 PDF 인식\n- 업로드 후 [미리보기]로 추출 내용 확인',
+    {sel:'#aifrs-api-key',         expand:'.af-set-group', title:'③ Gemini API (주 엔진)', msg:'왜 필요한가요?\n- AI 분석·OCR·정밀분석·최종검증을 구동하는 핵심 엔진\n- 무료 티어로 충분히 사용 가능 (비용 0원)\n\n사용법\n- [🔑 Get Key] → 무료 키 생성 → 붙여넣고 [Save] → [Test]\n- 키는 이 브라우저에만 저장 — 외부 전송·공유되지 않음\n- 상세 절차는 [Guide] 참고'},
+    {sel:'#aifrs-or-key',          expand:'.af-set-group', title:'④ OpenRouter (예비 엔진)', msg:'왜 필요한가요?\n- Gemini 무료 한도 소진·일시 오류 시 자동 전환되는 백업 라인\n- 분석이 중간에 끊기지 않게 하는 안전장치 (무료 모델만 사용)\n\n사용법\n- 선택사항 — 없어도 동작하며, 있으면 안정성이 올라갑니다\n- 발급·등록 방법은 Gemini와 동일 ([Get Key] → [Save] → [Test])'},
+    {sel:'#aifrs-drop',            title:'⑤ 파일 업로드',   msg:'- 계약서·문서를 드래그 또는 클릭해 첨부\n- PDF·엑셀·이미지·ZIP·스캔 PDF 인식\n- 업로드 후 [미리보기]로 추출 내용 확인',
       pre:_tourCloseSettings},
-    {sel:'#aifrs-ai-btn',          title:'⑦ AI 분석',       msg:'- [Analyze] 한 번으로 거래구조 → 후보 기준서 자동\n- 스캔 문서는 OCR도 함께 처리\n- 다른 거래 문서가 섞이면 분석 전 자동 경고'},
-    {sel:'#aifrs-next-btn',        title:'⑧ 오프라인 매칭', msg:'- API 없이 내장 DB 1,439개 문단과 즉시 매칭\n- 파일이 바뀌면 결과 자동 갱신'},
-    {sel:'#aifrs-db-toggle',       title:'⑨ K-IFRS DB',    msg:'- 내장 기준서 50종·1,439문단 직접 열람\n- 모든 분석 근거가 여기서 검증됨'},
-    {sel:'#aifrs-db-q',            title:'⑩ DB 검색',      msg:'- 기준서번호·명칭·문단·키워드·원문 전문 검색\n- 결과 클릭 시 해당 기준서로 바로 이동',
+    {sel:'#aifrs-ai-btn',          title:'⑥ AI 분석',       msg:'- [Analyze] 한 번으로 거래구조 → 후보 기준서 자동\n- 스캔 문서는 OCR도 함께 처리\n- 다른 거래 문서가 섞이면 분석 전 자동 경고'},
+    {sel:'#aifrs-next-btn',        title:'⑦ 오프라인 매칭', msg:'- API 없이 내장 DB 1,439개 문단과 즉시 매칭\n- 파일이 바뀌면 결과 자동 갱신'},
+    {sel:'#aifrs-db-toggle',       title:'⑧ K-IFRS DB',    msg:'- 내장 기준서 50종·1,439문단 직접 열람\n- 모든 분석 근거가 여기서 검증됨'},
+    {sel:'#aifrs-db-q',            title:'⑨ DB 검색',      msg:'- 기준서번호·명칭·문단·키워드·원문 전문 검색\n- 결과 클릭 시 해당 기준서로 바로 이동',
       pre:function(){ var v=document.getElementById('aifrs-db-view'); if(v && (v.style.display==='none'||v.style.display==='')){ AiFRS.toggleDbView(); AiFRS._tourOpenedDb=true; } }},
-    {sel:'#aifrs-tour-btn',        title:'⑪ 언제든 다시',   msg:'- [사용 가이드]를 누르면 처음부터 다시 안내\n- 이제 키를 등록하고 문서를 올려 시작해 보세요!',
+    {sel:'#aifrs-tour-btn',        title:'⑩ 언제든 다시',   msg:'- [사용 가이드]를 누르면 처음부터 다시 안내\n- 이제 키를 등록하고 문서를 올려 시작해 보세요!',
       pre:_tourCloseDb}
   ];
   AiFRS.startTour = function(){
+    // 최초 실행 시 유도 글로우 해제(재방문에도 유지되도록 저장)
+    try{ localStorage.setItem('aifrs_tour_seen','1'); }catch(e){}
+    var tb=document.getElementById('aifrs-tour-btn'); if(tb) tb.classList.remove('af-guide-glow');
     AiFRS.endTour();
     var ov=document.createElement('div'); ov.className='aifrs-tour-ov'; ov.id='aifrs-tour-ov';
     ov.innerHTML='<div class="aifrs-tour-hl" id="aifrs-tour-hl"></div>'
@@ -3784,13 +3803,13 @@ a:hover { text-decoration: underline; }
       +     '<p class="af-hero-sub">K-IFRS AI Accounting Standards Analysis</p>'
       +     '<p class="af-hero-desc">Upload contracts &amp; documents for automatic K-IFRS standard matching,<br>with real-time code verification against the built-in standards database.</p>'
       +     '<div class="af-steps">'
-      +       '<div class="af-sc"><div class="ic">📎</div><div class="n">STEP 1</div><div class="t">파일 업로드</div>'
+      +       '<div class="af-sc"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-4.5"/><path d="M9.75 14.75 12 12.5l2.25 2.25"/></svg></div><div class="n">STEP 1</div><div class="t">파일 업로드</div>'
       +         '<div class="tip">- 하단 바에 드래그 또는 클릭\n- PDF·엑셀·이미지·ZIP 인식\n- 스캔 PDF는 자동 OCR</div></div>'
-      +       '<div class="af-sc"><div class="ic">🤖</div><div class="n">STEP 2</div><div class="t">AI 분석</div>'
+      +       '<div class="af-sc"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="1.8"/><rect x="10.3" y="10.3" width="3.4" height="3.4" rx="0.8"/><path d="M9.5 4.5V7M14.5 4.5V7M9.5 17v2.5M14.5 17v2.5M4.5 9.5H7M4.5 14.5H7M17 9.5h2.5M17 14.5h2.5"/></svg></div><div class="n">STEP 2</div><div class="t">AI 분석</div>'
       +         '<div class="tip">- [Analyze] 클릭 한 번\n- 거래구조 → 후보 기준서 선별\n- API 키는 최초 1회만 설정</div></div>'
-      +       '<div class="af-sc"><div class="ic">🔬</div><div class="n">STEP 3</div><div class="t">정밀 분석</div>'
+      +       '<div class="af-sc"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="5.8"/><path d="m19.5 19.5-5-5"/><path d="M10.5 8v5M8 10.5h5"/></svg></div><div class="n">STEP 3</div><div class="t">정밀 분석</div>'
       +         '<div class="tip">- 기준서별 [정밀 분석] 클릭\n- 문단 단위 체크리스트 검토\n- 내장 DB로 조문 코드검증</div></div>'
-      +       '<div class="af-sc"><div class="ic">✅</div><div class="n">STEP 4</div><div class="t">최종 검증</div>'
+      +       '<div class="af-sc"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 5.5 6v5.2c0 4.3 2.8 7.5 6.5 9.3 3.7-1.8 6.5-5 6.5-9.3V6z"/><path d="m9.3 11.7 2 2 3.5-3.9"/></svg></div><div class="n">STEP 4</div><div class="t">최종 검증</div>'
       +         '<div class="tip">- [최종 검증] 클릭\n- 문서 원문 인용만 근거로 판정\n- 충족·미흡 AI 감사 리포트</div></div>'
       +     '</div>'
       +   '</div>'
@@ -3809,7 +3828,7 @@ a:hover { text-decoration: underline; }
       +   '<div class="af-drop" id="aifrs-drop"><span class="af-drop-text">Drop files here or click &mdash; PDF, Excel, CSV, Word, PPT, Image, ZIP</span></div>'
       +   '<button class="af-btn af-btn-primary" id="aifrs-ai-btn" disabled>Analyze</button>'
       +   '<button class="af-btn af-btn-ghost af-btn-sm" id="aifrs-next-btn" disabled title="Offline keyword analysis">Keywords</button>'
-      +   '<button class="af-btn af-btn-ghost af-btn-sm" id="aifrs-tour-btn" title="주요 기능을 순서대로 안내합니다">&#129517; 사용 가이드</button>'
+      +   '<button class="af-btn af-btn-ghost af-btn-sm" id="aifrs-tour-btn" title="주요 기능을 순서대로 안내합니다"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;vertical-align:-1.5px;margin-right:4px"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>사용 가이드</button>'
       +   '<button class="af-btn af-btn-ghost af-btn-sm" id="aifrs-clear-btn" style="display:none" title="Clear all">&#10005;</button>'
       + '</div>'
       + '<span class="af-bottom-info" id="aifrs-ready-info"></span>'
@@ -3841,7 +3860,11 @@ a:hover { text-decoration: underline; }
     var aiBtn = document.getElementById('aifrs-ai-btn');
     if(aiBtn) aiBtn.addEventListener('click', AiFRS.runAiAnalysis);
     var tourBtn = document.getElementById('aifrs-tour-btn');
-    if(tourBtn) tourBtn.addEventListener('click', AiFRS.startTour);
+    if(tourBtn){
+      tourBtn.addEventListener('click', AiFRS.startTour);
+      var seen=false; try{ seen=localStorage.getItem('aifrs_tour_seen')==='1'; }catch(e){}
+      if(!seen) tourBtn.classList.add('af-guide-glow');
+    }
     var brand = root.querySelector('.af-brand');
     if(brand) brand.addEventListener('click', function(){ if(AiFRS.state.files.length){ if(window.confirm('초기 화면으로 돌아갈까요? 업로드된 파일과 분석 결과가 초기화됩니다.')) AiFRS.goHome(); } else { AiFRS.goHome(); } });
 
