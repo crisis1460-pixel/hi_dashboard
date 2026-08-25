@@ -758,6 +758,10 @@ a:hover { text-decoration: underline; }
 .af-easy-row + .af-easy-row { margin-top:7px; padding-top:7px; border-top:1px dotted var(--border); }
 .af-easy-row > b { flex-shrink:0; width:44px; color:#2dd4bf; font-weight:700; }
 .af-easy-row > span { flex:1; min-width:0; }
+.af-easy-step { display:flex; gap:8px; align-items:flex-start; }
+.af-easy-step + .af-easy-step { margin-top:6px; }
+.af-easy-step > i { flex-shrink:0; font-style:normal; font-weight:700; color:var(--blue-sky); font-size:11px; background:rgba(0,102,204,.14); border-radius:4px; padding:1px 7px; margin-top:2px; }
+.af-easy-step > span { flex:1; min-width:0; }
 
 /* 1줄 면책 + ⓘ */
 .af-foot1 { display:flex; align-items:center; gap:6px; margin-top:16px; font-size:11px; color:var(--txt3); line-height:1.7; }
@@ -3254,9 +3258,21 @@ a:hover { text-decoration: underline; }
         var what=d['무엇']||'', how=d['어떻게']||'';
         var legacy=d['쉬운설명']||d['설명']||'';
         if(!what && !how && !legacy) throw new Error('응답 파싱 실패 — 다시 시도해 주세요.');
+        // "N단계:" 패턴을 줄내림 + 라벨 칩으로 분리(모델이 한 문단으로 뱉어도 항상 정렬)
+        var howHtml='';
+        if(how){
+          var parts=String(how).split(/(?=\d+\s*단계\s*[:：])/).map(function(s){return s.trim();}).filter(Boolean);
+          if(parts.length>=2){
+            howHtml=parts.map(function(p){
+              var m=p.match(/^(\d+\s*단계)\s*[:：]\s*([\s\S]*)$/);
+              return m ? '<div class="af-easy-step"><i>'+esc(m[1].replace(/\s+/g,''))+'</i><span>'+esc(m[2])+'</span></div>'
+                       : '<div class="af-easy-step"><span>'+esc(p)+'</span></div>';
+            }).join('');
+          } else { howHtml=esc(how); }
+        }
         var html='<div class="af-easy">'
           + (what?'<div class="af-easy-row"><b>무엇을</b><span>'+esc(what)+'</span></div>':'')
-          + (how?'<div class="af-easy-row"><b>어떻게</b><span>'+esc(how)+'</span></div>':'')
+          + (how?'<div class="af-easy-row"><b>어떻게</b><span>'+howHtml+'</span></div>':'')
           + (!what&&!how?esc(legacy):'')
           + '</div>';
         AiFRS._easyCache[key]=html; slot.innerHTML=html;
