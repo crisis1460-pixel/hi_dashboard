@@ -713,6 +713,32 @@ a:hover { text-decoration: underline; }
 .af-next > span { flex:1; min-width:180px; }
 .af-next b { color:var(--txt); }
 
+/* 도움말 팝업 정의 행 — 칩 + 항상 보이는 설명(호버 불필요) */
+.af-def-sec { display:flex; align-items:center; gap:7px; margin:16px 0 7px; font-size:13px; font-weight:700; color:var(--txt); }
+.af-def-sec:first-child { margin-top:4px; }
+.af-def-sec > span.aifrs-note { font-weight:400; }
+.af-def-row { display:flex; align-items:flex-start; gap:11px; padding:7px 0; font-size:12.5px; line-height:1.7; color:var(--txt2); border-top:1px dotted var(--border); }
+.af-def-row:first-of-type { border-top:none; }
+.af-def-row > .af-chip, .af-def-row > .aifrs-prio { flex-shrink:0; margin-top:1px; min-width:84px; justify-content:center; }
+.af-def-row > span:last-child { flex:1; min-width:0; }
+.af-def-row b { color:var(--txt); }
+
+/* 후속조치 플랜(다음 할 일) + 쉬운 설명 */
+.af-plan-li { display:flex; gap:10px; margin-top:10px; font-size:12.5px; color:var(--txt2); line-height:1.7; }
+.af-plan-li > i {
+  flex-shrink:0; width:20px; height:20px; border-radius:50%; margin-top:2px;
+  background:rgba(0,102,204,.16); color:var(--blue-sky); font-style:normal; font-weight:700; font-size:11px;
+  display:inline-flex; align-items:center; justify-content:center;
+}
+.af-plan-b { flex:1; min-width:0; }
+.af-plan-h { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:3px; }
+.af-plan-what { color:var(--txt); }
+.af-plan-next { font-size:11.5px; color:var(--txt3); margin-top:3px; }
+.af-easy {
+  background:var(--bg3); border:1px solid var(--border); border-left:3px solid #2dd4bf;
+  border-radius:8px; padding:9px 12px; margin-top:7px; font-size:12px; color:var(--txt2); line-height:1.8;
+}
+
 /* 1줄 면책 + ⓘ */
 .af-foot1 { display:flex; align-items:center; gap:6px; margin-top:16px; font-size:11px; color:var(--txt3); line-height:1.7; }
 .af-foot1 > span { flex:1; min-width:0; }
@@ -2089,7 +2115,7 @@ a:hover { text-decoration: underline; }
         box.innerHTML='<div class="aifrs-api-stat err">추출된 텍스트가 없습니다.</div>'
           + (errs.length?'<div class="aifrs-note" style="margin-top:6px"><b>OCR 오류</b><br>'+errs.join('<br>')+'</div>':'<div class="aifrs-note" style="margin-top:6px">OCR 대상이 없거나 실패했습니다. 파일 카드 상태를 확인하세요.</div>')
           + '<div class="aifrs-note" style="margin-top:6px">무료 한도(분당/일일) 초과면 잠시(약 30초~1분) 뒤 재시도하세요.</div>'
-          + '<div style="margin-top:8px"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runAiAnalysis()">🔄 다시 시도</button></div>';
+          + '<div style="margin-top:8px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runAiAnalysis()">🔄 다시 시도</button></div>';
         return;
       }
       var off=AiFRS.analyze(text);
@@ -2126,12 +2152,12 @@ a:hover { text-decoration: underline; }
       if(_isAbort(e)){
         box.innerHTML='<div class="aifrs-api-stat">⏹ 분석을 중단했습니다.</div>'
           + '<div class="aifrs-note" style="margin-top:6px">진행 중이던 API 호출을 취소했습니다. (이미 추출 완료된 OCR 텍스트는 유지되어 다시 분석 시 재사용됩니다.)</div>'
-          + '<div style="margin-top:8px"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runAiAnalysis()">🔄 다시 분석</button></div>';
+          + '<div style="margin-top:8px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runAiAnalysis()">🔄 다시 분석</button></div>';
         return;
       }
       var hint=/retry in|quota|exceeded|429|rate/i.test((e&&e.message)||'')?'<div class="aifrs-note" style="margin-top:6px">무료 한도(분당/일일) 초과일 수 있습니다. 잠시(약 30초~1분) 뒤 다시 시도하거나, 한 번에 올리는 파일 수를 줄여보세요.</div>':'';
       box.innerHTML='<div class="aifrs-api-stat err">❌ '+esc(e.message)+'</div>'+hint
-        + '<div style="margin-top:8px"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runAiAnalysis()">🔄 다시 시도</button></div>';
+        + '<div style="margin-top:8px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runAiAnalysis()">🔄 다시 시도</button></div>';
     });
   };
   // API ① 진행 중단 (fetch·재시도·OCR 루프 전체 취소)
@@ -2144,28 +2170,21 @@ a:hover { text-decoration: underline; }
     var ov=document.createElement('div');
     ov.className='aifrs-modal-ov';
     ov.innerHTML='<div class="aifrs-modal" style="max-width:720px;width:94vw;text-align:left;overflow:visible">'
-      + '<div class="m-ttl" style="text-align:center">🔎 신뢰도 라벨 설명</div>'
+      + '<div class="m-ttl" style="text-align:center">신뢰도 라벨 설명</div>'
       + '<div class="aifrs-help-body">'
-      +   '<p>라벨은 <b>두 종류</b>입니다. ⓐ <b>코드검증(5단계)</b> = 분석이 가리킨 조문이 실재하는가(신뢰도). ⓑ <b>AI감사(6단계)</b> = 그 검토포인트를 <b>실제 업로드 문서에 적용했을 때 문서가 요건을 충족하는가</b>(실질 판정).</p>'
-      +   '<p style="margin:10px 0 4px"><b>ⓐ 코드검증(신뢰도) — 정밀분석 직후 자동</b> <span class="aifrs-note">(항목 요약줄의 글리프·단어)</span></p>'
-      +   '<div class="aifrs-tip-row">'
-      +     '<span class="af-chip aifrs-tip" data-tip="통과&#10;조문 실존 + 화이트리스트 + 키워드 단서 확인. 인용이 실재한다는 1차 스크리닝 통과.">'+_gl('ok')+'통과</span>'
-      +     '<span class="af-chip aifrs-tip" data-tip="미검증&#10;문단은 실존하나 키워드 단서가 약함.">'+_gl('warn')+'미검증</span>'
-      +     '<span class="af-chip aifrs-tip" data-tip="확인불가&#10;문단이 DB에 없거나 화이트리스트 밖. AI 오인용 가능성.">'+_gl('bad')+'확인불가</span>'
-      +   '</div>'
-      +   '<p style="margin:14px 0 4px"><b>ⓑ AI감사(문서 충족 여부) — [최종 검증] 클릭 시</b></p>'
-      +   '<div class="aifrs-tip-row">'
-      +     '<span class="af-chip aifrs-tip" data-tip="충족&#10;문서 내용이 요건을 명확히 충족(근거 조항·사실 제시).">'+_gl('ok')+'충족</span>'
-      +     '<span class="af-chip aifrs-tip" data-tip="미흡&#10;요건 미충족·누락·위반. 보완 필요(가장 주목할 발견사항).">'+_gl('bad')+'미흡</span>'
-      +     '<span class="af-chip aifrs-tip" data-tip="확인필요&#10;문서 정보만으로는 판단 불가. 추가 자료·수치 확인 필요.">'+_gl('warn')+'확인필요</span>'
-      +     '<span class="af-chip aifrs-tip" data-tip="해당없음&#10;이 거래에는 적용되지 않는 요건.">'+_gl('na')+'해당없음</span>'
-      +   '</div>'
-      +   '<p style="margin:14px 0 4px"><b>파이프라인 도트</b> — 감사 항목 요약줄의 점 3개</p>'
-      +   '<div class="aifrs-tip-row">'
-      +     '<span class="af-chip"><span class="af-dots"><i class="af-dot ok"></i><i class="af-dot ok"></i><i class="af-dot ok"></i></span>코드검증 · 교차검증 · 인용검증</span>'
-      +   '</div>'
-      +   '<p class="aifrs-note" style="margin-top:4px">왼쪽부터 <b>코드검증</b>(조문 실존) · <b>교차검증</b>(2차 검토자 하향 여부) · <b>인용검증</b>(문서에서 확인된 근거 유무). 초록=정상, 노랑=주의, 빨강=미확보.</p>'
-      +   '<p class="aifrs-note">※ ⓐ는 AI 인용의 실재성을 코드로 거르는 단계(개념 판단 아님), ⓑ가 실제 <b>문서를 근거로 한 감사 판정</b>입니다. AI감사 항목에 ⓐ 신뢰도가 낮으면(코드검증 미검증/확인불가) 작은 회색 태그로 함께 표시됩니다.</p>'
+      +   '<p>라벨은 <b>두 종류</b>입니다. ⓐ <b>코드검증</b> = 분석이 가리킨 조문이 실재하는가(신뢰도). ⓑ <b>AI감사</b> = 그 검토포인트를 실제 업로드 문서에 적용했을 때 <b>문서가 요건을 충족하는가</b>(실질 판정).</p>'
+      +   '<div class="af-def-sec">ⓐ 코드검증 — 정밀분석 직후 자동 <span class="aifrs-note">(항목 요약줄의 글리프·단어)</span></div>'
+      +   '<div class="af-def-row"><span class="af-chip">'+_gl('ok')+'통과</span><span>조문 실존 + 화이트리스트 + 키워드 단서까지 확인 — 인용이 실재한다는 <b>1차 스크리닝 통과</b></span></div>'
+      +   '<div class="af-def-row"><span class="af-chip">'+_gl('warn')+'미검증</span><span>문단은 실존하나 <b>키워드 단서가 약함</b> — 내용 일치 여부는 AI감사에서 확정</span></div>'
+      +   '<div class="af-def-row"><span class="af-chip">'+_gl('bad')+'확인불가</span><span>문단이 DB에 없거나 화이트리스트 밖 — <b>AI 오인용 가능성</b>, 원문 직접 확인 권장</span></div>'
+      +   '<div class="af-def-sec">ⓑ AI감사 — [최종 검증] 클릭 시 <span class="aifrs-note">(문서 충족 여부 판정)</span></div>'
+      +   '<div class="af-def-row"><span class="af-chip">'+_gl('ok')+'충족</span><span>문서 내용이 요건을 명확히 충족 — 근거 조항·사실이 문서에서 확인됨</span></div>'
+      +   '<div class="af-def-row"><span class="af-chip">'+_gl('bad')+'미흡</span><span>요건 미충족·누락·위반 — <b>보완이 필요한 가장 주목할 발견사항</b></span></div>'
+      +   '<div class="af-def-row"><span class="af-chip">'+_gl('warn')+'확인필요</span><span>문서 정보만으로는 판단 불가 — 추가 자료·수치 확인 후 재감사</span></div>'
+      +   '<div class="af-def-row"><span class="af-chip">'+_gl('na')+'해당없음</span><span>이 거래에는 적용되지 않는 요건</span></div>'
+      +   '<div class="af-def-sec">파이프라인 도트 <span class="aifrs-note">(감사 항목 요약줄의 점 3개)</span></div>'
+      +   '<div class="af-def-row"><span class="af-chip"><span class="af-dots"><i class="af-dot ok"></i><i class="af-dot ok"></i><i class="af-dot ok"></i></span></span><span>왼쪽부터 <b>코드검증</b>(조문 실존) · <b>교차검증</b>(2차 검토자 하향 여부) · <b>인용검증</b>(문서 근거 유무). 초록=정상 · 노랑=주의 · 빨강=미확보</span></div>'
+      +   '<p class="aifrs-note" style="margin-top:10px">※ ⓐ는 AI 인용의 실재성을 코드로 거르는 단계이고, ⓑ가 실제 <b>문서를 근거로 한 감사 판정</b>입니다.</p>'
       + '</div>'
       + '<div class="m-foot"><button class="aifrs-btn">확인</button></div></div>';
     function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
@@ -2177,17 +2196,16 @@ a:hover { text-decoration: underline; }
     var ov=document.createElement('div'); ov.className='aifrs-modal-ov';
     function chip(n,c,bg){ return '<span class="aifrs-prio" style="position:static;flex-shrink:0;color:'+c+';background:'+bg+'">'+n+'</span>'; }
     ov.innerHTML='<div class="aifrs-modal" style="max-width:680px;width:94vw;text-align:left;overflow:visible">'
-      + '<div class="m-ttl" style="text-align:center">🔢 검토 우선순위 설명</div>'
+      + '<div class="m-ttl" style="text-align:center">검토 우선순위 설명</div>'
       + '<div class="aifrs-help-body">'
       +   '<p>각 조문이 <b>이 거래의 회계 “결론”을 바꾸는 판단 길목</b>인지를 AI가 1~100으로 평가한 값입니다(거래 맥락 기준·참고용). 우선순위 <b>내림차순</b>으로 정렬되고, <b>형식(&lt;40)</b> 문단은 자동으로 접힙니다.</p>'
-      +   '<p style="margin:10px 0 4px"><b>등급(모든 기준서 공통 기준)</b> <span class="aifrs-note">(라벨에 마우스를 대면 설명이 보입니다)</span></p>'
-      +   '<div class="aifrs-tip-row">'
-      +     '<span class="aifrs-tip" data-tip="핵심 (≥70)&#10;인식 여부·시점, 분류, 측정금액을 결정하는 핵심 판단 조문.">'+chip('핵심 ≥70','#f87171','rgba(248,113,113,.15)')+'</span>'
-      +     '<span class="aifrs-tip" data-tip="검토 (40~69)&#10;결론에 영향은 있으나 부차적·조건부로 따져볼 조문.">'+chip('검토 40~69','#fbbf24','rgba(251,191,36,.15)')+'</span>'
-      +     '<span class="aifrs-tip" data-tip="형식 (<40)&#10;공시·주석 등 이 거래에 변수 없는 조항. 기본 접힘.">'+chip('형식 &lt;40','var(--txt3)','var(--bg4)')+'</span>'
-      +   '</div>'
-      +   '<p style="margin:12px 0 4px"><b>정렬</b> — 우선순위↓, 동점이면 정밀분석은 <b>확인불가&gt;미검증&gt;통과</b>, 감사는 <b>확인필요&gt;미흡&gt;충족</b> 순.</p>'
-      +   '<p class="aifrs-note">※ AI 평가라 절대적이지 않습니다. <b>참고용 가이드일 뿐 어떤 조문도 검토 생략의 근거가 아니며</b>, 접힌 형식 문단도 펼쳐 모두 볼 수 있습니다.</p>'
+      +   '<div class="af-def-sec">등급 <span class="aifrs-note">(모든 기준서 공통 기준)</span></div>'
+      +   '<div class="af-def-row">'+chip('핵심 ≥70','#f87171','rgba(248,113,113,.15)')+'<span><b>인식 여부·시점, 분류, 측정금액을 결정</b>하는 핵심 판단 조문 — 가장 먼저 확인</span></div>'
+      +   '<div class="af-def-row">'+chip('검토 40~69','#fbbf24','rgba(251,191,36,.15)')+'<span>결론에 영향은 있으나 <b>부차적·조건부</b>로 따져볼 조문</span></div>'
+      +   '<div class="af-def-row">'+chip('형식 &lt;40','var(--txt3)','var(--bg4)')+'<span>공시·주석 등 이 거래에 변수 없는 조항 — <b>기본 접힘</b>(펼쳐 볼 수 있음)</span></div>'
+      +   '<div class="af-def-sec">정렬 순서</div>'
+      +   '<p style="margin:0">우선순위 내림차순, 동점이면 정밀분석은 <b>확인불가 &gt; 미검증 &gt; 통과</b>, 감사는 <b>확인필요 &gt; 미흡 &gt; 충족</b> 순으로 주의가 필요한 항목이 위로 옵니다.</p>'
+      +   '<p class="aifrs-note" style="margin-top:10px">※ AI 평가라 절대적이지 않습니다. <b>참고용 가이드일 뿐 어떤 조문도 검토 생략의 근거가 아닙니다.</b></p>'
       + '</div>'
       + '<div class="m-foot"><button class="aifrs-btn">확인</button></div></div>';
     function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
@@ -2273,7 +2291,7 @@ a:hover { text-decoration: underline; }
             :(rawn?'<div class="aifrs-pr-warn-row aifrs-pr-row" style="margin-top:4px"><b>문서 근거</b><span>검증된 인용 없음(AI 제시 '+rawn+'건이 문서와 불일치)</span></div>':''))
         + '<div style="margin-top:7px"><span class="aifrs-note">'+(low?'※ 당사 위치/분류가 모호합니다 — 아래 후보가 부적절하면 당사 위치를 정정해 알려주세요(재분석).':'※ 당사 위치가 틀리면 적용 기준서가 달라집니다 — 잘못됐으면 알려주세요.')+'</span></div>'
         + (gs['방향경고']?'<div class="aifrs-api-stat err" style="margin-top:6px">'+esc(gs['방향경고'])+'</div>':'')
-        + (gs['__userFixed']?'<div style="margin-top:8px"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.reselectCandidates()" title="확정한 거래구조를 전제로 적용 기준서 후보를 AI가 다시 선정(API 1콜)">🔄 AI로 후보 재선정 (1콜)</button></div>':'')
+        + (gs['__userFixed']?'<div style="margin-top:8px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.reselectCandidates()" title="확정한 거래구조를 전제로 적용 기준서 후보를 AI가 다시 선정(API 1콜)">🔄 AI로 후보 재선정 (1콜)</button></div>':'')
         + '</div>';
     }
     var cands=data.candidates||[];
@@ -2420,7 +2438,7 @@ a:hover { text-decoration: underline; }
         box.innerHTML=renderPreciseResult(data, std, ((Date.now()-t0)/1000).toFixed(1));
       })
       .catch(function(e){ fin();
-        if(_isAbort(e)){ box.innerHTML='<div class="aifrs-api-stat">⏹ 정밀 분석을 중단했습니다.</div><div style="margin-top:8px"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runPreciseAnalysis(\''+no+'\')">🔄 다시 정밀 분석</button></div>'; return; }
+        if(_isAbort(e)){ box.innerHTML='<div class="aifrs-api-stat">⏹ 정밀 분석을 중단했습니다.</div><div style="margin-top:8px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runPreciseAnalysis(\''+no+'\')">🔄 다시 정밀 분석</button></div>'; return; }
         box.innerHTML='<div class="aifrs-api-stat err">❌ '+esc(e.message)+'</div>'; });
   };
   AiFRS.cancelPrecise=function(no){ var c=AiFRS._preciseCtl&&AiFRS._preciseCtl[no]; if(c){ try{c.abort();}catch(e){} } };
@@ -2703,7 +2721,8 @@ a:hover { text-decoration: underline; }
       scope:'<path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13zM21 21l-4.6-4.6"/>',
       shield:'<path d="M12 2L4 6v6c0 4.42 3.4 8.48 8 10 4.6-1.52 8-5.58 8-10V6L12 2z"/><path d="M8.5 12l2.5 2.5 4.5-4.5"/>',
       compass:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
-      img:'<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M3.5 16.5l4.5-4 4 3.5 3.5-3 5 4"/>'
+      img:'<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M3.5 16.5l4.5-4 4 3.5 3.5-3 5 4"/>',
+      plan:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 2.5h6v3H9z"/><path d="M8.5 13l2.2 2.2 4.3-4.3"/>'
     }[kind]||'';
     return '<svg viewBox="0 0 24 24" fill="none" stroke="'+c+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:'+px+'px;height:'+px+'px;vertical-align:-3px;flex-shrink:0">'+d+'</svg>';
   }
@@ -2913,7 +2932,8 @@ a:hover { text-decoration: underline; }
             ? '<b>'+probs+'건</b>이 미검증·확인불가입니다. <b>AI감사</b>로 문서 근거를 대조해 충족 여부와 해결방향(보완·확인 사항)을 확인하세요.'
             : '코드검증(조문 실존)은 모두 통과했습니다. 문서가 실제로 요건을 충족하는지는 <b>AI감사</b>에서 확정됩니다.')
         + '</span>'
-      + '<button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runFinalAudit(\''+std.no+'\')">'+(hasAudit?'🔄 최종 검증 다시 실행':'✅ 최종 검증(AI감사) 실행')+'</button></div></div>';
+      + '</div>'
+      + '<div style="margin-top:9px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runFinalAudit(\''+std.no+'\')">'+(hasAudit?'🔄 최종 검증 다시 실행':'✅ 최종 검증(AI감사) 실행')+'</button></div></div>';
     var foot='<div class="af-foot1">'+_gl('warn')+'<span>AI 분석 결과는 참고용이며, 최종 판단·책임은 담당자에게 있습니다.</span>'
       + '<button class="aifrs-help-btn" onclick="window.AiFRS.showSheet(\'discPrecise\')">ⓘ 자세히</button></div>';
     var auditSlot='<div class="aifrs-precise-slot" id="aifrs-audit-'+std.no+'"></div>';
@@ -3080,8 +3100,8 @@ a:hover { text-decoration: underline; }
           });
       })
       .catch(function(e){ afin();
-        if(_isAbort(e)){ slot.innerHTML='<div class="aifrs-api-stat">⏹ 최종 검증을 중단했습니다.</div><div style="margin-top:8px"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runFinalAudit(\''+no+'\')">🔄 다시 최종 검증</button></div>'; return; }
-        slot.innerHTML='<div class="aifrs-api-stat err">❌ '+esc(e.message)+'</div><div style="margin-top:8px"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runFinalAudit(\''+no+'\')">🔄 다시 시도</button></div>'; });
+        if(_isAbort(e)){ slot.innerHTML='<div class="aifrs-api-stat">⏹ 최종 검증을 중단했습니다.</div><div style="margin-top:8px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runFinalAudit(\''+no+'\')">🔄 다시 최종 검증</button></div>'; return; }
+        slot.innerHTML='<div class="aifrs-api-stat err">❌ '+esc(e.message)+'</div><div style="margin-top:8px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runFinalAudit(\''+no+'\')">🔄 다시 시도</button></div>'; });
   };
   AiFRS.cancelAudit=function(no){ var c=AiFRS._auditCtl&&AiFRS._auditCtl[no]; if(c){ try{c.abort();}catch(e){} } };
   function _auditVerd(v){
@@ -3090,6 +3110,90 @@ a:hover { text-decoration: underline; }
     if(v==='해당없음') return {cls:'a', ico:'➖', cfb:'', tip:'해당없음&#10;이 거래에는 적용되지 않는 요건.'};
     return {cls:'a', ico:'⚠️', cfb:'amber', tip:'확인필요&#10;문서 정보만으로는 판단 불가. 추가 자료·수치 확인 필요.'};   // 확인필요(기본)
   }
+  // ── 후속조치 플랜(0콜): 문제 항목을 행동 언어로 통합. 유형·다음 단계는 로컬 규칙, 상세 풀이는 [쉬운 설명](온디맨드 1콜) ──
+  function _planKey(no, art){ return (String(no)+'-'+String(art)).replace(/[^0-9A-Za-z가-힣]/g,''); }
+  function _actionOf(a){
+    var t=(a['판단불가사유']||'')+' '+(a['보완사항']||'');
+    if(a['판정']==='미흡')
+      return {label:'보완 필요', c:'#f87171', next:'계약·문서 내용을 보완(수정·추가 합의)한 뒤 변경본을 업로드해 재감사하세요.'};
+    if(/확인되지 않|확인 불가|확인할 수 없|없음|누락|부재|제시되지 않|기재되지 않|찾을 수 없/.test(t))
+      return {label:'자료 확보', c:'#fbbf24', next:'해당 내용이 담긴 자료(부속합의서·정산서·품의서 등)를 확보해 파일로 추가한 뒤 재감사하세요.'};
+    return {label:'사실 확인', c:'#fbbf24', next:'계약 담당자·상대방에게 위 사항을 확인하고, 확인 내용이 담긴 자료를 추가해 재감사하세요.'};
+  }
+  function _buildActionPlan(std, items, audited){
+    var byArt={}; items.forEach(function(it){ byArt[String(it['조문번호']||'').trim()]=it; });
+    var probs=audited.filter(function(a){ return a['판정']==='미흡'||a['판정']==='확인필요'; });
+    if(!probs.length) return '';
+    probs.sort(function(x,y){
+      var px=_clampPrio((byArt[String(x['조문번호']||'').trim()]||{})['검토우선순위']);
+      var py=_clampPrio((byArt[String(y['조문번호']||'').trim()]||{})['검토우선순위']);
+      return py-px;
+    });
+    var rows=probs.map(function(a, idx){
+      var art=String(a['조문번호']||'').trim(), it=byArt[art]||{};
+      var act=_actionOf(a), key=_planKey(std.no, art);
+      var what=a['보완사항']||a['판단불가사유']||it['검토포인트']||it['체크항목']||'';
+      var range=AiFRS.stripStdPrefix(std.no, art)||art;
+      return '<div class="af-plan-li"><i>'+(idx+1)+'</i><div class="af-plan-b">'
+        + '<div class="af-plan-h">'
+        +   '<span class="af-chip" style="color:'+act.c+'"><b style="color:inherit;opacity:.7">유형</b>'+act.label+'</span>'
+        +   (art?_artChip(std.no, range, '§ '+esc(range)):'')
+        + '</div>'
+        + (what?'<div class="af-plan-what">'+esc(what)+'</div>':'')
+        + '<div class="af-plan-next">→ '+esc(act.next)+'</div>'
+        + '<div style="margin-top:5px"><button class="aifrs-help-btn" onclick="window.AiFRS.explainEasy(\''+std.no+'\',\''+esc(art)+'\')">ⓘ 쉬운 설명</button></div>'
+        + '<div id="aifrs-easy-'+key+'"></div>'
+        + '</div></div>';
+    }).join('');
+    return '<div class="af-hero-card" style="border-left-color:#fbbf24">'
+      + '<div class="af-hero-t">'+_ico('plan',15)+'<span>다음 할 일</span>'
+      +   '<span class="af-hero-sub">문제 '+probs.length+'건 — 처리 후 재감사하면 자동 재판정</span></div>'
+      + rows + '</div>';
+  }
+  // [쉬운 설명]: 검증 완료된 감사 결과 1건을 비전문가 언어로 풀이 — 누를 때만 API 1콜, 결과는 세션 캐시
+  AiFRS.explainEasy = function(no, art){
+    var key=_planKey(no, art), slot=document.getElementById('aifrs-easy-'+key);
+    if(!slot) return;
+    AiFRS._easyCache=AiFRS._easyCache||{};
+    if(AiFRS._easyCache[key]){ slot.innerHTML=AiFRS._easyCache[key]; return; }
+    if(!AiFRS.getApiKey() && !AiFRS.getOrKey()){ slot.innerHTML='<div class="aifrs-note">먼저 ⚙ 설정에서 API 키를 저장·연결하세요.</div>'; return; }
+    var _rg=AiFRS.rateGuard(); if(!_rg.ok){ showRateWaitPopup(_rg.waitSec); return; }
+    var rec=(AiFRS._lastAudit||{})[no], a=null;
+    if(rec&&rec.items) rec.items.forEach(function(x){ if(String(x['조문번호']||'').trim()===String(art).trim()) a=x; });
+    if(!a){ slot.innerHTML='<div class="aifrs-note">항목 데이터를 찾을 수 없습니다 — 감사를 다시 실행해 보세요.</div>'; return; }
+    var it=null, pr=(AiFRS._lastPrecise||{})[no];
+    if(pr&&pr.items) pr.items.forEach(function(x){ if(String(x['조문번호']||'').trim()===String(art).trim()) it=x; });
+    var std=AiFRS.findStandard(no);
+    slot.innerHTML='<div class="aifrs-ai-load" style="padding:8px 0;text-align:left;font-size:12px"><span class="aifrs-spin"></span> 쉬운 설명 생성 중…</div>';
+    var prompt=[
+      '당신은 회계 초보 실무자를 돕는 친절한 선배입니다. 아래 AI 감사 결과 1건을 회계 지식이 없는 사람도 이해할 수 있게 설명하세요.',
+      '- 3~5문장, 존댓말. 전문용어는 쓸 때마다 괄호로 한 줄 풀이를 붙일 것.',
+      '- 구성: ① 무엇이 문제/확인사항인지 ② 왜 중요한지(잘못되면 어떤 영향) ③ 지금 당장 무엇을 하면 되는지(구체적 행동).',
+      '- 아래 제공된 정보 밖의 사실을 추측하지 말 것.',
+      '',
+      '[기준서] 제'+no+'호 '+(std?std.name:'')+' / 조문 '+art,
+      '[검토포인트] '+((it&&it['검토포인트'])||''),
+      '[판정] '+(a['판정']||''),
+      '[문서에서 확인된 근거] '+((a['근거인용']||[]).join(' / ')||'없음'),
+      '[감사의견] '+(a['감사의견']||''),
+      '[보완사항] '+(a['보완사항']||''),
+      '[판단불가사유] '+(a['판단불가사유']||''),
+      '',
+      '반드시 아래 JSON으로만: {"쉬운설명":"..."}'
+    ].join('\n');
+    AiFRS.callGemini(prompt, {json:true, temperature:0})
+      .then(function(t){
+        var d=AiFRS.parseJsonResponse(t)||{};
+        var txt=d['쉬운설명']||d['설명']||'';
+        if(!txt) throw new Error('응답 파싱 실패 — 다시 시도해 주세요.');
+        var html='<div class="af-easy">'+esc(txt)+'</div>';
+        AiFRS._easyCache[key]=html; slot.innerHTML=html;
+      })
+      .catch(function(e){
+        slot.innerHTML='<div class="aifrs-api-stat err">❌ '+esc(e.message)+'</div>'
+          + '<div style="margin-top:5px"><button class="aifrs-help-btn" onclick="window.AiFRS.explainEasy(\''+no+'\',\''+esc(String(art))+'\')">🔄 다시 시도</button></div>';
+      });
+  };
   function renderFinalAudit(std, items, audited, secs){
     var byNo={}; audited.forEach(function(a){ byNo[String(a['조문번호']||'').trim()]=a; });
     var cnt={'충족':0,'미흡':0,'확인필요':0,'해당없음':0};
@@ -3168,7 +3272,8 @@ a:hover { text-decoration: underline; }
       + '<span style="display:inline-flex;align-items:center;gap:6px">'+_ico('shield',15)+' AI감사 결과</span>'
       + '<button class="aifrs-help-btn" onclick="window.AiFRS.showSheet(\'prioAudit\')">ⓘ 우선순위·정렬</button>'
       + '<button class="aifrs-help-btn" onclick="window.AiFRS.showSheet(\'discAudit\')">ⓘ 감사 방식</button></div>';
-    return headRow+hero+rows+foot;
+    var plan=_buildActionPlan(std, items, audited);
+    return headRow+hero+plan+rows+foot;
   }
 
   // ── 7단계: 증빙 PDF 다운로드 (브라우저 인쇄 → "PDF로 저장") ──
@@ -3297,12 +3402,12 @@ a:hover { text-decoration: underline; }
     AiFRS.callGemini(buildJournalPrompt(), {json:true, temperature:0.1, signal:ctl?ctl.signal:undefined, system:'당신은 K-IFRS 회계 담당자입니다. 확정 분석에만 근거해 단계별 분개를 작성하고 반드시 JSON으로만 답합니다.'})
       .then(function(txt){ fin();
         var data=AiFRS.parseJsonResponse(txt);
-        if(!data||!data['분개']){ box.innerHTML='<div class="aifrs-an-head">📒 회계처리안</div><div class="aifrs-api-stat err">작성 결과 파싱 실패.</div><div style="margin-top:8px"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runJournal()">🔄 다시 작성</button></div>'; return; }
+        if(!data||!data['분개']){ box.innerHTML='<div class="aifrs-an-head">📒 회계처리안</div><div class="aifrs-api-stat err">작성 결과 파싱 실패.</div><div style="margin-top:8px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runJournal()">🔄 다시 작성</button></div>'; return; }
         AiFRS._lastJournal=data; box.innerHTML=renderJournal(data, ((Date.now()-t0)/1000).toFixed(1));
       })
       .catch(function(e){ fin();
-        if(_isAbort(e)){ box.innerHTML='<div class="aifrs-an-head">📒 회계처리안</div><div class="aifrs-api-stat">⏹ 작성을 중단했습니다.</div><div style="margin-top:8px"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runJournal()">🔄 다시 작성</button></div>'; return; }
-        box.innerHTML='<div class="aifrs-an-head">📒 회계처리안</div><div class="aifrs-api-stat err">❌ '+esc(e.message)+'</div><div style="margin-top:8px"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runJournal()">🔄 다시 시도</button></div>'; });
+        if(_isAbort(e)){ box.innerHTML='<div class="aifrs-an-head">📒 회계처리안</div><div class="aifrs-api-stat">⏹ 작성을 중단했습니다.</div><div style="margin-top:8px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runJournal()">🔄 다시 작성</button></div>'; return; }
+        box.innerHTML='<div class="aifrs-an-head">📒 회계처리안</div><div class="aifrs-api-stat err">❌ '+esc(e.message)+'</div><div style="margin-top:8px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runJournal()">🔄 다시 시도</button></div>'; });
   };
   function renderJournal(d, secs){
     var basis=(d['금액기준']==='실제')?'<span class="aifrs-jn-basis real">실제 금액</span>':'<span class="aifrs-jn-basis ex">예시 금액(실제로 교체 필요)</span>';
