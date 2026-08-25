@@ -409,7 +409,7 @@ a:hover { text-decoration: underline; }
 
 .aifrs-audit-tag { font-size:9.5px; font-weight:700; color:#a78bfa; background:rgba(167,139,250,.15); border-radius:var(--radius-pill); padding:1px 7px; margin-left:4px; }
 
-.aifrs-pr-verify { font-size:10px; color:var(--txt3); margin-top:7px; font-family:monospace; border-top:1px dotted var(--border); padding-top:6px; }
+.aifrs-pr-verify { font-size:10.5px; color:var(--txt3); margin-top:7px; font-family:inherit; border-top:1px dotted var(--border); padding-top:6px; }
 
 .aifrs-disclaimer {
   margin-top:16px; font-size:11px; color:var(--txt3); background:var(--bg3);
@@ -583,7 +583,7 @@ a:hover { text-decoration: underline; }
 .aifrs-art-jn {
   font-size:12px; color:var(--blue-sky); line-height:1.8; margin-top:8px; padding:8px 13px;
   background:var(--bg1, #1a1a1c); border:1px solid var(--border); border-radius:8px;
-  font-family:'SF Mono', Consolas, 'Courier New', monospace; white-space:pre-wrap;
+  font-family:inherit; font-variant-numeric:tabular-nums; white-space:pre-wrap;
 }
 
 .aifrs-modal-overlay, .aifrs-modal-ov {
@@ -2036,7 +2036,7 @@ a:hover { text-decoration: underline; }
         if(signal && signal.aborted) return Promise.reject(_abortErr());
         if(!parts.length){ rec.ocrText=''; rec.ocrDone=true; rec.ocrErr='PDF→이미지 변환 실패'+(rec._pdfErr?'('+rec._pdfErr+')':''); i++; renderFileList(); return step(); }
         var ocrM=AiFRS.API.ocrModel||undefined;   // 비우면 자동모드(또는 수동 현재모델) 따라감
-        return AiFRS.callGemini(AiFRS.OCR_PROMPT, {images:parts, temperature:0, retry:5, model:ocrM, signal:signal, onRetry:function(k,mx,mdl,e){ var b=document.getElementById('aifrs-ai'); if(b) b.innerHTML=_stepper(2)+'<div class="aifrs-ai-load"><span class="aifrs-spin"></span> 🖼️ '+esc(rec.name)+' OCR 재시도 '+k+'/'+mx+'<div class="aifrs-note">'+_retryReason(e)+'</div>'+_aiCancelBtn()+'</div>'; }})
+        return AiFRS.callGemini(AiFRS.OCR_PROMPT, {images:parts, temperature:0, retry:5, model:ocrM, signal:signal, onRetry:function(k,mx,mdl,e){ var b=document.getElementById('aifrs-ai'); if(b) b.innerHTML=_stepper(2)+'<div class="aifrs-ai-load"><span class="aifrs-spin"></span> '+_ico('img',14)+' '+esc(rec.name)+' OCR 재시도 '+k+'/'+mx+'<div class="aifrs-note">'+_retryReason(e)+'</div>'+_aiCancelBtn()+'</div>'; }})
           .then(function(t){ rec.ocrText=(t||'').trim(); rec.ocrDone=true; i++; renderFileList(); return step(); })
           .catch(function(e){ if(_isAbort(e)) throw e;   // 중단이면 다음 파일로 넘어가지 않고 루프 종료
             rec.ocrText=''; rec.ocrDone=true; rec.ocrErr=(e&&e.message)||'OCR 실패'; i++; renderFileList(); return step(); });
@@ -2080,7 +2080,7 @@ a:hover { text-decoration: underline; }
     box.innerHTML=_stepper(2)+'<div class="aifrs-ai-load"><span class="aifrs-spin"></span> 준비 중…'+_aiCancelBtn()+'</div>';
     // 1) 이미지 OCR(비전) 먼저 → 텍스트 합류
     AiFRS.ensureImagesOcr(function(n,total,name){
-      box.innerHTML=_stepper(2)+'<div class="aifrs-ai-load"><span class="aifrs-spin"></span> 🖼️ 이미지 텍스트 추출(OCR) '+n+'/'+total+'…<div class="aifrs-note">'+esc(name)+'</div>'+_aiCancelBtn()+'</div>';
+      box.innerHTML=_stepper(2)+'<div class="aifrs-ai-load"><span class="aifrs-spin"></span> '+_ico('img',14)+' 이미지 텍스트 추출(OCR) '+n+'/'+total+'…<div class="aifrs-note">'+esc(name)+'</div>'+_aiCancelBtn()+'</div>';
     }, _sig).then(function(){
       var text=gatherText();
       if(!text){
@@ -2102,9 +2102,9 @@ a:hover { text-decoration: underline; }
         .then(function(txt1){
           var norm=AiFRS.parseJsonResponse(txt1)||{};
           // ── 2차: 거래구조(당사 위치·관계) 확정 → 후보 기준서 ──
-          box.innerHTML=_stepper(4)+'<div class="aifrs-ai-load"><span class="aifrs-spin"></span> 🧭 거래구조(당사 위치·관계) 분석 중… <b id="aifrs-ai-timer">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="aifrs-note">2/2 — 당사 위치 확정 → 후보 기준서 선정</div>'+_aiCancelBtn()+'</div>';
+          box.innerHTML=_stepper(4)+'<div class="aifrs-ai-load"><span class="aifrs-spin"></span> '+_ico('compass',14)+' 거래구조(당사 위치·관계) 분석 중… <b id="aifrs-ai-timer">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="aifrs-note">2/2 — 당사 위치 확정 → 후보 기준서 선정</div>'+_aiCancelBtn()+'</div>';
           return AiFRS.callGemini(buildStructurePrompt(text, norm.normalizedTerms||[]), {json:true, temperature:0.1, signal:_sig, system:'당신은 K-IFRS 전문가입니다. 보고실체(당사) 관점에서 거래구조를 확정하고 적용 기준서를 정확히 판단합니다. JSON으로만 답합니다.',
-              onRetry:function(k,mx,mdl,e){ if(box) box.innerHTML=_stepper(4)+'<div class="aifrs-ai-load"><span class="aifrs-spin"></span> 🧭 거래구조 재시도 '+k+'/'+mx+' <b id="aifrs-ai-timer">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="aifrs-note">2/2 — '+_retryReason(e)+'</div>'+_aiCancelBtn()+'</div>'; }})
+              onRetry:function(k,mx,mdl,e){ if(box) box.innerHTML=_stepper(4)+'<div class="aifrs-ai-load"><span class="aifrs-spin"></span> '+_ico('compass',14)+' 거래구조 재시도 '+k+'/'+mx+' <b id="aifrs-ai-timer">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="aifrs-note">2/2 — '+_retryReason(e)+'</div>'+_aiCancelBtn()+'</div>'; }})
             .then(function(txt2){
               clearInterval(aiTimer); AiFRS._aiBusy=false;
               var st=AiFRS.parseJsonResponse(txt2);
@@ -2263,7 +2263,7 @@ a:hover { text-decoration: underline; }
       if(_infl) _ch.push(_kvChip('영향 측면', _infl));
       if(gs['신뢰도']) _ch.push('<span class="af-chip" style="color:'+(low?'#fbbf24':'#2dd4bf')+'"><b style="color:inherit;opacity:.7">신뢰도</b>'+esc(gs['신뢰도'])+'</span>');
       h+='<div class="aifrs-tx-box'+(low?' warn':'')+'">'
-        + '<div class="aifrs-tx-box-h">🧭 거래구조 (당사 위치·관계)'
+        + '<div class="aifrs-tx-box-h">'+_ico('compass',14)+' 거래구조 (당사 위치·관계)'
         + (gs['자료성격']?' <span class="aifrs-tx-tag">'+esc(gs['자료성격'])+'</span>':'')
         + '</div>'
         + (_ch.length?'<div class="af-chip-row">'+_ch.join('')+'</div>':'')
@@ -2701,7 +2701,9 @@ a:hover { text-decoration: underline; }
     var d={
       ai:'<path d="M10 3.5l1.6 4.4 4.4 1.6-4.4 1.6L10 15.5l-1.6-4.4L4 9.5l4.4-1.6z"/><path d="M17.5 3l.9 2.6 2.6.9-2.6.9L17.5 10l-.9-2.6L14 7.5l2.6-.9z"/>',
       scope:'<path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13zM21 21l-4.6-4.6"/>',
-      shield:'<path d="M12 2L4 6v6c0 4.42 3.4 8.48 8 10 4.6-1.52 8-5.58 8-10V6L12 2z"/><path d="M8.5 12l2.5 2.5 4.5-4.5"/>'
+      shield:'<path d="M12 2L4 6v6c0 4.42 3.4 8.48 8 10 4.6-1.52 8-5.58 8-10V6L12 2z"/><path d="M8.5 12l2.5 2.5 4.5-4.5"/>',
+      compass:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
+      img:'<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M3.5 16.5l4.5-4 4 3.5 3.5-3 5 4"/>'
     }[kind]||'';
     return '<svg viewBox="0 0 24 24" fill="none" stroke="'+c+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:'+px+'px;height:'+px+'px;vertical-align:-3px;flex-shrink:0">'+d+'</svg>';
   }
@@ -2862,7 +2864,7 @@ a:hover { text-decoration: underline; }
       var paraLabel=v.pinpoint?(v.pinpoint.no+v.pinpoint.idx):rangeNo;
       var cw=_codeWord(v.level);
       // 코드검증 근거: 텍스트 나열 → 글리프 + 짧은 구절
-      var verify='<div class="aifrs-pr-verify" style="font-family:inherit">'
+      var verify='<div class="aifrs-pr-verify">'
         + _glLine([
             [v.para?'ok':'bad', '문단 '+(v.para?'실존':'불일치')],
             [v.whitelist?'ok':'bad', '화이트리스트 '+(v.whitelist?'OK':'밖')],
@@ -3108,7 +3110,7 @@ a:hover { text-decoration: underline; }
         : '';
       // 환각제외 안내는 경고 아이콘 한 줄로 축약(상세는 title)
       var hallucNote = (a['환각제외']>0)
-        ? '<div class="aifrs-pr-verify" style="font-family:inherit"><span class="af-vitem" title="AI가 제시한 근거 '+a['환각제외']+'건이 문서에서 확인되지 않아 자동 제외되었습니다(할루시네이션 차단)">'
+        ? '<div class="aifrs-pr-verify"><span class="af-vitem" title="AI가 제시한 근거 '+a['환각제외']+'건이 문서에서 확인되지 않아 자동 제외되었습니다(할루시네이션 차단)">'
             + _gl('warn',11)+'AI 제시 근거 '+a['환각제외']+'건 제외 — 문서에서 미확인</span></div>'
         : '';
       var auBase=artNo||(code.para?code.para.no:'');   // 조문번호 누락 시 코드검증이 복원한 DB 문단번호로 표시
