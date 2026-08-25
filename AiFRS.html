@@ -3182,7 +3182,12 @@ a:hover { text-decoration: underline; }
   function _buildActionPlan(std, items, audited){
     var byArt={}; items.forEach(function(it){ byArt[String(it['조문번호']||'').trim()]=it; });
     var probs=audited.filter(function(a){ return a['판정']==='미흡'||a['판정']==='확인필요'; });
-    if(!probs.length) return '';
+    if(!probs.length){
+      // 전 항목 충족 — 섹션을 숨기지 않고 "할 일 없음" 한 줄로 여정을 완결
+      return '<div class="af-hero-card" style="border-left-color:#2dd4bf">'
+        + '<div class="af-hero-t">'+_ico('plan',15)+'<span>다음 할 일</span>'
+        + '<span class="af-hero-sub">없음 — 모든 항목이 문서 근거로 충족되어 별도 조치가 필요하지 않습니다</span></div></div>';
+    }
     probs.sort(function(x,y){
       var px=_clampPrio((byArt[String(x['조문번호']||'').trim()]||{})['검토우선순위']);
       var py=_clampPrio((byArt[String(y['조문번호']||'').trim()]||{})['검토우선순위']);
