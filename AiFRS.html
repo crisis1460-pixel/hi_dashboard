@@ -1213,7 +1213,7 @@ a:hover { text-decoration: underline; }
   };
   // 자동 모델 우선순위. 모델ID에 '/'가 있으면 OpenRouter(OpenAI호환), 없으면 Gemini로 라우팅(_providerOf).
   // 2026-07-16: gemini-2.0-flash·2.0-flash-lite 완전 종료(shut down) 확인 → 2.5/3.6 세대로 교체
-  AiFRS.MODEL_CHAIN = ['gemini-2.5-flash-lite','gemini-2.5-flash','gemini-3.6-flash','gemini-3.5-flash-lite'];   // Gemini(주력)만 — OR 무료모델은 동적 조회로 채움
+  AiFRS.MODEL_CHAIN = ['gemini-3.5-flash-lite','gemini-3.6-flash','gemini-2.5-flash','gemini-2.5-flash-lite'];   // 신세대(3.x) 우선 — 2.5 계열은 신규 프로젝트에서 차단됨(구키 폴백용으로 유지). OR 무료모델은 동적 조회로 채움
   // ⚠ OpenRouter 무료모델 ID는 수시 변동(슬러그가 유료로 바뀌거나 사라짐) → refreshOrModels로 실시간 조회, 조회 실패 시 OR_FALLBACK 사용
   AiFRS.OR_FALLBACK = ['meta-llama/llama-3.3-70b-instruct:free','mistralai/mistral-small-3.2-24b-instruct:free','google/gemma-3-27b-it:free'];
   AiFRS._orFreeModels = null;        // refreshOrModels가 채우는 동적 무료모델 목록
@@ -1338,7 +1338,7 @@ a:hover { text-decoration: underline; }
     if(opts.temperature!=null) gc.temperature=opts.temperature;
     gc.maxOutputTokens = opts.maxOutputTokens || 8192;   // 응답이 중간에 잘려 JSON이 미완성되는 것 방지
     // 2.5 계열은 사고(thinking) 토큰이 출력 예산을 먼저 소진해 JSON이 일찍 잘림 → JSON 호출에선 사고 비활성화(출력 보존+속도↑)
-    if(opts.json && /2\.5/.test(model)) gc.thinkingConfig = {thinkingBudget:0};
+    if(opts.json && /2\.5/.test(model)) gc.thinkingConfig = {thinkingBudget:0};   // 2.5 계열만 — 3.x는 thinkingConfig 미지원(invalid argument), 실측 확인 2026-08-25
     if(Object.keys(gc).length) body.generationConfig=gc;
     if(opts.system) body.systemInstruction={parts:[{text:opts.system}]};
     if(AiFRS._callTimes) AiFRS._callTimes.push(Date.now());   // 분당 가드용 호출 기록
@@ -1448,7 +1448,7 @@ a:hover { text-decoration: underline; }
   function _shouldTryNextModel(e){
     if(e && e.skipModel) return true;   // 이미지 호출에 걸린 OR 텍스트모델 등 — 다음 모델로
     var m=((e&&e.message)||'')+'';
-    return _isTransient(e) || /not found|not supported|unsupported|not a valid model|invalid model|permission|PERMISSION_DENIED|\b40[34]\b|limit:\s*0/i.test(m);
+    return _isTransient(e) || /not found|not supported|unsupported|not a valid model|invalid model|no longer available|permission|PERMISSION_DENIED|\b40[34]\b|limit:\s*0/i.test(m);
   }
   // 일시적 과부하·레이트리밋·쿼터 자동 재시도 + (자동모드면) 되는 모델로 폴백
   AiFRS.callGemini = function(prompt, opts){
