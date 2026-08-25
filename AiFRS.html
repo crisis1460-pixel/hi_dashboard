@@ -505,7 +505,22 @@ a:hover { text-decoration: underline; }
 .aifrs-toggle { font-size:12px; color:var(--blue-sky); cursor:pointer; font-weight:600; }
 .aifrs-toggle:hover { text-decoration:underline; }
 /* DB 뷰어 검색 */
-.aifrs-db-search { display:flex; align-items:center; gap:10px; margin:4px 0 12px; }
+.aifrs-db-search { display:flex; align-items:center; gap:10px; margin:4px 0 8px; }
+/* DB 타입 필터 칩 + 결과 복원 배너 */
+.aifrs-db-ty { display:flex; gap:6px; margin:0 0 12px; flex-wrap:wrap; }
+.aifrs-db-ty button {
+  background:var(--bg2); color:var(--txt2); border:1px solid var(--border); border-radius:9999px;
+  font:inherit; font-size:11.5px; padding:3px 12px; cursor:pointer; line-height:1.6;
+}
+.aifrs-db-ty button:hover { border-color:var(--blue); color:var(--txt); }
+.aifrs-db-ty button.on { background:rgba(0,102,204,.16); border-color:var(--blue); color:var(--txt); font-weight:700; }
+#aifrs-restore-bar {
+  position:fixed; left:50%; bottom:22px; transform:translateX(-50%); z-index:9000;
+  display:flex; align-items:center; gap:10px; max-width:92vw;
+  background:var(--bg2); border:1px solid var(--border); border-radius:12px;
+  padding:10px 16px; font-size:12.5px; color:var(--txt2); box-shadow:0 6px 24px rgba(0,0,0,.45); line-height:1.6;
+}
+#aifrs-restore-bar b { color:var(--txt); }
 .aifrs-db-search input {
   flex:1; max-width:420px; padding:9px 14px; border:1px solid var(--border2); border-radius:10px;
   background:var(--bg3); color:var(--txt); font-size:13px; font-family:inherit; outline:none; transition:border-color .15s;
@@ -645,12 +660,87 @@ a:hover { text-decoration: underline; }
 .aifrs-db-view summary { cursor:pointer; padding:6px 0; font-weight:600; color:var(--txt); }
 .aifrs-db-view summary:hover { color:var(--blue-sky); }
 
+/* ── UX 다이어트: 글리프·칩·히어로·2단계 펼침(2026-08) ── */
+.af-gl { width:13px; height:13px; flex-shrink:0; vertical-align:-2px; }
+.af-chip {
+  display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; line-height:1.55;
+  padding:2px 9px; border-radius:9999px; background:var(--bg4); color:var(--txt2); white-space:nowrap;
+}
+.af-chip > b { color:var(--txt3); font-weight:700; }
+.af-chip-row { display:flex; flex-wrap:wrap; gap:6px; margin:7px 0 3px; }
+.af-chip-art { background:var(--blue-d); color:var(--blue-sky); font-weight:700; cursor:pointer; border:1px solid rgba(0,102,204,.3); }
+.af-chip-art:hover { background:rgba(0,102,204,.2); }
+.af-chip-art .af-chip-cue { font-size:9px; font-weight:700; opacity:.7; font-style:normal; }
+.af-chip-top { background:var(--blue); color:#fff; font-weight:700; }
+.af-stat { display:inline-flex; align-items:center; font-size:11.5px; font-weight:700; white-space:nowrap; }
+
+/* 항목 2단계 펼침(요약 → 클릭 시 상세) */
+.af-item > summary {
+  list-style:none; cursor:pointer; display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  font-size:12.5px; font-weight:700; color:var(--txt); line-height:1.6;
+}
+.af-item > summary::-webkit-details-marker { display:none; }
+.af-item > summary::after { content:'자세히 ▾'; margin-left:6px; font-size:10px; font-weight:700; color:var(--txt3); flex-shrink:0; }
+.af-item[open] > summary::after { content:'접기 ▴'; }
+.af-item > summary:hover::after { color:var(--blue-sky); }
+.af-item > summary .aifrs-prio, .af-item > summary .aifrs-prio.aifrs-tip { position:relative; top:auto; right:auto; margin-left:auto; }
+.af-sum-txt { flex:1 1 120px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11.5px; font-weight:500; color:var(--txt3); }
+.af-item-body { margin-top:9px; padding-top:9px; border-top:1px dotted var(--border); }
+.aifrs-pr-row > span { flex:1; min-width:0; }
+
+/* 검증 라인(글리프) */
+.af-verify-row { display:flex; flex-wrap:wrap; gap:5px 14px; font-size:10.5px; color:var(--txt3); line-height:1.7; }
+.af-vitem { display:inline-flex; align-items:center; gap:4px; }
+.af-verify-why { font-size:10.5px; color:var(--txt3); line-height:1.7; margin-top:3px; opacity:.85; }
+
+/* 종합 히어로 · 다음 확인 */
+.af-hero-card {
+  background:var(--bg3); border:1px solid var(--border); border-left:3px solid var(--blue);
+  border-radius:var(--radius-lg); padding:14px 18px; margin:0 0 12px;
+}
+.af-hero-t { display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:700; color:var(--txt); line-height:1.6; }
+.af-hero-t .af-hero-sub { margin-left:auto; font-size:11px; font-weight:600; color:var(--txt3); }
+.af-bar { display:flex; height:8px; border-radius:9999px; overflow:hidden; background:var(--bg4); margin:11px 0 9px; }
+.af-bar > i { display:block; height:100%; }
+.af-legend { display:flex; flex-wrap:wrap; gap:6px 14px; font-size:11.5px; color:var(--txt2); line-height:1.7; }
+.af-legend > span { display:inline-flex; align-items:center; gap:5px; }
+.af-legend em { width:8px; height:8px; border-radius:2px; display:inline-block; font-style:normal; flex-shrink:0; }
+.af-legend b { color:var(--txt); font-weight:700; }
+.af-next {
+  display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin-top:11px; padding-top:10px;
+  border-top:1px dotted var(--border); font-size:12.5px; color:var(--txt2); line-height:1.7;
+}
+.af-next > span { flex:1; min-width:180px; }
+.af-next b { color:var(--txt); }
+
+/* 1줄 면책 + ⓘ */
+.af-foot1 { display:flex; align-items:center; gap:6px; margin-top:16px; font-size:11px; color:var(--txt3); line-height:1.7; }
+.af-foot1 > span { flex:1; min-width:0; }
+
+/* 후보 기준서: 1순위 강조 + 나머지 접기 */
+.af-cand-top { border:2px solid var(--blue) !important; }
+.af-cand-fold { margin:6px 0 8px; border:1px dashed var(--border2); border-radius:var(--radius-sm); padding:0 12px; background:var(--bg); }
+.af-cand-fold > summary { cursor:pointer; padding:8px 0; font-size:12px; font-weight:600; color:var(--txt2); }
+.af-cand-fold > summary:hover { color:var(--blue-sky); }
+
+/* 파이프라인 도트(코드검증·교차검증·인용검증) */
+.af-dots { display:inline-flex; align-items:center; gap:4px; cursor:help; }
+.af-dot { width:7px; height:7px; border-radius:50%; background:var(--bg4); display:inline-block; }
+.af-dot.ok { background:#2dd4bf; }
+.af-dot.warn { background:#fbbf24; }
+.af-dot.bad { background:#f87171; }
+
 @media print {
   body { background:#fff !important; color:#1d1d1f !important; }
   .af-topbar, .af-bottom, .af-settings, .af-hero, .aifrs-btn, .aifrs-help-btn, .aifrs-toggle, #aifrs-db-view { display:none !important; }
   .af-main { overflow:visible !important; padding:0 !important; }
   .aifrs-pr-item { border-color:#e0e0e0 !important; background:#fff !important; break-inside:avoid; }
   .aifrs-analysis, .aifrs-pr-h, .aifrs-section-title { color:#1d1d1f !important; }
+  .af-item > summary::after { content:'' !important; }
+  .af-item > summary, .af-hero-t, .af-legend b, .af-next b { color:#1d1d1f !important; }
+  .af-chip, .af-hero-card { background:#f5f5f7 !important; color:#1d1d1f !important; border-color:#e0e0e0 !important; }
+  .af-sum-txt, .af-verify-row, .af-verify-why, .af-foot1 { color:#4a4a4f !important; }
+  .af-hero-card, .af-item { break-inside:avoid; }
 }
 </style>
 </head>
@@ -1154,10 +1244,27 @@ a:hover { text-decoration: underline; }
   AiFRS.setApiKey = function(k){
     k=(k||'').trim(); AiFRS.API.key=k;
     try { if(k) localStorage.setItem('aifrs-apikey',k); else localStorage.removeItem('aifrs-apikey'); } catch(e){}
+    _persistKeys();
   };
   // OpenRouter 키(예비 공급자) — Gemini 키와 별도 보관
   AiFRS.getOrKey = function(){ if(AiFRS.API.orKey) return AiFRS.API.orKey; try { return localStorage.getItem('aifrs-orkey')||''; } catch(e){ return ''; } };
-  AiFRS.setOrKey = function(k){ k=(k||'').trim(); AiFRS.API.orKey=k; try { if(k) localStorage.setItem('aifrs-orkey',k); else localStorage.removeItem('aifrs-orkey'); } catch(e){} };
+  AiFRS.setOrKey = function(k){ k=(k||'').trim(); AiFRS.API.orKey=k; try { if(k) localStorage.setItem('aifrs-orkey',k); else localStorage.removeItem('aifrs-orkey'); } catch(e){} _persistKeys(); };
+  // 키를 서버 측 aifrs-keys.json에도 저장(세션 간 유실 방지) — 실패해도 UI에 영향 없음
+  function _persistKeys(){
+    try {
+      var payload=JSON.stringify({gemini:AiFRS.getApiKey(), openrouter:AiFRS.getOrKey()});
+      fetch('/aifrs-keys.json',{method:'POST',headers:{'Content-Type':'application/json'},body:payload}).catch(function(){});
+    } catch(e){}
+  }
+  // 시작 시 aifrs-keys.json에서 키 자동 복원(localStorage 우선, 없으면 파일에서 보충)
+  AiFRS._restoreKeys = function(){
+    if(AiFRS.getApiKey() && AiFRS.getOrKey()) return;
+    fetch('/aifrs-keys.json').then(function(r){ return r.ok?r.json():null; }).then(function(d){
+      if(!d) return;
+      if(!AiFRS.getApiKey() && d.gemini){ AiFRS.API.key=d.gemini; try{localStorage.setItem('aifrs-apikey',d.gemini);}catch(e){} }
+      if(!AiFRS.getOrKey() && d.openrouter){ AiFRS.API.orKey=d.openrouter; try{localStorage.setItem('aifrs-orkey',d.openrouter);}catch(e){} }
+    }).catch(function(){});
+  };
   // 표시·실호출용 현재 모델. 자동모드면 최근 성공 모델(없으면 체인 1순위). 퇴역 모델이면 체인 1순위로 폴백
   AiFRS.getModel = function(){
     var m = AiFRS.API.auto ? (AiFRS._activeModel || AiFRS.MODEL_CHAIN[0]) : AiFRS.API.model;
@@ -1748,6 +1855,51 @@ a:hover { text-decoration: underline; }
       if(std && aslot && au[key] && au[key].items && typeof renderFinalAudit==='function'){ aslot.innerHTML=renderFinalAudit(std, pitems, au[key].items, ''); }   // 감사 결과(사용자확정 반영) 복원
     });
   }
+  // ── 분석 결과 스냅샷: 새로고침·탭 종료로 결과가 소실되는 것 방지(API 재호출 비용 절약) ──
+  var SNAP_KEY='aifrs-snapshot';
+  function _snapSave(){
+    try {
+      if(!AiFRS._lastAi) return;
+      var files=(AiFRS.state.files||[])
+        .filter(function(r){ return (r.status==='done'&&r.text)||r.ocrText; })
+        .map(function(r){ return {name:r.name, ext:r.ext, kind:r.kind, text:r.text||'', ocrText:r.ocrText||''}; });
+      var snap={ts:Date.now(), files:files, ai:AiFRS._lastAi, precise:AiFRS._lastPrecise||{}, audit:AiFRS._lastAudit||{}};
+      localStorage.setItem(SNAP_KEY, JSON.stringify(snap));
+    } catch(e){ try{ localStorage.removeItem(SNAP_KEY); }catch(e2){} }   // 용량 초과 시 저장 포기(동작 영향 없음)
+  }
+  function _snapClear(){ try{ localStorage.removeItem(SNAP_KEY); }catch(e){} var b=document.getElementById('aifrs-restore-bar'); if(b&&b.parentNode) b.parentNode.removeChild(b); }
+  // 시작 시 스냅샷이 있으면 복원 배너 제안(자동 복원 아님 — 새 작업 방해 금지)
+  AiFRS._offerRestore=function(){
+    try {
+      var raw=localStorage.getItem(SNAP_KEY); if(!raw) return;
+      var snap=JSON.parse(raw); if(!snap||!snap.ai) return;
+      if((AiFRS.state.files||[]).length || AiFRS._lastAi) return;
+      var d=new Date(snap.ts||0), pad=function(n){return (n<10?'0':'')+n;};
+      var when=pad(d.getMonth()+1)+'/'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes());
+      var bar=document.createElement('div'); bar.id='aifrs-restore-bar';
+      bar.innerHTML='<span>이전 분석 결과가 있습니다 <b>('+when+' · 파일 '+(snap.files||[]).length+'개)</b></span>'
+        + '<button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS._doRestore()">결과 복원</button>'
+        + '<button class="aifrs-btn aifrs-btn-ghost aifrs-btn-sm" onclick="window.AiFRS._dismissSnapshot()">지우기</button>';
+      document.body.appendChild(bar);
+    } catch(e){}
+  };
+  AiFRS._dismissSnapshot=function(){ _snapClear(); };
+  AiFRS._doRestore=function(){
+    try {
+      var snap=JSON.parse(localStorage.getItem(SNAP_KEY)||'null'); if(!snap||!snap.ai) return;
+      AiFRS.state.files=(snap.files||[]).map(function(f){
+        return {id:'f'+(++AiFRS._seq), name:f.name, ext:f.ext, kind:f.kind, size:0,
+                status:(f.text?'done':'image'), text:f.text||'', ocrText:f.ocrText||'', ocrDone:!!f.ocrText,
+                error:'', dataUrl:'', file:null, from:'복원'};
+      });
+      AiFRS._lastAi=snap.ai; AiFRS._lastPrecise=snap.precise||{}; AiFRS._lastAudit=snap.audit||{};
+      var hero=document.getElementById('af-hero'); if(hero) hero.classList.add('hidden');
+      renderFileList();
+      var box=document.getElementById('aifrs-ai');
+      if(box){ box.style.display='block'; box.innerHTML=renderAiResult(snap.ai,''); _restoreCachedResults(); }
+      var b=document.getElementById('aifrs-restore-bar'); if(b&&b.parentNode) b.parentNode.removeChild(b);
+    } catch(e){}
+  };
   function _applyClarifications(answers){
     var ai=AiFRS._lastAi||{}; var gs=ai['거래구조']||{}; var cands=ai.candidates||[];
     var structureChanged=false, standardChanged=false, auditChanged={};
@@ -1942,9 +2094,9 @@ a:hover { text-decoration: underline; }
       var docNorm=_qnorm(text);   // 거래구조 근거인용 실존검증용
       aiTimer=setInterval(function(){ var el=document.getElementById('aifrs-ai-timer'); if(el) el.textContent=((Date.now()-t0)/1000).toFixed(1)+'초'; },100);
       // ── 1차: 용어 정규화 ──
-      box.innerHTML=_stepper(3)+'<div class="aifrs-ai-load"><span class="aifrs-spin"></span> 🤖 용어 정규화 중… <b id="aifrs-ai-timer">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="aifrs-note">1/2 — 회계용어 표준화</div>'+_aiCancelBtn()+'</div>';
+      box.innerHTML=_stepper(3)+'<div class="aifrs-ai-load"><span class="aifrs-spin"></span> '+_ico('ai',14)+' 용어 정규화 중… <b id="aifrs-ai-timer">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="aifrs-note">1/2 — 회계용어 표준화</div>'+_aiCancelBtn()+'</div>';
       return AiFRS.callGemini(buildNormalizePrompt(text, off), {json:true, temperature:0.2, signal:_sig, system:'당신은 K-IFRS 전문가입니다. 실무 문서의 용어를 기준서 표준 용어로 정규화합니다. JSON으로만 답합니다.',
-          onRetry:function(k,mx,mdl,e){ if(box) box.innerHTML=_stepper(3)+'<div class="aifrs-ai-load"><span class="aifrs-spin"></span> 🤖 정규화 재시도 '+k+'/'+mx+' <b id="aifrs-ai-timer">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="aifrs-note">1/2 — '+_retryReason(e)+'</div>'+_aiCancelBtn()+'</div>'; }})
+          onRetry:function(k,mx,mdl,e){ if(box) box.innerHTML=_stepper(3)+'<div class="aifrs-ai-load"><span class="aifrs-spin"></span> '+_ico('ai',14)+' 정규화 재시도 '+k+'/'+mx+' <b id="aifrs-ai-timer">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="aifrs-note">1/2 — '+_retryReason(e)+'</div>'+_aiCancelBtn()+'</div>'; }})
         .then(function(txt1){
           var norm=AiFRS.parseJsonResponse(txt1)||{};
           // ── 2차: 거래구조(당사 위치·관계) 확정 → 후보 기준서 ──
@@ -1964,6 +2116,7 @@ a:hover { text-decoration: underline; }
               var data={ '거래구조':gs, candidates:cands, normalizedTerms:norm.normalizedTerms||[], generalTerms:norm.generalTerms||[], __truncated:(norm.__truncated||st.__truncated) };
               AiFRS._lastAi=data;
               box.innerHTML=renderAiResult(data, ((Date.now()-t0)/1000).toFixed(1));
+              _snapSave();
             });
         });
     }).catch(function(e){
@@ -1992,19 +2145,24 @@ a:hover { text-decoration: underline; }
       + '<div class="m-ttl" style="text-align:center">🔎 신뢰도 라벨 설명</div>'
       + '<div class="aifrs-help-body">'
       +   '<p>라벨은 <b>두 종류</b>입니다. ⓐ <b>코드검증(5단계)</b> = 분석이 가리킨 조문이 실재하는가(신뢰도). ⓑ <b>AI감사(6단계)</b> = 그 검토포인트를 <b>실제 업로드 문서에 적용했을 때 문서가 요건을 충족하는가</b>(실질 판정).</p>'
-      +   '<p style="margin:10px 0 4px"><b>ⓐ 코드검증(신뢰도) — 정밀분석 직후 자동</b> <span class="aifrs-note">(라벨에 마우스를 대면 설명이 보입니다)</span></p>'
+      +   '<p style="margin:10px 0 4px"><b>ⓐ 코드검증(신뢰도) — 정밀분석 직후 자동</b> <span class="aifrs-note">(항목 요약줄의 글리프·단어)</span></p>'
       +   '<div class="aifrs-tip-row">'
-      +     '<span class="aifrs-cf aifrs-cf-g aifrs-tip" data-tip="코드검증 통과&#10;조문 실존 + 화이트리스트 + 키워드 단서 확인. 인용이 실재한다는 1차 스크리닝 통과.">🟢 코드검증 통과</span>'
-      +     '<span class="aifrs-cf aifrs-cf-a aifrs-tip" data-tip="미검증&#10;문단은 실존하나 키워드 단서가 약함.">🟠 미검증</span>'
-      +     '<span class="aifrs-cf aifrs-cf-r aifrs-tip" data-tip="확인불가&#10;문단이 DB에 없거나 화이트리스트 밖. AI 오인용 가능성.">🔴 확인불가</span>'
+      +     '<span class="af-chip aifrs-tip" data-tip="통과&#10;조문 실존 + 화이트리스트 + 키워드 단서 확인. 인용이 실재한다는 1차 스크리닝 통과.">'+_gl('ok')+'통과</span>'
+      +     '<span class="af-chip aifrs-tip" data-tip="미검증&#10;문단은 실존하나 키워드 단서가 약함.">'+_gl('warn')+'미검증</span>'
+      +     '<span class="af-chip aifrs-tip" data-tip="확인불가&#10;문단이 DB에 없거나 화이트리스트 밖. AI 오인용 가능성.">'+_gl('bad')+'확인불가</span>'
       +   '</div>'
       +   '<p style="margin:14px 0 4px"><b>ⓑ AI감사(문서 충족 여부) — [최종 검증] 클릭 시</b></p>'
       +   '<div class="aifrs-tip-row">'
-      +     '<span class="aifrs-cf aifrs-cf-g aifrs-tip" data-tip="충족&#10;문서 내용이 요건을 명확히 충족(근거 조항·사실 제시).">✅ 충족</span>'
-      +     '<span class="aifrs-cf aifrs-cf-r aifrs-tip" data-tip="미흡&#10;요건 미충족·누락·위반. 보완 필요(가장 주목할 발견사항).">❗ 미흡</span>'
-      +     '<span class="aifrs-cf aifrs-cf-a aifrs-tip" data-tip="확인필요&#10;문서 정보만으로는 판단 불가. 추가 자료·수치 확인 필요.">⚠️ 확인필요</span>'
-      +     '<span class="aifrs-cf aifrs-cf-a aifrs-tip" data-tip="해당없음&#10;이 거래에는 적용되지 않는 요건.">➖ 해당없음</span>'
+      +     '<span class="af-chip aifrs-tip" data-tip="충족&#10;문서 내용이 요건을 명확히 충족(근거 조항·사실 제시).">'+_gl('ok')+'충족</span>'
+      +     '<span class="af-chip aifrs-tip" data-tip="미흡&#10;요건 미충족·누락·위반. 보완 필요(가장 주목할 발견사항).">'+_gl('bad')+'미흡</span>'
+      +     '<span class="af-chip aifrs-tip" data-tip="확인필요&#10;문서 정보만으로는 판단 불가. 추가 자료·수치 확인 필요.">'+_gl('warn')+'확인필요</span>'
+      +     '<span class="af-chip aifrs-tip" data-tip="해당없음&#10;이 거래에는 적용되지 않는 요건.">'+_gl('na')+'해당없음</span>'
       +   '</div>'
+      +   '<p style="margin:14px 0 4px"><b>파이프라인 도트</b> — 감사 항목 요약줄의 점 3개</p>'
+      +   '<div class="aifrs-tip-row">'
+      +     '<span class="af-chip"><span class="af-dots"><i class="af-dot ok"></i><i class="af-dot ok"></i><i class="af-dot ok"></i></span>코드검증 · 교차검증 · 인용검증</span>'
+      +   '</div>'
+      +   '<p class="aifrs-note" style="margin-top:4px">왼쪽부터 <b>코드검증</b>(조문 실존) · <b>교차검증</b>(2차 검토자 하향 여부) · <b>인용검증</b>(문서에서 확인된 근거 유무). 초록=정상, 노랑=주의, 빨강=미확보.</p>'
       +   '<p class="aifrs-note">※ ⓐ는 AI 인용의 실재성을 코드로 거르는 단계(개념 판단 아님), ⓑ가 실제 <b>문서를 근거로 한 감사 판정</b>입니다. AI감사 항목에 ⓐ 신뢰도가 낮으면(코드검증 미검증/확인불가) 작은 회색 태그로 함께 표시됩니다.</p>'
       + '</div>'
       + '<div class="m-foot"><button class="aifrs-btn">확인</button></div></div>';
@@ -2083,7 +2241,7 @@ a:hover { text-decoration: underline; }
     document.body.appendChild(ov);
   };
   function renderAiResult(data, secs){
-    var h='<div class="aifrs-an-head">🤖 AI 분석 결과 (거래구조·후보) <span>'+secs+'초 · '+esc(AiFRS.getModel())+'</span>'
+    var h='<div class="aifrs-an-head">'+_ico('ai',15)+' AI 분석 결과 (거래구조·후보) <span>'+secs+'초 · '+esc(AiFRS.getModel())+'</span>'
       + '<button class="aifrs-help-btn" onclick="window.AiFRS.showLabelHelp()">ⓘ 신뢰도 라벨 설명</button>'
       + '<button class="aifrs-help-btn" style="margin-left:6px" onclick="window.AiFRS.showPrioHelp()">ⓘ 검토 우선순위 설명</button></div>';
     if(data.__truncated){ h+='<div class="aifrs-api-stat err" style="margin:4px 0">⚠ 응답이 길어 일부가 잘렸습니다 — 후보는 보존되지만 정규화 용어 일부가 누락될 수 있습니다. (다시 분석 권장)</div>'; }
@@ -2092,21 +2250,26 @@ a:hover { text-decoration: underline; }
       var low=(gs['신뢰도']==='낮음')||(gs['자료성격']==='복합·기타');
       var ver=gs['근거인용검증']||[], rawn=gs['근거인용원본수']||0;
       var hipos=gs['당사위치']||gs['HI위치']||gs['HI역할']||'';   // 구버전 호환
+      // 짧은 사실값(당사·상대방·관계·대금·영향·신뢰도)은 칩 한 줄로 압축, 서술형(핵심논점·실질·근거)만 행으로 유지
+      var _ch=[];
+      if(hipos) _ch.push(_kvChip('당사', hipos+(gs['__userFixed']?' · 확정':'')));
+      if(gs['상대방']) _ch.push(_kvChip('상대방', gs['상대방']));
+      else if(gs['상대방있음']===false) _ch.push(_kvChip('상대방','없음(내부)'));
+      if(gs['관계유형']) _ch.push(_kvChip('관계', gs['관계유형']));
+      if(gs['대금방향']&&gs['대금방향']!=='해당없음') _ch.push(_kvChip('대금', gs['대금방향']));
+      var _infl=Array.isArray(gs['회계영향측'])?gs['회계영향측'].join(' · '):(gs['회계영향측']||'');
+      if(_infl) _ch.push(_kvChip('영향 측면', _infl));
+      if(gs['신뢰도']) _ch.push('<span class="af-chip" style="color:'+(low?'#fbbf24':'#2dd4bf')+'"><b style="color:inherit;opacity:.7">신뢰도</b>'+esc(gs['신뢰도'])+'</span>');
       h+='<div class="aifrs-tx-box'+(low?' warn':'')+'">'
         + '<div class="aifrs-tx-box-h">🧭 거래구조 (당사 위치·관계)'
         + (gs['자료성격']?' <span class="aifrs-tx-tag">'+esc(gs['자료성격'])+'</span>':'')
         + '</div>'
-        + (hipos?'<div class="aifrs-pr-row"><b>당사 위치</b><span>'+esc(hipos)+(gs['__userFixed']?' <span class="aifrs-uchip">사용자확정</span>':'')+'</span></div>':'')
-        + ((gs['상대방']||gs['상대방있음']===false)?'<div class="aifrs-pr-row"><b>상대방</b>'+(gs['상대방']?esc(gs['상대방']):'없음(내부)')+'</div>':'')
-        + (gs['관계유형']?'<div class="aifrs-pr-row"><b>관계</b>'+esc(gs['관계유형'])+'</div>':'')
-        + (gs['대금방향']&&gs['대금방향']!=='해당없음'?'<div class="aifrs-pr-row"><b>대금</b>'+esc(gs['대금방향'])+'</div>':'')
-        + (gs['핵심회계논점']?'<div class="aifrs-pr-row"><b>핵심 논점</b>'+esc(gs['핵심회계논점'])+'</div>':'')
-        + (Array.isArray(gs['회계영향측'])&&gs['회계영향측'].length?'<div class="aifrs-pr-row"><b>영향 측면</b>'+gs['회계영향측'].map(function(x){return esc(x);}).join(' · ')+'</div>':(typeof gs['회계영향측']==='string'&&gs['회계영향측']?'<div class="aifrs-pr-row"><b>영향 측면</b>'+esc(gs['회계영향측'])+'</div>':''))
-        + (gs['경제적실질']||gs['거래요지']?'<div class="aifrs-pr-row"><b>경제적 실질</b>'+esc(gs['경제적실질']||gs['거래요지'])+'</div>':'')
-        + (ver.length?'<div class="aifrs-pr-row aifrs-pr-src" style="margin-top:4px"><b>문서 근거(검증됨)</b> '+ver.map(function(q){return '“'+esc(q)+'”';}).join(' &nbsp;/&nbsp; ')+'</div>'
-            :(rawn?'<div class="aifrs-pr-warn-row" style="margin-top:4px"><b>문서 근거</b> 검증된 인용 없음(AI 제시 '+rawn+'건이 문서와 불일치)</div>':''))
-        + '<div style="margin-top:5px">'+(gs['신뢰도']?'신뢰도: <b style="color:'+(low?'#fbbf24':'#2dd4bf')+'">'+esc(gs['신뢰도'])+'</b> &nbsp;':'')
-        + '<span class="aifrs-note">'+(low?'※ 당사 위치/분류가 모호합니다 — 아래 후보가 부적절하면 당사 위치를 정정해 알려주세요(재분석).':'※ 당사 위치가 틀리면 적용 기준서가 달라집니다 — 잘못됐으면 알려주세요.')+'</span></div>'
+        + (_ch.length?'<div class="af-chip-row">'+_ch.join('')+'</div>':'')
+        + (gs['핵심회계논점']?'<div class="aifrs-pr-row"><b>핵심 논점</b><span>'+esc(gs['핵심회계논점'])+'</span></div>':'')
+        + (gs['경제적실질']||gs['거래요지']?'<div class="aifrs-pr-row"><b>경제적 실질</b><span>'+esc(gs['경제적실질']||gs['거래요지'])+'</span></div>':'')
+        + (ver.length?'<div class="aifrs-pr-row aifrs-pr-src" style="margin-top:4px"><b>문서 근거(검증됨)</b><span>'+ver.map(function(q){return '“'+esc(q)+'”';}).join(' &nbsp;/&nbsp; ')+'</span></div>'
+            :(rawn?'<div class="aifrs-pr-warn-row aifrs-pr-row" style="margin-top:4px"><b>문서 근거</b><span>검증된 인용 없음(AI 제시 '+rawn+'건이 문서와 불일치)</span></div>':''))
+        + '<div style="margin-top:7px"><span class="aifrs-note">'+(low?'※ 당사 위치/분류가 모호합니다 — 아래 후보가 부적절하면 당사 위치를 정정해 알려주세요(재분석).':'※ 당사 위치가 틀리면 적용 기준서가 달라집니다 — 잘못됐으면 알려주세요.')+'</span></div>'
         + (gs['방향경고']?'<div class="aifrs-api-stat err" style="margin-top:6px">'+esc(gs['방향경고'])+'</div>':'')
         + (gs['__userFixed']?'<div style="margin-top:8px"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.reselectCandidates()" title="확정한 거래구조를 전제로 적용 기준서 후보를 AI가 다시 선정(API 1콜)">🔄 AI로 후보 재선정 (1콜)</button></div>':'')
         + '</div>';
@@ -2114,23 +2277,39 @@ a:hover { text-decoration: underline; }
     var cands=data.candidates||[];
     h+='<div class="aifrs-an-sec">후보 기준서 <span>'+cands.length+'종 · AI 판단</span></div>';
     if(!cands.length){ h+='<div class="aifrs-note">적용 기준서를 특정하지 못했습니다.</div>'; }
-    else cands.forEach(function(c){
-      var rawNo=String(c['기준서번호']||'').trim();
-      var std=AiFRS.findStandard(rawNo);
-      var valid=!!std;
-      var key=std?std.no:rawNo.replace(/[^0-9]/g,'');
-      var issues=(c['관련쟁점']||[]).map(function(x){return esc(x);}).join(', ');
-      h+='<div class="aifrs-an-std">'
-        + '<div class="aifrs-an-std-h"><span class="aifrs-std-no">'+esc(rawNo||'?')+'</span><span class="aifrs-an-name">'+esc(c['명칭']||(std?std.name:''))+(c['__userPick']?'<span class="aifrs-uchip">사용자확정</span>':'')+'</span><span class="aifrs-an-score aifrs-tip" data-tip="관련성 (0~100·참고용)&#10;AI가 평가한 이 거래와의 관련성. 높을수록 회계처리 근거일 가능성이 큽니다.">관련성 '+(c['관련성']||0)+'</span></div>'
-        + (c.__dirflag?'<div class="aifrs-api-stat err" style="margin-top:4px">'+esc(c.__dirflag)+'</div>':'')
-        + (c['사유']?'<div class="aifrs-an-para">'+esc(c['사유'])+'</div>':'')
-        + (issues?'<div class="aifrs-an-para">쟁점: <span class="aifrs-an-hit">'+issues+'</span></div>':'')
-        + (valid
-            ? '<div style="margin-top:8px"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runPreciseAnalysis(\''+key+'\')">🔬 정밀 분석</button></div>'
-              + '<div class="aifrs-precise-slot" id="aifrs-precise-'+key+'"></div>'
-            : '<div class="aifrs-api-stat err" style="margin-top:4px">⚠ 내장 DB에 없는 기준서번호 — 6단계 검증 대상</div>')
-        + '</div>';
-    });
+    else {
+      // 1순위만 전면 노출(진한 파란 테두리 + 관련성 배지), 2순위 이하는 접어 둠 — 정보는 보존
+      var _candCard=function(c, top){
+        var rawNo=String(c['기준서번호']||'').trim();
+        var std=AiFRS.findStandard(rawNo);
+        var valid=!!std;
+        var key=std?std.no:rawNo.replace(/[^0-9]/g,'');
+        var issues=(c['관련쟁점']||[]).map(function(x){return esc(x);}).join(', ');
+        return '<div class="aifrs-an-std'+(top?' af-cand-top':'')+'">'
+          + '<div class="aifrs-an-std-h">'
+            + (top?'<span class="af-chip af-chip-top">1순위</span>':'')
+            + '<span class="aifrs-std-no">'+esc(rawNo||'?')+'</span>'
+            + '<span class="aifrs-an-name">'+esc(c['명칭']||(std?std.name:''))+(c['__userPick']?'<span class="aifrs-uchip">사용자확정</span>':'')+'</span>'
+            + (top
+                ? '<span class="aifrs-an-score aifrs-tip" data-tip="관련성 (0~100·참고용)&#10;AI가 평가한 이 거래와의 관련성. 높을수록 회계처리 근거일 가능성이 큽니다.">관련성 '+(c['관련성']||0)+'</span>'
+                : '<span class="af-chip"><b>관련성</b>'+(c['관련성']||0)+'</span>')
+          + '</div>'
+          + (c.__dirflag?'<div class="aifrs-api-stat err" style="margin-top:4px">'+esc(c.__dirflag)+'</div>':'')
+          + (c['사유']?'<div class="aifrs-an-para">'+esc(c['사유'])+'</div>':'')
+          + (issues?'<div class="aifrs-an-para">쟁점: <span class="aifrs-an-hit">'+issues+'</span></div>':'')
+          + (valid
+              ? '<div style="margin-top:8px"><button class="aifrs-btn aifrs-btn-sm" style="display:inline-flex;align-items:center;gap:5px" onclick="window.AiFRS.runPreciseAnalysis(\''+key+'\')">'+_ico('scope',13)+' 정밀 분석</button></div>'
+                + '<div class="aifrs-precise-slot" id="aifrs-precise-'+key+'"></div>'
+              : '<div class="aifrs-api-stat err" style="margin-top:4px">⚠ 내장 DB에 없는 기준서번호 — 6단계 검증 대상</div>')
+          + '</div>';
+      };
+      h+=_candCard(cands[0], true);
+      if(cands.length>1){
+        h+='<details class="af-cand-fold"><summary>다른 후보 '+(cands.length-1)+'종 — 펼쳐 보기(정밀 분석 가능)</summary>'
+          + cands.slice(1).map(function(c){ return _candCard(c, false); }).join('')
+          + '</details>';
+      }
+    }
     var nt=data.normalizedTerms||[];
     h+='<div class="aifrs-an-sec aifrs-sec-tog" onclick="window.AiFRS.toggleAiSec(\'aifrs-nt-body\',this)">표준용어 정규화 <span>'+nt.length+'개</span><span class="aifrs-toggle aifrs-sec-arr">펼치기 ▾</span></div>';
     h+='<div id="aifrs-nt-body" style="display:none">';
@@ -2212,6 +2391,7 @@ a:hover { text-decoration: underline; }
     var box=document.getElementById('aifrs-precise-'+no) || document.getElementById('aifrs-precise');
     if(!box) return;
     box.style.display='block';
+    _openAncestorDetails(box);   // 접힌 후보 목록 안이면 펼쳐서 결과가 보이게
     if(!std){ box.innerHTML='<div class="aifrs-api-stat err">내장 DB에 제'+esc(String(stdNo))+'호가 없습니다.</div>'; return; }
     if(!AiFRS.getApiKey()){ box.innerHTML='<div class="aifrs-note">API 키가 필요합니다.</div>'; return; }
     var text=gatherText();
@@ -2227,14 +2407,14 @@ a:hover { text-decoration: underline; }
     var timer=setInterval(function(){ var el=document.getElementById(tid); if(el) el.textContent=((Date.now()-t0)/1000).toFixed(1)+'초'; },100);
     function fin(){ clearInterval(timer); delete AiFRS._preciseBusy[no]; delete AiFRS._preciseCtl[no]; }
     var prCancel=_cancelBtn("window.AiFRS.cancelPrecise('"+no+"')", '정밀 분석 중단');
-    box.innerHTML=_stepper(5)+'<div class="aifrs-ai-load"><span class="aifrs-spin"></span> 🔬 제'+esc(std.no)+'호 정밀 분석 중… <b id="'+tid+'">0.0초</b><div class="aifrs-note">API ② — 조문별 체크·검토포인트·분개</div>'+prCancel+'</div>';
+    box.innerHTML=_stepper(5)+'<div class="aifrs-ai-load"><span class="aifrs-spin"></span> '+_ico('scope',14)+' 제'+esc(std.no)+'호 정밀 분석 중… <b id="'+tid+'">0.0초</b><div class="aifrs-note">API ② — 조문별 체크·검토포인트·분개</div>'+prCancel+'</div>';
     AiFRS.callGemini(prompt, {json:true, temperature:0.1, signal:psig, system:'당신은 K-IFRS 전문가입니다. 지정된 기준서·조문 범위에 근거하여 분석하고, 반드시 JSON으로만 답합니다.',
-        onRetry:function(k,mx,mdl,e){ box.innerHTML=_stepper(5)+'<div class="aifrs-ai-load"><span class="aifrs-spin"></span> 🔬 제'+esc(std.no)+'호 재시도 '+k+'/'+mx+' <b id="'+tid+'">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="aifrs-note">API ② — '+_retryReason(e)+'</div>'+prCancel+'</div>'; }})
+        onRetry:function(k,mx,mdl,e){ box.innerHTML=_stepper(5)+'<div class="aifrs-ai-load"><span class="aifrs-spin"></span> '+_ico('scope',14)+' 제'+esc(std.no)+'호 재시도 '+k+'/'+mx+' <b id="'+tid+'">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="aifrs-note">API ② — '+_retryReason(e)+'</div>'+prCancel+'</div>'; }})
       .then(function(txt){
         fin();
         var data=AiFRS.parseJsonResponse(txt);
         if(!data){ box.innerHTML='<div class="aifrs-api-stat err">JSON 파싱 실패 — 원문 일부:</div><pre class="aifrs-preview">'+esc(txt.slice(0,1500))+'</pre>'; return; }
-        AiFRS._lastPrecise=AiFRS._lastPrecise||{}; AiFRS._lastPrecise[std.no]=data;
+        AiFRS._lastPrecise=AiFRS._lastPrecise||{}; AiFRS._lastPrecise[std.no]=data; _snapSave();
         box.innerHTML=renderPreciseResult(data, std, ((Date.now()-t0)/1000).toFixed(1));
       })
       .catch(function(e){ fin();
@@ -2502,12 +2682,129 @@ a:hover { text-decoration: underline; }
     else { level='amber'; reasons.push('DB 문단 키워드와 겹침 약함('+kwHit+'/'+kwTotal+')'); }
     return {level:level, para:para, recovered:recovered, whitelist:wl, kwTotal:kwTotal, kwHit:kwHit, srcHit:srcHit, pinpoint:pinpoint, hit:hit, miss:miss, reasons:reasons};
   };
-  function _cfLabel(level, audited){
-    if(level==='green') return audited
-      ? '<span class="aifrs-cf aifrs-cf-g aifrs-tip" data-tip="검증완료&#10;코드검증 + AI감사(최종검증)까지 통과한 항목.">🟢 검증완료</span>'
-      : '<span class="aifrs-cf aifrs-cf-g aifrs-tip" data-tip="코드검증 통과&#10;조문 실존 + 화이트리스트 + 키워드 단서 확인. 개념 부합은 AI감사(최종검증) 후 확정.">🟢 코드검증 통과</span>';
-    if(level==='amber') return '<span class="aifrs-cf aifrs-cf-a aifrs-tip" data-tip="미검증&#10;문단은 실존하나 키워드 단서가 약함.">🟠 미검증</span>';
-    return '<span class="aifrs-cf aifrs-cf-r aifrs-tip" data-tip="확인불가&#10;문단이 DB에 없거나 화이트리스트 밖. AI 오인용 가능성.">🔴 확인불가</span>';
+  // ── UX 다이어트 공통 유틸: SVG 글리프 · 칩 · ⓘ 시트(2026-08) ──
+  // 상태 표기를 이모지 대신 단색 SVG 글리프로 통일(시맨틱 3색만 사용)
+  function _gl(kind, size){
+    var px=size||13;
+    var col={ok:'#2dd4bf', bad:'#f87171', warn:'#fbbf24', na:'var(--txt3)'}[kind]||'var(--txt3)';
+    var d={ok:'<path d="M4 12.5l5.2 5.2L20 6.9"/>',
+           bad:'<path d="M6.2 6.2l11.6 11.6M17.8 6.2L6.2 17.8"/>',
+           warn:'<path d="M12 4.4L2.6 20h18.8L12 4.4z"/><path d="M12 10.2v4.1"/><path d="M12 17.3v.2"/>',
+           na:'<path d="M5.5 12h13"/>'}[kind]||'';
+    return '<svg class="af-gl" viewBox="0 0 24 24" fill="none" stroke="'+col+'" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:'+px+'px;height:'+px+'px">'+d+'</svg>';
+  }
+  // 헤더·로딩 전용 아이콘 — ai(AI분석) · scope(정밀분석) · shield(AI감사)
+  function _ico(kind, sz){
+    var px=sz||16, c='var(--blue)';
+    var d={
+      ai:'<path d="M10 3.5l1.6 4.4 4.4 1.6-4.4 1.6L10 15.5l-1.6-4.4L4 9.5l4.4-1.6z"/><path d="M17.5 3l.9 2.6 2.6.9-2.6.9L17.5 10l-.9-2.6L14 7.5l2.6-.9z"/>',
+      scope:'<path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13zM21 21l-4.6-4.6"/>',
+      shield:'<path d="M12 2L4 6v6c0 4.42 3.4 8.48 8 10 4.6-1.52 8-5.58 8-10V6L12 2z"/><path d="M8.5 12l2.5 2.5 4.5-4.5"/>'
+    }[kind]||'';
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="'+c+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:'+px+'px;height:'+px+'px;vertical-align:-3px;flex-shrink:0">'+d+'</svg>';
+  }
+  function _brief(t, n){ t=String(t||'').replace(/\s+/g,' ').trim(); return t.length>n ? t.slice(0,n)+'…' : t; }
+  function _kvChip(k, v, style){ return '<span class="af-chip"'+(style?' style="'+style+'"':'')+'><b>'+esc(k)+'</b>'+esc(v)+'</span>'; }
+  // 조문 칩(§ 68~71) — summary 안에서도 펼침 토글과 충돌하지 않도록 이벤트 전파 차단
+  function _artChip(stdNo, rangeNo, label){
+    return '<span class="af-chip af-chip-art" title="클릭하면 이 문단의 기준서 원문(내장 DB)이 팝업으로 열립니다"'
+      + ' onclick="event.stopPropagation();event.preventDefault();window.AiFRS.showParaText(\''+stdNo+'\',\''+rangeNo+'\')">'
+      + label+'<i class="af-chip-cue">원문</i></span>';
+  }
+  // 코드검증 등급 → 글리프·한 단어
+  function _codeWord(level){
+    if(level==='green') return {w:'통과',   g:'ok',   c:'#2dd4bf'};
+    if(level==='amber') return {w:'미검증', g:'warn', c:'#fbbf24'};
+    return {w:'확인불가', g:'bad', c:'#f87171'};
+  }
+  // 감사 판정 → 글리프·색
+  function _verdWord(v){
+    if(v==='충족')     return {g:'ok',   c:'#2dd4bf'};
+    if(v==='미흡')     return {g:'bad',  c:'#f87171'};
+    if(v==='해당없음') return {g:'na',   c:'var(--txt3)'};
+    return {g:'warn', c:'#fbbf24'};
+  }
+  // 검증 항목 나열(글리프 + 한 구절) — [종류, 문구] 배열
+  function _glLine(parts){
+    return '<div class="af-verify-row">'+parts.filter(Boolean).map(function(p){
+      return '<span class="af-vitem">'+_gl(p[0],11)+p[1]+'</span>';
+    }).join('')+'</div>';
+  }
+  // 파이프라인 도트 3개(코드검증·교차검증·인용검증)
+  function _pipeDots(codeLevel, cross, hasQuote){
+    var st={ok:'정상', warn:'주의', bad:'미확보'};
+    var d=[['코드검증', codeLevel==='green'?'ok':(codeLevel==='amber'?'warn':'bad')],
+           ['교차검증', cross==='하향'?'warn':'ok'],
+           ['인용검증', hasQuote?'ok':'bad']];
+    return '<span class="af-dots" title="'+d.map(function(x){return x[0]+' '+st[x[1]];}).join(' · ')+'">'
+      + d.map(function(x){return '<i class="af-dot '+x[1]+'"></i>';}).join('')+'</span>';
+  }
+  function _prioSheetHtml(tie){
+    return '<p>각 조문이 <b>이 거래의 회계 “결론”을 바꾸는 판단 길목</b>인지를 AI가 1~100으로 평가한 참고값입니다(거래 맥락 기준).</p>'
+      + '<div class="aifrs-tip-row" style="margin:8px 0 10px">'
+      +   '<span class="aifrs-prio" style="position:static;color:#f87171;background:rgba(248,113,113,.15)">핵심 ≥70</span>'
+      +   '<span class="aifrs-prio" style="position:static;color:#fbbf24;background:rgba(251,191,36,.15)">검토 40~69</span>'
+      +   '<span class="aifrs-prio" style="position:static;color:var(--txt3);background:var(--bg4)">형식 &lt;40</span></div>'
+      + '<p><b>정렬</b> — 검토 우선순위 <b>내림차순</b>, 동점이면 <b>'+tie+'</b> 순. 형식(&lt;40) 문단은 기본 접힘이며 펼쳐 모두 볼 수 있습니다.</p>'
+      + '<p>각 항목의 점수 근거는 항목을 펼치면 <b>“우선순위 근거”</b>에 표시됩니다.</p>'
+      + '<p class="aifrs-note" style="margin-top:10px">※ AI 평가라 절대적이지 않습니다. <b>참고용 가이드일 뿐 어떤 조문도 검토 생략의 근거가 아닙니다.</b></p>';
+  }
+  // ⓘ 시트: 상시 노출하던 범례·면책을 여기로 이동(정보 삭제가 아니라 계층 이동)
+  AiFRS._SHEET = {
+    prioPrecise: {t:'🔢 검토 우선순위 · 정렬 기준', h:_prioSheetHtml('확인불가 &gt; 미검증 &gt; 통과')},
+    prioAudit:   {t:'🔢 검토 우선순위 · 정렬 기준', h:_prioSheetHtml('확인필요 &gt; 미흡 &gt; 충족')},
+    discPrecise: {t:'ⓘ 정밀 분석 결과 안내', h:
+        '<p><b>코드검증이란</b> — 분석이 가리킨 조문이 실재하는지 코드로 대조하는 1차 스크리닝입니다. ① 문단 실존 ② 기준서 화이트리스트 ③ 문단 키워드(동의어 포함) 단서 대조.</p>'
+      + '<div class="aifrs-tip-row" style="margin:8px 0 10px">'
+      +   '<span class="af-chip">'+_gl('ok')+'통과</span><span class="af-chip">'+_gl('warn')+'미검증</span><span class="af-chip">'+_gl('bad')+'확인불가</span></div>'
+      + '<p><b>개념 부합</b>(문서가 실제로 그 요건을 충족하는가)은 코드로 판단하지 않습니다 — <b>[최종 검증]의 AI감사</b>에서 문서 근거로 확정합니다.</p>'
+      + '<p class="aifrs-note" style="margin-top:10px">※ 본 결과는 참고용이며, K-IFRS 적용·회계처리의 최종 판단과 책임은 담당자에게 있습니다.</p>'},
+    discAudit:   {t:'ⓘ AI감사 결과 안내', h:
+        '<p><b>3단계 근거기반 감사</b>로 산출된 결과입니다.</p>'
+      + '<div class="g-step"><b>①</b><span>근거추출 — 문서에서 검토포인트 관련 구절을 원문 그대로(verbatim) 추출한 뒤, <b>코드로 인용의 실존을 검증</b>(할루시네이션 차단)</span></div>'
+      + '<div class="g-step"><b>②</b><span>판정 — 검증된 근거만 사용해 충족 여부를 판단(근거가 없으면 임의 판단 없이 보류)</span></div>'
+      + '<div class="g-step"><b>③</b><span>교차검증 — 2차 검토자가 과잉판단을 재검증해 필요 시 <b>확인필요로 하향</b></span></div>'
+      + '<p style="margin-top:10px">근거가 없거나 불충분한 항목은 <b>판단불가(확인필요)</b>로 표기하고 후속 확인사항을 안내합니다. 각 항목의 도트 3개는 위 파이프라인(코드검증·교차검증·인용검증) 통과 여부입니다.</p>'
+      + '<p class="aifrs-note" style="margin-top:10px">※ 본 결과는 참고용이며, K-IFRS 적용·회계처리의 최종 판단과 책임은 담당자에게 있습니다. 판정이 <b>충족</b>이어도 원문 기준서 확인을 권장합니다.</p>'},
+    tour1: {t:'① 키 등록 — 자세히', h:
+        '<p><b>Gemini API Key (주 엔진 · 필수)</b></p>'
+      + '<div class="g-step"><b>1.</b><span>⚙ 설정 패널 → <b>[🔑 Get Key]</b>로 Google AI Studio에서 무료 키 발급</span></div>'
+      + '<div class="g-step"><b>2.</b><span>키를 붙여넣고 <b>[Save]</b> → <b>[Test]</b>로 연결 확인</span></div>'
+      + '<p style="margin-top:10px"><b>OpenRouter Key (예비 엔진 · 선택)</b></p>'
+      + '<div class="g-step"><b>·</b><span>Gemini 무료 한도가 떨어지면 자동으로 넘어가는 백업입니다. <b>무료 모델만</b> 사용하며 결제수단이 없으면 과금되지 않습니다.</span></div>'
+      + '<p style="margin-top:10px"><b>Reporting Entity (당사 명칭)</b></p>'
+      + '<div class="g-step"><b>·</b><span>“당사가 누구인가”를 기준으로 거래 방향(수취/지급)과 적용 기준서를 판정합니다. 기본값은 헥토이노베이션이며, 다른 법인이면 변경 후 [Save].</span></div>'
+      + '<p class="aifrs-note" style="margin-top:10px">※ 키는 이 브라우저(localStorage)에만 저장되며 외부로 전송·공유되지 않습니다. 최초 1회만 등록하면 다음 실행부터 자동 적용됩니다.</p>'},
+    tour2: {t:'② 올리고 분석 — 자세히', h:
+        '<div class="g-step"><b>1.</b><span><b>업로드</b> — 계약서·문서를 끌어다 놓거나 클릭해 첨부(PDF·엑셀·워드·이미지·ZIP·스캔 PDF). 업로드 후 [미리보기]로 추출 내용을 확인할 수 있습니다.</span></div>'
+      + '<div class="g-step"><b>2.</b><span><b>AI 분석</b> — [Analyze] 한 번으로 거래구조(당사 위치·관계·대금 방향)를 파악하고 후보 기준서를 선별합니다. 스캔 문서는 OCR도 함께 처리합니다.</span></div>'
+      + '<div class="g-step"><b>3.</b><span><b>정밀 분석</b> — 후보 카드의 [🔬 정밀 분석]을 누르면 그 기준서 조문 범위로 체크항목·검토포인트·분개예시를 산출합니다.</span></div>'
+      + '<div class="g-step"><b>4.</b><span><b>최종 검증(AI감사)</b> — 문서에서 검증된 인용만 근거로 각 검토포인트의 충족 여부를 판정합니다.</span></div>'
+      + '<p class="aifrs-note" style="margin-top:10px">※ 무료 API 분당 한도 보호를 위해 동시 정밀분석은 최대 3건입니다. 다른 거래의 문서가 섞이면 분석 전에 자동으로 경고합니다.</p>'},
+    tour3: {t:'③ 근거 검증 — 자세히', h:
+        '<div class="g-step"><b>·</b><span><b>항목 클릭</b> — 감사·정밀분석 항목은 요약만 보이고, 클릭하면 검토포인트·문서 근거·감사의견·보완사항이 펼쳐집니다. 문제 항목(미흡·확인필요)은 자동으로 펼쳐집니다.</span></div>'
+      + '<div class="g-step"><b>·</b><span><b>§ 문단 칩</b> — 누르면 해당 문단의 기준서 원문(내장 DB 5,468개 문단)이 팝업으로 열립니다.</span></div>'
+      + '<div class="g-step"><b>·</b><span><b>K-IFRS DB</b> — 기준서번호·명칭·문단·키워드·원문 전문을 직접 검색해 모든 분석 근거를 검증할 수 있습니다.</span></div>'
+      + '<div class="g-step"><b>·</b><span><b>해결방향</b> — “보완·확인”, “판단불가사유”에 후속 확인사항이 구체적으로 제시됩니다. 이를 토대로 계약 문구 보완·추가 자료 확보를 진행하세요.</span></div>'
+      + '<p class="aifrs-note" style="margin-top:10px">※ [증빙 PDF 저장]을 누르면 감사까지 완료된 기준서의 결과가 펼쳐진 상태로 인쇄됩니다.</p>'}
+  };
+  AiFRS.showSheet = function(key){
+    var sh=AiFRS._SHEET[key]; if(!sh) return;
+    var ov=document.createElement('div'); ov.className='aifrs-modal-ov';
+    ov.style.zIndex='10600';   // 사용 가이드(투어) 오버레이(10500)보다 위에 표시
+    ov.innerHTML='<div class="aifrs-modal" style="max-width:680px;width:94vw;text-align:left;max-height:82vh;overflow:auto">'
+      + '<div class="m-ttl" style="text-align:center">'+sh.t+'</div>'
+      + '<div class="aifrs-help-body">'+sh.h+'</div>'
+      + '<div class="m-foot" style="margin-top:14px;text-align:right"><button class="aifrs-btn aifrs-btn-sm">닫기</button></div></div>';
+    function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
+    ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
+    ov.querySelector('.m-foot button').addEventListener('click', close);
+    document.body.appendChild(ov);
+  };
+  // 접힌 details 안의 슬롯으로 결과가 들어갈 때 조상 details를 열어 준다
+  function _openAncestorDetails(el){
+    var n=el&&el.parentNode;
+    while(n && n.tagName){ if(n.tagName==='DETAILS') n.open=true; n=n.parentNode; }
   }
   // 문단 라벨 클릭 → 해당 문단 기준서 원문(내장 DB 발췌) 팝업
   AiFRS.showParaText = function(stdNo, paraNo){
@@ -2545,17 +2842,12 @@ a:hover { text-decoration: underline; }
       : {n:'형식',c:'var(--txt3)',bg:'var(--bg4)',d:'공시·주석 등 이 거래에 변수 없는 조항'});
     return ' <span class="aifrs-prio aifrs-tip" style="color:'+t.c+';background:'+t.bg+'" data-tip="검토 우선순위 '+p+'/100 (참고용·이 거래 기준)&#10;'+t.d+(reason?'. '+esc(reason):'')+'">'+t.n+' '+p+'</span>';
   }
-  // 우선순위 정렬 기준을 화면에 명시(불투명한 숫자 방지) — tie=동점 시 2차 정렬 설명
-  function _prioLegend(tie){
-    return '<div class="aifrs-note" style="margin:-2px 0 9px;line-height:1.65">🔢 <b>검토 우선순위</b>(참고용 · AI가 <u>이 거래 맥락</u>에서 쟁점이 큰 조문일수록 높게 평가) — '
-      + '<b style="color:#f87171">핵심 ≥70</b> · <b style="color:#fbbf24">검토 40~69</b> · <b style="color:var(--txt3)">형식 &lt;40</b>. '
-      + '우선순위 <b>내림차순</b> 정렬, 동점이면 <b>'+tie+'</b> 순. 각 항목의 점수 근거는 아래 "우선순위 근거"에 표시 — 참고용이며 어떤 조문도 검토 생략 사유가 아닙니다.</div>';
-  }
   // 개별 항목의 우선순위 점수 근거 행(투명성)
-  function _prioReasonRow(reason){ return reason?'<div class="aifrs-pr-row aifrs-pr-muted-row"><b>우선순위 근거</b> '+esc(reason)+'</div>':''; }
+  function _prioReasonRow(reason){ return reason?'<div class="aifrs-pr-row aifrs-pr-muted-row"><b>우선순위 근거</b><span>'+esc(reason)+'</span></div>':''; }
   function renderPreciseResult(data, std, secs){
     var items=data.items||[];
-    var head='<div class="aifrs-an-head">🔬 정밀 분석 — 제'+esc(std.no)+'호 '+esc(std.name)+' <span>'+secs+'초 · 항목 '+items.length+'개</span></div>';
+    var head='<div class="aifrs-an-head">'+_ico('scope',15)+' 정밀 분석 — 제'+esc(std.no)+'호 '+esc(std.name)+' <span>'+secs+'초 · 항목 '+items.length+'개</span>'
+      + '<button class="aifrs-help-btn" onclick="window.AiFRS.showSheet(\'prioPrecise\')">ⓘ 우선순위·정렬</button></div>';
     if(data.__truncated){ head+='<div class="aifrs-api-stat err" style="margin:4px 0">⚠ 응답이 길어 일부 끝부분이 잘렸습니다 — 완성된 항목까지만 표시합니다. (마지막 항목은 내용이 누락될 수 있음 → 다시 정밀 분석 권장)</div>'; }
     if(!items.length){ return head+'<div class="aifrs-note">관련 조문 분석 결과가 없습니다.</div>'; }
     var cnt={green:0,amber:0,red:0}, lvlRank={red:2,amber:1,green:0};
@@ -2566,36 +2858,64 @@ a:hover { text-decoration: underline; }
       var artNo=String(it['조문번호']||'');
       var rangeNo=AiFRS.stripStdPrefix(std.no, artNo)||artNo||'-';
       var paraLabel=v.pinpoint?(v.pinpoint.no+v.pinpoint.idx):rangeNo;
-      var verifyLine='검증: 문단 '+(v.para?'실존':'불일치')+' · 화이트리스트 '+(v.whitelist?'OK':'밖')
-        + (v.kwTotal? ' · 키워드 '+v.kwHit+'/'+v.kwTotal+(v.hit.length?'('+v.hit.map(esc).join(',')+')':'') : ' · 키워드 없음')
-        + (v.srcHit? ' · 원문직접인용 ✓' : '')
-        + (v.pinpoint? ' · 세부 '+esc(v.pinpoint.no+v.pinpoint.idx)+' DB일치 ✓' : '')
-        + (v.reasons.length? ' · '+v.reasons.map(esc).join('; ') : '');
-      var html='<div class="aifrs-pr-item aifrs-cfb-'+v.level+'">'+_prioBadge(prio, it['우선순위사유'])
-        + '<div class="aifrs-pr-h">'+_paraLink(std.no, rangeNo, '문단 '+esc(paraLabel))+' '+_cfLabel(v.level)
-          + (v.pinpoint?' <span class="aifrs-audit-tag" title="DB 범위문단 '+esc(rangeNo)+' 내에서 코드로 특정">범위 '+esc(rangeNo)+'</span>':'')+'</div>'
-        + (v.pinpoint?'<div class="aifrs-pr-row aifrs-pr-src"><b>해당 세부조문(원문)</b> '+esc(v.pinpoint.no+v.pinpoint.idx)+' '+esc(v.pinpoint.t)+'</div>':'')
-        + (it['체크항목']?'<div class="aifrs-pr-row aifrs-pr-violet"><b>체크항목</b> '+esc(it['체크항목'])+'</div>':'')
-        + (it['검토포인트']?'<div class="aifrs-pr-row"><b>검토포인트</b> '+esc(it['검토포인트'])+'</div>':'')
-        + (it['근거조문원문요약']?'<div class="aifrs-pr-row aifrs-pr-src"><b>근거조문</b> '+esc(it['근거조문원문요약'])+'</div>':'')
+      var cw=_codeWord(v.level);
+      // 코드검증 근거: 텍스트 나열 → 글리프 + 짧은 구절
+      var verify='<div class="aifrs-pr-verify" style="font-family:inherit">'
+        + _glLine([
+            [v.para?'ok':'bad', '문단 '+(v.para?'실존':'불일치')],
+            [v.whitelist?'ok':'bad', '화이트리스트 '+(v.whitelist?'OK':'밖')],
+            (v.kwTotal? [(v.kwHit>=1?'ok':'warn'), '키워드 '+v.kwHit+'/'+v.kwTotal+(v.hit.length?' ('+v.hit.map(esc).join(', ')+')':'')] : ['na','키워드 없음']),
+            (v.srcHit? ['ok','원문 직접인용'] : null),
+            (v.pinpoint? ['ok','세부 '+esc(v.pinpoint.no+v.pinpoint.idx)+' DB일치'] : null)
+          ])
+        + (v.reasons.length?'<div class="af-verify-why">'+v.reasons.map(esc).join(' · ')+'</div>':'')
+        + '</div>';
+      var brief=esc(_brief(it['체크항목']||it['검토포인트']||'', 44));
+      // 2단계 노출: 통과 항목은 요약만, 미검증·확인불가는 기본 펼침
+      var html='<details class="aifrs-pr-item af-item aifrs-cfb-'+v.level+'"'+(v.level==='green'?'':' open')+'>'
+        + '<summary>'+_gl(cw.g)+'<span class="af-stat" style="color:'+cw.c+'">'+cw.w+'</span>'
+          + _artChip(std.no, rangeNo, '§ '+esc(paraLabel))
+          + (v.pinpoint?'<span class="af-chip" title="DB 범위문단 '+esc(rangeNo)+' 내에서 코드로 특정"><b>범위</b>'+esc(rangeNo)+'</span>':'')
+          + (brief?'<span class="af-sum-txt">'+brief+'</span>':'')
+          + _prioBadge(prio, it['우선순위사유'])
+        + '</summary>'
+        + '<div class="af-item-body">'
+        + (v.pinpoint?'<div class="aifrs-pr-row aifrs-pr-src"><b>해당 세부조문(원문)</b><span>'+esc(v.pinpoint.no+v.pinpoint.idx)+' '+esc(v.pinpoint.t)+'</span></div>':'')
+        + (it['체크항목']?'<div class="aifrs-pr-row aifrs-pr-violet"><b>체크항목</b><span>'+esc(it['체크항목'])+'</span></div>':'')
+        + (it['검토포인트']?'<div class="aifrs-pr-row"><b>검토포인트</b><span>'+esc(it['검토포인트'])+'</span></div>':'')
+        + (it['근거조문원문요약']?'<div class="aifrs-pr-row aifrs-pr-src"><b>근거조문</b><span>'+esc(it['근거조문원문요약'])+'</span></div>':'')
         + (it['분개예시']?'<div class="aifrs-art-jn">'+esc(it['분개예시'])+'</div>':'')
         + _prioReasonRow(it['우선순위사유'])
-        + '<div class="aifrs-pr-verify">'+verifyLine+'</div>'
-        + '</div>';
+        + verify
+        + '</div></details>';
       return {prio:prio, level:v.level, html:html};
     });
     rows.sort(function(a,b){ return (b.prio-a.prio) || (lvlRank[b.level]-lvlRank[a.level]); });   // 검토 우선순위↓, 동점이면 주의필요(확인불가>미검증>통과)↓
     var hi=rows.filter(function(r){return r.prio>=40;}), lo=rows.filter(function(r){return r.prio<40;});
     var body=hi.map(function(r){return r.html;}).join('');
-    if(lo.length){ body+='<details class="aifrs-pr-fold"'+(hi.length?'':' open')+'><summary>⚪ 형식·낮은 우선순위 문단 '+lo.length+'개 — 펼쳐 보기</summary>'+lo.map(function(r){return r.html;}).join('')+'</details>'; }   // 형식(<40) 기본 접기(항목은 보존)
-    var summary='<div class="aifrs-pr-summary">🟢 코드검증 '+cnt.green+' · 🟠 미검증 '+cnt.amber+' · 🔴 확인불가 '+cnt.red
-      + ' <button class="aifrs-btn aifrs-btn-sm" style="margin-left:8px" onclick="window.AiFRS.runFinalAudit(\''+std.no+'\')">✅ 최종 검증(AI감사인 재검토)</button></div>';
-    var foot='<div class="aifrs-disclaimer">본 결과는 참고용이며, 최종 판단은 담당자 확인이 필요합니다. (코드검증 = 문단 실존·기준서 화이트리스트·문단 키워드(동의어 포함) 단서 대조 — <b>개념 부합은 [최종 검증]의 AI감사로 확정</b>)</div>';
+    if(lo.length){ body+='<details class="aifrs-pr-fold"'+(hi.length?'':' open')+'><summary>형식·낮은 우선순위 문단 '+lo.length+'개 — 펼쳐 보기</summary>'+lo.map(function(r){return r.html;}).join('')+'</details>'; }   // 형식(<40) 기본 접기(항목은 보존)
+    var summary='<div class="aifrs-pr-summary">'
+      + '<span class="af-vitem" style="margin-right:12px">'+_gl('ok')+'통과 <b>'+cnt.green+'</b></span>'
+      + '<span class="af-vitem" style="margin-right:12px">'+_gl('warn')+'미검증 <b>'+cnt.amber+'</b></span>'
+      + '<span class="af-vitem">'+_gl('bad')+'확인불가 <b>'+cnt.red+'</b></span></div>';
+    // 하단 "다음 확인" 히어로 — 문제 건수와 다음 행동(AI감사)을 한 줄로
+    var hasAudit=!!(AiFRS._lastAudit&&AiFRS._lastAudit[std.no]);
+    var probs=cnt.amber+cnt.red;
+    var nextHero='<div class="af-hero-card" style="border-left-color:'+(probs?'#fbbf24':'var(--blue)')+'">'
+      + '<div class="af-hero-t">'+_gl(probs?'warn':'ok',15)+'<span>다음 확인</span>'
+        + '<span class="af-hero-sub">'+(probs?'코드검증 주의 '+probs+'건':'코드검증 전 항목 통과')+'</span></div>'
+      + '<div class="af-next"><span>'
+        + (probs
+            ? '<b>'+probs+'건</b>이 미검증·확인불가입니다. <b>AI감사</b>로 문서 근거를 대조해 충족 여부와 해결방향(보완·확인 사항)을 확인하세요.'
+            : '코드검증(조문 실존)은 모두 통과했습니다. 문서가 실제로 요건을 충족하는지는 <b>AI감사</b>에서 확정됩니다.')
+        + '</span>'
+      + '<button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runFinalAudit(\''+std.no+'\')">'+(hasAudit?'🔄 최종 검증 다시 실행':'✅ 최종 검증(AI감사) 실행')+'</button></div></div>';
+    var foot='<div class="af-foot1">'+_gl('warn')+'<span>본 결과는 참고용이며, 최종 판단은 담당자 확인이 필요합니다.</span>'
+      + '<button class="aifrs-help-btn" onclick="window.AiFRS.showSheet(\'discPrecise\')">ⓘ 자세히</button></div>';
     var auditSlot='<div class="aifrs-precise-slot" id="aifrs-audit-'+std.no+'"></div>';
     // 정밀분석 상세: 최종 검증(AI감사) 결과가 이미 있으면 접힌 상태로 시작, 없으면 펼침. 접혀도 클릭해 다시 볼 수 있음.
-    var hasAudit=!!(AiFRS._lastAudit&&AiFRS._lastAudit[std.no]);
-    var bodyWrap='<details class="aifrs-pr-detail" id="aifrs-prdetail-'+std.no+'"'+(hasAudit?'':' open')+'><summary>🔬 정밀분석 상세 '+items.length+'개 — 클릭하여 펼치기/접기</summary><div class="aifrs-pr-detail-body">'+body+'</div></details>';
-    return head+summary+_prioLegend('확인불가>미검증>통과')+bodyWrap+auditSlot+foot;
+    var bodyWrap='<details class="aifrs-pr-detail" id="aifrs-prdetail-'+std.no+'"'+(hasAudit?'':' open')+'><summary>'+_ico('scope',13)+' 정밀분석 상세 '+items.length+'개 — 클릭하여 펼치기/접기</summary><div class="aifrs-pr-detail-body">'+body+'</div></details>';
+    return head+summary+bodyWrap+nextHero+auditSlot+foot;
   }
   // 감사 결과가 뜨면 정밀분석 상세를 접는다(펼치기로 다시 볼 수 있음)
   function _collapsePreciseDetail(no){ var d=document.getElementById('aifrs-prdetail-'+no); if(d) d.open=false; }
@@ -2691,6 +3011,7 @@ a:hover { text-decoration: underline; }
     var std=AiFRS.findStandard(stdNo); var no=std?std.no:String(stdNo).trim();
     if(AiFRS._auditBusy[no]) return;
     var slot=document.getElementById('aifrs-audit-'+no); if(!std||!slot) return;
+    _openAncestorDetails(slot);   // 접힌 후보 목록 안이면 펼쳐서 결과가 보이게
     var last=AiFRS._lastPrecise&&AiFRS._lastPrecise[no]; var items=(last&&last.items)||[];
     if(!items.length){ slot.innerHTML='<div class="aifrs-note">먼저 정밀 분석을 실행하세요.</div>'; return; }
     if(!AiFRS.getApiKey()){ slot.innerHTML='<div class="aifrs-note">API 키가 필요합니다.</div>'; return; }
@@ -2708,7 +3029,7 @@ a:hover { text-decoration: underline; }
     var timer=setInterval(function(){ var el=document.getElementById('aifrs-audit-timer-'+no); if(el) el.textContent=((Date.now()-t0)/1000).toFixed(1)+'초'; },100);
     function afin(){ clearInterval(timer); delete AiFRS._auditBusy[no]; delete AiFRS._auditCtl[no]; }
     var auCancel=_cancelBtn("window.AiFRS.cancelAudit('"+no+"')", '최종 검증 중단');
-    function stage(t, sub){ slot.innerHTML=_stepper(6)+'<div class="aifrs-ai-load"><span class="aifrs-spin"></span> ✅ AI감사 '+t+' <b id="aifrs-audit-timer-'+no+'">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="aifrs-note">'+sub+'</div>'+auCancel+'</div>'; }
+    function stage(t, sub){ slot.innerHTML=_stepper(6)+'<div class="aifrs-ai-load"><span class="aifrs-spin"></span> '+_ico('shield',14)+' AI감사 '+t+' <b id="aifrs-audit-timer-'+no+'">'+((Date.now()-t0)/1000).toFixed(1)+'초</b><div class="aifrs-note">'+sub+'</div>'+auCancel+'</div>'; }
     // 1단계: 근거 추출 (감사 슬롯은 정밀분석 상세 아래에 있어 화면 밖일 수 있으므로 로딩 시작 시 스크롤로 보여줌)
     stage('1/3 근거 추출 중…', '문서에서 검토포인트 관련 원문을 그대로(verbatim) 추출');
     slot.scrollIntoView({behavior:'smooth', block:'center'});
@@ -2748,6 +3069,7 @@ a:hover { text-decoration: underline; }
                     '판단불가사유':(downReason?downReason+' ':'')+(j['판단불가사유']||''), '근거인용':e.quotes, '환각제외':e.halluc, '교차':String(v['결과']||'유지') };
                 });
                 (AiFRS._lastAudit=AiFRS._lastAudit||{})[no]={ items:audited, std:{no:std.no, name:std.name}, ts:Date.now() };   // 9단계(객관식 보정)·증빙용 구조화 보관
+                _snapSave();
                 slot.innerHTML=renderFinalAudit(std, items, audited, ((Date.now()-t0)/1000).toFixed(1));
                 _collapsePreciseDetail(std.no);   // 감사 결과 뜨면 정밀분석 상세 자동 접기(펼치기로 다시 볼 수 있음)
               });
@@ -2772,45 +3094,77 @@ a:hover { text-decoration: underline; }
       var a=byNo[artNo]||audited[idx]||{};
       var verd=a['판정']||'확인필요'; if(cnt[verd]==null) verd='확인필요';
       cnt[verd]++;
-      var vm=_auditVerd(verd);
+      var vm=_auditVerd(verd), vw=_verdWord(verd);
       var prio=_clampPrio(it['검토우선순위']);
-      var code=AiFRS.verifyItem(std.no, it);   // 코드 신뢰도(존재성)는 보조 표시
+      var code=AiFRS.verifyItem(std.no, it);   // 코드 신뢰도(존재성)는 파이프라인 도트로 축약 표시
       var quotes=a['근거인용']||[];
       var quoteHtml = quotes.length
-        ? '<div class="aifrs-pr-row aifrs-pr-src"><b>문서 근거(검증됨)</b> '+quotes.map(function(q){return '“'+esc(q)+'”';}).join(' &nbsp;/&nbsp; ')+'</div>'
-        : '<div class="aifrs-pr-row aifrs-pr-muted-row"><b>문서 근거</b> 검증된 인용 없음</div>';
+        ? '<div class="aifrs-pr-row aifrs-pr-src"><b>문서 근거(검증됨)</b><span>'+quotes.map(function(q){return '“'+esc(q)+'”';}).join(' &nbsp;/&nbsp; ')+'</span></div>'
+        : '<div class="aifrs-pr-row aifrs-pr-muted-row"><b>문서 근거</b><span>검증된 인용 없음</span></div>';
       var unable = (verd==='확인필요' && a['판단불가사유'] && String(a['판단불가사유']).trim())
-        ? '<div class="aifrs-pr-row aifrs-pr-warn-row"><b>판단불가사유</b> '+esc(a['판단불가사유'])+'</div>'
+        ? '<div class="aifrs-pr-row aifrs-pr-warn-row"><b>판단불가사유</b><span>'+esc(a['판단불가사유'])+'</span></div>'
         : '';
+      // 환각제외 안내는 경고 아이콘 한 줄로 축약(상세는 title)
       var hallucNote = (a['환각제외']>0)
-        ? '<div class="aifrs-pr-verify">⚠ AI가 제시한 근거 '+a['환각제외']+'건은 문서에서 확인되지 않아 제외함(할루시네이션 차단)</div>'
+        ? '<div class="aifrs-pr-verify" style="font-family:inherit"><span class="af-vitem" title="AI가 제시한 근거 '+a['환각제외']+'건이 문서에서 확인되지 않아 자동 제외되었습니다(할루시네이션 차단)">'
+            + _gl('warn',11)+'AI 제시 근거 '+a['환각제외']+'건 제외 — 문서에서 미확인</span></div>'
         : '';
       var auBase=artNo||(code.para?code.para.no:'');   // 조문번호 누락 시 코드검증이 복원한 DB 문단번호로 표시
       var auRange=AiFRS.stripStdPrefix(std.no, auBase)||auBase||'-';
       var auLabel=code.pinpoint?(code.pinpoint.no+code.pinpoint.idx):auRange;
-      var html='<div class="aifrs-pr-item aifrs-cfb-'+vm.cfb+'">'+_prioBadge(prio, it['우선순위사유'])
-        + '<div class="aifrs-pr-h">'+_paraLink(std.no, auRange, '문단 '+esc(auLabel))+' <span class="aifrs-cf aifrs-cf-'+vm.cls+' aifrs-tip" data-tip="'+vm.tip+'">'+vm.ico+' '+esc(verd)+'</span>'
+      var brief=esc(_brief(it['검토포인트']||it['체크항목']||'', 44));
+      // 상태 표기 통합: 감사판정 로젠지 1개 + 파이프라인 도트 3개. 문제 항목(미흡·확인필요)만 기본 펼침.
+      var open=(verd==='미흡'||verd==='확인필요');
+      var html='<details class="aifrs-pr-item af-item aifrs-cfb-'+vm.cfb+'"'+(open?' open':'')+'>'
+        + '<summary>'+_gl(vw.g)+'<span class="af-stat aifrs-tip" style="color:'+vw.c+'" data-tip="'+vm.tip+'">'+esc(verd)+'</span>'
+          + _artChip(std.no, auRange, '§ '+esc(auLabel))
+          + _pipeDots(code.level, a['교차'], quotes.length>0)
           + (a['__userFixed']?'<span class="aifrs-uchip">사용자확정</span>':'')
-          + (code.pinpoint?' <span class="aifrs-audit-tag" title="DB 범위문단 '+esc(auRange)+' 내에서 코드로 특정">범위 '+esc(auRange)+'</span>':'')
-          + (a['교차']==='하향'?' <span class="aifrs-audit-tag">2차검증 하향</span>':'')
-          + (code.level!=='green'?' <span class="aifrs-audit-tag">코드검증 '+(code.level==='red'?'확인불가':'미검증')+'</span>':'')+'</div>'
-        + (code.pinpoint?'<div class="aifrs-pr-row aifrs-pr-src"><b>해당 세부조문(원문)</b> '+esc(code.pinpoint.no+code.pinpoint.idx)+' '+esc(code.pinpoint.t)+'</div>':'')
-        + (it['검토포인트']?'<div class="aifrs-pr-row"><b>검토포인트</b> '+esc(it['검토포인트'])+'</div>':'')
+          + (brief?'<span class="af-sum-txt">'+brief+'</span>':'')
+          + _prioBadge(prio, it['우선순위사유'])
+        + '</summary>'
+        + '<div class="af-item-body">'
+        + (code.pinpoint?'<div class="aifrs-pr-row aifrs-pr-src"><b>해당 세부조문(원문)</b><span>'+esc(code.pinpoint.no+code.pinpoint.idx)+' '+esc(code.pinpoint.t)+(auRange&&auRange!==auLabel?' <span class="aifrs-note">(DB 범위문단 '+esc(auRange)+' 내 코드 특정)</span>':'')+'</span></div>':'')
+        + (it['검토포인트']?'<div class="aifrs-pr-row"><b>검토포인트</b><span>'+esc(it['검토포인트'])+'</span></div>':'')
         + quoteHtml
-        + (a['감사의견']?'<div class="aifrs-pr-row aifrs-pr-violet"><b>AI감사의견</b> '+esc(a['감사의견'])+'</div>':'')
-        + (verd!=='확인필요' && a['보완사항']?'<div class="aifrs-pr-row aifrs-pr-warn-row"><b>보완·확인</b> '+esc(a['보완사항'])+'</div>':'')
-        + unable + hallucNote
+        + (a['감사의견']?'<div class="aifrs-pr-row aifrs-pr-violet"><b>AI감사의견</b><span>'+esc(a['감사의견'])+'</span></div>':'')
+        + (verd!=='확인필요' && a['보완사항']?'<div class="aifrs-pr-row aifrs-pr-warn-row"><b>보완·확인</b><span>'+esc(a['보완사항'])+'</span></div>':'')
+        + unable
+        + (a['교차']==='하향'?'<div class="aifrs-pr-row aifrs-pr-muted-row"><b>교차검증</b><span>2차 검토에서 확인필요로 하향된 항목입니다.</span></div>':'')
         + _prioReasonRow(it['우선순위사유'])
-        + '</div>';
+        + hallucNote
+        + '</div></details>';
       return {prio:prio, verd:verd, html:html};
     });
     var vrank={'확인필요':3,'미흡':2,'해당없음':1,'충족':0};   // 동점이면 확인필요>미흡>해당없음>충족 먼저
     rows.sort(function(a,b){ return (b.prio-a.prio) || ((vrank[b.verd]||0)-(vrank[a.verd]||0)); });
     rows=rows.map(function(r){return r.html;}).join('');
-    var summary='<div class="aifrs-pr-summary">✅ 충족 '+cnt['충족']+' · ❗ 미흡 '+cnt['미흡']+' · ⚠️ 확인필요(판단불가) '+cnt['확인필요']+' · ➖ 해당없음 '+cnt['해당없음']+'</div>';
-    var note='<div class="aifrs-disclaimer">3단계 감사(①근거추출 → 코드로 인용 실존 검증 → ②검증근거로만 판정 → ③교차검증). 모든 판정은 <b>문서에서 코드로 검증된 인용</b>에만 근거하며, 근거가 없거나 불충분한 항목은 임의 판단 없이 <b>판단불가(확인필요)</b>로 표기하고 후속확인을 안내합니다.</div>';
-    var clarBtn='';   // 모호항목 보정 기능 미사용(숨김)
-    return '<div class="aifrs-an-head" style="margin-top:8px;border-top:1px solid var(--border);padding-top:10px;display:flex;align-items:center;gap:8px"><span>✅ AI감사 결과 <span style="font-weight:600;color:var(--txt3)">'+secs+'초 · 3단계 근거기반 검증</span></span>'+clarBtn+'</div>'+summary+_prioLegend('확인필요>미흡>충족')+rows+note;
+    // 종합 판정 히어로: 분포 바(적합·검토필요·부적합·해당없음) + 다음 행동 한 줄
+    var tot=items.length||1, probs=cnt['미흡']+cnt['확인필요'];
+    var pct=function(n){ return (n*100/tot).toFixed(2)+'%'; };
+    var head1 = cnt['미흡']>0 ? {t:'부적합 항목 있음 — 보완 필요', c:'#f87171', g:'bad'}
+      : (cnt['확인필요']>0 ? {t:'추가 확인 필요', c:'#fbbf24', g:'warn'}
+      : {t:'적합 — 문제 항목 없음', c:'#2dd4bf', g:'ok'});
+    var seg=function(n,c){ return n?'<i style="width:'+pct(n)+';background:'+c+'"></i>':''; };
+    var lg=function(c,n,v){ return '<span><em style="background:'+c+'"></em>'+n+' <b>'+v+'</b></span>'; };
+    var hero='<div class="af-hero-card" style="border-left-color:'+head1.c+'">'
+      + '<div class="af-hero-t">'+_gl(head1.g,15)+'<span style="color:'+head1.c+'">'+head1.t+'</span>'
+        + '<span class="af-hero-sub">항목 '+items.length+'개 · '+secs+'초 · 3단계 근거기반 검증</span></div>'
+      + '<div class="af-bar">'+seg(cnt['충족'],'#2dd4bf')+seg(cnt['확인필요'],'#fbbf24')+seg(cnt['미흡'],'#f87171')+seg(cnt['해당없음'],'var(--bg4)')+'</div>'
+      + '<div class="af-legend">'+lg('#2dd4bf','적합(충족)',cnt['충족'])+lg('#fbbf24','검토필요(확인필요)',cnt['확인필요'])
+        + lg('#f87171','부적합(미흡)',cnt['미흡'])+lg('var(--bg4)','해당없음',cnt['해당없음'])+'</div>'
+      + '<div class="af-next">'+_gl(probs?'warn':'ok')+'<span>'
+        + (probs
+            ? '문제 <b>'+probs+'건</b>은 아래에서 자동으로 펼쳐집니다 — <b>문서 근거·보완·확인</b> 사항에서 해결방향을 확인하세요.'
+            : '모든 항목이 문서 근거로 뒷받침됩니다. 각 항목을 클릭하면 근거와 감사의견을 확인할 수 있습니다.')
+        + '</span></div></div>';
+    var foot='<div class="af-foot1">'+_gl('warn')+'<span>AI 분석 결과는 참고용이며, 최종 판단·책임은 담당자에게 있습니다.</span>'
+      + '<button class="aifrs-help-btn" onclick="window.AiFRS.showSheet(\'discAudit\')">ⓘ 자세히</button></div>';
+    var headRow='<div class="aifrs-an-head" style="margin-top:8px;border-top:1px solid var(--border);padding-top:10px">'
+      + '<span style="display:inline-flex;align-items:center;gap:6px">'+_ico('shield',15)+' AI감사 결과</span>'
+      + '<button class="aifrs-help-btn" onclick="window.AiFRS.showSheet(\'prioAudit\')">ⓘ 우선순위·정렬</button>'
+      + '<button class="aifrs-help-btn" onclick="window.AiFRS.showSheet(\'discAudit\')">ⓘ 감사 방식</button></div>';
+    return headRow+hero+rows+foot;
   }
 
   // ── 7단계: 증빙 PDF 다운로드 (브라우저 인쇄 → "PDF로 저장") ──
@@ -2833,6 +3187,9 @@ a:hover { text-decoration: underline; }
     bodyClone.removeAttribute('id');   // 원본과 id 중복 방지
     var btns=bodyClone.querySelectorAll('button');   // 상호작용 버튼은 증빙에서 제거
     for(var i=0;i<btns.length;i++){ if(btns[i].parentNode) btns[i].parentNode.removeChild(btns[i]); }
+    // 2단계 펼침(항목 details·후보 접기)은 인쇄 시 강제 전개 — 접힌 채 출력되면 근거가 누락됨
+    var fops=bodyClone.querySelectorAll('details.af-item, details.af-cand-fold, details.aifrs-pr-fold');
+    for(var fo=0;fo<fops.length;fo++){ fops[fo].setAttribute('open',''); }
     // ── 증빙 양식 정리: 정규화표·일반용어·안내문구 제외, 헤드/후보 문구 정돈 ──
     var rms=bodyClone.querySelectorAll('table.aifrs-nt, .aifrs-an-chips');
     for(var ri=0;ri<rms.length;ri++){ if(rms[ri].parentNode) rms[ri].parentNode.removeChild(rms[ri]); }
@@ -2854,6 +3211,8 @@ a:hover { text-decoration: underline; }
       var pds=card.querySelectorAll('.aifrs-pr-detail');   // 정밀분석 상세(문단별)는 증빙에서 접힌 채 유지 → 인쇄 시 문단 미출력
       for(var pi=0;pi<pds.length;pi++){ pds[pi].removeAttribute('open'); var sm=pds[pi].querySelector('summary'); if(sm) sm.textContent='🔬 정밀분석 상세(문단별)는 증빙에서 제외 — 화면에서 확인'; }
     }
+    var folds=bodyClone.querySelectorAll('details.af-cand-fold');   // 감사 미완료 후보가 모두 빠져 빈 껍데기가 된 접기 블록 제거
+    for(var fdi=0;fdi<folds.length;fdi++){ if(!folds[fdi].querySelector('.aifrs-an-std') && folds[fdi].parentNode) folds[fdi].parentNode.removeChild(folds[fdi]); }
     var cS=bodyClone.querySelectorAll('.aifrs-an-sec');   // '후보 기준서' 카운트를 실제 노출 종수로 갱신
     for(var csi=0;csi<cS.length;csi++){ if((cS[csi].textContent||'').indexOf('후보 기준서')>=0){ var csp=cS[csi].querySelector('span'); if(csp) csp.textContent=keptStd+'종(AI감사 완료)'; } }
     var head0=bodyClone.querySelector('.aifrs-an-head');   // 첫 헤드(API①) → 제목 교체(초·모델 제거)
@@ -3336,6 +3695,7 @@ a:hover { text-decoration: underline; }
     if(!window.confirm('업로드된 파일 '+n+'건을 모두 삭제할까요?')) return;
     AiFRS.state.files = [];
     AiFRS._lastAi=null; AiFRS._lastPrecise={}; AiFRS._lastAudit={}; AiFRS._lastJournal=null;
+    _snapClear();
     ['aifrs-ai','aifrs-precise','aifrs-journal','aifrs-analysis'].forEach(function(id){ var el=document.getElementById(id); if(el){ el.innerHTML=''; el.style.display='none'; } });
     renderFileList();
   };
@@ -3377,11 +3737,18 @@ a:hover { text-decoration: underline; }
     var st=AiFRS.dbStats();
     var h='<div class="aifrs-db-stat">기준서·문서 <b>'+st.standards+'종</b> · 문단 지문 <b>'+st.articles+'개</b> · 회계용어 <b>'+st.terms+'개</b>(동의어 포함 <b>'+st.surface+'개</b>)</div>';
     h+='<div class="aifrs-db-search"><input id="aifrs-db-q" type="text" placeholder="🔍 기준서번호·명칭·문단·키워드·원문 검색 (예: 1038, 무형자산, 자본화)" oninput="window.AiFRS.dbSearch(this.value)"><span class="aifrs-db-qcnt" id="aifrs-db-qcnt"></span></div>';
-    h+='<div id="aifrs-db-results" style="display:none"></div><div id="aifrs-db-list">';
     var TY={standard:'📘 기준서', interpretation:'📑 해석서', framework:'📐 개념체계·실무서'};
+    h+='<div class="aifrs-db-ty" id="aifrs-db-ty">'
+      + '<button class="on" data-ty="all" onclick="window.AiFRS.setDbTy(\'all\',this)">전체</button>'
+      + ['standard','interpretation','framework'].map(function(ty){
+          return '<button data-ty="'+ty+'" onclick="window.AiFRS.setDbTy(\''+ty+'\',this)">'+TY[ty]+'</button>';
+        }).join('')
+      + '</div>';
+    h+='<div id="aifrs-db-results" style="display:none"></div><div id="aifrs-db-list">';
     ['standard','interpretation','framework'].forEach(function(ty){
       var idxs=[]; AiFRS.DB.standards.forEach(function(s,i){ if((s.type||'standard')===ty) idxs.push(i); });
       if(!idxs.length) return;
+      h+='<div class="aifrs-db-tygrp" data-ty="'+ty+'">';
       h+='<div class="aifrs-db-group">'+TY[ty]+' <span>'+idxs.length+'종</span></div>';
       idxs.forEach(function(i){
         var s=AiFRS.DB.standards[i];
@@ -3395,6 +3762,7 @@ a:hover { text-decoration: underline; }
           + '<div class="aifrs-std-body" id="aifrs-std-body-'+i+'" style="display:none"></div>'
           + '</div>';
       });
+      h+='</div>';
     });
     return h+'</div>';
   }
@@ -3409,13 +3777,26 @@ a:hover { text-decoration: underline; }
     clearTimeout(AiFRS._dbQTimer);
     AiFRS._dbQTimer = setTimeout(function(){ _dbSearchRun(qRaw); }, 180);
   };
+  // 타입 필터(전체/기준서/해석서/개념체계) — 목록·검색 결과 모두에 적용
+  AiFRS.setDbTy = function(ty, btn){
+    AiFRS._dbTy = ty;
+    var wrap=document.getElementById('aifrs-db-ty');
+    if(wrap){ Array.prototype.forEach.call(wrap.querySelectorAll('button'), function(b){ b.classList.toggle('on', b===btn); }); }
+    Array.prototype.forEach.call(document.querySelectorAll('.aifrs-db-tygrp'), function(g){
+      g.style.display = (ty==='all' || g.getAttribute('data-ty')===ty) ? '' : 'none';
+    });
+    var q=document.getElementById('aifrs-db-q');
+    if(q && String(q.value||'').trim().length>=2) _dbSearchRun(q.value);   // 검색 중이면 필터 반영해 재검색
+  };
   function _dbSearchRun(qRaw){
     var list=document.getElementById('aifrs-db-list'), res=document.getElementById('aifrs-db-results'), cnt=document.getElementById('aifrs-db-qcnt');
     if(!list||!res) return;
     var q=String(qRaw||'').trim();
     if(q.length<2){ res.style.display='none'; res.innerHTML=''; list.style.display=''; if(cnt) cnt.textContent=''; return; }
     var ql=q.toLowerCase(); var MAX=60; var hits=0, shown=0, h='';
+    var tyF=AiFRS._dbTy||'all';
     AiFRS.DB.standards.forEach(function(s,i){
+      if(tyF!=='all' && (s.type||'standard')!==tyF) return;   // 타입 필터
       var stdHit = (s.no+' '+s.name).toLowerCase().indexOf(ql)>=0;
       var pHits=[];
       (s.paragraphs||[]).forEach(function(p){
@@ -3498,20 +3879,12 @@ a:hover { text-decoration: underline; }
   }
   function _tourCloseDb(){ if(AiFRS._tourOpenedDb){ AiFRS.toggleDbView(); AiFRS._tourOpenedDb=false; } }
   AiFRS.TOUR_STEPS = [
-    {sel:'#aifrs-settings-toggle', title:'① 시작 전 준비 — 설정', msg:'- AI 분석·정밀 분석·최종 검증에는 API 키 필요\n- ⚙ 버튼으로 설정 패널 열기\n- 최초 1회만 등록하면 끝 — 다음 3개 항목에서 차례로 안내'},
-    {sel:'#aifrs-entity',          expand:'.af-set-group', title:'② Reporting Entity (당사 명칭)', msg:'왜 필요한가요?\n- AiFRS는 "당사가 누구인가"를 기준으로 거래 방향(수취/지급)과 적용 기준서를 판정\n- 문서 속 자사명을 거래 상대방으로 오인하지 않도록 제외하는 데에도 사용\n\n사용법\n- 기본값은 헥토이노베이션 — (주)·주식회사 등 접두어 없이 핵심 명칭만 입력\n- 다른 법인에서 사용할 경우 회사명 변경 후 [Save]',
-      pre:_tourOpenSettings},
-    {sel:'#aifrs-api-key',         expand:'.af-set-group', title:'③ Gemini API (주 엔진)', msg:'왜 필요한가요?\n- AI 분석·OCR·정밀 분석·최종 검증을 구동하는 핵심 엔진\n- 무료 티어로 충분히 사용 가능 (비용 0원)\n\n사용법\n- [🔑 Get Key] → 무료 키 생성 → 붙여넣고 [Save] → [Test]\n- 키는 이 브라우저에만 저장 — 외부로 전송·공유되지 않음\n- 상세 절차는 [Guide] 참고'},
-    {sel:'#aifrs-or-key',          expand:'.af-set-group', title:'④ OpenRouter (예비 엔진)', msg:'왜 필요한가요?\n- Gemini 무료 한도 소진·일시 오류 시 자동 전환되는 백업 라인\n- 분석이 중간에 끊기지 않도록 하는 안전장치 (무료 모델만 사용)\n\n사용법\n- 선택사항 — 없어도 동작하며, 등록 시 안정성 향상\n- 발급·등록 방법은 Gemini와 동일 ([Get Key] → [Save] → [Test])'},
-    {sel:'#aifrs-drop',            title:'⑤ 파일 업로드',   msg:'- 계약서·문서를 드래그 또는 클릭해 첨부\n- PDF·엑셀·이미지·ZIP·스캔 PDF 인식\n- 업로드 후 [미리보기]로 추출 내용 확인',
-      pre:_tourCloseSettings},
-    {sel:'#aifrs-ai-btn',          title:'⑥ AI 분석',       msg:'- [Analyze] 한 번으로 거래구조 분석 → 후보 기준서 자동 선별\n- 스캔 문서는 OCR도 함께 처리\n- 다른 거래의 문서가 섞이면 분석 전 자동 경고'},
-    {sel:'#aifrs-next-btn',        title:'⑦ 오프라인 매칭', msg:'- API 없이 내장 DB 5,468개 문단과 즉시 매칭\n- 파일이 바뀌면 결과 자동 갱신'},
-    {sel:'#aifrs-db-toggle',       title:'⑧ K-IFRS DB',    msg:'- 내장 기준서 50종·5,468개 문단 직접 열람\n- 모든 분석 근거를 여기서 검증'},
-    {sel:'#aifrs-db-q',            title:'⑨ DB 검색',      msg:'- 기준서번호·명칭·문단·키워드·원문 전문 검색\n- 결과 클릭 시 해당 기준서로 바로 이동',
-      pre:function(){ var v=document.getElementById('aifrs-db-view'); if(v && (v.style.display==='none'||v.style.display==='')){ AiFRS.toggleDbView(); AiFRS._tourOpenedDb=true; } }},
-    {sel:'#aifrs-tour-btn',        title:'⑩ 언제든 다시',   msg:'- [사용 가이드]를 누르면 처음부터 다시 안내\n- 이제 키를 등록하고 문서를 올려 시작해 보세요!',
-      pre:_tourCloseDb}
+    {sel:'#aifrs-settings-toggle', title:'① 키 등록', info:'tour1', pre:_tourOpenSettings,
+      msg:'- ⚙ 설정에서 Gemini API Key 저장 — 분석·OCR·감사를 구동하는 주 엔진(무료)\n- OpenRouter Key는 선택 — 한도 소진 시 자동 전환되는 백업\n- 최초 1회만 등록하면 다음 실행부터 자동 적용'},
+    {sel:'#aifrs-drop',            title:'② 올리고 분석', info:'tour2', pre:_tourCloseSettings,
+      msg:'- 계약서·문서를 끌어다 놓거나 클릭해 첨부 (PDF·엑셀·이미지·ZIP·스캔 PDF)\n- [Analyze]로 거래구조 분석 → 후보 기준서 자동 선별\n- 후보 카드에서 [정밀 분석] → [최종 검증(AI감사)] 순으로 진행'},
+    {sel:'#aifrs-db-toggle',       title:'③ 근거 검증', info:'tour3', pre:_tourCloseDb,
+      msg:'- 감사 결과 항목을 클릭하면 근거·감사의견이 펼쳐짐 (문제 항목은 자동 펼침)\n- § 문단 칩을 누르면 기준서 원문(내장 DB)을 즉시 확인\n- [보완·확인]·[판단불가사유]에서 문제 해결방향을 도출'}
   ];
   AiFRS.startTour = function(){
     // 실행 시 유도 글로우 해제(현재 세션 한정 — 새로고침하면 다시 표시)
@@ -3521,6 +3894,7 @@ a:hover { text-decoration: underline; }
     ov.innerHTML='<div class="aifrs-tour-hl" id="aifrs-tour-hl"></div>'
       + '<div class="aifrs-tour-tip" id="aifrs-tour-tip"><b></b><span class="tmsg"></span>'
       + '<div class="tfoot"><span class="tcnt"></span><div class="tbtns">'
+      + '<button class="tskip tinfo" onclick="window.AiFRS.showSheet(this.getAttribute(\'data-k\'))">ⓘ 자세히</button>'
       + '<button class="tskip" onclick="window.AiFRS.endTour()">건너뛰기</button>'
       + '<button class="tskip tprev" onclick="window.AiFRS.prevTour()">이전</button>'
       + '<button class="tnext" onclick="window.AiFRS.nextTour()">다음</button>'
@@ -3544,7 +3918,7 @@ a:hover { text-decoration: underline; }
     if(cur && cur.sel==='#aifrs-drop') {} // 4→3: 아래 _placeTour의 pre가 설정을 다시 연다
     AiFRS._tourIdx--;
     var tgt=AiFRS.TOUR_STEPS[AiFRS._tourIdx];
-    var SET_STEPS={'#aifrs-entity':1,'#aifrs-api-key':1,'#aifrs-or-key':1};
+    var SET_STEPS={'#aifrs-settings-toggle':1};   // 설정 패널을 여는 단계
     if(tgt && tgt.sel!=='#aifrs-db-q') _tourCloseDb();          // DB 검색 단계가 아니면 DB 뷰 닫기
     if(tgt && !SET_STEPS[tgt.sel]) _tourCloseSettings();        // 설정 3단계가 아니면 설정 패널 닫기
     _placeTour();
@@ -3576,6 +3950,8 @@ a:hover { text-decoration: underline; }
     tip.querySelector('.tcnt').textContent=(i+1)+' / '+steps.length;
     tip.querySelector('.tnext').textContent = i===steps.length-1?'완료':'다음';
     var pv=tip.querySelector('.tprev'); if(pv) pv.style.display = i===0?'none':'';
+    var inf=tip.querySelector('.tinfo');   // 단계별 ⓘ 상세 시트(정보는 시트로 이동)
+    if(inf){ if(s.info){ inf.style.display=''; inf.setAttribute('data-k', s.info); } else { inf.style.display='none'; } }
     var W=tip.offsetWidth||380, vw=window.innerWidth, vh=window.innerHeight;
     var tx=Math.min(Math.max(r.left+r.width/2-W/2, 14), vw-W-14);
     var above = (r.top+r.height/2) > vh/2;   // 하단 대상이면 위에, 상단 대상이면 아래에 표시
@@ -3587,6 +3963,12 @@ a:hover { text-decoration: underline; }
   AiFRS.dbJump = function(i){
     var inp=document.getElementById('aifrs-db-q'); if(inp) inp.value='';
     _dbSearchRun('');
+    // 점프 대상이 타입 필터로 숨겨져 있으면 필터를 전체로 되돌림
+    var s=AiFRS.DB.standards[i];
+    if(s && (AiFRS._dbTy||'all')!=='all' && (s.type||'standard')!==AiFRS._dbTy){
+      var allBtn=document.querySelector('#aifrs-db-ty button[data-ty="all"]');
+      AiFRS.setDbTy('all', allBtn);
+    }
     var b=document.getElementById('aifrs-std-body-'+i);
     if(b && b.style.display==='none') AiFRS.toggleStd(i);
     var head=b && b.previousElementSibling;
@@ -3932,6 +4314,7 @@ a:hover { text-decoration: underline; }
   AiFRS.addFiles = function(fl){
     var hero = document.getElementById('af-hero');
     if(hero) hero.classList.add('hidden');
+    var rb=document.getElementById('aifrs-restore-bar'); if(rb&&rb.parentNode) rb.parentNode.removeChild(rb);   // 새 작업 시작 — 복원 배너 정리(스냅샷은 유지)
     // 파일 구성이 바뀌면 AI 분석·정밀분석·감사 결과는 더 이상 유효하지 않으므로 초기화(재호출 비용 있어 자동 재실행 안 함)
     // 오프라인 키워드 매칭(Keywords)은 추출 완료 시 renderFileList → _autoRefreshOffline에서 조용히 자동 갱신됨
     AiFRS._lastAi=null; AiFRS._lastPrecise={}; AiFRS._lastAudit={}; AiFRS._lastJournal=null; AiFRS._mixOkSig=null;
@@ -3947,6 +4330,8 @@ a:hover { text-decoration: underline; }
   AiFRS.goHome = function(){
     AiFRS.state.files = [];
     AiFRS._lastAi=null; AiFRS._lastPrecise={}; AiFRS._lastAudit={}; AiFRS._lastJournal=null; AiFRS._mixOkSig=null;
+    try{ localStorage.removeItem('aifrs-snapshot'); }catch(e){}
+    var rb=document.getElementById('aifrs-restore-bar'); if(rb&&rb.parentNode) rb.parentNode.removeChild(rb);
     ['aifrs-ai','aifrs-precise','aifrs-journal'].forEach(function(id){ var el=document.getElementById(id); if(el){ el.innerHTML=''; el.style.display='none'; } });
     var hero = document.getElementById('af-hero');
     if(hero){ hero.classList.remove('hidden'); hero.style.display=''; }
@@ -3960,6 +4345,19 @@ a:hover { text-decoration: underline; }
     if(sT) sT.classList.remove('active');
     renderFileList();
   };
+  // 전역 키보드 — Escape: 투어·안내 모달 닫기(입력형 모달은 제외, 각 모달의 배경클릭 닫기 로직 재사용) / Ctrl+Enter: AI 분석
+  document.addEventListener('keydown', function(e){
+    if(e.key==='Escape'){
+      if(document.getElementById('aifrs-tour-ov')){ AiFRS.endTour(); return; }
+      var ovs=document.querySelectorAll('.aifrs-modal-ov');
+      if(ovs.length){
+        var top=ovs[ovs.length-1];
+        if(!top.querySelector('input,select,textarea')) top.click();
+      }
+    } else if((e.ctrlKey||e.metaKey) && e.key==='Enter'){
+      if((AiFRS.state.files||[]).length && !AiFRS._aiBusy){ e.preventDefault(); AiFRS.runAiAnalysis(); }
+    }
+  });
   window.AiFRS = AiFRS;
 })();
 
@@ -3968,6 +4366,10 @@ document.addEventListener('DOMContentLoaded', function(){
   if(window.AiFRS && typeof window.AiFRS.render === 'function'){
     window.AiFRS.render();
   }
+  // localStorage 키 유실 시 aifrs-keys.json에서 자동 복원
+  if(window.AiFRS) window.AiFRS._restoreKeys && window.AiFRS._restoreKeys();
+  // 이전 분석 스냅샷이 있으면 복원 배너 제안
+  if(window.AiFRS && window.AiFRS._offerRestore) window.AiFRS._offerRestore();
 });
 </script>
 </body>

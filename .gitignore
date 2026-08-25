@@ -9,3 +9,7 @@ K-IFRS/_*.txt
 *.bak
 HI_예실분석 자동화*.zip
 월 별 원천자료/
+
+# AiFRS 루프 상태·API 키 (자동 생성, 커밋 불필요)
+AiFRS_loop/
+aifrs-keys.json
