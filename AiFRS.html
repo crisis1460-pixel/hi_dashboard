@@ -716,6 +716,8 @@ a:hover { text-decoration: underline; }
 /* 1줄 면책 + ⓘ */
 .af-foot1 { display:flex; align-items:center; gap:6px; margin-top:16px; font-size:11px; color:var(--txt3); line-height:1.7; }
 .af-foot1 > span { flex:1; min-width:0; }
+/* AI감사 결과가 뜨면(감사 슬롯 비어있지 않음) 정밀분석 쪽 면책은 숨겨 1줄만 유지 */
+.aifrs-precise-slot:not(:empty) ~ .af-foot1 { display:none; }
 
 /* 후보 기준서: 1순위 강조 + 나머지 접기 */
 .af-cand-top { border:2px solid var(--blue) !important; }
@@ -2910,7 +2912,7 @@ a:hover { text-decoration: underline; }
             : '코드검증(조문 실존)은 모두 통과했습니다. 문서가 실제로 요건을 충족하는지는 <b>AI감사</b>에서 확정됩니다.')
         + '</span>'
       + '<button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runFinalAudit(\''+std.no+'\')">'+(hasAudit?'🔄 최종 검증 다시 실행':'✅ 최종 검증(AI감사) 실행')+'</button></div></div>';
-    var foot='<div class="af-foot1">'+_gl('warn')+'<span>본 결과는 참고용이며, 최종 판단은 담당자 확인이 필요합니다.</span>'
+    var foot='<div class="af-foot1">'+_gl('warn')+'<span>AI 분석 결과는 참고용이며, 최종 판단·책임은 담당자에게 있습니다.</span>'
       + '<button class="aifrs-help-btn" onclick="window.AiFRS.showSheet(\'discPrecise\')">ⓘ 자세히</button></div>';
     var auditSlot='<div class="aifrs-precise-slot" id="aifrs-audit-'+std.no+'"></div>';
     // 정밀분석 상세: 최종 검증(AI감사) 결과가 이미 있으면 접힌 상태로 시작, 없으면 펼침. 접혀도 클릭해 다시 볼 수 있음.
