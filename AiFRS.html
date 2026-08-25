@@ -3154,6 +3154,7 @@ a:hover { text-decoration: underline; }
                 });
                 (AiFRS._lastAudit=AiFRS._lastAudit||{})[no]={ items:audited, std:{no:std.no, name:std.name}, ts:Date.now() };   // 9단계(객관식 보정)·증빙용 구조화 보관
                 _snapSave();
+                if(AiFRS._easyCache) delete AiFRS._easyCache[_planKey(no,'all')];   // 감사 재실행 시 이전 판정 기준의 쉬운 설명 캐시 무효화
                 slot.innerHTML=renderFinalAudit(std, items, audited, ((Date.now()-t0)/1000).toFixed(1));
                 _collapsePreciseDetail(std.no);   // 감사 결과 뜨면 정밀분석 상세 자동 접기(펼치기로 다시 볼 수 있음)
                 var nh=document.getElementById('aifrs-nexthero-'+std.no); if(nh&&nh.parentNode) nh.parentNode.removeChild(nh);   // 감사 완료 — "다음 확인" CTA 제거(중복 안내 방지)
