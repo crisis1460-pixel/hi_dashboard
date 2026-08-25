@@ -2362,16 +2362,14 @@ a:hover { text-decoration: underline; }
           + (c['사유']?'<div class="aifrs-an-para">'+esc(c['사유'])+'</div>':'')
           + (issues?'<div class="aifrs-an-para">쟁점: <span class="aifrs-an-hit">'+issues+'</span></div>':'')
           + (valid
-              ? '<div style="margin-top:8px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runPreciseAnalysis(\''+key+'\')">'+_ico('scope',13,'currentColor')+' 정밀 분석</button>'
-                + (top?'<button class="aifrs-btn aifrs-btn-sm" style="margin-left:8px" onclick="window.AiFRS.runFullReview(\''+key+'\')" title="정밀 분석 → AI 감사 → 다음 할 일까지 한 번에 이어서 실행합니다">'+_ico('shield',13,'currentColor')+' 전체 검토 (정밀+감사)</button>':'')
-                + '</div>'
+              ? '<div style="margin-top:8px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runFullReview(\''+key+'\')" title="정밀 분석 → AI 감사 → 다음 할 일까지 한 번에 이어서 실행합니다">'+_ico('shield',13,'currentColor')+' AI 전체 검토</button></div>'
                 + '<div class="aifrs-precise-slot" id="aifrs-precise-'+key+'"></div>'
               : '<div class="aifrs-api-stat err" style="margin-top:4px">⚠ 내장 DB에 없는 기준서번호 — 6단계 검증 대상</div>')
           + '</div>';
       };
       h+=_candCard(cands[0], true);
       if(cands.length>1){
-        h+='<details class="af-cand-fold"><summary>다른 후보 '+(cands.length-1)+'종 — 펼쳐 보기(정밀 분석 가능)</summary>'
+        h+='<details class="af-cand-fold"><summary>다른 후보 '+(cands.length-1)+'종 — 펼쳐 보기(AI 전체 검토 가능)</summary>'
           + cands.slice(1).map(function(c){ return _candCard(c, false); }).join('')
           + '</details>';
       }
@@ -2389,7 +2387,7 @@ a:hover { text-decoration: underline; }
       h+='<div class="aifrs-an-sec aifrs-sec-tog" onclick="window.AiFRS.toggleAiSec(\'aifrs-gt-body\',this)">일반 업무 용어(분석 제외) <span>'+data.generalTerms.length+'개</span><span class="aifrs-toggle aifrs-sec-arr">펼치기 ▾</span></div>';
       h+='<div id="aifrs-gt-body" style="display:none"><div class="aifrs-an-chips">'+data.generalTerms.map(function(g){return '<span class="aifrs-chip-unc">'+esc(g)+'</span>';}).join('')+'</div></div>';
     }
-    h+='<div class="aifrs-note" style="margin-top:12px">후보의 [🔬 정밀 분석]을 누르면 그 기준서 조문 범위로 상세 분석(API ②)합니다.</div>';
+    h+='<div class="aifrs-note" style="margin-top:12px">후보의 [AI 전체 검토]를 누르면 정밀 분석 → AI 감사 → 다음 할 일까지 자동으로 이어서 실행합니다.</div>';
     return h;
   }
 
@@ -2856,7 +2854,7 @@ a:hover { text-decoration: underline; }
     tour2: {t:'② 올리고 분석 — 자세히', h:
         '<div class="g-step"><b>1.</b><span><b>업로드</b> — 계약서·문서를 끌어다 놓거나 클릭해 첨부(PDF·엑셀·워드·이미지·ZIP·스캔 PDF). 업로드 후 [미리보기]로 추출 내용을 확인할 수 있습니다.</span></div>'
       + '<div class="g-step"><b>2.</b><span><b>AI 분석</b> — [Analyze] 한 번으로 거래구조(당사 위치·관계·대금 방향)를 파악하고 후보 기준서를 선별합니다. 스캔 문서는 OCR도 함께 처리합니다.</span></div>'
-      + '<div class="g-step"><b>3.</b><span><b>정밀 분석</b> — 후보 카드의 [🔬 정밀 분석]을 누르면 그 기준서 조문 범위로 체크항목·검토포인트·분개예시를 산출합니다.</span></div>'
+      + '<div class="g-step"><b>3.</b><span><b>AI 전체 검토</b> — 후보 카드의 [AI 전체 검토]를 누르면 정밀 분석(조문별 체크항목·검토포인트)과 AI 감사가 자동으로 이어서 실행됩니다.</span></div>'
       + '<div class="g-step"><b>4.</b><span><b>최종 검증(AI감사)</b> — 문서에서 검증된 인용만 근거로 각 검토포인트의 충족 여부를 판정합니다.</span></div>'
       + '<p class="aifrs-note" style="margin-top:10px">※ 무료 API 분당 한도 보호를 위해 동시 정밀분석은 최대 3건입니다. 다른 거래의 문서가 섞이면 분석 전에 자동으로 경고합니다.</p>'},
     tour3: {t:'③ 근거 검증 — 자세히', h:
@@ -4082,7 +4080,7 @@ a:hover { text-decoration: underline; }
     {sel:'#aifrs-settings-toggle', title:'① 키 등록', info:'tour1', pre:_tourOpenSettings,
       msg:'- ⚙ 설정에서 Gemini API Key 저장 — 분석·OCR·감사를 구동하는 주 엔진(무료)\n- OpenRouter Key는 선택 — 한도 소진 시 자동 전환되는 백업\n- 최초 1회만 등록하면 다음 실행부터 자동 적용'},
     {sel:'#aifrs-drop',            title:'② 올리고 분석', info:'tour2', pre:_tourCloseSettings,
-      msg:'- 계약서·문서를 끌어다 놓거나 클릭해 첨부 (PDF·엑셀·이미지·ZIP·스캔 PDF)\n- [Analyze]로 거래구조 분석 → 후보 기준서 자동 선별\n- 후보 카드에서 [정밀 분석] → [최종 검증(AI감사)] 순으로 진행'},
+      msg:'- 계약서·문서를 끌어다 놓거나 클릭해 첨부 (PDF·엑셀·이미지·ZIP·스캔 PDF)\n- [Analyze]로 거래구조 분석 → 후보 기준서 자동 선별\n- 후보 카드의 [AI 전체 검토] 한 번으로 정밀 분석→AI 감사→다음 할 일까지 자동 진행'},
     {sel:'#aifrs-db-toggle',       title:'③ 근거 검증', info:'tour3', pre:_tourCloseDb,
       msg:'- 감사 결과 항목을 클릭하면 근거·감사의견이 펼쳐짐 (문제 항목은 자동 펼침)\n- § 문단 칩을 누르면 기준서 원문(내장 DB)을 즉시 확인\n- [보완·확인]·[판단불가사유]에서 문제 해결방향을 도출'}
   ];
@@ -4391,7 +4389,7 @@ a:hover { text-decoration: underline; }
       +       '<div class="af-sc"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="1.8"/><rect x="10.3" y="10.3" width="3.4" height="3.4" rx="0.8"/><path d="M9.5 4.5V7M14.5 4.5V7M9.5 17v2.5M14.5 17v2.5M4.5 9.5H7M4.5 14.5H7M17 9.5h2.5M17 14.5h2.5"/></svg></div><div class="n">STEP 2</div><div class="t">AI 분석</div>'
       +         '<div class="tip">- [Analyze] 한 번 클릭\n- 거래구조 분석 → 후보 기준서 선별\n- API 키는 최초 1회만 설정</div></div>'
       +       '<div class="af-sc"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="5.8"/><path d="m19.5 19.5-5-5"/><path d="M10.5 8v5M8 10.5h5"/></svg></div><div class="n">STEP 3</div><div class="t">정밀 분석</div>'
-      +         '<div class="tip">- 기준서별 [정밀 분석] 클릭\n- 문단 단위 체크리스트 검토\n- 내장 DB로 조문 코드 검증</div></div>'
+      +         '<div class="tip">- 기준서별 [AI 전체 검토] 클릭\n- 문단 단위 체크리스트 검토\n- 내장 DB로 조문 코드 검증</div></div>'
       +       '<div class="af-sc"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 5.5 6v5.2c0 4.3 2.8 7.5 6.5 9.3 3.7-1.8 6.5-5 6.5-9.3V6z"/><path d="m9.3 11.7 2 2 3.5-3.9"/></svg></div><div class="n">STEP 4</div><div class="t">최종 검증</div>'
       +         '<div class="tip">- [최종 검증] 클릭\n- 문서 원문 인용만을 근거로 판정\n- 충족·미흡 AI 감사 리포트</div></div>'
       +     '</div>'
