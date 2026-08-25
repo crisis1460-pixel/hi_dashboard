@@ -2300,7 +2300,7 @@ a:hover { text-decoration: underline; }
           + (c['사유']?'<div class="aifrs-an-para">'+esc(c['사유'])+'</div>':'')
           + (issues?'<div class="aifrs-an-para">쟁점: <span class="aifrs-an-hit">'+issues+'</span></div>':'')
           + (valid
-              ? '<div style="margin-top:8px"><button class="aifrs-btn aifrs-btn-sm" style="display:inline-flex;align-items:center;gap:5px" onclick="window.AiFRS.runPreciseAnalysis(\''+key+'\')">'+_ico('scope',13)+' 정밀 분석</button></div>'
+              ? '<div style="margin-top:8px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runPreciseAnalysis(\''+key+'\')">'+_ico('scope',13,'currentColor')+' 정밀 분석</button></div>'
                 + '<div class="aifrs-precise-slot" id="aifrs-precise-'+key+'"></div>'
               : '<div class="aifrs-api-stat err" style="margin-top:4px">⚠ 내장 DB에 없는 기준서번호 — 6단계 검증 대상</div>')
           + '</div>';
@@ -2695,9 +2695,9 @@ a:hover { text-decoration: underline; }
            na:'<path d="M5.5 12h13"/>'}[kind]||'';
     return '<svg class="af-gl" viewBox="0 0 24 24" fill="none" stroke="'+col+'" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:'+px+'px;height:'+px+'px">'+d+'</svg>';
   }
-  // 헤더·로딩 전용 아이콘 — ai(AI분석) · scope(정밀분석) · shield(AI감사)
-  function _ico(kind, sz){
-    var px=sz||16, c='var(--blue)';
+  // 헤더·로딩 전용 아이콘 — ai(AI분석) · scope(정밀분석) · shield(AI감사). col: 파란 배경 버튼 안에서는 'currentColor'
+  function _ico(kind, sz, col){
+    var px=sz||16, c=col||'var(--blue)';
     var d={
       ai:'<path d="M10 3.5l1.6 4.4 4.4 1.6-4.4 1.6L10 15.5l-1.6-4.4L4 9.5l4.4-1.6z"/><path d="M17.5 3l.9 2.6 2.6.9-2.6.9L17.5 10l-.9-2.6L14 7.5l2.6-.9z"/>',
       scope:'<path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13zM21 21l-4.6-4.6"/>',
