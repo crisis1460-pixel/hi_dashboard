@@ -3244,7 +3244,13 @@ a:hover { text-decoration: underline; }
     return '<div class="af-hero-card" style="border-left-color:'+(probs.length?'#fbbf24':'#2dd4bf')+'">'
       + '<div class="af-hero-t">'+_ico('plan',15)+'<span>다음 할 일</span>'
       +   '<span class="af-hero-sub">'+sub+'</span></div>'
-      + '<div class="af-plan-guide">올리신 문서는 <b>제'+esc(std.no)+'호 「'+esc(std.name||'')+'」</b> 기준서로 검토하며, 아래 순서대로 확인하면 마무리됩니다.</div>'
+      + (function(){
+          var gs=(AiFRS._lastAi&&AiFRS._lastAi['거래구조'])||{};
+          var issue=gs['핵심회계논점']||'';
+          return '<div class="af-plan-guide">올리신 문서는 <b>제'+esc(std.no)+'호 「'+esc(std.name||'')+'」</b> 기준서로 검토합니다.'
+            + (issue?'<br>이번 문의에서 정해야 할 것: <b>'+esc(issue)+'</b>':'')
+            + '<br>아래 순서대로 확인하면 결론이 나옵니다.</div>';
+        })()
       + rows
       + '<div style="margin-top:11px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.explainEasyAll(\''+std.no+'\')" title="위 항목 전체를 기준서 흐름(정의→조건→결론)에 따라 한 번에 쉬운 말로 풀이합니다 (API 1콜)">ⓘ 쉬운 설명 — 전체 통합 풀이</button></div>'
       + '<div id="aifrs-easyall-'+std.no+'"></div>'
