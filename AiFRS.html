@@ -1284,6 +1284,8 @@ a:hover { text-decoration: underline; }
     var l=(AiFRS._orFreeModels&&AiFRS._orFreeModels.length)?AiFRS._orFreeModels:AiFRS.OR_FALLBACK;
     return l.slice(0,5);
   };
+  // lite 고착 해제 — 429 폴백으로 lite가 활성화된 채 다음 단계가 시작되면 상위 모델부터 재시도(1차 패스 14회차 감사 무효화 재발 방지)
+  AiFRS._unstickLite = function(){ var m=AiFRS._activeModel; if(m && /lite/i.test(m)) AiFRS._activeModel=null; };
   AiFRS._modelTryOrder = function(){
     var gem=AiFRS.getApiKey()?AiFRS.MODEL_CHAIN.slice():[];
     var all=gem.concat(AiFRS._orChain());                 // Gemini(주력) → OpenRouter(동적 무료, 폴백)
@@ -1742,6 +1744,7 @@ a:hover { text-decoration: underline; }
       '- ⚠ 광고·판촉비처럼 별도 "비용" 기준서가 없는 지출은, 그 비용처리를 규정한 기준서(광고비=1038 문단69)를 최상위 관련 기준서로 둘 것 — 자산화하지 않더라도 그것이 회계처리 근거이므로 관련성을 높게(자산화 안 한다고 1038을 강등하지 말 것).',
       '- ⚠ 물리적 실체가 있는 재화(디바이스·기기·설비·부품·실물 샘플) 취득은 유형자산(1016) 또는 비용(소모품비)이 1차 후보다. 무형자산(1038)은 실체 없는 자산(SW·라이선스·IP·개발비·콘텐츠 저작권)일 때만 상위로 두고, 실물 재화를 1038을 1016보다 높은 관련성으로 두지 말 것. 취득 목적이 "신규사업 검토·테스트·평가·시제품"이면 자산 정의 미충족 가능성이 크므로 비용(소모품비·경상연구비) 관련성도 함께 높게 둘 것("AI·신규사업" 같은 단어를 무형·개발비로 과대해석 금지).',
       '- ⚠ 일반·구조 기준서(1001 재무제표 표시, 1008 회계정책·추정변경·오류, 개념체계 등)는 문서에 그 특정 쟁점(표시·분류 다툼, 회계정책/추정 변경, 오류수정)이 실제로 있을 때만 후보에 넣고, 단순 거래에서는 상위로 올리지 말 것.',
+      '- ⚠ 관련성 점수는 "문서의 핵심 거래를 직접 규정하는가"로만 매길 것. 문서에 용어·계정과목이 언급됐다는 이유만으로(예: 외화 항목이 있다고 1032 고점, 이연법인세 계산에 등장했다고 1012 외 기준서 고점) 부수 기준서에 70점 이상을 주지 말 것 — 부수·간접 관련은 40점 이하. 1위와 2위 격차가 실질 관련성 차이를 반영해야 함.',
       '- 당사 위치가 모호하거나 근거가 약하면 신뢰도 "낮음".',
       '- ⚠ 출력이 잘려도 보존되도록 거래구조와 candidates를 먼저 출력. 반드시 아래 JSON 순서로만(다른 텍스트 금지):',
       '{"거래구조":{"자료성격":"거래형|내부형|논점·질의형|복합·기타","상대방있음":true,"상대방":"","당사위치":"","관계유형":"공급(수취)|취득·수령(지급)|차입|대여|투자|내부평가·배분|회계·세무논점|기타","대금방향":"당사 수취|당사 지급|해당없음","핵심회계논점":"","회계영향측":["수익"],"경제적실질":"","근거인용":[""],"신뢰도":"높음|보통|낮음"},"candidates":[{"기준서번호":"","명칭":"","관련성":0,"사유":"","관련쟁점":[""]}]}'
@@ -2128,6 +2131,7 @@ a:hover { text-decoration: underline; }
   AiFRS._aiBusy=false;
   AiFRS.runAiAnalysis = function(){
     if(AiFRS._aiBusy) return;
+    AiFRS._unstickLite();
     if(!AiFRS._mixBypass){   // 복수 파일 섞임 의심 시 API 호출 전에 팝업으로 차단(비용 절약)
       _guardMixedThen(function(){ AiFRS._mixBypass=true; try{ AiFRS.runAiAnalysis(); } finally { AiFRS._mixBypass=false; } });
       return;
@@ -2453,6 +2457,7 @@ a:hover { text-decoration: underline; }
     var std=AiFRS.findStandard(stdNo);
     var no=std?std.no:String(stdNo).replace(/[^0-9]/g,'');
     if(AiFRS._preciseBusy[no]) return;   // 같은 기준서 중복 클릭만 차단(다른 기준서는 동시 가능)
+    AiFRS._unstickLite();
     if(Object.keys(AiFRS._preciseBusy).length >= AiFRS.MAX_PRECISE){ showConcurrencyPopup(Object.keys(AiFRS._preciseBusy).length); return; }  // 4번째 차단
     var box=document.getElementById('aifrs-precise-'+no) || document.getElementById('aifrs-precise');
     if(!box) return;
@@ -3094,6 +3099,7 @@ a:hover { text-decoration: underline; }
   AiFRS.runFinalAudit = function(stdNo){
     var std=AiFRS.findStandard(stdNo); var no=std?std.no:String(stdNo).trim();
     if(AiFRS._auditBusy[no]) return;
+    AiFRS._unstickLite();
     var slot=document.getElementById('aifrs-audit-'+no); if(!std||!slot) return;
     _openAncestorDetails(slot);   // 접힌 후보 목록 안이면 펼쳐서 결과가 보이게
     var last=AiFRS._lastPrecise&&AiFRS._lastPrecise[no]; var items=(last&&last.items)||[];
@@ -3111,7 +3117,8 @@ a:hover { text-decoration: underline; }
     AiFRS._auditCtl[no]=ctl; var asig=ctl?ctl.signal:undefined;
     var t0=Date.now();
     var timer=setInterval(function(){ var el=document.getElementById('aifrs-audit-timer-'+no); if(el) el.textContent=((Date.now()-t0)/1000).toFixed(1)+'초'; },100);
-    function afin(){ clearInterval(timer); delete AiFRS._auditBusy[no]; delete AiFRS._auditCtl[no]; }
+    var wd=setTimeout(function(){ if(AiFRS._auditBusy[no]&&ctl){ try{ctl.abort();}catch(e){} } }, 15*60*1000);   // 워치독: 감사 총 15분 상한(재시도 폭풍·탭 스로틀로 인한 무한 대기 차단)
+    function afin(){ clearInterval(timer); clearTimeout(wd); delete AiFRS._auditBusy[no]; delete AiFRS._auditCtl[no]; }
     var auCancel=_cancelBtn("window.AiFRS.cancelAudit('"+no+"')", '최종 검증 중단');
     function stage(t, sub){ slot.innerHTML=_aiLoad('shield',3,'AI 감사 '+t, sub,'aifrs-audit-timer-'+no,((Date.now()-t0)/1000).toFixed(1)+'초',auCancel); }
     // 1단계: 근거 추출 (감사 슬롯은 정밀분석 상세 아래에 있어 화면 밖일 수 있으므로 로딩 시작 시 스크롤로 보여줌)
@@ -3149,7 +3156,11 @@ a:hover { text-decoration: underline; }
                   var v=_alignByArt(vList, e.it['조문번호'], i)||{}; var j=e.judg;
                   var verd=j['판정']||'확인필요'; var downReason='';
                   if(String(v['결과']||'')==='하향' && verd!=='확인필요'){ downReason=v['사유']||'2차 검증에서 근거 부족으로 하향'; verd='확인필요'; }
-                  return { '조문번호':e.it['조문번호']||'', '판정':verd, '감사의견':j['감사의견']||'', '보완사항':j['보완사항']||'',
+                  var op=j['감사의견']||'';
+                  if(downReason) op='[교차검증 하향] '+downReason+(op?' (1차 의견: '+op+')':'');   // 하향 시 의견 텍스트도 갱신 — 충족 어조 의견이 그대로 남는 문제 방지
+                  var evState=e.quotes.length?'확보':'부족';
+                  if(evState==='부족' && verd==='확인필요' && !downReason) op='[근거부족] '+op;   // 내용상 판단보류와 근거미확보를 구분 표기
+                  return { '조문번호':e.it['조문번호']||'', '판정':verd, '감사의견':op, '보완사항':j['보완사항']||'', '근거상태':evState,
                     '판단불가사유':(downReason?downReason+' ':'')+(j['판단불가사유']||''), '근거인용':e.quotes, '환각제외':e.halluc, '교차':String(v['결과']||'유지') };
                 });
                 (AiFRS._lastAudit=AiFRS._lastAudit||{})[no]={ items:audited, std:{no:std.no, name:std.name}, ts:Date.now() };   // 9단계(객관식 보정)·증빙용 구조화 보관
