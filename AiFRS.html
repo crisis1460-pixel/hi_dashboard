@@ -3213,30 +3213,29 @@ a:hover { text-decoration: underline; }
     if(!list.length) return '';
     var _artNum=function(a){ var m=String(a['조문번호']||'').match(/\d+(\.\d+)?/); return m?parseFloat(m[0]):9999; };
     list=list.slice().sort(function(x,y){ return _artNum(x)-_artNum(y); });
-    // 할 일 설명 먼저 → 관련 검토 문단 번호는 문장 끝에 기재
+    // 처음 보는 사람 기준의 단순 로드맵 — 한 줄 = "확인 주제: 상태" (긴 의견 발췌 없음, 상세는 쉬운 설명)
+    var usedTopics={};
     var rows=list.map(function(a, idx){
       var art=String(a['조문번호']||'').trim(), it=byArt[art]||{};
       var range=AiFRS.stripStdPrefix(std.no, art)||art;
-      var verd=a['판정'], sent='', c='';
-      if(verd==='충족'){
-        c='#2dd4bf';
-        sent='<b style="color:'+c+'">충족</b> — '+esc(_brief(a['감사의견']||'문서 근거로 확인되었습니다', 76))+' → 이 결론대로 처리하면 됩니다.';
-      } else if(verd==='미흡'){
-        c='#f87171';
-        sent='<b style="color:'+c+'">보완 필요</b> — '+esc(_brief(a['보완사항']||a['감사의견']||'', 76))+' → 계약·문서 내용 보완을 검토하세요.';
-      } else {
-        c='#fbbf24';
-        sent='<b style="color:'+c+'">확인 필요</b> — '+esc(_brief(a['판단불가사유']||a['보완사항']||it['검토포인트']||'', 76))+' → 해당 내용이 담긴 자료·사실을 확인하세요.';
-      }
+      var para=null; try{ para=AiFRS.findArticle(std.no, art); }catch(e){}
+      var topic=(para&&para.topic)||'';
+      if(!topic || usedTopics[topic]) topic=_brief(it['검토포인트']||it['체크항목']||topic||'검토 항목', 26);   // DB topic이 범위 중복이면 검토포인트로 구분
+      usedTopics[topic]=1;
+      var verd=a['판정'], st='', c='';
+      if(verd==='충족'){ c='#2dd4bf'; st='충족 — 결론대로 처리'; }
+      else if(verd==='미흡'){ c='#f87171'; st='보완 필요'; }
+      else { c='#fbbf24'; st='자료·사실 확인 필요'; }
       return '<div class="af-plan-sline"><i>'+(idx+1)+'</i><span>'
-        + sent
-        + (art?' <span class="af-plan-ref">관련 문단 '+_artChip(std.no, range, '§ '+esc(range))+'</span>':'')
+        + esc(topic)+' 확인: <b style="color:'+c+'">'+st+'</b>'
+        + (art?' <span class="af-plan-ref">'+_artChip(std.no, range, '§ '+esc(range))+'</span>':'')
         + '</span></div>';
     }).join('');
     rows+='<div class="af-plan-close">'
       + (probs.length
-          ? '→ 위 순서대로 확인·검토를 진행하세요.'
-          : '→ 모든 단계가 문서 근거로 충족되었습니다. 각 결론대로 회계처리를 진행하면 됩니다.')
+          ? '→ 현재 <b>'+okays.length+'건 충족</b> · <b>'+probs.length+'건 확인 필요</b> — 위 표시된 자료·사실 확인이 끝나면 이 기준서 검토가 마무리됩니다.'
+          : '→ 모든 단계가 문서 근거로 충족되었습니다. 각 결론대로 회계처리를 진행하면 검토가 마무리됩니다.')
+      + ' 설명이 어렵다면 아래 <b>[ⓘ 쉬운 설명]</b>을 눌러 상세 풀이를 확인하세요.'
       + '</div>';
     var sub=probs.length
       ? '확인 필요 '+probs.length+'건 · 처리 방향 '+okays.length+'건'
@@ -3245,7 +3244,7 @@ a:hover { text-decoration: underline; }
     return '<div class="af-hero-card" style="border-left-color:'+(probs.length?'#fbbf24':'#2dd4bf')+'">'
       + '<div class="af-hero-t">'+_ico('plan',15)+'<span>다음 할 일</span>'
       +   '<span class="af-hero-sub">'+sub+'</span></div>'
-      + '<div class="af-plan-guide">분석 결과를 <b>기준서 흐름 순서(정의→요건→후속)</b>로 묶어, 어느 문단으로 무엇을 확인·수행하면 되는지 하나의 흐름으로 정리했습니다.</div>'
+      + '<div class="af-plan-guide">올리신 문서는 <b>제'+esc(std.no)+'호 「'+esc(std.name||'')+'」</b> 기준서로 검토하며, 아래 순서대로 확인하면 마무리됩니다.</div>'
       + rows
       + '<div style="margin-top:11px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.explainEasyAll(\''+std.no+'\')" title="위 항목 전체를 기준서 흐름(정의→조건→결론)에 따라 한 번에 쉬운 말로 풀이합니다 (API 1콜)">ⓘ 쉬운 설명 — 전체 통합 풀이</button></div>'
       + '<div id="aifrs-easyall-'+std.no+'"></div>'
