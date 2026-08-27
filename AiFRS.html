@@ -742,6 +742,16 @@ a:hover { text-decoration: underline; }
 /* 후속조치 플랜(다음 할 일) + 쉬운 설명 */
 .af-plan-guide { margin-top:8px; padding-bottom:9px; border-bottom:1px dotted var(--border); font-size:12px; color:var(--txt3); line-height:1.7; }
 .af-plan-guide b { color:var(--txt2); }
+.af-plan-sline { display:flex; gap:9px; margin-top:8px; font-size:12.5px; color:var(--txt2); line-height:1.8; }
+.af-plan-sline > i {
+  flex-shrink:0; width:20px; height:20px; border-radius:50%; margin-top:3px;
+  background:rgba(0,102,204,.16); color:var(--blue-sky); font-style:normal; font-weight:700; font-size:11px;
+  display:inline-flex; align-items:center; justify-content:center;
+}
+.af-plan-sline > span { flex:1; min-width:0; }
+.af-plan-sline > span > b { color:var(--txt); }
+.af-plan-close { margin-top:10px; padding-top:9px; border-top:1px dotted var(--border); font-size:12.5px; color:var(--txt2); line-height:1.8; }
+.af-plan-close b { color:var(--txt); }
 .af-plan-li { display:flex; gap:10px; margin-top:10px; font-size:12.5px; color:var(--txt2); line-height:1.7; }
 .af-plan-li > i {
   flex-shrink:0; width:20px; height:20px; border-radius:50%; margin-top:2px;
@@ -3195,34 +3205,39 @@ a:hover { text-decoration: underline; }
   }
   function _buildActionPlan(std, items, audited){
     var byArt={}; items.forEach(function(it){ byArt[String(it['조문번호']||'').trim()]=it; });
-    // 충족 여부와 무관하게 전 항목 가이드 제공(기준서 해석은 유저에게 어려움) — 문제 항목 먼저, 충족은 '처리 방향'으로
-    var _pr=function(a){ return _clampPrio((byArt[String(a['조문번호']||'').trim()]||{})['검토우선순위']); };
+    // 충족 여부와 무관하게 전 항목을 하나의 의견칸으로 통합 — 기준서 흐름(조문 오름차순: 정의→요건→후속) 순서로 "§문단으로 무엇을 하고 → 다음 §문단으로 무엇을 한다" 요약
     var probs=audited.filter(function(a){ return a['판정']==='미흡'||a['판정']==='확인필요'; });
     var okays=audited.filter(function(a){ return a['판정']==='충족'; });
-    probs.sort(function(x,y){ return _pr(y)-_pr(x); });
-    okays.sort(function(x,y){ return _pr(y)-_pr(x); });
     var list=probs.concat(okays);
     if(!list.length) return '';
+    var _artNum=function(a){ var m=String(a['조문번호']||'').match(/\d+(\.\d+)?/); return m?parseFloat(m[0]):9999; };
+    list=list.slice().sort(function(x,y){ return _artNum(x)-_artNum(y); });
     var rows=list.map(function(a, idx){
       var art=String(a['조문번호']||'').trim(), it=byArt[art]||{};
-      var ok=(a['판정']==='충족');
-      var act=ok
-        ? {label:'처리 방향', c:'#2dd4bf', next:'위 결론(감사의견)대로 처리하면 됩니다. 구체적인 적용·회계처리 방법은 [ⓘ 쉬운 설명]에서 확인하세요.'}
-        : _actionOf(a);
-      var key=_planKey(std.no, art);
-      var what=ok
-        ? (a['감사의견']||it['검토포인트']||'')
-        : (a['보완사항']||a['판단불가사유']||it['검토포인트']||it['체크항목']||'');
       var range=AiFRS.stripStdPrefix(std.no, art)||art;
-      return '<div class="af-plan-li"><i>'+(idx+1)+'</i><div class="af-plan-b">'
-        + '<div class="af-plan-h">'
-        +   '<span class="af-chip" style="color:'+act.c+'"><b style="color:inherit;opacity:.7">유형</b>'+act.label+'</span>'
-        +   (art?_artChip(std.no, range, '§ '+esc(range)):'')
-        + '</div>'
-        + (what?'<div class="af-plan-what">'+esc(what)+'</div>':'')
-        + '<div class="af-plan-next">→ '+esc(act.next)+'</div>'
-        + '</div></div>';
+      var para=null; try{ para=AiFRS.findArticle(std.no, art); }catch(e){}
+      var topic=(para&&para.topic)||_brief(it['검토포인트']||it['체크항목']||'', 22);
+      var verd=a['판정'], sent='', c='';
+      if(verd==='충족'){
+        c='#2dd4bf';
+        sent='<b style="color:'+c+'">충족</b> — '+esc(_brief(a['감사의견']||'문서 근거로 확인되었습니다', 70))+' → 이 결론대로 처리하면 됩니다.';
+      } else if(verd==='미흡'){
+        c='#f87171';
+        sent='<b style="color:'+c+'">보완 필요</b> — '+esc(_brief(a['보완사항']||a['감사의견']||'', 70))+' → 계약·문서를 보완한 변경본을 추가하세요.';
+      } else {
+        c='#fbbf24';
+        sent='<b style="color:'+c+'">확인 필요</b> — '+esc(_brief(a['판단불가사유']||a['보완사항']||it['검토포인트']||'', 70))+' → 해당 내용이 담긴 자료를 확보해 추가하세요.';
+      }
+      return '<div class="af-plan-sline"><i>'+(idx+1)+'</i><span>'
+        + (art?_artChip(std.no, range, '§ '+esc(range)):'')
+        + (topic?' <b>'+esc(topic)+'</b>: ':' ')
+        + sent + '</span></div>';
     }).join('');
+    rows+='<div class="af-plan-close">'
+      + (probs.length
+          ? '→ 위 순서대로 진행하세요: 미비 자료를 확보·보완해 파일로 추가한 뒤 <b>[↻ 다시 검증]</b>을 누르면 전 항목이 재판정됩니다.'
+          : '→ 모든 단계가 문서 근거로 충족되었습니다. 각 결론대로 회계처리를 진행하면 됩니다.')
+      + '</div>';
     var sub=probs.length
       ? '확인 필요 '+probs.length+'건 · 처리 방향 '+okays.length+'건'
       : '전 항목 충족 — 항목별 처리 방향 안내';
@@ -3230,7 +3245,7 @@ a:hover { text-decoration: underline; }
     return '<div class="af-hero-card" style="border-left-color:'+(probs.length?'#fbbf24':'#2dd4bf')+'">'
       + '<div class="af-hero-t">'+_ico('plan',15)+'<span>다음 할 일</span>'
       +   '<span class="af-hero-sub">'+sub+'</span></div>'
-      + '<div class="af-plan-guide">분석 결과를 바탕으로 <b>지금 무엇을 하면 되는지</b> 항목별로 정리했습니다. 각 항목의 → 안내대로 진행하고, 자료가 보완되면 상단 [↻ 다시 검증]으로 재판정하세요.</div>'
+      + '<div class="af-plan-guide">분석 결과를 <b>기준서 흐름 순서(정의→요건→후속)</b>로 묶어, 어느 문단으로 무엇을 확인·수행하면 되는지 하나의 흐름으로 정리했습니다.</div>'
       + rows
       + '<div style="margin-top:11px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.explainEasyAll(\''+std.no+'\')" title="위 항목 전체를 기준서 흐름(정의→조건→결론)에 따라 한 번에 쉬운 말로 풀이합니다 (API 1콜)">ⓘ 쉬운 설명 — 전체 통합 풀이</button></div>'
       + '<div id="aifrs-easyall-'+std.no+'"></div>'
