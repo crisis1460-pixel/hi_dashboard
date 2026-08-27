@@ -3223,12 +3223,13 @@ a:hover { text-decoration: underline; }
       var topic=(para&&para.topic)||'';
       if(!topic || usedTopics[topic]) topic=_brief(it['검토포인트']||it['체크항목']||topic||'검토 항목', 26);   // DB topic이 범위 중복이면 검토포인트로 구분
       usedTopics[topic]=1;
-      var verd=a['판정'], st='', c='';
-      if(verd==='충족'){ c='#2dd4bf'; st='충족 — 결론대로 처리'; }
-      else if(verd==='미흡'){ c='#f87171'; st='보완 필요'; }
-      else { c='#fbbf24'; st='자료·사실 확인 필요'; }
+      // 첨부 문서에 대한 감사 판단을 한 줄로 — 주제 + 이 건의 결론 요약 + 상태
+      var verd=a['판정'], st='', c='', judg='';
+      if(verd==='충족'){ c='#2dd4bf'; st='충족'; judg=_brief(a['감사의견']||'문서 근거로 확인됨', 64); }
+      else if(verd==='미흡'){ c='#f87171'; st='보완 필요'; judg=_brief(a['보완사항']||a['감사의견']||'', 64); }
+      else { c='#fbbf24'; st='자료·사실 확인 필요'; judg=_brief(a['판단불가사유']||a['보완사항']||it['검토포인트']||'', 64); }
       return '<div class="af-plan-sline"><i>'+(idx+1)+'</i><span>'
-        + esc(topic)+' 확인: <b style="color:'+c+'">'+st+'</b>'
+        + '<b>'+esc(topic)+'</b>: '+esc(judg)+' — <b style="color:'+c+'">'+st+'</b>'
         + (art?' <span class="af-plan-ref">'+_artChip(std.no, range, '§ '+esc(range))+'</span>':'')
         + '</span></div>';
     }).join('');
