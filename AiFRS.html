@@ -3223,10 +3223,10 @@ a:hover { text-decoration: underline; }
         sent='<b style="color:'+c+'">충족</b> — '+esc(_brief(a['감사의견']||'문서 근거로 확인되었습니다', 70))+' → 이 결론대로 처리하면 됩니다.';
       } else if(verd==='미흡'){
         c='#f87171';
-        sent='<b style="color:'+c+'">보완 필요</b> — '+esc(_brief(a['보완사항']||a['감사의견']||'', 70))+' → 계약·문서를 보완한 변경본을 추가하세요.';
+        sent='<b style="color:'+c+'">보완 필요</b> — '+esc(_brief(a['보완사항']||a['감사의견']||'', 70))+' → 계약·문서 내용 보완을 검토하세요.';
       } else {
         c='#fbbf24';
-        sent='<b style="color:'+c+'">확인 필요</b> — '+esc(_brief(a['판단불가사유']||a['보완사항']||it['검토포인트']||'', 70))+' → 해당 내용이 담긴 자료를 확보해 추가하세요.';
+        sent='<b style="color:'+c+'">확인 필요</b> — '+esc(_brief(a['판단불가사유']||a['보완사항']||it['검토포인트']||'', 70))+' → 해당 내용이 담긴 자료·사실을 확인하세요.';
       }
       return '<div class="af-plan-sline"><i>'+(idx+1)+'</i><span>'
         + (art?_artChip(std.no, range, '§ '+esc(range)):'')
@@ -3235,7 +3235,7 @@ a:hover { text-decoration: underline; }
     }).join('');
     rows+='<div class="af-plan-close">'
       + (probs.length
-          ? '→ 위 순서대로 진행하세요: 미비 자료를 확보·보완해 파일로 추가한 뒤 <b>[↻ 다시 검증]</b>을 누르면 전 항목이 재판정됩니다.'
+          ? '→ 위 순서대로 확인·검토를 진행하세요.'
           : '→ 모든 단계가 문서 근거로 충족되었습니다. 각 결론대로 회계처리를 진행하면 됩니다.')
       + '</div>';
     var sub=probs.length
