@@ -752,6 +752,7 @@ a:hover { text-decoration: underline; }
 .af-plan-sline > span > b { color:var(--txt); }
 .af-plan-close { margin-top:10px; padding-top:9px; border-top:1px dotted var(--border); font-size:12.5px; color:var(--txt2); line-height:1.8; }
 .af-plan-close b { color:var(--txt); }
+.af-plan-ref { display:inline-flex; align-items:center; gap:5px; margin-left:4px; font-size:11px; color:var(--txt3); white-space:nowrap; }
 .af-plan-li { display:flex; gap:10px; margin-top:10px; font-size:12.5px; color:var(--txt2); line-height:1.7; }
 .af-plan-li > i {
   flex-shrink:0; width:20px; height:20px; border-radius:50%; margin-top:2px;
@@ -3212,26 +3213,25 @@ a:hover { text-decoration: underline; }
     if(!list.length) return '';
     var _artNum=function(a){ var m=String(a['조문번호']||'').match(/\d+(\.\d+)?/); return m?parseFloat(m[0]):9999; };
     list=list.slice().sort(function(x,y){ return _artNum(x)-_artNum(y); });
+    // 할 일 설명 먼저 → 관련 검토 문단 번호는 문장 끝에 기재
     var rows=list.map(function(a, idx){
       var art=String(a['조문번호']||'').trim(), it=byArt[art]||{};
       var range=AiFRS.stripStdPrefix(std.no, art)||art;
-      var para=null; try{ para=AiFRS.findArticle(std.no, art); }catch(e){}
-      var topic=(para&&para.topic)||_brief(it['검토포인트']||it['체크항목']||'', 22);
       var verd=a['판정'], sent='', c='';
       if(verd==='충족'){
         c='#2dd4bf';
-        sent='<b style="color:'+c+'">충족</b> — '+esc(_brief(a['감사의견']||'문서 근거로 확인되었습니다', 70))+' → 이 결론대로 처리하면 됩니다.';
+        sent='<b style="color:'+c+'">충족</b> — '+esc(_brief(a['감사의견']||'문서 근거로 확인되었습니다', 76))+' → 이 결론대로 처리하면 됩니다.';
       } else if(verd==='미흡'){
         c='#f87171';
-        sent='<b style="color:'+c+'">보완 필요</b> — '+esc(_brief(a['보완사항']||a['감사의견']||'', 70))+' → 계약·문서 내용 보완을 검토하세요.';
+        sent='<b style="color:'+c+'">보완 필요</b> — '+esc(_brief(a['보완사항']||a['감사의견']||'', 76))+' → 계약·문서 내용 보완을 검토하세요.';
       } else {
         c='#fbbf24';
-        sent='<b style="color:'+c+'">확인 필요</b> — '+esc(_brief(a['판단불가사유']||a['보완사항']||it['검토포인트']||'', 70))+' → 해당 내용이 담긴 자료·사실을 확인하세요.';
+        sent='<b style="color:'+c+'">확인 필요</b> — '+esc(_brief(a['판단불가사유']||a['보완사항']||it['검토포인트']||'', 76))+' → 해당 내용이 담긴 자료·사실을 확인하세요.';
       }
       return '<div class="af-plan-sline"><i>'+(idx+1)+'</i><span>'
-        + (art?_artChip(std.no, range, '§ '+esc(range)):'')
-        + (topic?' <b>'+esc(topic)+'</b>: ':' ')
-        + sent + '</span></div>';
+        + sent
+        + (art?' <span class="af-plan-ref">관련 문단 '+_artChip(std.no, range, '§ '+esc(range))+'</span>':'')
+        + '</span></div>';
     }).join('');
     rows+='<div class="af-plan-close">'
       + (probs.length
