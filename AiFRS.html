@@ -2205,6 +2205,9 @@ a:hover { text-decoration: underline; }
               gs['근거인용원본수']=raw.length;
               gs['근거인용검증']=raw.filter(function(q){ return _quoteInDoc(q, docNorm); });   // 문서 실존분만 채택(할루시네이션 차단)
               var cands=st.candidates||[];
+              // DB에 없는 기준서번호(모델 번호환각, 예: 1136)는 후보에서 제외 — 미존재 번호가 UI에 노출되는 것 차단
+              cands=cands.filter(function(c){ return AiFRS.findStandard(String(c['기준서번호']||c.no||'')); });
+              if(st.candidates && st.candidates.length!==cands.length) st.candidates=cands;
               _applyDirectionGuard(gs, cands, text);   // 거래구조 방향과 어긋나는 수익/비용 기준서 강등 + 근거↔당사위치 교차검증
               var data={ '거래구조':gs, candidates:cands, normalizedTerms:norm.normalizedTerms||[], generalTerms:norm.generalTerms||[], __truncated:(norm.__truncated||st.__truncated) };
               AiFRS._lastAi=data;
