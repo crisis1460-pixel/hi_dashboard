@@ -414,10 +414,11 @@ a:hover { text-decoration: underline; }
 .af-gate-row { display:flex; align-items:center; gap:7px; padding:3px 0; font-size:11.5px; border-bottom:1px solid var(--hairline); }
 .af-gate-row:last-child { border-bottom:none; }
 .af-gate-ico { font-size:12px; font-weight:700; width:14px; text-align:center; flex-shrink:0; }
-.af-gate-q { flex:1; color:var(--txt1); }
+.af-gate-q { flex:1; color:var(--txt); }
 .af-gate-lbl { font-size:10.5px; font-weight:600; flex-shrink:0; }
 
 .aifrs-pr-verify { display:none; font-size:10.5px; color:var(--txt3); margin-top:7px; font-family:inherit; border-top:1px dotted var(--border); padding-top:6px; }
+.aifrs-halluc-note { font-size:10.5px; color:var(--txt3); margin-top:7px; border-top:1px dotted var(--border); padding-top:6px; }
 
 .aifrs-disclaimer {
   margin-top:16px; font-size:11px; color:var(--txt3); background:var(--bg3);
@@ -1963,7 +1964,7 @@ a:hover { text-decoration: underline; }
     var rec=(AiFRS._lastAudit||{})[no]; if(!rec) return;
     var std=AiFRS.findStandard(no)||rec.std; var slot=document.getElementById('aifrs-audit-'+no);
     var pitems=((AiFRS._lastPrecise||{})[no]||{}).items||[];
-    if(slot && std && typeof renderFinalAudit==='function'){ slot.innerHTML=renderFinalAudit(std, pitems, rec.items, ''); _collapsePreciseDetail(no); }
+    if(slot && std && typeof renderFinalAudit==='function' && Array.isArray(rec.items)){ slot.innerHTML=renderFinalAudit(std, pitems, rec.items, ''); _collapsePreciseDetail(no); }
   }
   // 결과 전체 재렌더 후, 이미 받아둔 정밀분석·AI감사 결과를 슬롯에 다시 주입(보정 시 결과가 사라져 API 재호출하던 문제 방지)
   function _restoreCachedResults(){
@@ -1974,7 +1975,7 @@ a:hover { text-decoration: underline; }
     });
     Object.keys(au).forEach(function(key){
       var std=AiFRS.findStandard(key), aslot=document.getElementById('aifrs-audit-'+key), pitems=((pr[key]||{}).items)||[];
-      if(std && aslot && au[key] && au[key].items && typeof renderFinalAudit==='function'){ aslot.innerHTML=renderFinalAudit(std, pitems, au[key].items, ''); }   // 감사 결과(사용자확정 반영) 복원
+      if(std && aslot && au[key] && Array.isArray(au[key].items) && typeof renderFinalAudit==='function'){ aslot.innerHTML=renderFinalAudit(std, pitems, au[key].items, ''); }   // 감사 결과(사용자확정 반영) 복원
     });
   }
   // ── 분석 결과 스냅샷: 새로고침·탭 종료로 결과가 소실되는 것 방지(API 재호출 비용 절약) ──
@@ -2916,8 +2917,9 @@ a:hover { text-decoration: underline; }
   function _kvChip(k, v, style){ return '<span class="af-chip"'+(style?' style="'+style+'"':'')+'><b>'+esc(k)+'</b>'+esc(v)+'</span>'; }
   // 조문 칩(§ 68~71) — summary 안에서도 펼침 토글과 충돌하지 않도록 이벤트 전파 차단
   function _artChip(stdNo, rangeNo, label){
+    var safeRange=String(rangeNo||'').replace(/[^0-9A-Za-z.\-~]/g,'');
     return '<span class="af-chip af-chip-art" title="클릭하면 이 문단의 기준서 원문(내장 DB)이 팝업으로 열립니다"'
-      + ' onclick="event.stopPropagation();event.preventDefault();window.AiFRS.showParaText(\''+stdNo+'\',\''+rangeNo+'\')">'
+      + ' onclick="event.stopPropagation();event.preventDefault();window.AiFRS.showParaText(\''+stdNo+'\',\''+safeRange+'\')">'
       + label+'<i class="af-chip-cue">원문</i></span>';
   }
   // 코드검증 등급 → 글리프·한 단어
@@ -3491,15 +3493,19 @@ a:hover { text-decoration: underline; }
     var gates=_HIGH_GATE[std.no]; if(!gates||!gates.length) return '';
     // 조문번호 정규화 비교: 감사 항목 조문과 게이트 ko가 겹치는지 확인
     function _overlap(artNo, ko){
-      var a=String(artNo||'').replace(/[^0-9.~]/g,'');
-      var k=String(ko||'').replace(/[^0-9.~]/g,'');
+      var sA=String(artNo||'').trim(), sK=String(ko||'').trim();
+      // B-부록 접두어: 한쪽만 B-접두어면 별개 영역 → 불일치
+      var bA=/^[Bb]\d/.test(sA.split('~')[0]);
+      var bK=/^[Bb]\d/.test(sK.split('~')[0]);
+      if(bA!==bK) return false;
+      var a=sA.replace(/[^0-9.~]/g,'');
+      var k=sK.replace(/[^0-9.~]/g,'');
       if(!a||!k) return false;
       if(a===k) return true;
-      // 범위 비교: ko가 "X~Y" 형태이면 a의 첫 숫자가 그 범위에 포함되는지
-      var m=k.match(/^(\d+(?:\.\d+)?)~(\d+(?:\.\d+)?)$/);
+      // 범위 비교: 소수점 다단계(4.1.1~4.1.5) 포함 처리
+      var m=k.match(/^(\d+(?:\.\d+)*)~(\d+(?:\.\d+)*)$/);
       if(m){var lo=parseFloat(m[1]),hi=parseFloat(m[2]),v=parseFloat(a.split('~')[0]); return v>=lo&&v<=hi;}
-      // a가 범위 "X~Y" 형태이면 ko가 그 범위의 시작이랑 겹치는지
-      var ma=a.match(/^(\d+(?:\.\d+)?)~(\d+(?:\.\d+)?)$/);
+      var ma=a.match(/^(\d+(?:\.\d+)*)~(\d+(?:\.\d+)*)$/);
       if(ma){var lo2=parseFloat(ma[1]),hi2=parseFloat(ma[2]),v2=parseFloat(k.split('~')[0]); return v2>=lo2&&v2<=hi2;}
       return a.indexOf(k.split('~')[0])===0 || k.indexOf(a.split('~')[0])===0;
     }
@@ -3541,7 +3547,7 @@ a:hover { text-decoration: underline; }
         : '';
       // 환각제외 안내는 경고 아이콘 한 줄로 축약(상세는 title)
       var hallucNote = (a['환각제외']>0)
-        ? '<div class="aifrs-pr-verify"><span class="af-vitem" title="AI가 제시한 근거 '+a['환각제외']+'건이 문서에서 확인되지 않아 자동 제외되었습니다(할루시네이션 차단)">'
+        ? '<div class="aifrs-halluc-note"><span class="af-vitem" title="AI가 제시한 근거 '+a['환각제외']+'건이 문서에서 확인되지 않아 자동 제외되었습니다(할루시네이션 차단)">'
             + _gl('warn',11)+'AI 제시 근거 '+a['환각제외']+'건 제외 — 문서에서 미확인</span></div>'
         : '';
       var auBase=artNo||(code.para?code.para.no:'');   // 조문번호 누락 시 코드검증이 복원한 DB 문단번호로 표시
