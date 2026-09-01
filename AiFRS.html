@@ -409,7 +409,15 @@ a:hover { text-decoration: underline; }
 
 .aifrs-audit-tag { font-size:9.5px; font-weight:700; color:#a78bfa; background:rgba(167,139,250,.15); border-radius:var(--radius-pill); padding:1px 7px; margin-left:4px; }
 
-.aifrs-pr-verify { font-size:10.5px; color:var(--txt3); margin-top:7px; font-family:inherit; border-top:1px dotted var(--border); padding-top:6px; }
+.af-gate-panel { margin:10px 0 8px; padding:10px 14px; background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius-lg); }
+.af-gate-hd { font-size:11px; font-weight:700; color:var(--txt2); margin-bottom:7px; display:flex; align-items:center; gap:5px; }
+.af-gate-row { display:flex; align-items:center; gap:7px; padding:3px 0; font-size:11.5px; border-bottom:1px solid var(--hairline); }
+.af-gate-row:last-child { border-bottom:none; }
+.af-gate-ico { font-size:12px; font-weight:700; width:14px; text-align:center; flex-shrink:0; }
+.af-gate-q { flex:1; color:var(--txt1); }
+.af-gate-lbl { font-size:10.5px; font-weight:600; flex-shrink:0; }
+
+.aifrs-pr-verify { display:none; font-size:10.5px; color:var(--txt3); margin-top:7px; font-family:inherit; border-top:1px dotted var(--border); padding-top:6px; }
 
 .aifrs-disclaimer {
   margin-top:16px; font-size:11px; color:var(--txt3); background:var(--bg3);
@@ -518,6 +526,28 @@ a:hover { text-decoration: underline; }
   max-width:1160px; margin:0 auto; padding:16px 0;
   font-size:13.5px; color:var(--txt2); line-height:1.65;
 }
+.aifrs-hist-view {
+  max-width:760px; margin:0 auto; padding:16px 0;
+  font-size:13.5px; color:var(--txt2); line-height:1.65;
+}
+.aifrs-hist-hd {
+  font-size:14.5px; font-weight:700; color:var(--txt); margin:0 0 14px;
+  padding:0 0 10px; border-bottom:1px solid var(--border);
+}
+.aifrs-hist-item { margin:0; border-bottom:1px solid var(--border2); }
+.aifrs-hist-item summary {
+  cursor:pointer; padding:11px 4px; font-weight:600; color:var(--txt);
+  display:flex; align-items:baseline; gap:10px; list-style:none;
+}
+.aifrs-hist-item summary::-webkit-details-marker { display:none; }
+.aifrs-hist-item summary::after { content:'▾'; font-size:11px; margin-left:auto; color:var(--blue-sky); flex-shrink:0; transition:transform .15s; }
+.aifrs-hist-item[open] summary::after { transform:rotate(-180deg); }
+.aifrs-hist-item summary:hover { color:var(--blue-sky); }
+.aifrs-hist-date {
+  font-size:11px; font-weight:600; color:var(--blue-sky);
+  background:rgba(0,102,204,.10); border-radius:6px; padding:2px 8px; white-space:nowrap; flex-shrink:0;
+}
+.aifrs-hist-detail { padding:8px 12px 14px 4px; color:var(--txt2); font-size:13px; line-height:1.75; }
 .aifrs-toggle { font-size:12px; color:var(--blue-sky); cursor:pointer; font-weight:600; }
 .aifrs-toggle:hover { text-decoration:underline; }
 /* DB 뷰어 검색 */
@@ -800,7 +830,7 @@ a:hover { text-decoration: underline; }
 
 @media print {
   body { background:#fff !important; color:#1d1d1f !important; }
-  .af-topbar, .af-bottom, .af-settings, .af-hero, .aifrs-btn, .aifrs-help-btn, .aifrs-toggle, #aifrs-db-view { display:none !important; }
+  .af-topbar, .af-bottom, .af-settings, .af-hero, .aifrs-btn, .aifrs-help-btn, .aifrs-toggle, #aifrs-db-view, #aifrs-hist-view { display:none !important; }
   .af-main { overflow:visible !important; padding:0 !important; }
   .aifrs-pr-item { border-color:#e0e0e0 !important; background:#fff !important; break-inside:avoid; }
   .aifrs-analysis, .aifrs-pr-h, .aifrs-section-title { color:#1d1d1f !important; }
@@ -1184,7 +1214,7 @@ a:hover { text-decoration: underline; }
     if(enFiles.length){
       enNote='<div class="aifrs-note" style="margin:0 0 10px;padding:9px 13px;background:rgba(41,151,255,.08);border:1px solid rgba(41,151,255,.25);border-radius:10px">'
         + '🌐 <b>영문 문서 '+enFiles.length+'건</b>('+enFiles.map(function(r){return esc(r.name);}).join(', ')+')이 포함돼 있습니다. '
-        + '오프라인 Keywords는 한글 DB 기반이라 영문 문서 매칭이 제한됩니다 — 영문 문서는 <b>[🤖 Analyze]</b>가 정확합니다.</div>';
+        + '한글 DB 기반이라 영문 문서 매칭이 제한됩니다 — 영문 문서는 <b>[AI 분석]</b>이 정확합니다.</div>';
     }
     box.innerHTML=enNote+renderAnalysis(res, done.length, imgs);
   }
@@ -2329,9 +2359,8 @@ a:hover { text-decoration: underline; }
     document.body.appendChild(ov);
   };
   function renderAiResult(data, secs){
-    var h='<div class="aifrs-an-head">'+_ico('ai',15)+' AI 분석 결과 (거래구조·후보) <span>'+secs+'초 · '+esc(AiFRS.getModel())+'</span>'
-      + '<button class="aifrs-help-btn" onclick="window.AiFRS.showLabelHelp()">ⓘ 신뢰도 라벨 설명</button>'
-      + '<button class="aifrs-help-btn" style="margin-left:6px" onclick="window.AiFRS.showPrioHelp()">ⓘ 검토 우선순위 설명</button></div>';
+    var h='<div class="aifrs-an-head" title="AI가 거래구조를 파악하고 적용 가능한 K-IFRS 기준서 후보를 선정한 결과입니다">'+_ico('ai',15)+' AI 분석 결과 (거래구조·후보) <span>'+secs+'초 · '+esc(AiFRS.getModel())+'</span>'
+      + '</div>';
     if(data.__truncated){ h+='<div class="aifrs-api-stat err" style="margin:4px 0">⚠ 응답이 길어 일부가 잘렸습니다 — 후보는 보존되지만 정규화 용어 일부가 누락될 수 있습니다. (다시 분석 권장)</div>'; }
     var gs=data['거래구조']||data.context||{};   // 신규 거래구조 / 구버전 context 하위호환
     if(gs && (gs['자료성격']||gs['당사위치']||gs['HI위치']||gs['관계유형']||gs['핵심회계논점']||gs['경제적실질']||gs['문서유형']||gs['HI역할']||gs['거래요지'])){
@@ -2375,12 +2404,9 @@ a:hover { text-decoration: underline; }
         var issues=(c['관련쟁점']||[]).map(function(x){return esc(x);}).join(', ');
         return '<div class="aifrs-an-std'+(top?' af-cand-top':'')+'">'
           + '<div class="aifrs-an-std-h">'
-            + (top?'<span class="af-chip af-chip-top">1순위</span>':'')
+            + (top?'<span class="af-chip af-chip-top" title="AI가 이 문서에 가장 적합하다고 판단한 K-IFRS 기준서입니다">AI 추천 기준서</span>':'')
             + '<span class="aifrs-std-no">'+esc(rawNo||'?')+'</span>'
             + '<span class="aifrs-an-name">'+esc(c['명칭']||(std?std.name:''))+(c['__userPick']?'<span class="aifrs-uchip">사용자확정</span>':'')+'</span>'
-            + (top
-                ? '<span class="aifrs-an-score aifrs-tip" data-tip="관련성 (0~100·참고용)&#10;AI가 평가한 이 거래와의 관련성. 높을수록 회계처리 근거일 가능성이 큽니다.">관련성 '+(c['관련성']||0)+'</span>'
-                : '<span class="af-chip"><b>관련성</b>'+(c['관련성']||0)+'</span>')
           + '</div>'
           + (c.__dirflag?'<div class="aifrs-api-stat err" style="margin-top:4px">'+esc(c.__dirflag)+'</div>':'')
           + (c['사유']?'<div class="aifrs-an-para">'+esc(c['사유'])+'</div>':'')
@@ -2398,24 +2424,104 @@ a:hover { text-decoration: underline; }
           + '</details>';
       }
     }
-    var nt=data.normalizedTerms||[];
-    h+='<div class="aifrs-an-sec aifrs-sec-tog" onclick="window.AiFRS.toggleAiSec(\'aifrs-nt-body\',this)">표준용어 정규화 <span>'+nt.length+'개</span><span class="aifrs-toggle aifrs-sec-arr">펼치기 ▾</span></div>';
-    h+='<div id="aifrs-nt-body" style="display:none">';
-    if(nt.length){
-      h+='<table class="aifrs-nt"><thead><tr><th>원문</th><th>표준용어</th><th>기준서</th><th>신뢰도</th></tr></thead><tbody>';
-      nt.forEach(function(t){ h+='<tr><td>'+esc(t['원문']||'')+'</td><td>'+esc(t['표준용어']||'')+'</td><td>'+esc(t['기준서번호']||'')+'</td><td>'+esc(t['신뢰도']||'')+'</td></tr>'; });
-      h+='</tbody></table>';
-    } else { h+='<div class="aifrs-note">정규화된 표준용어가 없습니다.</div>'; }
-    h+='</div>';
-    if((data.generalTerms||[]).length){
-      h+='<div class="aifrs-an-sec aifrs-sec-tog" onclick="window.AiFRS.toggleAiSec(\'aifrs-gt-body\',this)">일반 업무 용어(분석 제외) <span>'+data.generalTerms.length+'개</span><span class="aifrs-toggle aifrs-sec-arr">펼치기 ▾</span></div>';
-      h+='<div id="aifrs-gt-body" style="display:none"><div class="aifrs-an-chips">'+data.generalTerms.map(function(g){return '<span class="aifrs-chip-unc">'+esc(g)+'</span>';}).join('')+'</div></div>';
-    }
     h+='<div class="aifrs-note" style="margin-top:12px">후보의 [AI 전체 검토]를 누르면 정밀 분석 → AI 감사 → 다음 할 일까지 자동으로 이어서 실행합니다.</div>';
     return h;
   }
 
   // ── API ②: 특정 기준서 조문 범위 정밀 분석 ──
+  // ── HIGH 17개 기준서 판단 게이트 트리 ──
+  // 각 기준서마다 핵심 판단 순서(gate)를 정의 — buildPrecisePrompt 프롬프트 주입 + renderFinalAudit ✓/⬜ 패널 렌더링에 사용
+  var _HIGH_GATE = {
+    '1001': [
+      {q:'계속기업 가정 충족', ko:'25~26', pass:'차기 12개월 영업 지속 능력 뒷받침 증거 존재'},
+      {q:'공정표시 원칙 준수', ko:'15~24', pass:'중요한 공정표시 일탈 적용 사유 없음'},
+      {q:'비교정보 표시', ko:'38~44', pass:'당기·전기 비교 표시 구조 적절'}
+    ],
+    '1012': [
+      {q:'일시적 차이 식별', ko:'15~17', pass:'세무상 vs 회계상 금액 차이 항목 확인'},
+      {q:'이연법인세 자산 인식요건', ko:'24~31', pass:'향후 과세소득 발생가능성(미래 회수가능성) 판단'},
+      {q:'적용 세율 확정', ko:'46~52', pass:'확정 세율 사용 및 세율변경 효과 인식'}
+    ],
+    '1016': [
+      {q:'자산 정의 — 사용 목적', ko:'6', pass:'영업활동(생산·제공·임대·관리)에 사용할 목적 보유'},
+      {q:'자산 정의 — 내용연수', ko:'6', pass:'한 기간(1년) 초과 사용 예상 여부'},
+      {q:'인식요건 충족', ko:'7', pass:'미래경제효익 유입 가능성 + 원가 신뢰측정'},
+      {q:'원가 구성 적절', ko:'15~28', pass:'취득원가 포함·제외 항목 올바르게 분류'}
+    ],
+    '1019': [
+      {q:'급여 유형 분류', ko:'5', pass:'단기/장기/퇴직/해고급여 중 해당 유형 올바르게 분류'},
+      {q:'퇴직급여 제도 유형', ko:'26~45', pass:'확정기여형(DC) vs 확정급부형(DB) 구분'},
+      {q:'DB 적용 시 보험수리가정', ko:'55~132', pass:'DB라면 보험수리적 가정·현재가치 적용 여부'}
+    ],
+    '1021': [
+      {q:'기능통화 결정', ko:'8~14', pass:'거래 주요 경제환경 통화를 기능통화로 올바르게 결정'},
+      {q:'화폐성·비화폐성 구분', ko:'16', pass:'화폐성(마감환율) vs 비화폐성(역사적환율) 항목 구분'},
+      {q:'기말 환산 적용', ko:'21~26', pass:'화폐성 마감환율·비화폐성 역사적환율 사용 여부'}
+    ],
+    '1023': [
+      {q:'적격자산 해당 여부', ko:'5', pass:'의도된 용도·준비에 상당 기간이 필요한 자산인지'},
+      {q:'자본화 이자율 산출', ko:'10~14', pass:'특정·일반 차입금 자본화율 산출 방식 확인'},
+      {q:'자본화 기간 판단', ko:'17~25', pass:'개시·중단·종료 기준 충족 여부'}
+    ],
+    '1032': [
+      {q:'금융자산·부채·자본 분류', ko:'15~27', pass:'발행자 관점의 분류(지급 의무 여부) 결정'},
+      {q:'복합금융상품 분리', ko:'28~32', pass:'자본·부채 요소 분리 인식 여부'},
+      {q:'상계요건 동시충족', ko:'42~50', pass:'법적 상계권 + 순액결제 의도 모두 충족'}
+    ],
+    '1036': [
+      {q:'손상 징후 존재', ko:'8~17', pass:'외부·내부 손상 징후 하나 이상 확인'},
+      {q:'회수가능액 결정', ko:'18~57', pass:'순공정가치 vs 사용가치 중 높은 금액 산출'},
+      {q:'손상차손 인식·배분', ko:'59~108', pass:'장부가 > 회수가능액이면 차손 인식·CGU 배분'}
+    ],
+    '1038': [
+      {q:'식별가능성', ko:'11~17', pass:'분리가능 OR 계약·법적 권리에서 발생'},
+      {q:'통제', ko:'13~16', pass:'미래경제효익을 통제할 능력 근거 존재'},
+      {q:'미래경제효익', ko:'17', pass:'매출·원가절감 등 미래유입 가능성 확인'},
+      {q:'연구 vs 개발 구분', ko:'54~67', pass:'연구단계(비용)·개발단계(6요건 자산화) 올바른 구분'}
+    ],
+    '1103': [
+      {q:'사업 정의 충족', ko:'B7~B12', pass:'투입요소+과정+산출요소 또는 집중성 테스트 통과'},
+      {q:'취득자 식별', ko:'B13~B18', pass:'지배기업(취득자) 명확히 식별됨'},
+      {q:'이전 대가 측정', ko:'37~40', pass:'취득원가 구성 및 측정 기준 올바름'}
+    ],
+    '1107': [
+      {q:'금융위험 분류 완결', ko:'31~42', pass:'신용·유동성·시장위험(환율·이자율·가격) 모두 식별'},
+      {q:'익스포저 공시 충분', ko:'35~36', pass:'각 위험 노출액·최대손실 공시 여부'},
+      {q:'민감도 분석 수행', ko:'40~42', pass:'시장위험별 민감도 분석 포함'}
+    ],
+    '1109': [
+      {q:'금융자산 분류(SPPI+사업모형)', ko:'4.1.1~4.1.5', pass:'AC/FVOCI/FVTPL 올바르게 결정됨'},
+      {q:'손상(ECL) 인식', ko:'5.5.1~5.5.20', pass:'신용위험 증가 단계별 12개월/전체기간 ECL 인식'},
+      {q:'헤지회계(해당 시)', ko:'6.4.1', pass:'헤지수단·대상 지정 및 요건 충족'}
+    ],
+    '1110': [
+      {q:'지배력 ①: 힘', ko:'10~14', pass:'관련 활동을 지시할 능력(의결권·실질 지배권) 존재'},
+      {q:'지배력 ②: 변동이익 노출', ko:'15~16', pass:'피투자자 변동이익에 노출 또는 권리 보유'},
+      {q:'지배력 ③: 힘-이익 연결', ko:'17', pass:'힘을 이용해 이익에 영향을 미치는 능력 존재'},
+      {q:'연결 범위 확정', ko:'19~26', pass:'피지배기업 포함 완결, 면제 여부 검토'}
+    ],
+    '1113': [
+      {q:'주요 시장 결정', ko:'16~21', pass:'거래량 가장 많은(또는 가장 유리한) 시장 식별'},
+      {q:'측정기법 선택', ko:'61~66', pass:'시장·이익·원가접근법 중 상황에 맞는 기법 선택'},
+      {q:'공정가치 서열체계', ko:'72~90', pass:'Level 1/2/3 분류 올바름'}
+    ],
+    '1115': [
+      {q:'계약 식별(단계1)', ko:'9~16', pass:'당사자 승인·권리·지급조건·상업적 실질 충족'},
+      {q:'수행의무 식별(단계2)', ko:'22~30', pass:'별도 구별되는 재화·용역 단위로 분리'},
+      {q:'거래가격 결정(단계3)', ko:'47~72', pass:'변동대가·비현금·반품·금융요소 포함 총 가격 산정'},
+      {q:'배분(단계4) + 인식(단계5)', ko:'31~38', pass:'단독 판매가격 기준 배분 + 한 시점 vs 기간 인식 판단'}
+    ],
+    '1116': [
+      {q:'리스 정의 충족', ko:'B13~B20', pass:'식별 자산의 사용방법 결정권·효익 거의 전부 수취 이전'},
+      {q:'면제 적용 여부', ko:'5~8', pass:'단기리스(12개월 이하) 또는 소액자산 면제 결정'},
+      {q:'사용권자산·부채 인식', ko:'22~30', pass:'리스개시일 현재가치 기준 자산·부채 계상'}
+    ],
+    '1117': [
+      {q:'보험계약 정의 충족', ko:'B2~B30', pass:'보험위험이 유의적으로 이전되는 계약 여부'},
+      {q:'PAA 적용 가능성', ko:'53~59', pass:'보장기간 12개월 이하 또는 PAA 중요차이 없음'},
+      {q:'계약상 서비스마진(CSM)', ko:'38~46', pass:'미래 서비스 이익 CSM 계산·인식 기간 배분'}
+    ]
+  };
   function buildPrecisePrompt(std, text, gs){
     gs=gs||{};
     var arts=(std.paragraphs||[]).map(function(p){
@@ -2449,6 +2555,7 @@ a:hover { text-decoration: underline; }
       '- ⚠ 1115 본인 vs 대리인: 당사가 고객에 이전하기 전 재화·용역을 통제하면 "본인" → 대가 "총액"을 수익으로 인식하고, 제3자(대행사·플랫폼)에 지급하는 수수료는 수익에서 차감하지 말고 별도 "비용(지급수수료·매출원가)"으로 인식한다. 통제 없이 주선만 하면 "대리인" → 수수료(순액)만 수익. ❌ "총액 인식"과 "수수료를 수익에서 차감"을 한 결론에 동시에 쓰면 자기모순이니 금지.',
       '- 본인(총액) 결론이면 분개예시에 매출 총액과 지급수수료 비용을 모두 표기(예: (차)현금 (차)지급수수료 / (대)매출 (대)부가세예수금). 표시방법에는 본인=\"총액\"·대리인=\"순액\"을 적고, 그 외 항목은 빈 문자열.',
       '- 근거조문원문요약은 위 조문 범위에 근거하여 1문장.',
+      (_HIGH_GATE[std.no] ? '['+std.no+'호 판단 게이트 — 이 순서대로 검토포인트를 구성하세요]\n'+_HIGH_GATE[std.no].map(function(g,i){return '  게이트'+(i+1)+' 「'+g.q+'」(조문 '+g.ko+'): '+g.pass;}).join('\n')+'\n↑ 위 게이트 항목 순서대로 검토포인트를 구성하고, 각 게이트에 대응하는 조문번호를 반드시 포함하세요.\n' : ''),
       '- 검토우선순위: 이 거래에서 해당 조문을 실제로 따져봐야 하는 정도를 1~100 정수로(★이 거래 맥락 기준). ★판단 기준(모든 기준서 공통): 회계처리 "결론"을 바꾸는 조문 = 높게(70~100) — 즉 (a)인식 여부·시점을 정하거나 (b)분류를 가르거나(자산/수익·부채/자본·자본화/비용화 등) (c)측정금액을 결정하는 조문. 공시·주석, 이 거래에 변수 없는 조항, 적용 안 되는 예외·특수규정(해당없음 가능성)은 낮게(1~39). (예: 1115면 본인/대리인·수익인식 시점이 높음.) ⚠ 참고용 가이드일 뿐, 어떤 조문도 검토 생략의 근거가 아니다.',
       '- 우선순위사유: 그 점수의 근거를 1줄(예: "변동대가 없어 형식적", "본인/대리인 판단이 총액·순액을 가르는 핵심 쟁점").',
       '- ⚠ "조문번호"에는 위 목록의 문단번호만 그대로 적으세요(예: "68~71"). 기준서번호를 접두로 붙이지 마세요(❌"'+std.no+'.68~71" ❌"제'+std.no+'호 68").',
@@ -2800,7 +2907,8 @@ a:hover { text-decoration: underline; }
       shield:'<path d="M12 2L4 6v6c0 4.42 3.4 8.48 8 10 4.6-1.52 8-5.58 8-10V6L12 2z"/><path d="M8.5 12l2.5 2.5 4.5-4.5"/>',
       compass:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
       img:'<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M3.5 16.5l4.5-4 4 3.5 3.5-3 5 4"/>',
-      plan:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 2.5h6v3H9z"/><path d="M8.5 13l2.2 2.2 4.3-4.3"/>'
+      plan:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 2.5h6v3H9z"/><path d="M8.5 13l2.2 2.2 4.3-4.3"/>',
+      hist:'<circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 15.5,14.5"/>'
     }[kind]||'';
     return '<svg viewBox="0 0 24 24" fill="none" stroke="'+c+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:'+px+'px;height:'+px+'px;vertical-align:-3px;flex-shrink:0">'+d+'</svg>';
   }
@@ -2947,8 +3055,8 @@ a:hover { text-decoration: underline; }
   function _prioReasonRow(reason){ return reason?'<div class="aifrs-pr-row aifrs-pr-muted-row"><b>우선순위 근거</b><span>'+esc(reason)+'</span></div>':''; }
   function renderPreciseResult(data, std, secs){
     var items=data.items||[];
-    var head='<div class="aifrs-an-head">'+_ico('scope',15)+' 정밀 분석 — 제'+esc(std.no)+'호 '+esc(std.name)+' <span>'+secs+'초 · 항목 '+items.length+'개</span>'
-      + '<button class="aifrs-help-btn" onclick="window.AiFRS.showSheet(\'prioPrecise\')">ⓘ 우선순위·정렬</button></div>';
+    var head='<div class="aifrs-an-head" title="조문별로 이 거래와의 적합 여부를 단계적으로 검토합니다. 핵심 항목은 빨간색, 검토 필요는 노란색으로 표시됩니다">'+_ico('scope',15)+' 정밀 분석 — 제'+esc(std.no)+'호 '+esc(std.name)+' <span>'+secs+'초 · 항목 '+items.length+'개</span>'
+      + '</div>';
     if(data.__truncated){ head+='<div class="aifrs-api-stat err" style="margin:4px 0">⚠ 응답이 길어 일부 끝부분이 잘렸습니다 — 완성된 항목까지만 표시합니다. (마지막 항목은 내용이 누락될 수 있음 → 다시 정밀 분석 권장)</div>'; }
     if(!items.length){ return head+'<div class="aifrs-note">관련 조문 분석 결과가 없습니다.</div>'; }
     var cnt={green:0,amber:0,red:0}, lvlRank={red:2,amber:1,green:0};
@@ -3013,8 +3121,7 @@ a:hover { text-decoration: underline; }
       + '</div>'
       + '<div style="margin-top:9px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runFinalAudit(\''+std.no+'\')">✅ 최종 검증(AI감사) 실행</button></div></div>';
     if(hasAudit) nextHero='';   // 감사 결과가 이미 있으면 "다음 확인" CTA는 표시하지 않음(재실행은 감사 결과 헤더의 [다시 검증])
-    var foot='<div class="af-foot1">'+_gl('warn')+'<span>AI 분석 결과는 참고용이며, 최종 판단·책임은 담당자에게 있습니다.</span>'
-      + '<button class="aifrs-help-btn" onclick="window.AiFRS.showSheet(\'discPrecise\')">ⓘ 자세히</button></div>';
+    var foot='<div class="af-foot1">'+_gl('warn')+'<span>AI 분석 결과는 참고용이며, 최종 판단·책임은 담당자에게 있습니다.</span></div>';
     var auditSlot='<div class="aifrs-precise-slot" id="aifrs-audit-'+std.no+'"></div>';
     // 정밀분석 상세: 최종 검증(AI감사) 결과가 이미 있으면 접힌 상태로 시작, 없으면 펼침. 접혀도 클릭해 다시 볼 수 있음.
     var bodyWrap='<details class="aifrs-pr-detail" id="aifrs-prdetail-'+std.no+'"'+(hasAudit?'':' open')+'><summary>'+_ico('scope',13)+' 정밀분석 상세 '+items.length+'개 — 클릭하여 펼치기/접기</summary><div class="aifrs-pr-detail-body">'+body+'</div></details>';
@@ -3064,6 +3171,16 @@ a:hover { text-decoration: underline; }
       '{"evidence":[{"조문번호":"","인용":["문서원문구절"],"근거없음":false}]}'
     ].join('\n');
   }
+  // 문서 유형별 판정 가이드 힌트 — buildJudgePrompt/buildAuditVerifyPrompt에 삽입
+  function _docKindHint(dk){
+    var d=String(dk||'').toLowerCase();
+    if(d.indexOf('계약')>=0) return '\n[계약서 특이사항] 의무·권리·기간·대금 산정·성과물 범위·당사자 역할 조항이 핵심 거래사실 근거입니다. 당사의 주체성(통제 여부)과 대가 구조(고정/변동/성과연동)도 주목하세요.';
+    if(d.indexOf('재무제표')>=0||d.indexOf('재무보고')>=0||d.indexOf('감사보고')>=0) return '\n[재무보고서 특이사항] 계정명·금액·주석 공시 내용이 핵심 근거입니다. 회계정책·추정치 변경 및 공정가치 서열 공시 여부도 확인하세요.';
+    if(d.indexOf('이사회')>=0||d.indexOf('주주')>=0||d.indexOf('결의')>=0||d.indexOf('품의')>=0) return '\n[내부 결의문 특이사항] 결의사항·거래 목적·승인 금액과 조건이 핵심 근거입니다. 이사회 결의 일자와 전제 조건도 확인하세요.';
+    if(d.indexOf('세무')>=0||d.indexOf('신고')>=0||d.indexOf('세금계산서')>=0) return '\n[세무서류 특이사항] 신고금액·공제요건·세무조정 내역이 핵심 근거입니다. 법인세·부가세 회계처리와의 정합성도 확인하세요.';
+    if(d.indexOf('평가')>=0||d.indexOf('감정')>=0||d.indexOf('보고서')>=0) return '\n[평가·감정 보고서 특이사항] 평가방법·가정·기준일·범위 한정 문구가 핵심 근거입니다. 평가 목적과 회계 적용 목적의 일치 여부를 확인하세요.';
+    return '';
+  }
   // 2단계: 코드로 검증된 근거만 가지고 판정
   function buildJudgePrompt(std, itemsEv, docKind){
     var lines=itemsEv.map(function(e,idx){
@@ -3074,7 +3191,7 @@ a:hover { text-decoration: underline; }
       '당신은 신중하고 균형 잡힌 회계 검토자입니다. 각 검토포인트를, 아래 [검증된 문서 근거](문서에 실제 존재함이 코드로 확인된 인용)만 사용해 판정하세요.',
       '⚠ 절대 규칙: 제시된 근거 외의 외부 지식·일반론·추측 사용 금지. 근거에 없는 사실을 단정하지 마세요.',
       '',
-      '[문서 성격] 이 문서는 '+(docKind||'원천 문서(계약서 등)')+'입니다. 즉 회계기록(분개·재무제표·주석)이 아니라 회계처리의 입력이 되는 원천 자료입니다.',
+      '[문서 성격] 이 문서는 '+(docKind||'원천 문서(계약서 등)')+'입니다. 즉 회계기록(분개·재무제표·주석)이 아니라 회계처리의 입력이 되는 원천 자료입니다.'+_docKindHint(docKind),
       '⚠ 따라서 회계처리 결론·회계용어(수익인식 시점, 수행의무 배분, 변동대가 추정 등)가 문서에 적혀 있지 않은 것은 정상이며, 그 부재만으로 "미흡"으로 판정하지 마세요.',
       '',
       '제'+std.no+'호 「'+std.name+'」',
@@ -3102,7 +3219,7 @@ a:hover { text-decoration: underline; }
     }).join('\n\n');
     return [
       '당신은 1차 감사 결과를 검증하는 2차 검토자입니다. 각 판정이 "제시된 근거만으로" 타당한지 보수적으로 재검증하세요.',
-      '[문서 성격] 이 문서는 '+(docKind||'원천 문서(계약서 등)')+'(회계기록 아님)입니다.',
+      '[문서 성격] 이 문서는 '+(docKind||'원천 문서(계약서 등)')+'(회계기록 아님)입니다.'+_docKindHint(docKind),
       '다음 중 하나에 해당할 때만 "하향"(확인필요로): ① 감사의견이 문서에 없는 사실관계를 지어냄(사실 날조) ② 거래의 기본 성격조차 문서로 확인되지 않는데 충족으로 단정 ③ 근거와 판정이 논리적으로 모순 ④ 인용 근거가 검토포인트의 핵심 사실을 실제로 입증하지 못하고 막연히 관련될 뿐이거나, 논점이 다른 조항을 끌어다 단정함(예: 일반 「양도금지」 조항으로 무형자산 "분리가능성 없음"을 단정). 그 외에는 "유지".',
       '⚠ 다음은 절대 하향 사유가 아니다(유지하라): ⓐ 검토포인트의 회계 결론(비용처리·자산화 불가 등)이 문서에 그대로 적혀 있지 않음 ⓑ 거래 성격은 문서로 확인되고 기준서 적용으로 결론이 도출됨 ⓒ 회계용어·결론의 단순 부재. 이 문서는 회계기록이 아니라 원천 자료이므로, 회계 결론은 원래 문서에 없고 검토자가 기준서를 적용해 내린다. (단, 위 ④처럼 근거가 검토포인트와 논점이 다른 경우는 하향 대상이다)',
       '',
@@ -3178,6 +3295,7 @@ a:hover { text-decoration: underline; }
                   if(downReason) op='[교차검증 하향] '+downReason+(op?' (1차 의견: '+op+')':'');   // 하향 시 의견 텍스트도 갱신 — 충족 어조 의견이 그대로 남는 문제 방지
                   var evState=e.quotes.length?'확보':'부족';
                   if(evState==='부족' && verd==='확인필요' && !downReason) op='[근거부족] '+op;   // 내용상 판단보류와 근거미확보를 구분 표기
+                  if(!op.trim()) op='[의견미생성] AI가 감사의견을 생성하지 않았습니다 — 재검토를 권장합니다.';
                   return { '조문번호':e.it['조문번호']||'', '판정':verd, '감사의견':op, '보완사항':j['보완사항']||'', '근거상태':evState,
                     '판단불가사유':(downReason?downReason+' ':'')+(j['판단불가사유']||''), '근거인용':e.quotes, '환각제외':e.halluc, '교차':String(v['결과']||'유지') };
                 });
@@ -3279,7 +3397,7 @@ a:hover { text-decoration: underline; }
             + '<br>아래 순서대로 확인하면 결론이 나옵니다.</div>';
         })()
       + rows
-      + '<div style="margin-top:11px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.explainEasyAll(\''+std.no+'\')" title="위 항목 전체를 기준서 흐름(정의→조건→결론)에 따라 한 번에 쉬운 말로 풀이합니다 (API 1콜)">ⓘ 쉬운 설명 — 전체 통합 풀이</button></div>'
+      + '<div style="margin-top:14px;text-align:center"><button class="aifrs-btn" style="background:var(--blue-sky);color:#fff;border-color:var(--blue-sky);font-weight:700;font-size:13px;padding:9px 22px" onclick="window.AiFRS.explainEasyAll(\''+std.no+'\')" title="위 항목 전체를 기준서 흐름(정의→조건→결론)에 따라 한 번에 쉬운 말로 풀이합니다">쉬운 설명 — 전체 한번에 풀이</button></div>'
       + '<div id="aifrs-easyall-'+std.no+'"></div>'
       + '</div>';
   }
@@ -3368,6 +3486,41 @@ a:hover { text-decoration: underline; }
           + '<div style="margin-top:5px;text-align:center"><button class="aifrs-help-btn" onclick="window.AiFRS.explainEasyAll(\''+no+'\')">🔄 다시 시도</button></div>';
       });
   };
+  // HIGH 17개 판단 게이트 패널 — 감사 결과와 게이트를 매핑해 ✓/⬜/⚠ 렌더링
+  function _buildGatePanel(std, audited){
+    var gates=_HIGH_GATE[std.no]; if(!gates||!gates.length) return '';
+    // 조문번호 정규화 비교: 감사 항목 조문과 게이트 ko가 겹치는지 확인
+    function _overlap(artNo, ko){
+      var a=String(artNo||'').replace(/[^0-9.~]/g,'');
+      var k=String(ko||'').replace(/[^0-9.~]/g,'');
+      if(!a||!k) return false;
+      if(a===k) return true;
+      // 범위 비교: ko가 "X~Y" 형태이면 a의 첫 숫자가 그 범위에 포함되는지
+      var m=k.match(/^(\d+(?:\.\d+)?)~(\d+(?:\.\d+)?)$/);
+      if(m){var lo=parseFloat(m[1]),hi=parseFloat(m[2]),v=parseFloat(a.split('~')[0]); return v>=lo&&v<=hi;}
+      // a가 범위 "X~Y" 형태이면 ko가 그 범위의 시작이랑 겹치는지
+      var ma=a.match(/^(\d+(?:\.\d+)?)~(\d+(?:\.\d+)?)$/);
+      if(ma){var lo2=parseFloat(ma[1]),hi2=parseFloat(ma[2]),v2=parseFloat(k.split('~')[0]); return v2>=lo2&&v2<=hi2;}
+      return a.indexOf(k.split('~')[0])===0 || k.indexOf(a.split('~')[0])===0;
+    }
+    var rows=gates.map(function(g){
+      var match=null;
+      audited.forEach(function(a){ if(_overlap(a['조문번호'],g.ko)) match=a; });
+      var verd=match?match['판정']:'';
+      var ico, cls, label;
+      if(verd==='충족'){ico='✓';cls='#2dd4bf';label='충족';}
+      else if(verd==='미흡'){ico='✗';cls='#f87171';label='미흡';}
+      else if(verd==='확인필요'){ico='⚠';cls='#fbbf24';label='확인필요';}
+      else if(verd==='해당없음'){ico='─';cls='var(--txt3)';label='해당없음';}
+      else{ico='⬜';cls='var(--txt3)';label='미판정';}
+      return '<div class="af-gate-row">'
+        +'<span class="af-gate-ico" style="color:'+cls+'">'+ico+'</span>'
+        +'<span class="af-gate-q" title="조문 '+esc(g.ko)+' · '+esc(g.pass)+'">'+esc(g.q)+'</span>'
+        +'<span class="af-gate-lbl" style="color:'+cls+'">'+label+'</span>'
+        +'</div>';
+    }).join('');
+    return '<div class="af-gate-panel"><div class="af-gate-hd">'+_ico('plan',13)+' 판단 게이트 — 제'+esc(std.no)+'호 핵심 체크</div>'+rows+'</div>';
+  }
   function renderFinalAudit(std, items, audited, secs){
     var byNo={}; audited.forEach(function(a){ byNo[String(a['조문번호']||'').trim()]=a; });
     var cnt={'충족':0,'미흡':0,'확인필요':0,'해당없음':0};
@@ -3433,22 +3586,20 @@ a:hover { text-decoration: underline; }
       + '<div class="af-hero-t">'+_gl(head1.g,15)+'<span style="color:'+head1.c+'">'+head1.t+'</span>'
         + '<span class="af-hero-sub">항목 '+items.length+'개 · '+secs+'초 · 3단계 근거기반 검증</span></div>'
       + '<div class="af-bar">'+seg(cnt['충족'],'#2dd4bf')+seg(cnt['확인필요'],'#fbbf24')+seg(cnt['미흡'],'#f87171')+seg(cnt['해당없음'],'var(--bg4)')+'</div>'
-      + '<div class="af-legend">'+lg('#2dd4bf','적합(충족)',cnt['충족'])+lg('#fbbf24','검토필요(확인필요)',cnt['확인필요'])
-        + lg('#f87171','부적합(미흡)',cnt['미흡'])+lg('var(--bg4)','해당없음',cnt['해당없음'])+'</div>'
+      + '<div class="af-legend">'+lg('#2dd4bf','적합',cnt['충족'])+lg('#fbbf24','검토필요',cnt['확인필요'])
+        + lg('#f87171','부적합',cnt['미흡'])+lg('var(--bg4)','해당없음',cnt['해당없음'])+'</div>'
       + '<div class="af-next">'+_gl(probs?'warn':'ok')+'<span>'
         + (probs
             ? '문제 <b>'+probs+'건</b>은 아래에서 자동으로 펼쳐집니다 — <b>문서 근거·보완·확인</b> 사항에서 해결방향을 확인하세요.'
             : '모든 항목이 문서 근거로 뒷받침됩니다. 각 항목을 클릭하면 근거와 감사의견을 확인할 수 있습니다.')
         + '</span></div></div>';
-    var foot='<div class="af-foot1">'+_gl('warn')+'<span>AI 분석 결과는 참고용이며, 최종 판단·책임은 담당자에게 있습니다.</span>'
-      + '<button class="aifrs-help-btn" onclick="window.AiFRS.showSheet(\'discAudit\')">ⓘ 자세히</button></div>';
-    var headRow='<div class="aifrs-an-head" style="margin-top:8px;border-top:1px solid var(--border);padding-top:10px">'
+    var foot='<div class="af-foot1">'+_gl('warn')+'<span>AI 분석 결과는 참고용이며, 최종 판단·책임은 담당자에게 있습니다.</span></div>';
+    var headRow='<div class="aifrs-an-head" style="margin-top:8px;border-top:1px solid var(--border);padding-top:10px" title="문서 원문을 근거로 각 조항의 충족 여부를 판정합니다. 문제 항목은 자동으로 펼쳐집니다">'
       + '<span style="display:inline-flex;align-items:center;gap:6px">'+_ico('shield',15)+' AI감사 결과</span>'
-      + '<button class="aifrs-help-btn" onclick="window.AiFRS.showSheet(\'prioAudit\')">ⓘ 우선순위·정렬</button>'
-      + '<button class="aifrs-help-btn" onclick="window.AiFRS.showSheet(\'discAudit\')">ⓘ 감사 방식</button>'
       + '<button class="aifrs-help-btn" onclick="window.AiFRS.runFinalAudit(\''+std.no+'\')" title="AI 감사를 처음부터 다시 실행합니다">↻ 다시 검증</button></div>';
     var plan=_buildActionPlan(std, items, audited);
-    return headRow+hero+rows+plan+foot;   // 다음 할 일은 감사의견(항목 리스트) 뒤에 배치
+    var gatePanel=_buildGatePanel(std, audited);   // HIGH 17개 기준서만 판단 게이트 패널 표시
+    return headRow+hero+gatePanel+rows+plan+foot;   // 게이트 패널은 히어로 카드 바로 아래, 항목 리스트 위
   }
 
   // ── 7단계: 증빙 PDF 다운로드 (브라우저 인쇄 → "PDF로 저장") ──
@@ -4017,6 +4168,61 @@ a:hover { text-decoration: underline; }
     });
     return h;
   }
+  function buildHistHtml(){
+    var items = [
+      { date:'2026-09-01', title:'사용자 화면 전면 간소화 + 교차검증 3사이클 완주',
+        bullets:[
+          '불필요한 안내 버튼·점수 표시·영문 텍스트 제거 — 비전문가도 한눈에 읽히는 화면으로 개편, 핵심 기능만 남긴 최소 UI 달성',
+          '총 89건 교차검증(3패스) 완주 — 오판 0건, 정확도 사이클2·3 연속 100% 달성',
+          'AI가 데이터베이스에 없는 기준서 번호를 생성하는 환각(Hallucination) 현상 탐지 및 차단 장치 적용'
+        ]
+      },
+      { date:'2026-08-31', title:'AI 정확도 교정 — 핵심 오류 유형 실증 수정 (사이클2)',
+        bullets:[
+          '주된 회계 이슈와 부수 논점을 AI가 혼동하는 오류 유형 식별 및 프롬프트 교정',
+          '교정 전후 실증: AI가 정답 기준서를 얼마나 확신하는지를 나타내는 신뢰도 격차가 10점 → 33점으로 강화 — 정답이 더 압도적으로 선택됨을 확인',
+          '두 기준서가 동시에 적용되는 복합 거래의 경우, 하나만 정답으로 강제하지 않고 "두 기준서 병립 검토" 결론을 제시하는 기준 수립 — 과도한 단순화 방지'
+        ]
+      },
+      { date:'2026-08-27', title:'초보자 중심 UX 심화 — 인지 부담 최소화·단계별 행동 로드맵',
+        bullets:[
+          '회계 기준서를 처음 접하는 실무자를 전제한 2단계 정보 공개 방식 도입 — 핵심 요약 우선, 세부는 선택 펼침',
+          '"다음 할 일" 단계별 행동 로드맵 설계 — 기준서를 읽어도 무엇을 해야 할지 모르는 사용자를 위한 구체적 액션 가이드',
+          '기준서 조문을 쉬운 언어로 재해석하는 4단 설명 체계 적용 (왜 중요한가 → 무엇을 확인하는가 → 어떻게 판단하는가 → 주의할 점)'
+        ]
+      },
+      { date:'2026-08-25', title:'UX 전면 재설계 — 원버튼 자동화·결과 복원·AI 엔진 이중화',
+        bullets:[
+          '복잡한 다단계 조작을 "AI 전체 검토" 단일 버튼으로 통합 — 분석 → 심층분석 → AI감사 자동 연속 실행',
+          '분석 결과 스냅샷 저장·복원 기능 도입 — 페이지 이탈 후에도 직전 결과 즉시 재현 가능',
+          '주력 AI 엔진을 Gemini 3.x(Flash·Pro 자동 선택)로 전환, OpenRouter를 예비 엔진으로 이중화'
+        ]
+      },
+      { date:'2026-08-24', title:'실증 검증 체계 수립 — 21개 기준서 실무 시나리오 테스트셋 구축',
+        bullets:[
+          'K-IFRS 21개 기준서 각각에 대해 실제 업무 시나리오 기반 테스트 문서 21종 독자 제작',
+          '추정이 아닌 실증 교차검증 체계 수립 — 이후 전 사이클 정확도 검증의 기준 자료로 활용'
+        ]
+      },
+      { date:'2026-08-20', title:'AiFRS 컨셉 완성 — AI 분석 엔진·독립 앱·K-IFRS DB 전면 구축',
+        bullets:[
+          '사전 연구(6~7월)에서 검증된 AI 기준서 분석 알고리즘을 단일 파일(HTML) 독립 앱으로 완성',
+          '회계 이슈 입력 시 AI가 관련 K-IFRS 기준서를 자동 탐색, 처리 방향 및 회계처리안 초안까지 제시',
+          'K-IFRS 원문 기계추출 방식으로 데이터 신뢰성 확보 — 수록 문단 1,439개 → 5,468개(+280%), 적용지침·사례 전면 포함',
+          '유사 기준서 간 오분류 방지 안전장치 내장, 인터넷·API키만 있으면 어디서든 즉시 실행 가능'
+        ]
+      }
+    ];
+    var h='<div class="aifrs-hist-hd">개발 히스토리</div>';
+    items.forEach(function(it){
+      var ul='<ul style="margin:4px 0 4px 4px;padding-left:18px">'+it.bullets.map(function(b){ return '<li>'+esc(b)+'</li>'; }).join('')+'</ul>';
+      h+='<details class="aifrs-hist-item">'
+        +'<summary><span class="aifrs-hist-date">'+esc(it.date)+'</span>'+esc(it.title)+'</summary>'
+        +'<div class="aifrs-hist-detail">'+ul+'</div>'
+        +'</details>';
+    });
+    return h;
+  }
   function buildDbHtml(){
     var st=AiFRS.dbStats();
     var h='<div class="aifrs-db-stat">기준서·문서 <b>'+st.standards+'종</b> · 문단 지문 <b>'+st.articles+'개</b> · 회계용어 <b>'+st.terms+'개</b>(동의어 포함 <b>'+st.surface+'개</b>)</div>';
@@ -4131,6 +4337,20 @@ a:hover { text-decoration: underline; }
       else if(!(AiFRS.state&&AiFRS.state.files&&AiFRS.state.files.length)){ hero.style.display=''; }
     }
   };
+  AiFRS.toggleHistView = function(){
+    var view=document.getElementById('aifrs-hist-view');
+    var tog=document.getElementById('aifrs-hist-toggle');
+    if(!view) return;
+    var open=(view.style.display==='none'||view.style.display==='');
+    if(open&&!view._built){ view.innerHTML=buildHistHtml(); view._built=true; }
+    view.style.display=open?'block':'none';
+    if(tog){ tog.title=open?'개발 히스토리 접기':'개발 히스토리'; }
+    var hero=document.getElementById('af-hero');
+    if(hero){
+      if(open){ hero.style.display='none'; }
+      else if(!(AiFRS.state&&AiFRS.state.files&&AiFRS.state.files.length)){ hero.style.display=''; }
+    }
+  };
   // AI 분석결과 하단 섹션(표준용어 정규화·일반 업무용어) 접기/펼치기
   AiFRS.toggleAiSec = function(id, hdr){
     var body=document.getElementById(id);
@@ -4166,13 +4386,14 @@ a:hover { text-decoration: underline; }
     {sel:'#aifrs-settings-toggle', title:'① 키 등록', info:'tour1', pre:_tourOpenSettings,
       msg:'- ⚙ 설정에서 Gemini API Key 저장 — 분석·OCR·감사를 구동하는 주 엔진(무료)\n- OpenRouter Key는 선택 — 한도 소진 시 자동 전환되는 백업\n- 최초 1회만 등록하면 다음 실행부터 자동 적용'},
     {sel:'#aifrs-drop',            title:'② 올리고 분석', info:'tour2', pre:_tourCloseSettings,
-      msg:'- 계약서·문서를 끌어다 놓거나 클릭해 첨부 (PDF·엑셀·이미지·ZIP·스캔 PDF)\n- [Analyze]로 거래구조 분석 → 후보 기준서 자동 선별\n- 후보 카드의 [AI 전체 검토] 한 번으로 정밀 분석→AI 감사→다음 할 일까지 자동 진행'},
+      msg:'- 계약서·문서를 끌어다 놓거나 클릭해 첨부 (PDF·엑셀·이미지·ZIP·스캔 PDF)\n- [AI 분석]으로 거래구조 분석 → 후보 기준서 자동 선별\n- 후보 카드의 [AI 전체 검토] 한 번으로 정밀 분석→AI 감사→다음 할 일까지 자동 진행'},
     {sel:'#aifrs-db-toggle',       title:'③ 근거 검증', info:'tour3', pre:_tourCloseDb,
       msg:'- 감사 결과 항목을 클릭하면 근거·감사의견이 펼쳐짐 (문제 항목은 자동 펼침)\n- § 문단 칩을 누르면 기준서 원문(내장 DB)을 즉시 확인\n- [보완·확인]·[판단불가사유]에서 문제 해결방향을 도출'}
   ];
   AiFRS.startTour = function(){
     // 실행 시 유도 글로우 해제(현재 세션 한정 — 새로고침하면 다시 표시)
     var tb=document.getElementById('aifrs-tour-btn'); if(tb) tb.classList.remove('af-guide-glow');
+    localStorage.setItem('aifrs-tour-seen','1');
     AiFRS.endTour();
     var ov=document.createElement('div'); ov.className='aifrs-tour-ov'; ov.id='aifrs-tour-ov';
     ov.innerHTML='<div class="aifrs-tour-hl" id="aifrs-tour-hl"></div>'
@@ -4311,7 +4532,7 @@ a:hover { text-decoration: underline; }
     var m={ waiting:['aifrs-b-wait','대기'], processing:['aifrs-b-proc','<span class="aifrs-spin"></span> 추출중'],
             done:['aifrs-b-done','추출완료'], image:['aifrs-b-img','이미지'], error:['aifrs-b-err','오류'] };
     var b=m[rec.status]||m.waiting;
-    var en=_isEnDoc(rec)?'<span class="aifrs-file-badge aifrs-b-en aifrs-tip" data-tip="영문 문서&#10;AI 분석(Analyze)은 정상 지원. 오프라인 Keywords는 한글 DB 기반이라 매칭이 제한됩니다.">EN 영문</span>':'';
+    var en=_isEnDoc(rec)?'<span class="aifrs-file-badge aifrs-b-en aifrs-tip" data-tip="영문 문서&#10;AI 분석은 정상 지원. 한글 DB 기반이라 키워드 자동 매칭이 제한될 수 있습니다.">EN 영문</span>':'';
     return en+'<span class="aifrs-file-badge '+b[0]+'">'+b[1]+'</span>';
   }
   // 미리보기 전용 자동 정형화 — 내용은 그대로, 표시만 정리(문장·헤더·목록 단위 줄바꿈)
@@ -4418,6 +4639,7 @@ a:hover { text-decoration: underline; }
       + '<div class="af-topbar-inner">'
       +   '<div class="af-brand"><span class="af-brand-mark">AiFRS</span><span class="af-brand-tag">K-IFRS Intelligent Analysis</span></div>'
       +   '<div class="af-topbar-actions">'
+      +     '<button class="af-icon-btn" id="aifrs-hist-toggle" title="개발 히스토리">'+_ico('hist',15,'currentColor')+'</button>'
       +     '<button class="af-icon-btn" id="aifrs-db-toggle" title="K-IFRS DB">&#128452;</button>'
       +     '<button class="af-icon-btn" id="aifrs-settings-toggle" title="Settings">&#9881;</button>'
       +   '</div>'
@@ -4467,18 +4689,8 @@ a:hover { text-decoration: underline; }
       +   '<div class="af-hero" id="af-hero">'
       +     '<div class="af-hero-glow"></div>'
       +     '<h1 class="af-hero-title">AiFRS</h1>'
-      +     '<p class="af-hero-sub">K-IFRS AI Accounting Standards Analysis</p>'
-      +     '<p class="af-hero-desc">Upload contracts &amp; documents for automatic K-IFRS standard matching,<br>with real-time code verification against the built-in standards database.</p>'
-      +     '<div class="af-steps">'
-      +       '<div class="af-sc"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-4.5"/><path d="M9.75 14.75 12 12.5l2.25 2.25"/></svg></div><div class="n">STEP 1</div><div class="t">파일 업로드</div>'
-      +         '<div class="tip">- 하단 바에 드래그 또는 클릭\n- PDF·엑셀·이미지·ZIP 인식\n- 스캔 PDF는 자동 OCR</div></div>'
-      +       '<div class="af-sc"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="1.8"/><rect x="10.3" y="10.3" width="3.4" height="3.4" rx="0.8"/><path d="M9.5 4.5V7M14.5 4.5V7M9.5 17v2.5M14.5 17v2.5M4.5 9.5H7M4.5 14.5H7M17 9.5h2.5M17 14.5h2.5"/></svg></div><div class="n">STEP 2</div><div class="t">AI 분석</div>'
-      +         '<div class="tip">- [Analyze] 한 번 클릭\n- 거래구조 분석 → 후보 기준서 선별\n- API 키는 최초 1회만 설정</div></div>'
-      +       '<div class="af-sc"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="5.8"/><path d="m19.5 19.5-5-5"/><path d="M10.5 8v5M8 10.5h5"/></svg></div><div class="n">STEP 3</div><div class="t">정밀 분석</div>'
-      +         '<div class="tip">- [AI 전체 검토] 한 번 클릭\n- 문단 단위 체크리스트 검토\n- 내장 DB로 조문 코드 검증</div></div>'
-      +       '<div class="af-sc"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 5.5 6v5.2c0 4.3 2.8 7.5 6.5 9.3 3.7-1.8 6.5-5 6.5-9.3V6z"/><path d="m9.3 11.7 2 2 3.5-3.9"/></svg></div><div class="n">STEP 4</div><div class="t">최종 검증</div>'
-      +         '<div class="tip">- 전체 검토에 포함 자동 실행\n- 문서 원문 인용만을 근거로 판정\n- 감사 리포트 + 다음 할 일 안내</div></div>'
-      +     '</div>'
+      +     '<p class="af-hero-sub">K-IFRS AI 회계기준 자동 분석</p>'
+      +     '<p class="af-hero-desc">계약서·문서를 올리면 AI가 관련 K-IFRS 기준서를 자동으로 찾아드립니다.</p>'
       +   '</div>'
       +   '<div class="aifrs-filelist" id="aifrs-filelist"></div>'
       +   '<div id="aifrs-ai" class="aifrs-analysis" style="display:none"></div>'
@@ -4486,6 +4698,7 @@ a:hover { text-decoration: underline; }
       +   '<div id="aifrs-journal" class="aifrs-analysis" style="display:none"></div>'
       +   '<div id="aifrs-analysis" class="aifrs-analysis" style="display:none"></div>'
       +   '<div id="aifrs-db-view" class="aifrs-db-view" style="display:none"></div>'
+      +   '<div id="aifrs-hist-view" class="aifrs-hist-view" style="display:none"></div>'
       + '</div>'
 
       + '<div class="af-bottom">'
@@ -4493,8 +4706,7 @@ a:hover { text-decoration: underline; }
       +   '<input type="file" id="aifrs-file-input" multiple accept=".pdf,.xlsx,.xls,.csv,.docx,.pptx,.zip,.jpg,.jpeg,.png,.bmp" style="display:none">'
       +   '<button class="af-attach-btn" id="aifrs-attach" title="Attach files">&#128206;</button>'
       +   '<div class="af-drop" id="aifrs-drop"><span class="af-drop-text">Drop files here or click &mdash; PDF, Excel, CSV, Word, PPT, Image, ZIP</span></div>'
-      +   '<button class="af-btn af-btn-primary" id="aifrs-ai-btn" disabled>Analyze</button>'
-      +   '<button class="af-btn af-btn-ghost af-btn-sm" id="aifrs-next-btn" disabled title="Offline keyword analysis">Keywords</button>'
+      +   '<button class="af-btn af-btn-primary" id="aifrs-ai-btn" disabled>AI 분석</button>'
       +   '<button class="af-btn af-btn-ghost af-btn-sm" id="aifrs-tour-btn" title="주요 기능을 순서대로 안내합니다">사용 가이드</button>'
       +   '<button class="af-btn af-btn-ghost af-btn-sm" id="aifrs-clear-btn" style="display:none" title="Clear all">&#10005;</button>'
       + '</div>'
@@ -4517,19 +4729,22 @@ a:hover { text-decoration: underline; }
 
     var clearBtn = document.getElementById('aifrs-clear-btn');
     if(clearBtn) clearBtn.addEventListener('click', AiFRS.clearAll);
+    var histToggle = document.getElementById('aifrs-hist-toggle');
+    if(histToggle) histToggle.addEventListener('click', function(){
+      AiFRS.toggleHistView();
+      histToggle.classList.toggle('active');
+    });
     var dbToggle = document.getElementById('aifrs-db-toggle');
     if(dbToggle) dbToggle.addEventListener('click', function(){
       AiFRS.toggleDbView();
       dbToggle.classList.toggle('active');
     });
-    var nextBtn = document.getElementById('aifrs-next-btn');
-    if(nextBtn) nextBtn.addEventListener('click', AiFRS.runOfflineAnalysis);
     var aiBtn = document.getElementById('aifrs-ai-btn');
     if(aiBtn) aiBtn.addEventListener('click', AiFRS.runAiAnalysis);
     var tourBtn = document.getElementById('aifrs-tour-btn');
     if(tourBtn){
       tourBtn.addEventListener('click', AiFRS.startTour);
-      tourBtn.classList.add('af-guide-glow');   // 로드 시 항상 표시, 클릭하면 해제
+      if(!localStorage.getItem('aifrs-tour-seen')) tourBtn.classList.add('af-guide-glow');
     }
     var brand = root.querySelector('.af-brand');
     if(brand) brand.addEventListener('click', function(){ if(AiFRS.state.files.length){ if(window.confirm('초기 화면으로 돌아갈까요? 업로드된 파일과 분석 결과가 초기화됩니다.')) AiFRS.goHome(); } else { AiFRS.goHome(); } });
@@ -4623,6 +4838,10 @@ a:hover { text-decoration: underline; }
     if(db) db.style.display='none';
     var dbT = document.getElementById('aifrs-db-toggle');
     if(dbT) dbT.classList.remove('active');
+    var hist = document.getElementById('aifrs-hist-view');
+    if(hist) hist.style.display='none';
+    var histT = document.getElementById('aifrs-hist-toggle');
+    if(histT) histT.classList.remove('active');
     var sp = document.getElementById('af-settings');
     if(sp) sp.style.display='none';
     var sT = document.getElementById('aifrs-settings-toggle');
