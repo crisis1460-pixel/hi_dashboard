@@ -416,6 +416,27 @@ a:hover { text-decoration: underline; }
 .af-gate-ico { font-size:12px; font-weight:700; width:14px; text-align:center; flex-shrink:0; }
 .af-gate-q { flex:1; color:var(--txt); }
 .af-gate-lbl { font-size:10.5px; font-weight:600; flex-shrink:0; }
+.af-gate-cta { font-size:10px; font-weight:600; color:var(--blue); background:rgba(96,165,250,.12); border-radius:var(--radius-pill); padding:2px 8px; flex-shrink:0; cursor:pointer; white-space:nowrap; }
+.af-gate-cta:hover { background:rgba(96,165,250,.22); }
+
+.af-next-banner { display:flex; align-items:center; gap:8px; margin:10px 0; padding:9px 12px; background:rgba(96,165,250,.1); border:1px solid rgba(96,165,250,.3); border-radius:var(--radius-lg); }
+.af-next-ico { flex-shrink:0; display:flex; }
+.af-next-text { flex:1; font-size:12px; color:var(--txt2); }
+.af-next-btn { flex-shrink:0; font-size:11.5px; font-weight:700; color:#fff; background:var(--blue); border:none; border-radius:var(--radius-pill); padding:6px 12px; cursor:pointer; white-space:nowrap; }
+.af-next-btn:hover { opacity:.88; }
+
+.af-step-bar { display:flex; gap:4px; margin:8px 0 2px; flex-wrap:wrap; }
+.af-step { display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:600; padding:3px 8px; border-radius:var(--radius-pill); background:var(--bg3); color:var(--txt3); }
+.af-step i { font-style:normal; font-size:9.5px; line-height:1; }
+.af-step-dot { width:5px; height:5px; border-radius:50%; background:currentColor; display:inline-block; }
+.af-step-done { color:#2dd4bf; background:rgba(45,212,191,.12); }
+.af-step-active { color:var(--blue); background:rgba(96,165,250,.14); }
+.af-step-next { color:#2dd4bf; background:rgba(45,212,191,.05); border:1px dashed rgba(45,212,191,.45); }
+.af-step-error { color:#f87171; background:rgba(248,113,113,.12); }
+.af-step-pending { color:var(--txt3); background:var(--bg3); }
+
+.af-donut { width:42px; height:42px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; margin-right:4px; }
+.af-donut-hole { width:26px; height:26px; border-radius:50%; background:var(--bg3); display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; color:var(--txt2); }
 
 .aifrs-pr-verify { display:none; font-size:10.5px; color:var(--txt3); margin-top:7px; font-family:inherit; border-top:1px dotted var(--border); padding-top:6px; }
 .aifrs-halluc-note { font-size:10.5px; color:var(--txt3); margin-top:7px; border-top:1px dotted var(--border); padding-top:6px; }
@@ -1458,9 +1479,31 @@ a:hover { text-decoration: underline; }
       });
   }
   // 모델ID로 공급자 판별해 호출 라우팅(Gemini/OpenRouter)
+  // ⚠ 클라이언트 타임아웃: 서버가 429/503 등 명시적 에러 없이 그냥 무응답(hang)이면 fetch가 무한 대기해
+  // _isTransient가 안 걸려 재시도·모델폴백(Gemini→OpenRouter) 자체가 트리거되지 않는 구멍이 있었음(2026-09-02 사이클6 관찰:
+  // idx1·15·16·18이 정확히 loop_driver.js의 6분 폴링타임아웃에 걸릴 때까지 동일 모델에 붙잡혀 있었고, 그 미완료 fetch가
+  // 누적되어 47분 완전정지까지 발생). 무응답을 API_TIMEOUT_MS 후 강제로 '에러'로 변환해 기존 폴백 체인이 실제로 작동하게 함.
+  AiFRS.API_TIMEOUT_MS = 45000;
   function _apiCall(prompt, opts){
     var m=(opts&&opts.model)||AiFRS.getModel();
-    return (AiFRS._providerOf(m)==='openrouter' ? _openrouterCall : _geminiCall)(prompt, opts);
+    var fn=(AiFRS._providerOf(m)==='openrouter' ? _openrouterCall : _geminiCall);
+    var userSig=opts&&opts.signal;
+    if(userSig && userSig.aborted) return fn(prompt, opts);   // 이미 사용자가 취소한 상태 — 그대로 전달
+    if(typeof AbortController==='undefined') return fn(prompt, opts);   // 구형 환경 폴백
+    var toCtl=new AbortController();
+    var to=setTimeout(function(){ toCtl.abort(); }, AiFRS.API_TIMEOUT_MS);
+    var onUserAbort=null;
+    if(userSig){ onUserAbort=function(){ toCtl.abort(); }; userSig.addEventListener('abort', onUserAbort); }
+    var o2={}; for(var k in opts){ o2[k]=opts[k]; } o2.signal=toCtl.signal;
+    function cleanup(){ clearTimeout(to); if(userSig && onUserAbort) userSig.removeEventListener('abort', onUserAbort); }
+    return fn(prompt, o2).then(function(r){ cleanup(); return r; }).catch(function(e){
+      cleanup();
+      if(e && (e.name==='AbortError' || e.aborted)){
+        if(userSig && userSig.aborted){ e.aborted=true; throw e; }   // 진짜 사용자 취소 — 폴백 없이 종료
+        var te=new Error('요청 응답없음('+(AiFRS.API_TIMEOUT_MS/1000)+'초 타임아웃) — 재시도/모델폴백 대상'); te.status=504; throw te;
+      }
+      throw e;
+    });
   }
   // 사용자 중단(AbortController) 헬퍼
   function _abortErr(){ var e=new Error('사용자가 분석을 중단했습니다.'); e.aborted=true; return e; }
@@ -2416,11 +2459,22 @@ a:hover { text-decoration: underline; }
           + (c['사유']?'<div class="aifrs-an-para">'+esc(c['사유'])+'</div>':'')
           + (issues?'<div class="aifrs-an-para">쟁점: <span class="aifrs-an-hit">'+issues+'</span></div>':'')
           + (valid
-              ? '<div style="margin-top:8px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runFullReview(\''+key+'\')" title="정밀 분석 → AI 감사 → 다음 할 일까지 한 번에 이어서 실행합니다">'+_ico('shield',13,'currentColor')+' AI 전체 검토</button></div>'
+              ? '<div class="af-step-bar" id="aifrs-step-'+key+'">'+_stepBarHtml('init', !!_HIGH_GATE[key])+'</div>'
+                + '<div style="margin-top:4px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runFullReview(\''+key+'\')" title="정밀 분석 → AI 감사 → 다음 할 일까지 한 번에 이어서 실행합니다">'+_ico('shield',13,'currentColor')+' AI 전체 검토</button></div>'
                 + '<div class="aifrs-precise-slot" id="aifrs-precise-'+key+'"></div>'
               : '<div class="aifrs-api-stat err" style="margin-top:4px">⚠ 내장 DB에 없는 기준서번호 — 6단계 검증 대상</div>')
           + '</div>';
       };
+      var topRawNo=String(cands[0]['기준서번호']||'').trim();
+      var topStd=AiFRS.findStandard(topRawNo);
+      if(topStd){
+        var topKey=topStd.no;
+        h+='<div class="af-next-banner" id="aifrs-nexthero-'+topKey+'">'
+          + '<span class="af-next-ico">'+_ico('shield',15)+'</span>'
+          + '<span class="af-next-text">다음 → <b>제'+esc(topStd.no)+'호 '+esc(topStd.name)+'</b> 정밀분석으로 인식요건을 확인하세요</span>'
+          + '<button class="af-next-btn" onclick="window.AiFRS.runFullReview(\''+topKey+'\')">정밀분석 시작 →</button>'
+          + '</div>';
+      }
       h+=_candCard(cands[0], true);
       if(cands.length>1){
         h+='<details class="af-cand-fold"><summary>다른 후보 '+(cands.length-1)+'종 — 펼쳐 보기(AI 전체 검토 가능)</summary>'
@@ -2607,22 +2661,26 @@ a:hover { text-decoration: underline; }
     var timer=setInterval(function(){ var el=document.getElementById(tid); if(el) el.textContent=((Date.now()-t0)/1000).toFixed(1)+'초'; },100);
     function fin(){ clearInterval(timer); delete AiFRS._preciseBusy[no]; delete AiFRS._preciseCtl[no]; }
     var prCancel=_cancelBtn("window.AiFRS.cancelPrecise('"+no+"')", '정밀 분석 중단');
+    var hasGate=!!_HIGH_GATE[no];
     box.innerHTML=_aiLoad('scope',2,'정밀 분석 — 제'+esc(std.no)+'호','조문별 체크·검토포인트 산출',tid,'0.0초',prCancel);
+    _setStepBar(no,'precise-loading',hasGate);
+    var _nh0=document.getElementById('aifrs-nexthero-'+no); if(_nh0&&_nh0.parentNode) _nh0.parentNode.removeChild(_nh0);   // 정밀분석 시작 — "다음 확인" 배너 제거(목적 달성)
     AiFRS.callGemini(prompt, {json:true, temperature:0.1, signal:psig, system:'당신은 K-IFRS 전문가입니다. 지정된 기준서·조문 범위에 근거하여 분석하고, 반드시 JSON으로만 답합니다.',
         onRetry:function(k,mx,mdl,e){ box.innerHTML=_aiLoad('scope',2,'정밀 분석 — 제'+esc(std.no)+'호','재시도 '+k+'/'+mx+' — '+_retryReason(e),tid,((Date.now()-t0)/1000).toFixed(1)+'초',prCancel); }})
       .then(function(txt){
         fin();
         var data=AiFRS.parseJsonResponse(txt);
         if(Array.isArray(data)) data={items:data};   // 3.x는 래퍼 없이 최상위 배열로 응답하기도 함
-        if(!data){ box.innerHTML='<div class="aifrs-api-stat err">JSON 파싱 실패 — 원문 일부:</div><pre class="aifrs-preview">'+esc(txt.slice(0,1500))+'</pre>'; return; }
+        if(!data){ box.innerHTML='<div class="aifrs-api-stat err">JSON 파싱 실패 — 원문 일부:</div><pre class="aifrs-preview">'+esc(txt.slice(0,1500))+'</pre>'; _setStepBar(no,'precise-error',hasGate); return; }
         AiFRS._lastPrecise=AiFRS._lastPrecise||{}; AiFRS._lastPrecise[std.no]=data; _snapSave();
         box.innerHTML=renderPreciseResult(data, std, ((Date.now()-t0)/1000).toFixed(1));
+        _setStepBar(no,'precise-done',hasGate);
         // [전체 검토] 체인: 정밀 분석 성공 시 AI 감사 자동 연결(1회성 플래그)
         if(AiFRS._fullChain===std.no){ AiFRS._fullChain=null; setTimeout(function(){ AiFRS.runFinalAudit(std.no); }, 700); }
       })
       .catch(function(e){ fin(); AiFRS._fullChain=null;
-        if(_isAbort(e)){ box.innerHTML='<div class="aifrs-api-stat">⏹ 정밀 분석을 중단했습니다.</div><div style="margin-top:8px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runPreciseAnalysis(\''+no+'\')">🔄 다시 정밀 분석</button></div>'; return; }
-        box.innerHTML='<div class="aifrs-api-stat err">❌ '+esc(e.message)+'</div>'; });
+        if(_isAbort(e)){ box.innerHTML='<div class="aifrs-api-stat">⏹ 정밀 분석을 중단했습니다.</div><div style="margin-top:8px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runPreciseAnalysis(\''+no+'\')">🔄 다시 정밀 분석</button></div>'; _setStepBar(no,'precise-error',hasGate); return; }
+        box.innerHTML='<div class="aifrs-api-stat err">❌ '+esc(e.message)+'</div>'; _setStepBar(no,'precise-error',hasGate); });
   };
   // [전체 검토]: 정밀 분석 → AI 감사 → 다음 할 일까지 클릭 한 번으로 이어서 실행
   AiFRS.runFullReview=function(no){
@@ -3108,7 +3166,13 @@ a:hover { text-decoration: underline; }
     var hi=rows.filter(function(r){return r.prio>=40;}), lo=rows.filter(function(r){return r.prio<40;});
     var body=hi.map(function(r){return r.html;}).join('');
     if(lo.length){ body+='<details class="aifrs-pr-fold"'+(hi.length?'':' open')+'><summary>형식·낮은 우선순위 문단 '+lo.length+'개 — 펼쳐 보기</summary>'+lo.map(function(r){return r.html;}).join('')+'</details>'; }   // 형식(<40) 기본 접기(항목은 보존)
+    // 통과율 도넛: 정밀분석 코드검증 결과(통과·미검증·확인불가) 비율을 한눈에
+    var dTotal=items.length||1;
+    var gPct=cnt.green/dTotal*360, aPct=cnt.amber/dTotal*360;
+    var donutCss='conic-gradient(#2dd4bf 0deg '+gPct+'deg, #fbbf24 '+gPct+'deg '+(gPct+aPct)+'deg, #f87171 '+(gPct+aPct)+'deg 360deg)';
+    var donut='<div class="af-donut" style="background:'+donutCss+'" title="코드검증 통과율 '+Math.round(cnt.green/dTotal*100)+'%"><div class="af-donut-hole">'+Math.round(cnt.green/dTotal*100)+'%</div></div>';
     var summary='<div class="aifrs-pr-summary">'
+      + donut
       + '<span class="af-vitem" style="margin-right:12px">'+_gl('ok')+'통과 <b>'+cnt.green+'</b></span>'
       + '<span class="af-vitem" style="margin-right:12px">'+_gl('warn')+'미검증 <b>'+cnt.amber+'</b></span>'
       + '<span class="af-vitem">'+_gl('bad')+'확인불가 <b>'+cnt.red+'</b></span></div>';
@@ -3260,8 +3324,10 @@ a:hover { text-decoration: underline; }
     var wd=setTimeout(function(){ if(AiFRS._auditBusy[no]&&ctl){ try{ctl.abort();}catch(e){} } }, 15*60*1000);   // 워치독: 감사 총 15분 상한(재시도 폭풍·탭 스로틀로 인한 무한 대기 차단)
     function afin(){ clearInterval(timer); clearTimeout(wd); delete AiFRS._auditBusy[no]; delete AiFRS._auditCtl[no]; }
     var auCancel=_cancelBtn("window.AiFRS.cancelAudit('"+no+"')", '최종 검증 중단');
+    var hasGate=!!_HIGH_GATE[no];
     function stage(t, sub){ slot.innerHTML=_aiLoad('shield',3,'AI 감사 '+t, sub,'aifrs-audit-timer-'+no,((Date.now()-t0)/1000).toFixed(1)+'초',auCancel); }
     // 1단계: 근거 추출 (감사 슬롯은 정밀분석 상세 아래에 있어 화면 밖일 수 있으므로 로딩 시작 시 스크롤로 보여줌)
+    _setStepBar(no,'audit-loading',hasGate);
     stage('1/3 근거 추출 중…', '문서에서 검토포인트 관련 원문을 그대로(verbatim) 추출');
     slot.scrollIntoView({behavior:'smooth', block:'center'});
     AiFRS.callGemini(buildEvidencePrompt(std, items, docText), _aopts(asig, '문서에 실제로 존재하는 원문만 그대로 인용 추출. 요약·추측 금지. JSON만.', function(k,mx,mdl,e){ stage('1/3 근거추출 재시도 '+k+'/'+mx, _retryReason(e)); }))
@@ -3308,14 +3374,15 @@ a:hover { text-decoration: underline; }
                 _snapSave();
                 if(AiFRS._easyCache) delete AiFRS._easyCache[_planKey(no,'all')];   // 감사 재실행 시 이전 판정 기준의 쉬운 설명 캐시 무효화
                 slot.innerHTML=renderFinalAudit(std, items, audited, ((Date.now()-t0)/1000).toFixed(1));
+                _setStepBar(no,'audit-done',hasGate);
                 _collapsePreciseDetail(std.no);   // 감사 결과 뜨면 정밀분석 상세 자동 접기(펼치기로 다시 볼 수 있음)
                 var nh=document.getElementById('aifrs-nexthero-'+std.no); if(nh&&nh.parentNode) nh.parentNode.removeChild(nh);   // 감사 완료 — "다음 확인" CTA 제거(중복 안내 방지)
               });
           });
       })
       .catch(function(e){ afin();
-        if(_isAbort(e)){ slot.innerHTML='<div class="aifrs-api-stat">⏹ 최종 검증을 중단했습니다.</div><div style="margin-top:8px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runFinalAudit(\''+no+'\')">🔄 다시 최종 검증</button></div>'; return; }
-        slot.innerHTML='<div class="aifrs-api-stat err">❌ '+esc(e.message)+'</div><div style="margin-top:8px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runFinalAudit(\''+no+'\')">🔄 다시 시도</button></div>'; });
+        if(_isAbort(e)){ slot.innerHTML='<div class="aifrs-api-stat">⏹ 최종 검증을 중단했습니다.</div><div style="margin-top:8px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runFinalAudit(\''+no+'\')">🔄 다시 최종 검증</button></div>'; _setStepBar(no,'audit-error',hasGate); return; }
+        slot.innerHTML='<div class="aifrs-api-stat err">❌ '+esc(e.message)+'</div><div style="margin-top:8px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runFinalAudit(\''+no+'\')">🔄 다시 시도</button></div>'; _setStepBar(no,'audit-error',hasGate); });
   };
   AiFRS.cancelAudit=function(no){ var c=AiFRS._auditCtl&&AiFRS._auditCtl[no]; if(c){ try{c.abort();}catch(e){} } };
   function _auditVerd(v){
@@ -3497,6 +3564,33 @@ a:hover { text-decoration: underline; }
           + '<div style="margin-top:5px;text-align:center"><button class="aifrs-help-btn" onclick="window.AiFRS.explainEasyAll(\''+no+'\')">🔄 다시 시도</button></div>';
       });
   };
+  // 단계 인디케이터: AI분석(항상완료)→정밀검토→감사의견→(HIGH만)판단게이트.
+  // aifrs-precise-KEY/aifrs-audit-KEY box는 innerHTML 전체교체가 반복되므로, 스텝바는 별도 sibling(aifrs-step-KEY)로 두고 이 채널로만 갱신한다.
+  var _STEP_TABLE = {
+    'init':           ['done','pending','pending','pending'],
+    'precise-loading':['done','active','pending','pending'],
+    'precise-done':   ['done','done','next','pending'],
+    'precise-error':  ['done','error','pending','pending'],
+    'audit-loading':  ['done','done','active','pending'],
+    'audit-done':     ['done','done','done','done'],
+    'audit-error':    ['done','done','error','pending']
+  };
+  function _stepBarHtml(stage, hasGate){
+    var labels=['AI분석','정밀검토','감사의견','판단게이트'];
+    var st=_STEP_TABLE[stage]||_STEP_TABLE['init'];
+    var n=hasGate?4:3;
+    var html='';
+    for(var i=0;i<n;i++){
+      var s=st[i]||'pending';
+      var ico = s==='done'?'✓' : s==='error'?'!' : s==='active'?'…' : s==='next'?'›' : '';
+      html+='<span class="af-step af-step-'+s+'">'+(ico?'<i>'+ico+'</i>':'<i class="af-step-dot"></i>')+labels[i]+'</span>';
+    }
+    return html;
+  }
+  function _setStepBar(key, stage, hasGate){
+    var el=document.getElementById('aifrs-step-'+key); if(!el) return;
+    el.innerHTML=_stepBarHtml(stage, hasGate);
+  }
   // HIGH 17개 판단 게이트 패널 — 감사 결과와 게이트를 매핑해 ✓/⬜/⚠ 렌더링
   function _buildGatePanel(std, audited){
     var gates=_HIGH_GATE[std.no]; if(!gates||!gates.length) return '';
@@ -3528,10 +3622,15 @@ a:hover { text-decoration: underline; }
       else if(verd==='확인필요'){ico='⚠';cls='#fbbf24';label='확인필요';}
       else if(verd==='해당없음'){ico='─';cls='var(--txt3)';label='해당없음';}
       else{ico='⬜';cls='var(--txt3)';label='미판정';}
+      var safeKo=String(g.ko||'').replace(/[^0-9A-Za-z.\-~]/g,'');
+      var cta = (!verd && safeKo)
+        ? '<span class="af-gate-cta" title="이 조문의 기준서 원문을 팝업으로 확인합니다" onclick="event.stopPropagation();event.preventDefault();window.AiFRS.showParaText(\''+std.no+'\',\''+safeKo+'\')">→ §'+esc(safeKo)+' 원문 보기</span>'
+        : '';
       return '<div class="af-gate-row">'
         +'<span class="af-gate-ico" style="color:'+cls+'">'+ico+'</span>'
         +'<span class="af-gate-q" title="조문 '+esc(g.ko)+' · '+esc(g.pass)+'">'+esc(g.q)+'</span>'
         +'<span class="af-gate-lbl" style="color:'+cls+'">'+label+'</span>'
+        +cta
         +'</div>';
     }).join('');
     return '<div class="af-gate-panel"><div class="af-gate-hd">'+_ico('plan',13)+' 판단 게이트 — 제'+esc(std.no)+'호 핵심 체크</div>'+rows+'</div>';
@@ -4185,6 +4284,16 @@ a:hover { text-decoration: underline; }
   }
   function buildHistHtml(){
     var items = [
+      { date:'2026-09-02', title:'초보자 UX 개선 5종 — 다음 할 일 안내 강화(사이클5 후속)',
+        bullets:[
+          '후보 기준서 카드마다 「AI분석→정밀검토→감사의견→판단게이트」 단계 표시 추가 — 지금 어디까지 진행됐는지 한눈에 확인, 로딩·실패·재시도·자동연속실행 전 구간에서 상태 유지',
+          'AI 분석 직후 "다음 할 일"을 알려주는 안내 배너 추가 — 정밀분석 시작과 동시에 자동으로 사라져 중복 안내 방지',
+          '판단 게이트에서 아직 판정되지 않은 항목에 "원문 보기" 바로가기 버튼 추가 — 확인할 조문으로 즉시 이동',
+          '정밀분석 결과 요약에 통과율 도넛 차트 추가 — 텍스트 숫자만 있던 것을 색상으로 즉시 식별 가능하게 개선',
+          '사용 가이드(코치마크 투어)에 4단계 추가 — 오늘 추가된 단계 표시·안내 배너·판단 게이트를 신규 사용자에게도 안내',
+          '판단 게이트 최상단 배치·조문 클릭 시 원문 확인은 기존 구현이 이미 반영돼 있음을 확인(추가 작업 없이 재사용)'
+        ]
+      },
       { date:'2026-09-01', title:'화면 전면 간소화 + 신규 문서 48종 전수검증(사이클4) 완주',
         bullets:[
           '불필요한 안내 버튼·점수 표시·영문 텍스트 제거 — 비전문가도 한눈에 읽히는 화면으로 개편, 핵심 기능만 남긴 최소 UI 달성',
@@ -4405,7 +4514,9 @@ a:hover { text-decoration: underline; }
     {sel:'#aifrs-drop',            title:'② 올리고 분석', info:'tour2', pre:_tourCloseSettings,
       msg:'- 계약서·문서를 끌어다 놓거나 클릭해 첨부 (PDF·엑셀·이미지·ZIP·스캔 PDF)\n- [AI 분석]으로 거래구조 분석 → 후보 기준서 자동 선별\n- 후보 카드의 [AI 전체 검토] 한 번으로 정밀 분석→AI 감사→다음 할 일까지 자동 진행'},
     {sel:'#aifrs-db-toggle',       title:'③ 근거 검증', info:'tour3', pre:_tourCloseDb,
-      msg:'- 감사 결과 항목을 클릭하면 근거·감사의견이 펼쳐짐 (문제 항목은 자동 펼침)\n- § 문단 칩을 누르면 기준서 원문(내장 DB)을 즉시 확인\n- [보완·확인]·[판단불가사유]에서 문제 해결방향을 도출'}
+      msg:'- 감사 결과 항목을 클릭하면 근거·감사의견이 펼쳐짐 (문제 항목은 자동 펼침)\n- § 문단 칩을 누르면 기준서 원문(내장 DB)을 즉시 확인\n- [보완·확인]·[판단불가사유]에서 문제 해결방향을 도출'},
+    {sel:'.af-step-bar',           title:'④ 진행 단계 확인',
+      msg:'- 후보 카드마다 「AI분석→정밀검토→감사의견」 단계 표시로 지금 어디까지 왔는지 한눈에 확인\n- 파란 배너는 지금 눌러야 할 다음 버튼을 바로 알려줍니다\n- 감사 결과 상단 판단 게이트에서 핵심 체크포인트를 ✓/⬜로 확인하세요'}
   ];
   AiFRS.startTour = function(){
     // 실행 시 유도 글로우 해제(현재 세션 한정 — 새로고침하면 다시 표시)
