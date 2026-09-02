@@ -1481,7 +1481,7 @@ a:hover { text-decoration: underline; }
       }); })
       .then(function(j){
         var c=j.candidates&&j.candidates[0];
-        if(!c) throw new Error('응답에 후보가 없습니다(차단/필터 가능)');
+        if(!c){ var ne=new Error('AI가 응답을 반환하지 않았습니다(안전 필터 차단 또는 일시 오류) — 자동 재시도합니다'); ne.parseError=true; throw ne; }   // 빈 응답도 일시 오류로 취급 → 재시도·모델폴백 대상
         var ps=c.content&&c.content.parts;
         return (ps?ps.map(function(p){return p.text||'';}).join(''):'') || '';
       });
@@ -4529,6 +4529,7 @@ a:hover { text-decoration: underline; }
       if(open){ hero.style.display='none'; }
       else if(!(AiFRS.state&&AiFRS.state.files&&AiFRS.state.files.length)){ hero.style.display=''; }
     }
+    if(open) view.scrollIntoView({behavior:'smooth', block:'start'});   // 분석 결과로 화면이 길어진 상태에서 눌러도 패널이 바로 보이게
   };
   AiFRS.toggleHistView = function(){
     var view=document.getElementById('aifrs-hist-view');
@@ -4543,6 +4544,7 @@ a:hover { text-decoration: underline; }
       if(open){ hero.style.display='none'; }
       else if(!(AiFRS.state&&AiFRS.state.files&&AiFRS.state.files.length)){ hero.style.display=''; }
     }
+    if(open) view.scrollIntoView({behavior:'smooth', block:'start'});   // 분석 결과로 화면이 길어진 상태에서 눌러도 패널이 바로 보이게
   };
   // AI 분석결과 하단 섹션(표준용어 정규화·일반 업무용어) 접기/펼치기
   AiFRS.toggleAiSec = function(id, hdr){
