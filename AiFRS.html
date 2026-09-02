@@ -90,12 +90,14 @@ a:hover { text-decoration: underline; }
 .af-brand-mark {
   font-size:22px; font-weight:800; letter-spacing:-0.5px; color:#fff;
   background:linear-gradient(90deg, #fff 0%, #fff 35%, #2997ff 50%, #fff 65%, #fff 100%);
-  background-size:250% 100%;
+  background-size:200% 100%;
   -webkit-background-clip:text; -webkit-text-fill-color:transparent;
   background-clip:text;
-  animation:af-logoSweep 3.2s linear infinite;   /* 중앙(히어로)과 다른 패턴 — 왼쪽→오른쪽 스윕 */
+  animation:af-logoSweep 5s ease-in-out infinite;   /* 중앙(히어로)과 다른 패턴 — 왼쪽→오른쪽 스윕 후 정지 대기 */
 }
-@keyframes af-logoSweep { 0%{background-position:200% 0} 100%{background-position:-50% 0} }
+/* 실측 검증(배경 200%·정지지점 150%가 A~S 전체 흰색으로 안전, -50%는 150%와 수학적으로 완전히 동일한 상태라 반복 지점에 이음새 없음):
+   0~12% 흰색 정지 대기 → 12~75% 파란빛이 A→S로 스윕 → 75~100% 다시 흰색 정지 대기(다음 루프 시작과 동일 상태) */
+@keyframes af-logoSweep { 0%{background-position:150% 0} 12%{background-position:150% 0} 75%{background-position:-50% 0} 100%{background-position:-50% 0} }
 @keyframes af-logoWave { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
 @media (prefers-reduced-motion: reduce) { .af-brand-mark, .af-hero-title { animation:none; } }
 .af-brand-tag { font-size:11px; font-weight:400; color:var(--txt3); letter-spacing:0.5px; text-transform:uppercase; }
@@ -455,8 +457,16 @@ a:hover { text-decoration: underline; }
 .af-remote-led-zone:hover { background:rgba(255,255,255,.05); }
 .af-remote-led { width:6px; height:6px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #9be7ff, #1b6fa8 70%); box-shadow:0 0 5px rgba(70,180,255,.8); transition:box-shadow .15s; }
 /* 숨은 재미: LED를 20번 누르면 리모컨이 잠깐 무지개색으로 들썩임(기능과 무관, 순수 장식) */
-.af-remote.rainbow { animation:af-remoteShake .5s ease-in-out; }
-@keyframes af-remoteShake { 0%,100%{transform:rotate(0)} 20%{transform:rotate(-1.5deg)} 40%{transform:rotate(1.5deg)} 60%{transform:rotate(-1deg)} 80%{transform:rotate(1deg)} }
+.af-remote.rainbow { animation:af-remoteBorder 1.2s linear infinite; }   /* 흔들림(이동) 없이 테두리만 무지개로 순환 */
+@keyframes af-remoteBorder {
+  0%{box-shadow:0 22px 44px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -10px 22px rgba(0,0,0,.55),inset 6px 0 14px rgba(0,0,0,.25),inset -6px 0 14px rgba(0,0,0,.35), 0 0 0 2px #ff5252}
+  16%{box-shadow:0 22px 44px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -10px 22px rgba(0,0,0,.55),inset 6px 0 14px rgba(0,0,0,.25),inset -6px 0 14px rgba(0,0,0,.35), 0 0 0 2px #ffb752}
+  33%{box-shadow:0 22px 44px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -10px 22px rgba(0,0,0,.55),inset 6px 0 14px rgba(0,0,0,.25),inset -6px 0 14px rgba(0,0,0,.35), 0 0 0 2px #fff166}
+  50%{box-shadow:0 22px 44px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -10px 22px rgba(0,0,0,.55),inset 6px 0 14px rgba(0,0,0,.25),inset -6px 0 14px rgba(0,0,0,.35), 0 0 0 2px #66e07a}
+  66%{box-shadow:0 22px 44px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -10px 22px rgba(0,0,0,.55),inset 6px 0 14px rgba(0,0,0,.25),inset -6px 0 14px rgba(0,0,0,.35), 0 0 0 2px #52c7ff}
+  83%{box-shadow:0 22px 44px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -10px 22px rgba(0,0,0,.55),inset 6px 0 14px rgba(0,0,0,.25),inset -6px 0 14px rgba(0,0,0,.35), 0 0 0 2px #a67bff}
+  100%{box-shadow:0 22px 44px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -10px 22px rgba(0,0,0,.55),inset 6px 0 14px rgba(0,0,0,.25),inset -6px 0 14px rgba(0,0,0,.35), 0 0 0 2px #ff5252}
+}
 .af-remote.rainbow .af-remote-item { animation:af-remoteRainbow 1.2s linear infinite; }
 .af-remote.rainbow .af-remote-item:nth-child(2){animation-delay:.15s}
 .af-remote.rainbow .af-remote-item:nth-child(3){animation-delay:.3s}
@@ -4861,7 +4871,7 @@ a:hover { text-decoration: underline; }
   }
   // 펼침 이펙트(후광 글로우) — 클릭 위임으로 버튼류 전체(리모컨·상단바 아이콘·하단바·팝업 버튼 등)에 공통 적용, 개별 등록 불필요
   document.addEventListener('click', function(e){
-    var el=e.target.closest('.af-remote-item, .af-icon-btn, .af-attach-btn, .af-btn, .aifrs-btn, .aifrs-help-btn, .af-link-btn');
+    var el=e.target.closest('button, .af-remote-item, .af-chip-art, [class*="btn"]');   // 버튼 태그·클래스명에 btn 포함 전체 + 조문 칩 — 새로 추가되는 버튼에도 자동 적용
     if(!el) return;
     el.classList.remove('af-press-fx'); void el.offsetWidth; el.classList.add('af-press-fx');
   }, true);
