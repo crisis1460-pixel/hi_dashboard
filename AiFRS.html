@@ -2589,6 +2589,7 @@ a:hover { text-decoration: underline; }
     if(gs && (gs['자료성격']||gs['당사위치']||gs['HI위치']||gs['관계유형']||gs['핵심회계논점']||gs['경제적실질']||gs['문서유형']||gs['HI역할']||gs['거래요지'])){
       var low=(gs['신뢰도']==='낮음')||(gs['자료성격']==='복합·기타');
       var ver=gs['근거인용검증']||[], rawn=gs['근거인용원본수']||0;
+      var verTx=gs['근거인용검증_한글역']||[];
       var hipos=gs['당사위치']||gs['HI위치']||gs['HI역할']||'';   // 구버전 호환
       // 짧은 사실값(당사·상대방·관계·대금·영향·신뢰도)은 칩 한 줄로 압축, 서술형(핵심논점·실질·근거)만 행으로 유지
       var _ch=[];
@@ -4312,10 +4313,33 @@ a:hover { text-decoration: underline; }
     });
     if(otherArch.length)   showArchiveHelpModal(otherArch);
     if(unsupported.length) showUnsupportedModal(unsupported);
+    // 파일이 2개 이상 됐는데 이번 호출로 실제 새 파일이 늘어났으면(중복 업로드 등 무변화 제외) — 세션당 1회만 안내
+    if((added.length+archives.length)>0 && AiFRS.state.files.length>=2 && !AiFRS._multiFileWarned){
+      AiFRS._multiFileWarned=true;
+      showMultiFileWarnModal();
+    }
     renderFileList();
     added.forEach(processRec);
     archives.forEach(showPasswordModal);  // .zip → 비밀번호 입력 → 해제
   };
+  // ══ 파일 2개 이상 업로드 시 1회 안내: 같은 계약/거래 자료가 아니면 따로 분석해야 함 ══
+  function showMultiFileWarnModal(){
+    var ov=document.createElement('div');
+    ov.className='aifrs-modal-ov';
+    ov.innerHTML=
+      '<div class="aifrs-modal">'
+      + '<div class="m-ico">⚠️</div>'
+      + '<div class="m-ttl">파일이 여러 개예요 — 같은 건인가요?</div>'
+      + '<div class="m-msg">AI는 업로드된 파일을 <b>하나의 거래(계약) 자료</b>로 보고 함께 분석합니다.'
+      +   '<br><br>지금 올리신 파일들이 <b>서로 다른 계약·거래</b>에 관한 것이라면, 섞어서 분석하면 결과가 부정확해질 수 있습니다.'
+      +   '<br><span class="aifrs-note">※ 같은 건의 첨부·별지·번역본 등이면 그대로 함께 올리셔도 됩니다. 서로 다른 건이면 [처음]으로 초기화한 뒤 건별로 따로 분석해주세요.</span></div>'
+      + '<div class="m-foot"><button class="aifrs-btn">확인</button></div>'
+      + '</div>';
+    function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
+    ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
+    ov.querySelector('button').addEventListener('click', close);
+    document.body.appendChild(ov);
+  }
 
   // ══ 비표준 압축 형식 안내 모달 (.alz/.egg/.7z/.rar 등) ══
   function showArchiveHelpModal(names){
@@ -5324,11 +5348,13 @@ a:hover { text-decoration: underline; }
   var _origClearAll = AiFRS.clearAll;
   AiFRS.clearAll = function(){
     _origClearAll.call(AiFRS);
+    AiFRS._multiFileWarned=false;
     var hero = document.getElementById('af-hero');
     if(hero) hero.classList.remove('hidden');
   };
   AiFRS.goHome = function(){
     AiFRS.state.files = [];
+    AiFRS._multiFileWarned=false;
     AiFRS._lastAi=null; AiFRS._lastPrecise={}; AiFRS._lastAudit={}; AiFRS._lastJournal=null; AiFRS._mixOkSig=null;
     try{ localStorage.removeItem('aifrs-snapshot'); }catch(e){}
     var rb=document.getElementById('aifrs-restore-bar'); if(rb&&rb.parentNode) rb.parentNode.removeChild(rb);
