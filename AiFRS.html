@@ -4918,7 +4918,7 @@ a:hover { text-decoration: underline; }
     if(document.getElementById('af-sig-wm')) return;
     var d=document.createElement('div'); d.className='af-sig-wm'; d.id='af-sig-wm';
     var saved; try{ saved=localStorage.getItem('af_sig_text'); }catch(e){}
-    d.textContent = saved || 'Made by JIHO KIM';
+    d.textContent = saved || 'Designed by JIHO KIM';
     d.addEventListener('click', _sigEditFlow);
     document.body.appendChild(d);
   }
