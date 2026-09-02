@@ -49,7 +49,7 @@ if(typeof XLSXStyle==='undefined'){
   --bg4: #333336;
   --txt: #f5f5f7;
   --txt2: #cccccc;
-  --txt3: #7a7a7a;
+  --txt3: #9c9ca5;   /* #7a7a7a는 어두운 배경 대비 4.1:1로 작은 글씨 기준(4.5:1) 미달 — 전역 상향(2026-09) */
   --ink: #1d1d1f;
   --blue: #0066cc;
   --blue-focus: #0071e3;
@@ -78,7 +78,9 @@ a:hover { text-decoration: underline; }
 #aifrs-root { display:flex; flex-direction:column; height:100vh; }
 
 .af-topbar {
-  flex-shrink:0; height:56px; background:var(--bg2); border-bottom:1px solid var(--border);
+  flex-shrink:0; height:56px; border-bottom:1px solid #000;
+  background:linear-gradient(180deg,#26262b 0%,#19191c 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 4px 14px rgba(0,0,0,.4);
   display:flex; align-items:center; padding:0 24px; z-index:100;
 }
 .af-topbar-inner { display:flex; align-items:center; justify-content:space-between; width:100%; max-width:1160px; margin:0 auto; }
@@ -92,12 +94,18 @@ a:hover { text-decoration: underline; }
 .af-brand-tag { font-size:11px; font-weight:400; color:var(--txt3); letter-spacing:0.5px; text-transform:uppercase; }
 .af-topbar-actions { display:flex; gap:6px; }
 .af-icon-btn {
-  width:36px; height:36px; border:1px solid var(--border2); border-radius:var(--radius-sm);
-  background:transparent; color:var(--txt2); font-size:16px; cursor:pointer;
-  display:flex; align-items:center; justify-content:center; transition:all .15s;
+  width:36px; height:36px; border-radius:11px;
+  background:linear-gradient(180deg,#34343a 0%,#242428 60%,#1c1c1f 100%);
+  border:1px solid #050505; color:#d4d4d8; font-size:16px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition:transform .1s, box-shadow .1s;
+  box-shadow:0 1.5px 0 #050505, 0 2px 3px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.18), inset 0 -2px 4px rgba(0,0,0,.4);
 }
-.af-icon-btn:hover { background:var(--bg4); border-color:rgba(255,255,255,.2); }
-.af-icon-btn.active { background:var(--blue-d); border-color:var(--blue); color:var(--blue-sky); }
+.af-icon-btn:hover { color:#fff; }
+.af-icon-btn:active { transform:translateY(1px); box-shadow:0 1px 0 #050505, inset 0 1px 0 rgba(255,255,255,.1), inset 0 -1px 3px rgba(0,0,0,.6); }
+.af-icon-btn.active {
+  color:#fff; background:linear-gradient(180deg,#4bacff 0%,#2997ff 55%,#0f74e0 100%); border-color:#063a6b;
+  box-shadow:0 1.5px 0 #063a6b, 0 2px 5px rgba(41,151,255,.35), inset 0 1px 0 rgba(255,255,255,.5), inset 0 -2px 4px rgba(0,60,120,.5);
+}
 
 /* ── Settings Panel ── */
 .af-settings {
@@ -134,11 +142,19 @@ a:hover { text-decoration: underline; }
   white-space:nowrap; display:inline-flex; align-items:center; gap:6px;
 }
 .af-btn-sm { padding:6px 12px; font-size:12px; }
-.af-btn-primary { background:var(--blue); color:#fff; }
-.af-btn-primary:hover:not(:disabled) { background:var(--blue-focus); }
+.af-btn-primary {
+  color:#fff; background:linear-gradient(180deg,#4bacff 0%,#2997ff 55%,#0f74e0 100%); border:1px solid #063a6b;
+  box-shadow:0 2px 0 #063a6b, 0 3px 6px rgba(41,151,255,.35), inset 0 1px 0 rgba(255,255,255,.5), inset 0 -3px 5px rgba(0,60,120,.5);
+}
+.af-btn-primary:hover:not(:disabled) { filter:brightness(1.06); }
+.af-btn-primary:active:not(:disabled) { transform:translateY(1px); box-shadow:0 1px 0 #063a6b, inset 0 1px 0 rgba(255,255,255,.3), inset 0 -1px 3px rgba(0,40,90,.6); }
 .af-btn-primary:disabled { opacity:.4; cursor:not-allowed; }
-.af-btn-ghost { background:transparent; color:var(--txt2); border:1px solid var(--border2); }
-.af-btn-ghost:hover:not(:disabled) { background:var(--bg4); border-color:rgba(255,255,255,.2); }
+.af-btn-ghost {
+  color:#d4d4d8; background:linear-gradient(180deg,#34343a 0%,#242428 60%,#1c1c1f 100%); border:1px solid #050505;
+  box-shadow:0 2px 0 #050505, 0 3px 4px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.22), inset 0 -3px 5px rgba(0,0,0,.5);
+}
+.af-btn-ghost:hover:not(:disabled) { color:#fff; }
+.af-btn-ghost:active:not(:disabled) { transform:translateY(1px); box-shadow:0 1px 0 #050505, inset 0 1px 0 rgba(255,255,255,.1), inset 0 -1px 3px rgba(0,0,0,.6); }
 .af-btn-ghost:disabled { opacity:.3; cursor:not-allowed; }
 
 /* ── Main Content ── */
@@ -246,7 +262,9 @@ a:hover { text-decoration: underline; }
 
 /* ── Bottom Input Bar ── */
 .af-bottom {
-  flex-shrink:0; background:var(--bg2); border-top:1px solid var(--border);
+  flex-shrink:0; border-top:1px solid #000;
+  background:linear-gradient(180deg,#1f1f23 0%,#151517 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 -4px 14px rgba(0,0,0,.35);
   padding:12px 24px 16px;
 }
 .af-bottom-inner {
@@ -254,18 +272,23 @@ a:hover { text-decoration: underline; }
   display:flex; align-items:center; gap:8px;
 }
 .af-attach-btn {
-  width:40px; height:40px; border:1px solid var(--border2); border-radius:var(--radius-sm);
-  background:transparent; color:var(--txt2); font-size:18px; cursor:pointer;
-  display:flex; align-items:center; justify-content:center; transition:all .15s; flex-shrink:0;
+  width:40px; height:40px; border-radius:12px;
+  background:linear-gradient(180deg,#34343a 0%,#242428 60%,#1c1c1f 100%);
+  border:1px solid #050505; color:#d4d4d8; font-size:18px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition:transform .1s, box-shadow .1s; flex-shrink:0;
+  box-shadow:0 1.5px 0 #050505, 0 2px 3px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.18), inset 0 -2px 4px rgba(0,0,0,.4);
 }
-.af-attach-btn:hover { background:var(--bg4); border-color:rgba(255,255,255,.2); }
+.af-attach-btn:hover { color:#fff; }
+.af-attach-btn:active { transform:translateY(1px); box-shadow:0 1px 0 #050505, inset 0 1px 0 rgba(255,255,255,.1), inset 0 -1px 3px rgba(0,0,0,.6); }
 .af-drop {
-  flex:1; padding:10px 16px; border:1px dashed var(--border2); border-radius:var(--radius-sm);
-  background:var(--bg); cursor:pointer; transition:all .15s; min-height:40px;
+  flex:1; padding:10px 16px; border-radius:12px;
+  background:linear-gradient(180deg,#0c0c0e,#101013); border:1px solid #000;
+  box-shadow:inset 0 2px 5px rgba(0,0,0,.55), inset 0 -1px 0 rgba(255,255,255,.04);
+  cursor:pointer; transition:all .15s; min-height:40px;
   display:flex; align-items:center;
 }
-.af-drop:hover { border-color:var(--blue); background:var(--blue-d); }
-.af-drop.drag { border-color:var(--blue); background:var(--blue-d); border-style:solid; }
+.af-drop:hover { border-color:var(--blue); }
+.af-drop.drag { border-color:var(--blue); box-shadow:inset 0 2px 5px rgba(0,0,0,.55), 0 0 0 2px rgba(41,151,255,.3); }
 .af-drop-text { font-size:12px; color:var(--txt3); }
 .af-bottom-info { display:block; max-width:1160px; margin:4px auto 0; font-size:11px; color:var(--txt3); text-align:center; }
 
@@ -388,7 +411,14 @@ a:hover { text-decoration: underline; }
 .af-para-blk { margin-bottom:14px; }
 .af-para-blk:last-of-type { margin-bottom:0; }
 .af-para-h { font-weight:700; color:var(--txt); font-size:13px; margin-bottom:6px; display:flex; gap:8px; align-items:baseline; flex-wrap:wrap; }
-.af-para-txt { white-space:pre-wrap; line-height:1.9; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:14px 16px; font-size:13.5px; color:var(--txt2); word-break:keep-all; }
+.af-para-txt {
+  white-space:pre-wrap; line-height:1.9; border-radius:8px; padding:16px 18px; font-size:13.5px; color:#dcdce0; word-break:keep-all;
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,.012) 0px, rgba(255,255,255,.012) 1px, transparent 1px, transparent 26px),
+    linear-gradient(180deg,#242428 0%,#1d1d20 100%);
+  border:1px solid #000; border-left:3px solid #FF6114;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05), inset 0 -12px 20px rgba(0,0,0,.25);
+}
 
 /* ── 리모컨(플로팅 퀵버튼): 접기/펼치기 · 다음 단계 안내 · 문의 메일 ── */
 /* 리모컨 본체: 세로 패널에 큰 버튼 4개가 항상 보임(접기/펼치기 없음) */
@@ -462,7 +492,14 @@ a:hover { text-decoration: underline; }
 
 .aifrs-audit-tag { font-size:9.5px; font-weight:700; color:#a78bfa; background:rgba(167,139,250,.15); border-radius:var(--radius-pill); padding:1px 7px; margin-left:4px; }
 
-.af-gate-panel { margin:10px 0 8px; padding:10px 14px; background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius-lg); }
+.af-gate-panel {
+  margin:10px 0 8px; padding:10px 14px; border-radius:var(--radius-lg);
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,.012) 0px, rgba(255,255,255,.012) 1px, transparent 1px, transparent 26px),
+    linear-gradient(180deg,#242428 0%,#1d1d20 100%);
+  border:1px solid #000; border-left:3px solid #FF6114;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05), inset 0 -12px 20px rgba(0,0,0,.25);
+}
 .af-gate-hd { font-size:11px; font-weight:700; color:var(--txt2); margin-bottom:7px; display:flex; align-items:center; gap:5px; }
 .af-gate-row { display:flex; align-items:center; gap:7px; padding:3px 0; font-size:11.5px; border-bottom:1px solid var(--hairline); }
 .af-gate-row:last-child { border-bottom:none; }
@@ -571,15 +608,22 @@ a:hover { text-decoration: underline; }
 .aifrs-step-labels .l .ic .aifrs-spin { width:11px; height:11px; border-width:2px; }
 
 .aifrs-btn {
-  padding:8px 16px; border:none; border-radius:var(--radius-sm); font-size:12px;
-  font-weight:600; font-family:inherit; cursor:pointer; background:var(--blue); color:#fff;
-  transition:all .15s; display:inline-flex; align-items:center; gap:5px;
+  padding:8px 16px; border-radius:var(--radius-sm); font-size:12px;
+  font-weight:600; font-family:inherit; cursor:pointer; color:#fff;
+  background:linear-gradient(180deg,#4bacff 0%,#2997ff 55%,#0f74e0 100%); border:1px solid #063a6b;
+  box-shadow:0 2px 0 #063a6b, 0 3px 6px rgba(41,151,255,.35), inset 0 1px 0 rgba(255,255,255,.5), inset 0 -3px 5px rgba(0,60,120,.5);
+  transition:transform .1s, box-shadow .1s, filter .1s; display:inline-flex; align-items:center; gap:5px;
 }
-.aifrs-btn:hover { background:var(--blue-focus); }
+.aifrs-btn:hover { filter:brightness(1.06); }
+.aifrs-btn:active { transform:translateY(1px); box-shadow:0 1px 0 #063a6b, inset 0 1px 0 rgba(255,255,255,.3), inset 0 -1px 3px rgba(0,40,90,.6); }
 .aifrs-btn:disabled { opacity:.4; cursor:not-allowed; }
 .aifrs-btn-sm { padding:6px 12px; font-size:11px; }
-.aifrs-btn-ghost { background:transparent; color:var(--txt2); border:1px solid var(--border2); }
-.aifrs-btn-ghost:hover { background:var(--bg4); }
+.aifrs-btn-ghost {
+  color:#d4d4d8; background:linear-gradient(180deg,#34343a 0%,#242428 60%,#1c1c1f 100%); border:1px solid #050505;
+  box-shadow:0 2px 0 #050505, 0 3px 4px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.22), inset 0 -3px 5px rgba(0,0,0,.5);
+}
+.aifrs-btn-ghost:hover { color:#fff; filter:none; }
+.aifrs-btn-ghost:active { transform:translateY(1px); box-shadow:0 1px 0 #050505, inset 0 1px 0 rgba(255,255,255,.1), inset 0 -1px 3px rgba(0,0,0,.6); }
 .aifrs-clear-btn { padding:6px 12px; font-size:11px; }
 
 .aifrs-help-btn {
@@ -727,9 +771,9 @@ a:hover { text-decoration: underline; }
 .aifrs-clar-opt:hover { background:var(--bg4); border-color:rgba(255,255,255,.18); }
 .aifrs-uchip { font-size:10px; background:var(--blue-d); color:var(--blue-sky); border-radius:4px; padding:1px 6px; font-weight:600; }
 .aifrs-modal {
-  background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-lg);
+  background:linear-gradient(180deg,#26262b 0%,#1a1a1d 100%); border:1px solid #000; border-radius:var(--radius-lg);
   padding:24px; max-width:500px; width:90%; max-height:80vh; overflow-y:auto;
-  box-shadow:0 25px 50px rgba(0,0,0,.5);
+  box-shadow:0 25px 50px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.07);
 }
 .aifrs-modal h3 { font-size:16px; font-weight:700; margin:0 0 12px; color:var(--txt); }
 .aifrs-modal p { font-size:13px; color:var(--txt2); line-height:1.6; margin:6px 0; }
@@ -783,7 +827,7 @@ a:hover { text-decoration: underline; }
 .aifrs-db-view summary:hover { color:var(--blue-sky); }
 
 /* ── UX 다이어트: 글리프·칩·히어로·2단계 펼침(2026-08) ── */
-.af-gl { width:13px; height:13px; flex-shrink:0; vertical-align:-2px; }
+.af-gl { width:13px; height:13px; flex-shrink:0; vertical-align:-2px; filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.6)) drop-shadow(0 0 1px rgba(255,255,255,.15)); }
 .af-chip {
   display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; line-height:1.55;
   padding:2px 9px; border-radius:9999px; background:var(--bg4); color:var(--txt2); white-space:nowrap;
@@ -3048,7 +3092,7 @@ a:hover { text-decoration: underline; }
       plan:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 2.5h6v3H9z"/><path d="M8.5 13l2.2 2.2 4.3-4.3"/>',
       hist:'<circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 15.5,14.5"/>'
     }[kind]||'';
-    return '<svg viewBox="0 0 24 24" fill="none" stroke="'+c+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:'+px+'px;height:'+px+'px;vertical-align:-3px;flex-shrink:0">'+d+'</svg>';
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="'+c+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:'+px+'px;height:'+px+'px;vertical-align:-3px;flex-shrink:0;filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.6)) drop-shadow(0 0 1px rgba(255,255,255,.15))">'+d+'</svg>';
   }
   function _brief(t, n){ t=String(t||'').replace(/\s+/g,' ').trim(); return t.length>n ? t.slice(0,n)+'…' : t; }
   function _kvChip(k, v, style){ return '<span class="af-chip"'+(style?' style="'+style+'"':'')+'><b>'+esc(k)+'</b>'+esc(v)+'</span>'; }
@@ -4736,9 +4780,9 @@ a:hover { text-decoration: underline; }
   }
   AiFRS.remoteToggle=function(){};   // (구 접이식 메뉴 호환 — 지금은 버튼 4개 상시 노출)
   // 작은 알림 팝업(리모컨용)
-  function _remoteToast(title, msg){
+  function _remoteToast(msg){
     var ov=document.createElement('div'); ov.className='aifrs-modal-ov';
-    ov.innerHTML='<div class="aifrs-modal"><div class="m-ttl">'+esc(title)+'</div><div class="m-msg">'+esc(msg)+'</div><div class="m-foot"><button class="aifrs-btn">확인</button></div></div>';
+    ov.innerHTML='<div class="aifrs-modal"><div class="m-msg" style="text-align:center">'+esc(msg)+'</div><div class="m-foot"><button class="aifrs-btn">확인</button></div></div>';   // 제목·본문 중복 제거(한 줄로 통일)
     function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
     ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
     ov.querySelector('.m-foot button').addEventListener('click', close);
@@ -4747,14 +4791,14 @@ a:hover { text-decoration: underline; }
   // 1 숨김: 펼쳐진 항목을 모두 접고 맨 위로 — 접을 게 없으면 팝업만
   AiFRS.remoteCollapse=function(){
     var ds=document.querySelectorAll('#aifrs-ai details[open]');
-    if(!ds.length){ _remoteToast('숨길 항목이 없습니다', '지금 화면에 펼쳐진 항목이 없습니다.'); return; }
+    if(!ds.length){ _remoteToast('지금 화면에 펼쳐진 항목이 없습니다.'); return; }
     for(var i=0;i<ds.length;i++) ds[i].open=false;
     _scrollTopAll();
   };
   // 2 펼침: 접힌 항목을 모두 펼치고 맨 위로 — 펼칠 게 없으면 팝업만
   AiFRS.remoteExpand=function(){
     var ds=document.querySelectorAll('#aifrs-ai details:not([open])');
-    if(!ds.length){ _remoteToast('펼칠 항목이 없습니다', '지금 화면에 접힌 항목이 없습니다.'); return; }
+    if(!ds.length){ _remoteToast('지금 화면에 접힌 항목이 없습니다.'); return; }
     for(var i=0;i<ds.length;i++) ds[i].open=true;
     _scrollTopAll();
   };
@@ -4762,7 +4806,7 @@ a:hover { text-decoration: underline; }
   AiFRS.remoteHome=function(){
     var has=!!(AiFRS.state&&AiFRS.state.files&&AiFRS.state.files.length);
     if(has){ if(window.confirm('초기 화면으로 돌아갈까요? 업로드된 파일과 분석 결과가 초기화됩니다.')) AiFRS.goHome(); }
-    else AiFRS.goHome();
+    else _remoteToast('이미 처음 화면입니다.');   // 초기화할 게 없는 상태 — 조용히 무시 대신 안내
   };
   AiFRS.remoteMail=function(){
     _remoteClose();
@@ -5059,7 +5103,7 @@ a:hover { text-decoration: underline; }
       +   '<div class="af-drop" id="aifrs-drop"><span class="af-drop-text">Drop files here or click &mdash; PDF, Excel, CSV, Word, PPT, Image, ZIP</span></div>'
       +   '<button class="af-btn af-btn-primary" id="aifrs-ai-btn" disabled>AI 분석</button>'
       +   '<button class="af-btn af-btn-ghost af-btn-sm" id="aifrs-tour-btn" title="주요 기능을 순서대로 안내합니다">사용 가이드</button>'
-      +   '<button class="af-btn af-btn-ghost af-btn-sm" id="aifrs-clear-btn" style="display:none" title="Clear all">&#10005;</button>'
+      +   '<button class="af-btn af-btn-ghost af-btn-sm" id="aifrs-clear-btn" style="display:none" title="업로드 파일 전체 삭제">&#10005;</button>'
       + '</div>'
       + '<span class="af-bottom-info" id="aifrs-ready-info"></span>'
       + '</div>';
