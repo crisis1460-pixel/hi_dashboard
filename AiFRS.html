@@ -399,11 +399,14 @@ a:hover { text-decoration: underline; }
 
 .aifrs-pr-summary { display:flex; align-items:center; flex-wrap:wrap; gap:4px; padding:10px 14px; background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius-lg); margin-bottom:14px; font-size:12.5px; color:var(--txt2); }
 .aifrs-pr-detail > summary { margin-top:2px; }
+/* 계층 표기: 펼친 하위 묶음은 들여쓰기 + 세로 가이드선 + 안쪽(더 어두운) 배경 — 색(초록/노랑/빨강)은 상태, 위치·선은 계층으로 역할 분리 */
 .aifrs-pr-fold {
-  margin:6px 0 8px; border:1px dashed var(--border2); border-radius:var(--radius-sm);
-  padding:0 12px; background:var(--bg);
+  margin:8px 0 10px 12px; padding:0 0 0 14px;
+  border:none; border-left:2px solid var(--border2); border-radius:0; background:transparent;
 }
+.aifrs-pr-fold[open] { background:rgba(0,0,0,.16); border-radius:0 8px 8px 0; padding-right:10px; padding-bottom:8px; }
 .aifrs-pr-fold summary { cursor:pointer; padding:8px 0; font-size:12px; font-weight:600; color:var(--txt2); }
+.aifrs-pr-fold > summary::before { content:'↳ '; color:var(--txt3); }   /* 묶음 제목에만(안쪽 항목 줄 제외) */
 .aifrs-pr-fold summary:hover { color:var(--blue-sky); }
 .aifrs-precise-slot:not(:empty) { margin-top:10px; padding-top:10px; border-top:1px dashed var(--border2); }
 
@@ -422,6 +425,7 @@ a:hover { text-decoration: underline; }
 .af-next-banner { display:flex; align-items:center; gap:8px; margin:10px 0; padding:9px 12px; background:rgba(96,165,250,.1); border:1px solid rgba(96,165,250,.3); border-radius:var(--radius-lg); }
 .af-next-ico { flex-shrink:0; display:flex; }
 .af-next-text { flex:1; font-size:12px; color:var(--txt2); }
+.af-next-sub { font-size:11px; color:var(--txt3); margin-top:2px; }
 .af-next-btn { flex-shrink:0; font-size:11.5px; font-weight:700; color:#fff; background:var(--blue); border:none; border-radius:var(--radius-pill); padding:6px 12px; cursor:pointer; white-space:nowrap; }
 .af-next-btn:hover { opacity:.88; }
 
@@ -736,9 +740,17 @@ a:hover { text-decoration: underline; }
 }
 .af-chip > b { color:var(--txt3); font-weight:700; }
 .af-chip-row { display:flex; flex-wrap:wrap; gap:6px; margin:7px 0 3px; }
-.af-chip-art { background:var(--blue-d); color:var(--blue-sky); font-weight:700; cursor:pointer; border:1px solid rgba(0,102,204,.3); }
-.af-chip-art:hover { background:rgba(0,102,204,.2); }
-.af-chip-art .af-chip-cue { font-size:9px; font-weight:700; opacity:.7; font-style:normal; }
+/* §조문 칩 — 버튼답게(테두리·그림자·동사형 문구) */
+.af-chip-art { background:var(--blue-d); color:var(--blue-sky); font-weight:700; cursor:pointer; border:1px solid rgba(0,102,204,.55); box-shadow:0 1px 0 rgba(0,0,0,.25); }
+.af-chip-art:hover { background:rgba(0,102,204,.25); border-color:rgba(0,102,204,.85); }
+.af-chip-art:active { transform:translateY(1px); box-shadow:none; }
+.af-chip-art .af-chip-cue { font-size:9.5px; font-weight:700; opacity:1; font-style:normal; padding-left:6px; margin-left:1px; border-left:1px solid rgba(255,255,255,.18); }
+.af-hint { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--txt3); margin:4px 0 8px; }
+.af-hint b { color:var(--txt2); }
+/* 검증 예외 칩(정상이면 표시 없음) */
+.af-flag { font-size:10px; font-weight:700; padding:1px 7px; border-radius:9999px; white-space:nowrap; }
+.af-flag.warn { color:#fbbf24; background:rgba(251,191,36,.15); }
+.af-flag.bad { color:#f87171; background:rgba(248,113,113,.15); }
 .af-chip-top { background:var(--blue); color:#fff; font-weight:700; }
 .af-stat { display:inline-flex; align-items:center; font-size:11.5px; font-weight:700; white-space:nowrap; }
 
@@ -753,7 +765,7 @@ a:hover { text-decoration: underline; }
 .af-item > summary:hover::after { color:var(--blue-sky); }
 .af-item > summary .aifrs-prio, .af-item > summary .aifrs-prio.aifrs-tip { position:relative; top:auto; right:auto; margin-left:auto; }
 .af-sum-txt { flex:1 1 120px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11.5px; font-weight:500; color:var(--txt3); }
-.af-item-body { margin-top:9px; padding-top:9px; border-top:1px dotted var(--border); }
+.af-item-body { margin:9px 0 0 6px; padding:6px 0 2px 12px; border-left:2px solid var(--border2); }   /* 항목 상세 = 요약의 하위: 들여쓰기 + 가이드선 */
 .aifrs-pr-row > span { flex:1; min-width:0; }
 
 /* 검증 라인(글리프) */
@@ -802,6 +814,10 @@ a:hover { text-decoration: underline; }
 }
 .af-plan-sline > span { flex:1; min-width:0; }
 .af-plan-sline > span > b { color:var(--txt); }
+.af-plan-h2 { display:flex; align-items:center; gap:7px; flex-wrap:wrap; line-height:1.5; }
+.af-plan-h2 > b { color:var(--txt); font-size:13px; }
+.af-plan-st { font-style:normal; font-size:10.5px; font-weight:700; padding:1px 8px; border-radius:var(--radius-pill); white-space:nowrap; }
+.af-plan-j { margin-top:3px; font-size:12px; color:var(--txt3); line-height:1.65; }
 .af-plan-close { margin-top:10px; padding-top:9px; border-top:1px dotted var(--border); font-size:12.5px; color:var(--txt2); line-height:1.8; }
 .af-plan-close b { color:var(--txt); }
 .af-plan-close > div + div { margin-top:4px; }
@@ -839,8 +855,10 @@ a:hover { text-decoration: underline; }
 
 /* 후보 기준서: 1순위 강조 + 나머지 접기 */
 .af-cand-top { border:2px solid var(--blue) !important; }
-.af-cand-fold { margin:6px 0 8px; border:1px dashed var(--border2); border-radius:var(--radius-sm); padding:0 12px; background:var(--bg); }
+.af-cand-fold { margin:8px 0 10px 12px; padding:0 0 0 14px; border:none; border-left:2px solid var(--border2); border-radius:0; background:transparent; }
+.af-cand-fold[open] { background:rgba(0,0,0,.16); border-radius:0 8px 8px 0; padding-right:10px; padding-bottom:8px; }
 .af-cand-fold > summary { cursor:pointer; padding:8px 0; font-size:12px; font-weight:600; color:var(--txt2); }
+.af-cand-fold > summary::before { content:'↳ '; color:var(--txt3); }
 .af-cand-fold > summary:hover { color:var(--blue-sky); }
 
 /* 파이프라인 도트(코드검증·교차검증·인용검증) */
@@ -1437,7 +1455,7 @@ a:hover { text-decoration: underline; }
     if(opts.system) body.systemInstruction={parts:[{text:opts.system}]};
     if(AiFRS._callTimes) AiFRS._callTimes.push(Date.now());   // 분당 가드용 호출 기록
     return fetch(url,{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body), signal:opts.signal })
-      .then(function(r){ return r.json().catch(function(){ var e=new Error('HTTP '+r.status+' (응답 파싱 실패)'); e.status=r.status; throw e; }).then(function(j){
+      .then(function(r){ return r.json().catch(function(){ var e=new Error('HTTP '+r.status+' (응답 파싱 실패)'); e.status=r.status; e.parseError=true; throw e; }).then(function(j){
         if(!r.ok){ var er=new Error((j&&j.error&&j.error.message) || ('HTTP '+r.status)); er.status=r.status; throw er; }
         return j;
       }); })
@@ -1466,7 +1484,7 @@ a:hover { text-decoration: underline; }
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
       body:JSON.stringify(body), signal:opts.signal
     })
-      .then(function(r){ return r.json().catch(function(){ var e=new Error('HTTP '+r.status+' (응답 파싱 실패)'); e.status=r.status; throw e; }).then(function(j){
+      .then(function(r){ return r.json().catch(function(){ var e=new Error('HTTP '+r.status+' (응답 파싱 실패)'); e.status=r.status; e.parseError=true; throw e; }).then(function(j){
         if(!r.ok){ var emsg=(j&&j.error&&j.error.message) || ('HTTP '+r.status); var er=new Error(emsg); er.status=r.status;
           if(/unavailable for free|use this slug|paid version|not available on the free|requires (more )?credit|insufficient credit|per-day|free-models-per-day|unlock/i.test(emsg)) er.skipModel=true;   // 유료 전용·무료 일일한도 → 재시도 없이 다음 모델로
           throw er; }
@@ -1551,7 +1569,8 @@ a:hover { text-decoration: underline; }
       if(signal) signal.addEventListener('abort', onAbort);
     });
   }
-  function _isTransient(e){ if(e&&e.skipModel) return false; var m=((e&&e.message)||'')+''; var st=e&&e.status; return (st===503||st===429||st===500||st===502||st===504) || /high demand|overload|unavailable|try again later|rate limit|quota|exceeded|retry in|provider returned error|no (?:instances|endpoints|providers)|temporarily|\b50[0234]\b|\b429\b/i.test(m); }
+  function _isTransient(e){ if(e&&e.skipModel) return false; if(e&&e.parseError) return true;   // HTTP 200이어도 JSON 파싱 실패(응답 잘림·빈 응답 등)는 일시적 오류로 취급 — 재시도·모델폴백 대상(2026-09-02: 이 케이스가 빠져서 재시도 없이 방치→6분 워치독까지 정체하던 결함 수정)
+    var m=((e&&e.message)||'')+''; var st=e&&e.status; return (st===503||st===429||st===500||st===502||st===504) || /high demand|overload|unavailable|try again later|rate limit|quota|exceeded|retry in|provider returned error|no (?:instances|endpoints|providers)|temporarily|\b50[0234]\b|\b429\b/i.test(m); }
   function _retryDelayMs(e){ var m=((e&&e.message)||'')+''; var mm=m.match(/retry in ([\d.]+)\s*s/i)||m.match(/retryDelay["':\s]+([\d.]+)s/i); return mm?Math.min(30000, Math.ceil(parseFloat(mm[1])*1000)+500):0; }
   // 재시도 사유를 실제 에러로 분류 — '분당 한도' 하드코딩 오인 표시 방지
   function _retryReason(e){
@@ -2017,11 +2036,11 @@ a:hover { text-decoration: underline; }
     var pr=AiFRS._lastPrecise||{}, au=AiFRS._lastAudit||{};
     Object.keys(pr).forEach(function(key){
       var std=AiFRS.findStandard(key), slot=document.getElementById('aifrs-precise-'+key);
-      if(std && slot && pr[key] && typeof renderPreciseResult==='function'){ slot.innerHTML=renderPreciseResult(pr[key], std, ''); }   // 정밀분석 복원 + 빈 감사슬롯 재생성
+      if(std && slot && pr[key] && typeof renderPreciseResult==='function'){ slot.innerHTML=renderPreciseResult(pr[key], std, ''); _setStepBar(key,'precise-done',!!_HIGH_GATE[key]); }   // 정밀분석 복원 + 빈 감사슬롯 재생성 + 단계표시 동기화
     });
     Object.keys(au).forEach(function(key){
       var std=AiFRS.findStandard(key), aslot=document.getElementById('aifrs-audit-'+key), pitems=((pr[key]||{}).items)||[];
-      if(std && aslot && au[key] && Array.isArray(au[key].items) && typeof renderFinalAudit==='function'){ aslot.innerHTML=renderFinalAudit(std, pitems, au[key].items, ''); }   // 감사 결과(사용자확정 반영) 복원
+      if(std && aslot && au[key] && Array.isArray(au[key].items) && typeof renderFinalAudit==='function'){ aslot.innerHTML=renderFinalAudit(std, pitems, au[key].items, ''); _setStepBar(key,'audit-done',!!_HIGH_GATE[key]); }   // 감사 결과(사용자확정 반영) 복원 + 단계표시 동기화
     });
   }
   // ── 분석 결과 스냅샷: 새로고침·탭 종료로 결과가 소실되는 것 방지(API 재호출 비용 절약) ──
@@ -2327,8 +2346,12 @@ a:hover { text-decoration: underline; }
       +   '<div class="af-def-row"><span class="af-chip">'+_gl('bad')+'미흡</span><span>요건 미충족·누락·위반 — <b>보완이 필요한 가장 주목할 발견사항</b></span></div>'
       +   '<div class="af-def-row"><span class="af-chip">'+_gl('warn')+'확인필요</span><span>문서 정보만으로는 판단 불가 — 추가 자료·수치 확인 후 재감사</span></div>'
       +   '<div class="af-def-row"><span class="af-chip">'+_gl('na')+'해당없음</span><span>이 거래에는 적용되지 않는 요건</span></div>'
-      +   '<div class="af-def-sec">파이프라인 도트 <span class="aifrs-note">(감사 항목 요약줄의 점 3개)</span></div>'
-      +   '<div class="af-def-row"><span class="af-chip"><span class="af-dots"><i class="af-dot ok"></i><i class="af-dot ok"></i><i class="af-dot ok"></i></span></span><span>왼쪽부터 <b>코드검증</b>(조문 실존) · <b>교차검증</b>(2차 검토자 하향 여부) · <b>인용검증</b>(문서 근거 유무). 초록=정상 · 노랑=주의 · 빨강=미확보</span></div>'
+      +   '<div class="af-def-sec">검증 예외 표시 <span class="aifrs-note">(감사 항목 요약줄 — 문제가 있을 때만 나타남)</span></div>'
+      +   '<div class="af-def-row"><span class="af-flag warn">조문 미검증</span><span>조문은 실존하나 키워드 단서가 약함</span></div>'
+      +   '<div class="af-def-row"><span class="af-flag bad">조문 확인불가</span><span>조문이 DB에 없거나 범위 밖 — AI 오인용 가능성</span></div>'
+      +   '<div class="af-def-row"><span class="af-flag warn">2차 검토 하향</span><span>2차 검토자가 과잉판단으로 보고 확인필요로 낮춤</span></div>'
+      +   '<div class="af-def-row"><span class="af-flag bad">문서 인용 없음</span><span>문서에서 검증된 근거 인용을 찾지 못함</span></div>'
+      +   '<p class="aifrs-note">위 표시가 하나도 없으면 세 단계(조문 실존 → 2차 검토 → 문서 인용) 모두 정상 통과한 항목입니다.</p>'
       +   '<p class="aifrs-note" style="margin-top:10px">※ ⓐ는 AI 인용의 실재성을 코드로 거르는 단계이고, ⓑ가 실제 <b>문서를 근거로 한 감사 판정</b>입니다.</p>'
       + '</div>'
       + '<div class="m-foot"><button class="aifrs-btn">확인</button></div></div>';
@@ -2443,6 +2466,11 @@ a:hover { text-decoration: underline; }
     if(!cands.length){ h+='<div class="aifrs-note">적용 기준서를 특정하지 못했습니다.</div>'; }
     else {
       // 1순위만 전면 노출(진한 파란 테두리 + 관련성 배지), 2순위 이하는 접어 둠 — 정보는 보존
+      // 다음 할 일 배너: 1순위 기준서에 아직 정밀분석 결과가 없을 때만 표시(복원·재렌더 시 중복 안내 방지).
+      // 배너가 있으면 카드 안의 [AI 전체 검토] 버튼은 생략 — 실행 버튼을 하나로 일원화(정밀분석 vs 전체검토 혼동 방지)
+      var topRawNo=String(cands[0]['기준서번호']||'').trim();
+      var topStd=AiFRS.findStandard(topRawNo);
+      var showBanner=!!topStd && !((AiFRS._lastPrecise||{})[topStd.no]);
       var _candCard=function(c, top){
         var rawNo=String(c['기준서번호']||'').trim();
         var std=AiFRS.findStandard(rawNo);
@@ -2460,19 +2488,18 @@ a:hover { text-decoration: underline; }
           + (issues?'<div class="aifrs-an-para">쟁점: <span class="aifrs-an-hit">'+issues+'</span></div>':'')
           + (valid
               ? '<div class="af-step-bar" id="aifrs-step-'+key+'">'+_stepBarHtml('init', !!_HIGH_GATE[key])+'</div>'
-                + '<div style="margin-top:4px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runFullReview(\''+key+'\')" title="정밀 분석 → AI 감사 → 다음 할 일까지 한 번에 이어서 실행합니다">'+_ico('shield',13,'currentColor')+' AI 전체 검토</button></div>'
+                + ((top&&showBanner) ? '' : '<div style="margin-top:4px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runFullReview(\''+key+'\')" title="정밀 분석 → AI 감사 → 다음 할 일까지 한 번에 이어서 실행합니다">'+_ico('shield',13,'currentColor')+' AI 전체 검토</button></div>')
                 + '<div class="aifrs-precise-slot" id="aifrs-precise-'+key+'"></div>'
               : '<div class="aifrs-api-stat err" style="margin-top:4px">⚠ 내장 DB에 없는 기준서번호 — 6단계 검증 대상</div>')
           + '</div>';
       };
-      var topRawNo=String(cands[0]['기준서번호']||'').trim();
-      var topStd=AiFRS.findStandard(topRawNo);
-      if(topStd){
+      if(showBanner){
         var topKey=topStd.no;
-        h+='<div class="af-next-banner" id="aifrs-nexthero-'+topKey+'">'
+        h+='<div class="af-next-banner" id="aifrs-nextbanner-'+topKey+'">'
           + '<span class="af-next-ico">'+_ico('shield',15)+'</span>'
-          + '<span class="af-next-text">다음 → <b>제'+esc(topStd.no)+'호 '+esc(topStd.name)+'</b> 정밀분석으로 인식요건을 확인하세요</span>'
-          + '<button class="af-next-btn" onclick="window.AiFRS.runFullReview(\''+topKey+'\')">정밀분석 시작 →</button>'
+          + '<span class="af-next-text">다음 → <b>제'+esc(topStd.no)+'호 '+esc(topStd.name)+'</b>을 AI로 전체 검토합니다'
+          +   '<div class="af-next-sub">버튼 하나로 정밀분석 → AI감사 → 다음 할 일까지 자동 진행됩니다</div></span>'
+          + '<button class="af-next-btn" onclick="window.AiFRS.runFullReview(\''+topKey+'\')">'+_ico('shield',13,'currentColor')+' AI 전체 검토 시작</button>'
           + '</div>';
       }
       h+=_candCard(cands[0], true);
@@ -2482,8 +2509,7 @@ a:hover { text-decoration: underline; }
           + '</details>';
       }
     }
-    h+='<div class="aifrs-note" style="margin-top:12px">후보의 [AI 전체 검토]를 누르면 정밀 분석 → AI 감사 → 다음 할 일까지 자동으로 이어서 실행합니다.</div>';
-    return h;
+    return h;   // (하단 안내문 제거 — 배너·버튼 툴팁이 같은 내용을 안내)
   }
 
   // ── API ②: 특정 기준서 조문 범위 정밀 분석 ──
@@ -2664,7 +2690,7 @@ a:hover { text-decoration: underline; }
     var hasGate=!!_HIGH_GATE[no];
     box.innerHTML=_aiLoad('scope',2,'정밀 분석 — 제'+esc(std.no)+'호','조문별 체크·검토포인트 산출',tid,'0.0초',prCancel);
     _setStepBar(no,'precise-loading',hasGate);
-    var _nh0=document.getElementById('aifrs-nexthero-'+no); if(_nh0&&_nh0.parentNode) _nh0.parentNode.removeChild(_nh0);   // 정밀분석 시작 — "다음 확인" 배너 제거(목적 달성)
+    var _nh0=document.getElementById('aifrs-nextbanner-'+no); if(_nh0&&_nh0.parentNode) _nh0.parentNode.removeChild(_nh0);   // 정밀분석 시작 — "다음 할 일" 배너 제거(목적 달성). id는 정밀결과의 nexthero와 구분
     AiFRS.callGemini(prompt, {json:true, temperature:0.1, signal:psig, system:'당신은 K-IFRS 전문가입니다. 지정된 기준서·조문 범위에 근거하여 분석하고, 반드시 JSON으로만 답합니다.',
         onRetry:function(k,mx,mdl,e){ box.innerHTML=_aiLoad('scope',2,'정밀 분석 — 제'+esc(std.no)+'호','재시도 '+k+'/'+mx+' — '+_retryReason(e),tid,((Date.now()-t0)/1000).toFixed(1)+'초',prCancel); }})
       .then(function(txt){
@@ -2981,7 +3007,7 @@ a:hover { text-decoration: underline; }
     var safeRange=String(rangeNo||'').replace(/[^0-9A-Za-z.\-~]/g,'');
     return '<span class="af-chip af-chip-art" title="클릭하면 이 문단의 기준서 원문(내장 DB)이 팝업으로 열립니다"'
       + ' onclick="event.stopPropagation();event.preventDefault();window.AiFRS.showParaText(\''+stdNo+'\',\''+safeRange+'\')">'
-      + label+'<i class="af-chip-cue">원문</i></span>';
+      + '📖 '+label+'<i class="af-chip-cue">원문 보기</i></span>';   // 버튼답게: 아이콘 + 동사형 문구(커서 없이도 '누르는 것'임이 드러나게)
   }
   // 코드검증 등급 → 글리프·한 단어
   function _codeWord(level){
@@ -3003,13 +3029,15 @@ a:hover { text-decoration: underline; }
     }).join('')+'</div>';
   }
   // 파이프라인 도트 3개(코드검증·교차검증·인용검증)
+  // 검증 파이프라인(조문 실존·2차 검토·문서 인용) — 예외만 한국어 칩으로 표시, 전부 정상이면 아무것도 안 보임(신호등 점 3개 → 소음 제거)
   function _pipeDots(codeLevel, cross, hasQuote){
-    var st={ok:'정상', warn:'주의', bad:'미확보'};
-    var d=[['코드검증', codeLevel==='green'?'ok':(codeLevel==='amber'?'warn':'bad')],
-           ['교차검증', cross==='하향'?'warn':'ok'],
-           ['인용검증', hasQuote?'ok':'bad']];
-    return '<span class="af-dots" title="'+d.map(function(x){return x[0]+' '+st[x[1]];}).join(' · ')+'">'
-      + d.map(function(x){return '<i class="af-dot '+x[1]+'"></i>';}).join('')+'</span>';
+    var f=[];
+    if(codeLevel==='red') f.push(['bad','조문 확인불가']);
+    else if(codeLevel==='amber') f.push(['warn','조문 미검증']);
+    if(cross==='하향') f.push(['warn','2차 검토 하향']);
+    if(!hasQuote) f.push(['bad','문서 인용 없음']);
+    if(!f.length) return '';
+    return f.map(function(x){ return '<span class="af-flag '+x[0]+'" title="검증 과정(조문 실존 → 2차 검토 → 문서 인용 확인)에서 걸린 항목입니다. 펼치면 상세가 나옵니다">'+x[1]+'</span>'; }).join('');
   }
   function _prioSheetHtml(tie){
     return '<p>각 조문이 <b>이 거래의 회계 “결론”을 바꾸는 판단 길목</b>인지를 AI가 1~100으로 평가한 참고값입니다(거래 맥락 기준).</p>'
@@ -3018,6 +3046,7 @@ a:hover { text-decoration: underline; }
       +   '<span class="aifrs-prio" style="position:static;color:#fbbf24;background:rgba(251,191,36,.15)">검토 40~69</span>'
       +   '<span class="aifrs-prio" style="position:static;color:var(--txt3);background:var(--bg4)">형식 &lt;40</span></div>'
       + '<p><b>정렬</b> — 검토 우선순위 <b>내림차순</b>, 동점이면 <b>'+tie+'</b> 순. 형식(&lt;40) 문단은 기본 접힘이며 펼쳐 모두 볼 수 있습니다.</p>'
+      + '<p>화면에는 <b>핵심(≥70)만 배지</b>로 표시됩니다. 검토·형식 항목은 배지 없이 정렬 순서로만 반영되며, 점수는 배지에 커서를 대면 보입니다.</p>'
       + '<p>각 항목의 점수 근거는 항목을 펼치면 <b>“우선순위 근거”</b>에 표시됩니다.</p>'
       + '<p class="aifrs-note" style="margin-top:10px">※ AI 평가라 절대적이지 않습니다. <b>참고용 가이드일 뿐 어떤 조문도 검토 생략의 근거가 아닙니다.</b></p>';
   }
@@ -3108,18 +3137,18 @@ a:hover { text-decoration: underline; }
   }
   // 검토 우선순위(1~100, 참고용). 없으면 50(중립=검토등급, 접힘 방지). AI가 0/음수 주면 1로.
   function _clampPrio(v){ var n=Number(v); if(!isFinite(n)) return 50; return Math.max(1, Math.min(100, Math.round(n))); }
+  // 우선순위 배지 — 핵심(≥70)만 단어로 표시, 숫자는 툴팁으로만. 검토·형식은 배지 없음(항목이 이미 점수 내림차순 정렬이라 순서가 정보 — 숫자 비교 피로 제거)
   function _prioBadge(p, reason){
-    var t = p>=70?{n:'핵심',c:'#f87171',bg:'rgba(248,113,113,.15)',d:'인식·분류·측정금액을 결정하는 핵심 판단 조문'}
-      : (p>=40?{n:'검토',c:'#fbbf24',bg:'rgba(251,191,36,.15)',d:'결론에 영향 있으나 부차적·조건부 조문'}
-      : {n:'형식',c:'var(--txt3)',bg:'var(--bg4)',d:'공시·주석 등 이 거래에 변수 없는 조항'});
-    return ' <span class="aifrs-prio aifrs-tip" style="color:'+t.c+';background:'+t.bg+'" data-tip="검토 우선순위 '+p+'/100 (참고용·이 거래 기준)&#10;'+t.d+(reason?'. '+esc(reason):'')+'">'+t.n+' '+p+'</span>';
+    if(p<70) return '';
+    return ' <span class="aifrs-prio aifrs-tip" style="color:#f87171;background:rgba(248,113,113,.15)" data-tip="검토 우선순위 '+p+'/100 (참고용·이 거래 기준)&#10;인식·분류·측정금액을 결정하는 핵심 판단 조문'+(reason?'. '+esc(reason):'')+'">핵심</span>';
   }
   // 개별 항목의 우선순위 점수 근거 행(투명성)
   function _prioReasonRow(reason){ return reason?'<div class="aifrs-pr-row aifrs-pr-muted-row"><b>우선순위 근거</b><span>'+esc(reason)+'</span></div>':''; }
   function renderPreciseResult(data, std, secs){
     var items=data.items||[];
     var head='<div class="aifrs-an-head" title="조문별로 이 거래와의 적합 여부를 단계적으로 검토합니다. 핵심 항목은 빨간색, 검토 필요는 노란색으로 표시됩니다">'+_ico('scope',15)+' 정밀 분석 — 제'+esc(std.no)+'호 '+esc(std.name)+' <span>'+secs+'초 · 항목 '+items.length+'개</span>'
-      + '</div>';
+      + '</div>'
+      + '<div class="af-hint">📖 <b>§ 조문 칩</b>을 누르면 해당 기준서 원문이 바로 열립니다 · 항목 줄을 누르면 상세가 펼쳐집니다</div>';   // 첫 안내 1줄(커서 없이도 조작법이 보이게)
     if(data.__truncated){ head+='<div class="aifrs-api-stat err" style="margin:4px 0">⚠ 응답이 길어 일부 끝부분이 잘렸습니다 — 완성된 항목까지만 표시합니다. (마지막 항목은 내용이 누락될 수 있음 → 다시 정밀 분석 권장)</div>'; }
     if(!items.length){ return head+'<div class="aifrs-note">관련 조문 분석 결과가 없습니다.</div>'; }
     var cnt={green:0,amber:0,red:0}, lvlRank={red:2,amber:1,green:0};
@@ -3190,11 +3219,11 @@ a:hover { text-decoration: underline; }
       + '</div>'
       + '<div style="margin-top:9px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runFinalAudit(\''+std.no+'\')">✅ 최종 검증(AI감사) 실행</button></div></div>';
     if(hasAudit) nextHero='';   // 감사 결과가 이미 있으면 "다음 확인" CTA는 표시하지 않음(재실행은 감사 결과 헤더의 [다시 검증])
-    var foot='<div class="af-foot1">'+_gl('warn')+'<span>AI 분석 결과는 참고용이며, 최종 판단·책임은 담당자에게 있습니다.</span></div>';
+    // 면책 문구 상시 노출 제거(사용자 요청) — ⓘ 안내 시트(discPrecise·discAudit)에는 유지
     var auditSlot='<div class="aifrs-precise-slot" id="aifrs-audit-'+std.no+'"></div>';
     // 정밀분석 상세: 최종 검증(AI감사) 결과가 이미 있으면 접힌 상태로 시작, 없으면 펼침. 접혀도 클릭해 다시 볼 수 있음.
     var bodyWrap='<details class="aifrs-pr-detail" id="aifrs-prdetail-'+std.no+'"'+(hasAudit?'':' open')+'><summary>'+_ico('scope',13)+' 정밀분석 상세 '+items.length+'개 — 클릭하여 펼치기/접기</summary><div class="aifrs-pr-detail-body">'+body+'</div></details>';
-    return head+summary+bodyWrap+nextHero+auditSlot+foot;
+    return head+summary+bodyWrap+nextHero+auditSlot;
   }
   // 감사 결과가 뜨면 정밀분석 상세를 접는다(펼치기로 다시 볼 수 있음)
   function _collapsePreciseDetail(no){ var d=document.getElementById('aifrs-prdetail-'+no); if(d) d.open=false; }
@@ -3421,13 +3450,16 @@ a:hover { text-decoration: underline; }
       usedTopics[topic]=1;
       // 첨부 문서에 대한 감사 판단을 한 줄로 — 주제 + 이 건의 결론 요약 + 상태
       // 감사 결론은 생략 없이 전문 표시 — "어떻게 처리해야 한다"가 잘리면 방향 제시가 무의미
-      var verd=a['판정'], st='', c='', judg='';
-      if(verd==='충족'){ c='#2dd4bf'; st='충족'; judg=a['감사의견']||'문서 근거로 확인됨'; }
-      else if(verd==='미흡'){ c='#f87171'; st='보완 필요'; judg=a['보완사항']||a['감사의견']||''; }
-      else { c='#fbbf24'; st='자료·사실 확인 필요'; judg=a['판단불가사유']||a['보완사항']||it['검토포인트']||''; }
+      var verd=a['판정'], st='', c='', bg='', judg='';
+      if(verd==='충족'){ c='#2dd4bf'; bg='rgba(45,212,191,.12)'; st='충족'; judg=a['감사의견']||'문서 근거로 확인됨'; }
+      else if(verd==='미흡'){ c='#f87171'; bg='rgba(248,113,113,.12)'; st='보완 필요'; judg=a['보완사항']||a['감사의견']||''; }
+      else { c='#fbbf24'; bg='rgba(251,191,36,.12)'; st='확인 필요'; judg=a['판단불가사유']||a['보완사항']||it['검토포인트']||''; }
+      // 가독성: 1행 = 주제 + 상태 배지 + §조문(훑어보기용), 2행 = 판단 근거(연한 글씨, 필요할 때 읽기)
       return '<div class="af-plan-sline"><i>'+(idx+1)+'</i><span>'
-        + '<b>'+esc(topic)+'</b>: '+esc(judg)+' — <b style="color:'+c+'">'+st+'</b>'
-        + (art?' <span class="af-plan-ref">'+_artChip(std.no, range, '§ '+esc(range))+'</span>':'')
+        + '<div class="af-plan-h2"><b>'+esc(topic)+'</b><em class="af-plan-st" style="color:'+c+';background:'+bg+'">'+st+'</em>'
+        + (art?'<span class="af-plan-ref">'+_artChip(std.no, range, '§ '+esc(range))+'</span>':'')
+        + '</div>'
+        + '<div class="af-plan-j">'+esc(judg)+'</div>'
         + '</span></div>';
     }).join('');
     // 이 건의 종합 방향·결과 — 최고 우선순위 충족 항목의 감사 결론을 대표로(없으면 확인 대기 안내)
@@ -3438,7 +3470,7 @@ a:hover { text-decoration: underline; }
     });
     var repArt=rep?String(rep['조문번호']||'').trim():'';
     var concl=rep
-      ? '이 건의 방향: <b>'+esc(rep['감사의견'])+'</b>'
+      ? '<b>이 건의 방향</b> — '+esc(rep['감사의견'])
         + (repArt?' <span class="af-plan-ref">'+_artChip(std.no, AiFRS.stripStdPrefix(std.no,repArt)||repArt, '§ '+esc(AiFRS.stripStdPrefix(std.no,repArt)||repArt))+'</span>':'')
       : '이 건의 방향은 확인 필요 사항이 해결된 뒤 확정됩니다.';
     rows+='<div class="af-plan-close">'
@@ -3576,7 +3608,7 @@ a:hover { text-decoration: underline; }
     'audit-error':    ['done','done','error','pending']
   };
   function _stepBarHtml(stage, hasGate){
-    var labels=['AI분석','정밀검토','감사의견','판단게이트'];
+    var labels=['AI분석','정밀분석','AI감사','판단게이트'];   // 버튼·헤더 명칭과 동일 용어 사용(정밀 분석·AI감사)
     var st=_STEP_TABLE[stage]||_STEP_TABLE['init'];
     var n=hasGate?4:3;
     var html='';
@@ -3707,13 +3739,13 @@ a:hover { text-decoration: underline; }
             ? '문제 <b>'+probs+'건</b>은 아래에서 자동으로 펼쳐집니다 — <b>문서 근거·보완·확인</b> 사항에서 해결방향을 확인하세요.'
             : '모든 항목이 문서 근거로 뒷받침됩니다. 각 항목을 클릭하면 근거와 감사의견을 확인할 수 있습니다.')
         + '</span></div></div>';
-    var foot='<div class="af-foot1">'+_gl('warn')+'<span>AI 분석 결과는 참고용이며, 최종 판단·책임은 담당자에게 있습니다.</span></div>';
+    // 면책 문구 상시 노출 제거(사용자 요청) — ⓘ 안내 시트(discPrecise·discAudit)에는 유지
     var headRow='<div class="aifrs-an-head" style="margin-top:8px;border-top:1px solid var(--border);padding-top:10px" title="문서 원문을 근거로 각 조항의 충족 여부를 판정합니다. 문제 항목은 자동으로 펼쳐집니다">'
       + '<span style="display:inline-flex;align-items:center;gap:6px">'+_ico('shield',15)+' AI감사 결과</span>'
       + '<button class="aifrs-help-btn" onclick="window.AiFRS.runFinalAudit(\''+std.no+'\')" title="AI 감사를 처음부터 다시 실행합니다">↻ 다시 검증</button></div>';
     var plan=_buildActionPlan(std, items, audited);
     var gatePanel=_buildGatePanel(std, audited);   // HIGH 17개 기준서만 판단 게이트 패널 표시
-    return headRow+hero+gatePanel+rows+plan+foot;   // 게이트 패널은 히어로 카드 바로 아래, 항목 리스트 위
+    return headRow+hero+gatePanel+rows+plan;   // 게이트 패널은 히어로 카드 바로 아래, 항목 리스트 위
   }
 
   // ── 7단계: 증빙 PDF 다운로드 (브라우저 인쇄 → "PDF로 저장") ──
@@ -4287,7 +4319,8 @@ a:hover { text-decoration: underline; }
       { date:'2026-09-02', title:'초보자 UX 개선 5종 — 다음 할 일 안내 강화(사이클5 후속)',
         bullets:[
           '후보 기준서 카드마다 「AI분석→정밀검토→감사의견→판단게이트」 단계 표시 추가 — 지금 어디까지 진행됐는지 한눈에 확인, 로딩·실패·재시도·자동연속실행 전 구간에서 상태 유지',
-          'AI 분석 직후 "다음 할 일"을 알려주는 안내 배너 추가 — 정밀분석 시작과 동시에 자동으로 사라져 중복 안내 방지',
+          'AI 분석 직후 "다음 할 일" 안내 배너 추가 — 실행 버튼을 [AI 전체 검토 시작] 하나로 일원화(정밀분석/전체검토 혼동 제거), 시작과 동시에 자동으로 사라져 중복 안내 방지',
+          '"다음 할 일" 가독성 개선 — 각 항목을 「주제 + 상태 배지 + §조문」 1행과 판단 근거 2행으로 분리해 훑어보기 쉽게 재배치, 하단 면책 문구 상시 노출은 제거(ⓘ 안내에만 유지)',
           '판단 게이트에서 아직 판정되지 않은 항목에 "원문 보기" 바로가기 버튼 추가 — 확인할 조문으로 즉시 이동',
           '정밀분석 결과 요약에 통과율 도넛 차트 추가 — 텍스트 숫자만 있던 것을 색상으로 즉시 식별 가능하게 개선',
           '사용 가이드(코치마크 투어)에 4단계 추가 — 오늘 추가된 단계 표시·안내 배너·판단 게이트를 신규 사용자에게도 안내',
@@ -4516,7 +4549,7 @@ a:hover { text-decoration: underline; }
     {sel:'#aifrs-db-toggle',       title:'③ 근거 검증', info:'tour3', pre:_tourCloseDb,
       msg:'- 감사 결과 항목을 클릭하면 근거·감사의견이 펼쳐짐 (문제 항목은 자동 펼침)\n- § 문단 칩을 누르면 기준서 원문(내장 DB)을 즉시 확인\n- [보완·확인]·[판단불가사유]에서 문제 해결방향을 도출'},
     {sel:'.af-step-bar',           title:'④ 진행 단계 확인',
-      msg:'- 후보 카드마다 「AI분석→정밀검토→감사의견」 단계 표시로 지금 어디까지 왔는지 한눈에 확인\n- 파란 배너는 지금 눌러야 할 다음 버튼을 바로 알려줍니다\n- 감사 결과 상단 판단 게이트에서 핵심 체크포인트를 ✓/⬜로 확인하세요'}
+      msg:'- 후보 카드마다 「AI분석→정밀분석→AI감사」 단계 표시로 지금 어디까지 왔는지 한눈에 확인\n- 파란 배너의 [AI 전체 검토 시작] 버튼 하나로 정밀분석→AI감사→다음 할 일까지 자동 진행\n- 감사 결과 상단 판단 게이트에서 핵심 체크포인트를 ✓/⬜로 확인하세요'}
   ];
   AiFRS.startTour = function(){
     // 실행 시 유도 글로우 해제(현재 세션 한정 — 새로고침하면 다시 표시)
