@@ -390,6 +390,9 @@ a:hover { text-decoration: underline; }
 .aifrs-pr-row>b:first-child { flex:0 0 92px; word-break:keep-all; }
 .aifrs-pr-row b { color:var(--blue-sky); font-weight:700; }
 .aifrs-pr-src { color:#2dd4bf; }
+.af-quote-blk { margin-bottom:6px; }
+.af-quote-blk:last-child { margin-bottom:0; }
+.af-quote-tx { color:var(--txt3); font-size:11.5px; margin-top:2px; }   /* 영문 등 외국어 인용 밑에 붙는 한글 번역 */
 .aifrs-pr-warn-row { color:#fbbf24; }
 .aifrs-pr-muted-row { color:var(--txt3); }
 .aifrs-pr-violet { color:#a78bfa; }
@@ -2000,6 +2003,7 @@ a:hover { text-decoration: underline; }
       '',
       '── 출력 규칙 ──',
       '- 근거인용: 거래구조 판정의 근거가 된 문서 "원문 그대로의 구절"만 1~4개(요약·창작 금지 — 코드가 문서 실존을 검증함). 없으면 빈 배열·신뢰도 낮음.',
+      '- 근거인용_한글역: 근거인용 배열과 반드시 같은 개수·같은 순서로, 각 구절을 자연스러운 한국어로 번역(원문이 이미 한국어면 그 문장을 그대로 반복). 외국어 문서에서 사용자가 원문 밑에서 바로 뜻을 확인하기 위함.',
       '- candidates: 위 판정 관점으로 관련성(0~100) 높은 순 최대 8개. 낮아도 검토가치 있으면 포함(누락보다 포괄). 위 목록 번호만.',
       '- ⚠ 광고·판촉비처럼 별도 "비용" 기준서가 없는 지출은, 그 비용처리를 규정한 기준서(광고비=1038 문단69)를 최상위 관련 기준서로 둘 것 — 자산화하지 않더라도 그것이 회계처리 근거이므로 관련성을 높게(자산화 안 한다고 1038을 강등하지 말 것).',
       '- ⚠ 물리적 실체가 있는 재화(디바이스·기기·설비·부품·실물 샘플) 취득은 유형자산(1016) 또는 비용(소모품비)이 1차 후보다. 무형자산(1038)은 실체 없는 자산(SW·라이선스·IP·개발비·콘텐츠 저작권)일 때만 상위로 두고, 실물 재화를 1038을 1016보다 높은 관련성으로 두지 말 것. 취득 목적이 "신규사업 검토·테스트·평가·시제품"이면 자산 정의 미충족 가능성이 크므로 비용(소모품비·경상연구비) 관련성도 함께 높게 둘 것("AI·신규사업" 같은 단어를 무형·개발비로 과대해석 금지).',
@@ -2011,7 +2015,7 @@ a:hover { text-decoration: underline; }
       '- ⚠ 관련성 동점 금지: 1·2위 후보에 같은 점수를 주지 말 것 — 문서의 핵심 논점을 더 직접 규정하는 쪽에 최소 3점 이상 우위를 부여해 순위가 판단을 반영하게 할 것.',
       '- 당사 위치가 모호하거나 근거가 약하면 신뢰도 "낮음".',
       '- ⚠ 출력이 잘려도 보존되도록 거래구조와 candidates를 먼저 출력. 반드시 아래 JSON 순서로만(다른 텍스트 금지):',
-      '{"거래구조":{"자료성격":"거래형|내부형|논점·질의형|복합·기타","상대방있음":true,"상대방":"","당사위치":"","관계유형":"공급(수취)|취득·수령(지급)|차입|대여|투자|내부평가·배분|회계·세무논점|기타","대금방향":"당사 수취|당사 지급|해당없음","핵심회계논점":"","회계영향측":["수익"],"경제적실질":"","근거인용":[""],"신뢰도":"높음|보통|낮음"},"candidates":[{"기준서번호":"","명칭":"","관련성":0,"사유":"","관련쟁점":[""]}]}'
+      '{"거래구조":{"자료성격":"거래형|내부형|논점·질의형|복합·기타","상대방있음":true,"상대방":"","당사위치":"","관계유형":"공급(수취)|취득·수령(지급)|차입|대여|투자|내부평가·배분|회계·세무논점|기타","대금방향":"당사 수취|당사 지급|해당없음","핵심회계논점":"","회계영향측":["수익"],"경제적실질":"","근거인용":[""],"근거인용_한글역":[""],"신뢰도":"높음|보통|낮음"},"candidates":[{"기준서번호":"","명칭":"","관련성":0,"사유":"","관련쟁점":[""]}]}'
     ].join('\n');
   }
   // 거래구조로부터 HI가 수익(공급자) 측인지 비용(고객) 측인지 판별
@@ -2451,8 +2455,11 @@ a:hover { text-decoration: underline; }
               if(!st){ box.innerHTML='<div class="aifrs-api-stat err">응답 JSON 파싱 실패 — 원문 일부:</div><pre class="aifrs-preview">'+esc(txt2.slice(0,1500))+'</pre>'; return; }
               var gs=st['거래구조']||{};
               var raw=gs['근거인용']||[];
+              var rawTx=gs['근거인용_한글역']||[];
               gs['근거인용원본수']=raw.length;
-              gs['근거인용검증']=raw.filter(function(q){ return _quoteInDoc(q, docNorm); });   // 문서 실존분만 채택(할루시네이션 차단)
+              var _keepIdx=[];
+              gs['근거인용검증']=raw.filter(function(q,i){ var ok=_quoteInDoc(q, docNorm); if(ok) _keepIdx.push(i); return ok; });   // 문서 실존분만 채택(할루시네이션 차단)
+              gs['근거인용검증_한글역']=_keepIdx.map(function(i){ return rawTx[i]||''; });   // 검증 통과한 인용과 같은 순서로 번역 매칭
               var cands=st.candidates||[];
               // DB에 없는 기준서번호(모델 번호환각, 예: 1136)는 후보에서 제외 — 미존재 번호가 UI에 노출되는 것 차단
               cands=cands.filter(function(c){ return AiFRS.findStandard(String(c['기준서번호']||c.no||'')); });
@@ -2608,7 +2615,13 @@ a:hover { text-decoration: underline; }
         + (_ch.length?'<div class="af-chip-row">'+_ch.join('')+'</div>':'')
         + (gs['핵심회계논점']?'<div class="aifrs-pr-row"><b>핵심 논점</b><span>'+esc(gs['핵심회계논점'])+'</span></div>':'')
         + (gs['경제적실질']||gs['거래요지']?'<div class="aifrs-pr-row"><b>경제적 실질</b><span>'+esc(gs['경제적실질']||gs['거래요지'])+'</span></div>':'')
-        + (ver.length?'<div class="aifrs-pr-row aifrs-pr-src" style="margin-top:4px"><b>문서 근거(검증됨)</b><span>'+ver.map(function(q){return '“'+esc(q)+'”';}).join(' &nbsp;/&nbsp; ')+'</span></div>'
+        + (ver.length?'<div class="aifrs-pr-row aifrs-pr-src" style="margin-top:4px;align-items:flex-start"><b>문서 근거(검증됨)</b><span>'
+            + ver.map(function(q,i){
+                var tx=verTx[i]||'';
+                var same = tx && _qnorm(tx)===_qnorm(q);   // 이미 한국어 문서라 번역이 원문과 동일하면 중복 표시 생략
+                return '<div class="af-quote-blk">“'+esc(q)+'”'+(tx && !same?'<div class="af-quote-tx">🌐 '+esc(tx)+'</div>':'')+'</div>';
+              }).join('')
+            +'</span></div>'
             :(rawn?'<div class="aifrs-pr-warn-row aifrs-pr-row" style="margin-top:4px"><b>문서 근거</b><span>검증된 인용 없음(AI 제시 '+rawn+'건이 문서와 불일치)</span></div>':''))
         + (low?'<div style="margin-top:7px"><span class="aifrs-note">※ 당사 위치가 모호해 후보가 달라질 수 있습니다 — ⚙ 설정의 당사명(Reporting Entity)을 확인하세요.</span></div>':'')   // 행동 수단 없는 "알려주세요" 문구 제거, 모호할 때만 설정 안내
         + (gs['방향경고']?'<div class="aifrs-api-stat err" style="margin-top:6px">'+esc(gs['방향경고'])+'</div>':'')
@@ -4533,7 +4546,8 @@ a:hover { text-decoration: underline; }
           '회색 글자 대비 개선(전 화면 일괄) — 어두운 배경에서 가독성 향상',
           'K-IFRS DB 조회 화면 원문에도 문장 줄바꿈·번호 들여쓰기 적용',
           '팝업 버튼 하나에 눌림 글로우 이펙트 — 클릭 위임으로 전체 자동 적용',
-          '파일 2개 이상 업로드 시 "같은 건인지" 확인 팝업 추가'
+          '파일 2개 이상 업로드 시 "같은 건인지" 확인 팝업 추가',
+          '영문 등 외국어 근거 인용 밑에 한글 번역 자동 병기'
         ]
       },
       { date:'2026-09-01', title:'화면 전면 간소화 + 신규 문서 48종 전수검증(사이클4) 완주',
