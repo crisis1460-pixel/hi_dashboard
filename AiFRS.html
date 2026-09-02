@@ -391,16 +391,17 @@ a:hover { text-decoration: underline; }
 .af-para-txt { white-space:pre-wrap; line-height:1.9; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:14px 16px; font-size:13.5px; color:var(--txt2); word-break:keep-all; }
 
 /* ── 리모컨(플로팅 퀵버튼): 접기/펼치기 · 다음 단계 안내 · 문의 메일 ── */
-.af-remote { position:fixed; right:18px; top:50%; transform:translateY(-50%); z-index:10300; display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
-.af-remote-btn { width:44px; height:44px; border-radius:50%; background:var(--blue); color:#fff; border:none; cursor:pointer; box-shadow:0 6px 20px rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; transition:transform .15s; }
-.af-remote-btn:hover { transform:scale(1.06); }
-.af-remote-btn svg { width:20px; height:20px; }
-.af-remote-menu { display:none; flex-direction:column; gap:4px; background:var(--bg2); border:1px solid var(--border2); border-radius:12px; padding:8px; box-shadow:0 14px 40px rgba(0,0,0,.5); }
-.af-remote.open .af-remote-menu { display:flex; }
-.af-remote-item { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:8px; background:transparent; border:none; color:var(--txt); font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; text-align:left; }
-.af-remote-item:hover { background:var(--bg4); }
-.af-remote-item small { color:var(--txt3); font-weight:500; margin-left:2px; }
-@media (max-width:700px){ .af-remote { right:10px; } }
+/* 리모컨 본체: 세로 패널에 큰 버튼 4개가 항상 보임(접기/펼치기 없음) */
+.af-remote { position:fixed; right:16px; top:50%; transform:translateY(-50%); z-index:10300; display:flex; flex-direction:column; align-items:center; gap:10px; padding:18px 12px 20px; width:118px; background:linear-gradient(180deg, var(--bg2), var(--bg)); border:1px solid var(--border2); border-radius:34px; box-shadow:0 18px 50px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.07); }
+.af-remote::before { content:''; width:36px; height:5px; border-radius:3px; background:var(--bg4); margin-bottom:2px; }   /* 리모컨 상단 홈 */
+.af-remote-ttl { font-size:10px; font-weight:700; letter-spacing:.14em; color:var(--txt3); text-align:center; margin-bottom:4px; }
+.af-remote-item { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; width:92px; height:86px; border-radius:20px; background:var(--bg3); border:1px solid var(--border); color:var(--txt); font-size:12px; font-weight:700; cursor:pointer; line-height:1.15; text-align:center; transition:background .12s, transform .12s, border-color .12s; box-shadow:0 2px 0 rgba(0,0,0,.35); }
+.af-remote-item svg { width:26px; height:26px; }
+.af-remote-item:hover { background:var(--bg4); border-color:rgba(41,151,255,.6); transform:translateY(-1px); }
+.af-remote-item:active { transform:translateY(2px); box-shadow:none; }
+.af-remote-item.primary { background:var(--blue); border-color:var(--blue); color:#fff; }
+.af-remote-item.primary:hover { background:#0a7aeb; }
+@media (max-width:900px){ .af-remote { right:8px !important; width:80px; padding:12px 6px; gap:6px; border-radius:24px; } .af-remote-item { width:64px; height:62px; font-size:10.5px; } .af-remote-item svg { width:20px; height:20px; } }
 
 .aifrs-paralink {
   cursor:pointer; display:inline-flex; align-items:center; gap:3px;
@@ -4666,18 +4667,27 @@ a:hover { text-decoration: underline; }
   function _mountRemote(){
     if(document.getElementById('aifrs-remote')) return;
     var d=document.createElement('div'); d.className='af-remote'; d.id='aifrs-remote';
-    var svg='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h9M19 7h1M4 17h3M13 17h7"/><circle cx="16" cy="7" r="2.5"/><circle cx="10" cy="17" r="2.5"/></svg>';
-    d.innerHTML='<div class="af-remote-menu">'
-      + '<button class="af-remote-item" onclick="window.AiFRS.remoteCollapse()">'+_ico('hist',14)+'처음 화면으로 <small>모두 접기 · 맨 위</small></button>'
-      + '<button class="af-remote-item" onclick="window.AiFRS.remoteExpand()">'+_ico('scope',14)+'모두 펼치기 <small>맨 위</small></button>'
-      + '<button class="af-remote-item" onclick="window.AiFRS.remoteGuide()">'+_ico('compass',14)+'지금 할 일 안내</button>'
-      + '<button class="af-remote-item" onclick="window.AiFRS.remoteMail()">'+_ico('plan',14)+'문의·건의 메일</button>'
-      + '</div>'
-      + '<button class="af-remote-btn" title="리모컨 — 접기/펼치기 · 지금 할 일 안내 · 문의" onclick="window.AiFRS.remoteToggle()">'+svg+'</button>';
+    var ic=function(p){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>'; };
+    var iHome=ic('<path d="M12 4l8 7h-2.5v8h-4v-5h-3v5h-4v-8H4z"/>');                                   // 집(처음으로)
+    var iOpen=ic('<path d="M4 6h16M4 12h16M4 18h16"/><path d="M8 3l-3 3 3 3M16 15l3 3-3 3"/>');          // 목록 펼침
+    var iGuide=ic('<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>');                 // 나침반(할 일 안내)
+    var iMail=ic('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>');           // 메일
+    d.innerHTML='<div class="af-remote-ttl">리모컨</div>'
+      + '<button class="af-remote-item" title="펼친 항목을 모두 접고 맨 위 화면으로" onclick="window.AiFRS.remoteCollapse()">'+iHome+'처음으로</button>'
+      + '<button class="af-remote-item" title="접힌 항목을 모두 펼치고 맨 위 화면으로" onclick="window.AiFRS.remoteExpand()">'+iOpen+'모두 펼침</button>'
+      + '<button class="af-remote-item primary" title="지금 단계에서 다음에 누를 것을 화면에 표시" onclick="window.AiFRS.remoteGuide()">'+iGuide+'할 일 안내</button>'
+      + '<button class="af-remote-item" title="문의·기능 건의 메일 보내기 (letsbe1460@hecto.co.kr)" onclick="window.AiFRS.remoteMail()">'+iMail+'문의 메일</button>';
     document.body.appendChild(d);
-    document.addEventListener('click', function(e){ if(!d.contains(e.target)) d.classList.remove('open'); });
+    _placeRemote(); window.addEventListener('resize', _placeRemote);
   }
-  AiFRS.remoteToggle=function(){ var d=document.getElementById('aifrs-remote'); if(d) d.classList.toggle('open'); };
+  // 본문(최대 1160px 중앙)의 오른쪽 여백 한가운데에 리모컨을 놓는다 — 여백이 좁으면 가장자리에 붙임
+  function _placeRemote(){
+    var d=document.getElementById('aifrs-remote'); if(!d) return;
+    var vw=window.innerWidth, w=d.offsetWidth||118, margin=(vw-1160)/2;
+    var right = margin>w+24 ? Math.round((margin-w)/2) : 12;
+    d.style.right=right+'px';
+  }
+  AiFRS.remoteToggle=function(){};   // (구 접이식 메뉴 호환 — 지금은 버튼 4개 상시 노출)
   AiFRS.remoteCollapse=function(){ _remoteClose(); var ds=document.querySelectorAll('#aifrs-ai details[open]'); for(var i=0;i<ds.length;i++) ds[i].open=false; _scrollTopAll(); };
   AiFRS.remoteExpand=function(){ _remoteClose(); var ds=document.querySelectorAll('#aifrs-ai details:not([open])'); for(var i=0;i<ds.length;i++) ds[i].open=true; _scrollTopAll(); };
   AiFRS.remoteMail=function(){
