@@ -531,8 +531,8 @@ a:hover { text-decoration: underline; }
 /* 메인화면 구석에 흐릿하게 떠 있는 숨김 시그니처 — 클릭 시 PIN(해시 비교) 확인 후에만 문구 수정 가능 */
 .af-sig-wm {
   position:fixed; right:16px; bottom:10px; z-index:5;
-  font-size:11px; font-weight:700; letter-spacing:.14em;
-  color:rgba(255,255,255,.05); white-space:nowrap; user-select:none; cursor:default;
+  font-size:9px; font-weight:700; letter-spacing:.1em;
+  color:rgba(255,255,255,.09); white-space:nowrap; user-select:none; cursor:default;
 }
 @media (max-width:640px){ .af-sig-wm { display:none; } }
 
@@ -4918,7 +4918,7 @@ a:hover { text-decoration: underline; }
     if(document.getElementById('af-sig-wm')) return;
     var d=document.createElement('div'); d.className='af-sig-wm'; d.id='af-sig-wm';
     var saved; try{ saved=localStorage.getItem('af_sig_text'); }catch(e){}
-    d.textContent = saved || 'JIHO KIM';
+    d.textContent = saved || 'Made by JIHO KIM';
     d.addEventListener('click', _sigEditFlow);
     document.body.appendChild(d);
   }
