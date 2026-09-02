@@ -420,13 +420,20 @@ a:hover { text-decoration: underline; }
 .af-para-blk:last-of-type { margin-bottom:0; }
 .af-para-h { font-weight:700; color:var(--txt); font-size:13px; margin-bottom:6px; display:flex; gap:8px; align-items:baseline; flex-wrap:wrap; }
 .af-para-txt {
-  white-space:pre-wrap; line-height:1.9; border-radius:8px; padding:16px 18px; font-size:13.5px; color:#dcdce0; word-break:keep-all;
+  line-height:1.9; border-radius:8px; padding:16px 18px; font-size:13.5px; color:#dcdce0; word-break:keep-all;
   background:
     repeating-linear-gradient(0deg, rgba(255,255,255,.012) 0px, rgba(255,255,255,.012) 1px, transparent 1px, transparent 26px),
     linear-gradient(180deg,#242428 0%,#1d1d20 100%);
   border:1px solid #000; border-left:3px solid #FF6114;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.05), inset 0 -12px 20px rgba(0,0,0,.25);
 }
+/* 원문 발췌 안의 문단(.af-para-p)·번호 항목(.af-para-li) — 번호는 매달린들여쓰기(hanging indent)로 줄바꿈 시에도 본문 시작열과 맞춰짐 */
+.af-para-p { margin:0 0 14px; }
+.af-para-p:last-child { margin-bottom:0; }
+.af-para-li { display:flex; gap:8px; align-items:flex-start; margin:2px 0; }
+.af-para-li:last-child { margin-bottom:0; }
+.af-para-li > i { flex-shrink:0; font-style:normal; color:var(--txt3); }
+.af-para-li > span { flex:1; min-width:0; }
 
 /* ── 리모컨(플로팅 퀵버튼): 접기/펼치기 · 다음 단계 안내 · 문의 메일 ── */
 /* 리모컨 본체: 세로 패널에 큰 버튼 4개가 항상 보임(접기/펼치기 없음) */
@@ -469,7 +476,13 @@ a:hover { text-decoration: underline; }
   box-shadow:inset 0 -4px 6px rgba(0,0,0,.6), inset 0 2px 2px rgba(255,255,255,.06);
 }
 .af-remote-sep { width:100%; height:1px; margin:16px 0 12px; background:linear-gradient(90deg, transparent, rgba(255,255,255,.14), transparent); }
-.af-remote-ci { font-size:9px; font-weight:800; letter-spacing:.03em; color:#FF6114; text-align:center; line-height:1.35; text-shadow:0 1px 2px rgba(0,0,0,.6); user-select:none; }
+/* 몰드 성형 배지 느낌의 음각/양각 — 위쪽은 밝은 하이라이트, 아래쪽은 짙은 그림자로 새겨진 듯하게 */
+.af-remote-ci {
+  font-size:9px; font-weight:800; letter-spacing:.06em; text-align:center; line-height:1.4; user-select:none;
+  background:linear-gradient(180deg, #ff9a5c 0%, #FF6114 55%, #d94e0a 100%);
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 -1px 0 rgba(255,255,255,.25)) drop-shadow(0 1.5px 1px rgba(0,0,0,.7));
+}
 @media (max-width:900px){ .af-remote { right:8px !important; } }
 
 .aifrs-paralink {
@@ -752,7 +765,9 @@ a:hover { text-decoration: underline; }
   display:flex; gap:8px; align-items:flex-start;
 }
 .aifrs-art-ex b { font-style:normal; color:var(--txt3); font-size:11px; text-transform:uppercase; letter-spacing:.5px; flex-shrink:0; margin-top:2px; }
-.aifrs-art-ex > span { flex:1; min-width:0; white-space:pre-wrap; word-break:keep-all; }   /* 문장 단위 줄바꿈이 살도록 — 이탤릭은 여러 줄에서 가독성 떨어져 해제 */
+.aifrs-art-ex > span { flex:1; min-width:0; }   /* 내부는 이제 .af-para-p/.af-para-li 블록(문장 단위 줄바꿈 + 번호 매달린들여쓰기) */
+.aifrs-art-ex .af-para-p, .aifrs-art-ex .af-para-li { margin-bottom:6px; }
+.aifrs-art-ex .af-para-p:last-child, .aifrs-art-ex .af-para-li:last-child { margin-bottom:0; }
 .aifrs-ex-hl { color:var(--blue-sky); font-weight:700; }
 .aifrs-art-jn {
   font-size:12px; color:var(--blue-sky); line-height:1.8; margin-top:8px; padding:8px 13px;
@@ -923,6 +938,9 @@ a:hover { text-decoration: underline; }
 .af-plan-close { margin-top:10px; padding-top:9px; border-top:1px dotted var(--border); font-size:12.5px; color:var(--txt2); line-height:1.8; }
 .af-plan-close b { color:var(--txt); }
 .af-plan-close > div + div { margin-top:4px; }
+.af-plan-arrow { display:flex; gap:6px; align-items:flex-start; }
+.af-plan-arrow > i { flex-shrink:0; font-style:normal; }
+.af-plan-arrow > span { flex:1; min-width:0; }   /* 줄바꿈 후 두 번째 줄부터 "→" 밑이 아니라 본문 시작열에 맞춰지도록(hanging indent) */
 .af-plan-hint { font-size:11.5px; color:var(--txt3); }
 .af-plan-ref { display:inline-flex; align-items:center; gap:5px; margin-left:4px; font-size:11px; color:var(--txt3); white-space:nowrap; }
 .af-plan-li { display:flex; gap:10px; margin-top:10px; font-size:12.5px; color:var(--txt2); line-height:1.7; }
@@ -3219,12 +3237,23 @@ a:hover { text-decoration: underline; }
     t=t.replace(/\s*(\(\d{1,2}\)|\([가-힣]\)|[⑴-⒇㈎-㈛])\s*/g, '\n$1 ');
     return t.replace(/\n{3,}/g, '\n\n').replace(/^\n+/, '').trim();
   }
+  // (1)(2)·⑴⑵ 같은 호 번호는 텍스트 블록(\n) 안에서는 CSS로 매달린들여쓰기를 걸 수 없음(줄바꿈 시 다시 왼쪽 끝으로) →
+  // 번호가 붙은 줄만 실제 행(플렉스)으로 분리해 번호 폭만큼 들여써지게 만든다. hl은 세그먼트별 키워드 하이라이트용(선택).
+  function _fmtExcerptHtml(t, hl){
+    hl = hl || function(s){ return s; };
+    var lines=_fmtExcerpt(t).split('\n').filter(function(s){ return s.trim(); });
+    return lines.map(function(line){
+      var m=line.match(/^(\(\d{1,2}\)|\([가-힣]\)|[⑴-⒇㈎-㈛])\s*(.*)$/);
+      if(m) return '<div class="af-para-li"><i>'+esc(m[1])+'</i><span>'+hl(esc(m[2]))+'</span></div>';
+      return '<div class="af-para-p">'+hl(esc(line))+'</div>';
+    }).join('');
+  }
   function _paraBlock(std, pno){
     var para=AiFRS.findArticle(std.no, pno);
     var label=AiFRS.stripStdPrefix(std.no, pno)||pno;
     if(!para) return '<div class="af-para-blk"><div class="af-para-h">문단 '+esc(label)+'</div><div class="aifrs-note">이 문단은 내장 DB에 없습니다. (원본 기준서를 직접 확인하세요)</div></div>';
     return '<div class="af-para-blk"><div class="af-para-h">문단 '+esc(label)+(para.topic?' <span class="aifrs-pr-violet">'+esc(para.topic)+'</span>':'')+'</div>'
-      + '<div class="af-para-txt">'+esc(_fmtExcerpt(para.excerpt||para.summary||'(원문 없음)'))+'</div>'
+      + '<div class="af-para-txt">'+_fmtExcerptHtml(para.excerpt||para.summary||'(원문 없음)')+'</div>'
       + (para.summary && para.excerpt?'<div class="aifrs-note" style="margin-top:8px"><b>요약</b> '+esc(para.summary)+'</div>':'')
       + (para.keywords&&para.keywords.length?'<div class="aifrs-note" style="margin-top:6px"><b>핵심어</b> '+para.keywords.map(function(k){return esc(k.t);}).join(' · ')+'</div>':'')
       + '</div>';
@@ -3588,7 +3617,7 @@ a:hover { text-decoration: underline; }
         + (repArt?' <span class="af-plan-ref">'+_artChip(std.no, AiFRS.stripStdPrefix(std.no,repArt)||repArt, '§ '+esc(AiFRS.stripStdPrefix(std.no,repArt)||repArt))+'</span>':'')
       : '이 건의 방향은 확인 필요 사항이 해결된 뒤 확정됩니다.';
     rows+='<div class="af-plan-close">'
-      + '<div>→ '+concl+'</div>'
+      + '<div class="af-plan-arrow"><i>→</i><span>'+concl+'</span></div>'
       + (probs.length && rep ? '<div>다만 <b>확인 필요 '+probs.length+'건</b>이 해결되어야 확정됩니다.</div>' : '')   // "전 항목 충족…" 고정 문구 제거(요약바가 이미 같은 정보)
       + '<div class="af-plan-hint">설명이 어렵다면 아래 <b>[ⓘ 쉬운 설명]</b>을 눌러 상세 풀이를 확인하세요.</div>'
       + '</div>';
@@ -4415,7 +4444,7 @@ a:hover { text-decoration: underline; }
         return '<span class="aifrs-kw" title="매칭 가중치 '+w+' ('+lv+') — 업로드 문서에서 이 용어 발견 시 해당 문단에 '+w+'점 가산">'+esc(k.t)+'<sup>'+(k.w||'')+'</sup></span>';
       }).join('');
       var ck=(p.checklist&&p.checklist.length)?('<div class="aifrs-art-ck">'+p.checklist.map(function(c){return '<div class="ck-li"><i>✓</i><span>'+esc(c)+'</span></div>';}).join('')+'</div>'):'';
-      var ex=p.excerpt?('<div class="aifrs-art-ex"><b>원문</b><span>'+_hlKeywords(esc(_fmtExcerpt(p.excerpt)), p.keywords)+'</span></div>'):'';   // 문장 단위 줄바꿈(팝업과 동일 포맷) — DB 전체 조회 화면에는 미적용이던 부분
+      var ex=p.excerpt?('<div class="aifrs-art-ex"><b>원문</b><span>'+_fmtExcerptHtml(p.excerpt, function(escText){ return _hlKeywords(escText, p.keywords); })+'</span></div>'):'';   // 문장 단위 줄바꿈 + 번호 항목은 매달린들여쓰기(hanging indent)
       var jn=p.journal?('<div class="aifrs-art-jn">'+esc(p.journal)+'</div>'):'';
       h+='<div class="aifrs-art">'
         + '<div class="aifrs-art-t">문단 '+esc(p.no)+' · '+esc(p.topic||'')+'</div>'
@@ -4794,7 +4823,7 @@ a:hover { text-decoration: underline; }
   // 작은 알림 팝업(리모컨용)
   function _remoteToast(msg){
     var ov=document.createElement('div'); ov.className='aifrs-modal-ov';
-    ov.innerHTML='<div class="aifrs-modal"><div class="m-msg" style="text-align:center">'+esc(msg)+'</div><div class="m-foot"><button class="aifrs-btn">확인</button></div></div>';   // 제목·본문 중복 제거(한 줄로 통일)
+    ov.innerHTML='<div class="aifrs-modal" style="max-width:300px"><div class="m-msg" style="text-align:center">'+esc(msg)+'</div><div class="m-foot" style="justify-content:center"><button class="aifrs-btn">확인</button></div></div>';   // 문구가 짧아 기본 폭(500px)이 과함 — 축소
     function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
     ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
     ov.querySelector('.m-foot button').addEventListener('click', close);
