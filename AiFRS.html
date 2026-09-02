@@ -1541,7 +1541,7 @@ a:hover { text-decoration: underline; }
   }
   function _aiLoad(kind, step, title, sub, timerId, timerInit, cancel){
     return '<div class="af-task">'
-      + '<div class="af-task-h">'+_ico(kind,15)+'<b>'+title+'</b>'+_chainDots(step)
+      + '<div class="af-task-h">'+_ico(kind,15)+'<b>'+title+'</b>'
       +   (timerId?'<span class="af-task-time" id="'+timerId+'">'+(timerInit||'0.0초')+'</span>':'')+'</div>'
       + (sub?'<div class="af-task-sub">'+sub+'</div>':'')
       + '<div class="af-task-bar"><i></i></div>'
@@ -2338,17 +2338,17 @@ a:hover { text-decoration: underline; }
       + '<div class="aifrs-help-body">'
       +   '<p>라벨은 <b>두 종류</b>입니다. ⓐ <b>코드검증</b> = 분석이 가리킨 조문이 실재하는가(신뢰도). ⓑ <b>AI감사</b> = 그 검토포인트를 실제 업로드 문서에 적용했을 때 <b>문서가 요건을 충족하는가</b>(실질 판정).</p>'
       +   '<div class="af-def-sec">ⓐ 코드검증 — 정밀분석 직후 자동 <span class="aifrs-note">(항목 요약줄의 글리프·단어)</span></div>'
-      +   '<div class="af-def-row"><span class="af-chip">'+_gl('ok')+'통과</span><span>조문 실존 + 화이트리스트 + 키워드 단서까지 확인 — 인용이 실재한다는 <b>1차 스크리닝 통과</b></span></div>'
-      +   '<div class="af-def-row"><span class="af-chip">'+_gl('warn')+'미검증</span><span>문단은 실존하나 <b>키워드 단서가 약함</b> — 내용 일치 여부는 AI감사에서 확정</span></div>'
-      +   '<div class="af-def-row"><span class="af-chip">'+_gl('bad')+'확인불가</span><span>문단이 DB에 없거나 화이트리스트 밖 — <b>AI 오인용 가능성</b>, 원문 직접 확인 권장</span></div>'
+      +   '<div class="af-def-row"><span class="af-chip">'+_gl('ok')+'확인됨</span><span>조문이 실제로 있고 키워드 단서까지 맞음 — 인용이 실재한다는 <b>1차 확인 통과</b></span></div>'
+      +   '<div class="af-def-row"><span class="af-chip">'+_gl('warn')+'근거 약함</span><span>조문은 있으나 <b>키워드 단서가 약함</b> — 내용 일치 여부는 AI감사에서 확정</span></div>'
+      +   '<div class="af-def-row"><span class="af-chip">'+_gl('bad')+'조문 불일치</span><span>조문이 DB에 없거나 범위 밖 — <b>AI 오인용 가능성</b>, 원문 직접 확인 권장</span></div>'
       +   '<div class="af-def-sec">ⓑ AI감사 — [AI 전체 검토] 시 자동 실행 <span class="aifrs-note">(문서 충족 여부 판정)</span></div>'
       +   '<div class="af-def-row"><span class="af-chip">'+_gl('ok')+'충족</span><span>문서 내용이 요건을 명확히 충족 — 근거 조항·사실이 문서에서 확인됨</span></div>'
-      +   '<div class="af-def-row"><span class="af-chip">'+_gl('bad')+'미흡</span><span>요건 미충족·누락·위반 — <b>보완이 필요한 가장 주목할 발견사항</b></span></div>'
-      +   '<div class="af-def-row"><span class="af-chip">'+_gl('warn')+'확인필요</span><span>문서 정보만으로는 판단 불가 — 추가 자료·수치 확인 후 재감사</span></div>'
+      +   '<div class="af-def-row"><span class="af-chip">'+_gl('bad')+'보완 필요</span><span>요건 미충족·누락·위반 — <b>보완이 필요한 가장 주목할 발견사항</b></span></div>'
+      +   '<div class="af-def-row"><span class="af-chip">'+_gl('warn')+'확인 필요</span><span>문서 정보만으로는 판단 불가 — 추가 자료·수치 확인 후 재감사</span></div>'
       +   '<div class="af-def-row"><span class="af-chip">'+_gl('na')+'해당없음</span><span>이 거래에는 적용되지 않는 요건</span></div>'
       +   '<div class="af-def-sec">검증 예외 표시 <span class="aifrs-note">(감사 항목 요약줄 — 문제가 있을 때만 나타남)</span></div>'
-      +   '<div class="af-def-row"><span class="af-flag warn">조문 미검증</span><span>조문은 실존하나 키워드 단서가 약함</span></div>'
-      +   '<div class="af-def-row"><span class="af-flag bad">조문 확인불가</span><span>조문이 DB에 없거나 범위 밖 — AI 오인용 가능성</span></div>'
+      +   '<div class="af-def-row"><span class="af-flag warn">근거 약함</span><span>조문은 있으나 키워드 단서가 약함</span></div>'
+      +   '<div class="af-def-row"><span class="af-flag bad">조문 불일치</span><span>조문이 DB에 없거나 범위 밖 — AI 오인용 가능성</span></div>'
       +   '<div class="af-def-row"><span class="af-flag warn">2차 검토 하향</span><span>2차 검토자가 과잉판단으로 보고 확인필요로 낮춤</span></div>'
       +   '<div class="af-def-row"><span class="af-flag bad">문서 인용 없음</span><span>문서에서 검증된 근거 인용을 찾지 못함</span></div>'
       +   '<p class="aifrs-note">위 표시가 하나도 없으면 세 단계(조문 실존 → 2차 검토 → 문서 인용) 모두 정상 통과한 항목입니다.</p>'
@@ -2372,7 +2372,7 @@ a:hover { text-decoration: underline; }
       +   '<div class="af-def-row">'+chip('검토 40~69','#fbbf24','rgba(251,191,36,.15)')+'<span>결론에 영향은 있으나 <b>부차적·조건부</b>로 따져볼 조문</span></div>'
       +   '<div class="af-def-row">'+chip('형식 &lt;40','var(--txt3)','var(--bg4)')+'<span>공시·주석 등 이 거래에 변수 없는 조항 — <b>기본 접힘</b>(펼쳐 볼 수 있음)</span></div>'
       +   '<div class="af-def-sec">정렬 순서</div>'
-      +   '<p style="margin:0">우선순위 내림차순, 동점이면 정밀분석은 <b>확인불가 &gt; 미검증 &gt; 통과</b>, 감사는 <b>확인필요 &gt; 미흡 &gt; 충족</b> 순으로 주의가 필요한 항목이 위로 옵니다.</p>'
+      +   '<p style="margin:0">우선순위 내림차순, 동점이면 정밀분석은 <b>조문 불일치 &gt; 근거 약함 &gt; 확인됨</b>, 감사는 <b>확인 필요 &gt; 보완 필요 &gt; 충족</b> 순으로 주의가 필요한 항목이 위로 옵니다.</p>'
       +   '<p class="aifrs-note" style="margin-top:10px">※ AI 평가라 절대적이지 않습니다. <b>참고용 가이드일 뿐 어떤 조문도 검토 생략의 근거가 아닙니다.</b></p>'
       + '</div>'
       + '<div class="m-foot"><button class="aifrs-btn">확인</button></div></div>';
@@ -2429,7 +2429,7 @@ a:hover { text-decoration: underline; }
     document.body.appendChild(ov);
   };
   function renderAiResult(data, secs){
-    var h='<div class="aifrs-an-head" title="AI가 거래구조를 파악하고 적용 가능한 K-IFRS 기준서 후보를 선정한 결과입니다">'+_ico('ai',15)+' AI 분석 결과 (거래구조·후보) <span>'+secs+'초 · '+esc(AiFRS.getModel())+'</span>'
+    var h='<div class="aifrs-an-head" title="AI가 거래구조를 파악하고 적용 가능한 K-IFRS 기준서 후보를 선정한 결과입니다">'+_ico('ai',15)+' AI 분석 결과 (거래구조·후보)'   // 처리시간·모델명은 개발자 정보라 제거
       + '</div>';
     if(data.__truncated){ h+='<div class="aifrs-api-stat err" style="margin:4px 0">⚠ 응답이 길어 일부가 잘렸습니다 — 후보는 보존되지만 정규화 용어 일부가 누락될 수 있습니다. (다시 분석 권장)</div>'; }
     var gs=data['거래구조']||data.context||{};   // 신규 거래구조 / 구버전 context 하위호환
@@ -2445,8 +2445,8 @@ a:hover { text-decoration: underline; }
       if(gs['관계유형']) _ch.push(_kvChip('관계', gs['관계유형']));
       if(gs['대금방향']&&gs['대금방향']!=='해당없음') _ch.push(_kvChip('대금', gs['대금방향']));
       var _infl=Array.isArray(gs['회계영향측'])?gs['회계영향측'].join(' · '):(gs['회계영향측']||'');
-      if(_infl) _ch.push(_kvChip('영향 측면', _infl));
-      if(gs['신뢰도']) _ch.push('<span class="af-chip" style="color:'+(low?'#fbbf24':'#2dd4bf')+'"><b style="color:inherit;opacity:.7">신뢰도</b>'+esc(gs['신뢰도'])+'</span>');
+      if(_infl) _ch.push(_kvChip('영향 받는 계정', _infl));
+      if(gs['신뢰도'] && low) _ch.push('<span class="af-chip" style="color:#fbbf24"><b style="color:inherit;opacity:.7">판단 확신도</b>'+esc(gs['신뢰도'])+'</span>');   // 낮을 때만 노출(정상일 땐 소음)
       h+='<div class="aifrs-tx-box'+(low?' warn':'')+'">'
         + '<div class="aifrs-tx-box-h">'+_ico('compass',14)+' 거래구조 (당사 위치·관계)'
         + (gs['자료성격']?' <span class="aifrs-tx-tag">'+esc(gs['자료성격'])+'</span>':'')
@@ -2456,7 +2456,7 @@ a:hover { text-decoration: underline; }
         + (gs['경제적실질']||gs['거래요지']?'<div class="aifrs-pr-row"><b>경제적 실질</b><span>'+esc(gs['경제적실질']||gs['거래요지'])+'</span></div>':'')
         + (ver.length?'<div class="aifrs-pr-row aifrs-pr-src" style="margin-top:4px"><b>문서 근거(검증됨)</b><span>'+ver.map(function(q){return '“'+esc(q)+'”';}).join(' &nbsp;/&nbsp; ')+'</span></div>'
             :(rawn?'<div class="aifrs-pr-warn-row aifrs-pr-row" style="margin-top:4px"><b>문서 근거</b><span>검증된 인용 없음(AI 제시 '+rawn+'건이 문서와 불일치)</span></div>':''))
-        + '<div style="margin-top:7px"><span class="aifrs-note">'+(low?'※ 당사 위치/분류가 모호합니다 — 아래 후보가 부적절하면 당사 위치를 정정해 알려주세요(재분석).':'※ 당사 위치가 틀리면 적용 기준서가 달라집니다 — 잘못됐으면 알려주세요.')+'</span></div>'
+        + (low?'<div style="margin-top:7px"><span class="aifrs-note">※ 당사 위치가 모호해 후보가 달라질 수 있습니다 — ⚙ 설정의 당사명(Reporting Entity)을 확인하세요.</span></div>':'')   // 행동 수단 없는 "알려주세요" 문구 제거, 모호할 때만 설정 안내
         + (gs['방향경고']?'<div class="aifrs-api-stat err" style="margin-top:6px">'+esc(gs['방향경고'])+'</div>':'')
         + (gs['__userFixed']?'<div style="margin-top:8px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.reselectCandidates()" title="확정한 거래구조를 전제로 적용 기준서 후보를 AI가 다시 선정(API 1콜)">🔄 AI로 후보 재선정 (1콜)</button></div>':'')
         + '</div>';
@@ -3011,10 +3011,12 @@ a:hover { text-decoration: underline; }
   }
   // 코드검증 등급 → 글리프·한 단어
   function _codeWord(level){
-    if(level==='green') return {w:'통과',   g:'ok',   c:'#2dd4bf'};
-    if(level==='amber') return {w:'미검증', g:'warn', c:'#fbbf24'};
-    return {w:'확인불가', g:'bad', c:'#f87171'};
+    if(level==='green') return {w:'확인됨',    g:'ok',   c:'#2dd4bf'};
+    if(level==='amber') return {w:'근거 약함',  g:'warn', c:'#fbbf24'};
+    return {w:'조문 불일치', g:'bad', c:'#f87171'};
   }
+  // 감사 판정 데이터값(충족/미흡/확인필요/해당없음)은 로직·프롬프트에서 쓰므로 유지, 화면 표시어만 한 벌로 통일
+  function _verdLabel(v){ return v==='미흡'?'보완 필요':(v==='확인필요'?'확인 필요':String(v||'')); }
   // 감사 판정 → 글리프·색
   function _verdWord(v){
     if(v==='충족')     return {g:'ok',   c:'#2dd4bf'};
@@ -3032,8 +3034,8 @@ a:hover { text-decoration: underline; }
   // 검증 파이프라인(조문 실존·2차 검토·문서 인용) — 예외만 한국어 칩으로 표시, 전부 정상이면 아무것도 안 보임(신호등 점 3개 → 소음 제거)
   function _pipeDots(codeLevel, cross, hasQuote){
     var f=[];
-    if(codeLevel==='red') f.push(['bad','조문 확인불가']);
-    else if(codeLevel==='amber') f.push(['warn','조문 미검증']);
+    if(codeLevel==='red') f.push(['bad','조문 불일치']);
+    else if(codeLevel==='amber') f.push(['warn','근거 약함']);
     if(cross==='하향') f.push(['warn','2차 검토 하향']);
     if(!hasQuote) f.push(['bad','문서 인용 없음']);
     if(!f.length) return '';
@@ -3052,12 +3054,12 @@ a:hover { text-decoration: underline; }
   }
   // ⓘ 시트: 상시 노출하던 범례·면책을 여기로 이동(정보 삭제가 아니라 계층 이동)
   AiFRS._SHEET = {
-    prioPrecise: {t:'🔢 검토 우선순위 · 정렬 기준', h:_prioSheetHtml('확인불가 &gt; 미검증 &gt; 통과')},
+    prioPrecise: {t:'🔢 검토 우선순위 · 정렬 기준', h:_prioSheetHtml('조문 불일치 &gt; 근거 약함 &gt; 확인됨')},
     prioAudit:   {t:'🔢 검토 우선순위 · 정렬 기준', h:_prioSheetHtml('확인필요 &gt; 미흡 &gt; 충족')},
     discPrecise: {t:'ⓘ 정밀 분석 결과 안내', h:
         '<p><b>코드검증이란</b> — 분석이 가리킨 조문이 실재하는지 코드로 대조하는 1차 스크리닝입니다. ① 문단 실존 ② 기준서 화이트리스트 ③ 문단 키워드(동의어 포함) 단서 대조.</p>'
       + '<div class="aifrs-tip-row" style="margin:8px 0 10px">'
-      +   '<span class="af-chip">'+_gl('ok')+'통과</span><span class="af-chip">'+_gl('warn')+'미검증</span><span class="af-chip">'+_gl('bad')+'확인불가</span></div>'
+      +   '<span class="af-chip">'+_gl('ok')+'확인됨</span><span class="af-chip">'+_gl('warn')+'근거 약함</span><span class="af-chip">'+_gl('bad')+'조문 불일치</span></div>'
       + '<p><b>개념 부합</b>(문서가 실제로 그 요건을 충족하는가)은 코드로 판단하지 않습니다 — <b>[AI 전체 검토]의 AI감사 단계</b>에서 문서 근거로 확정합니다.</p>'
       + '<p class="aifrs-note" style="margin-top:10px">※ 본 결과는 참고용이며, K-IFRS 적용·회계처리의 최종 판단과 책임은 담당자에게 있습니다.</p>'},
     discAudit:   {t:'ⓘ AI감사 결과 안내', h:
@@ -3065,7 +3067,7 @@ a:hover { text-decoration: underline; }
       + '<div class="g-step"><b>①</b><span>근거추출 — 문서에서 검토포인트 관련 구절을 원문 그대로(verbatim) 추출한 뒤, <b>코드로 인용의 실존을 검증</b>(할루시네이션 차단)</span></div>'
       + '<div class="g-step"><b>②</b><span>판정 — 검증된 근거만 사용해 충족 여부를 판단(근거가 없으면 임의 판단 없이 보류)</span></div>'
       + '<div class="g-step"><b>③</b><span>교차검증 — 2차 검토자가 과잉판단을 재검증해 필요 시 <b>확인필요로 하향</b></span></div>'
-      + '<p style="margin-top:10px">근거가 없거나 불충분한 항목은 <b>판단불가(확인필요)</b>로 표기하고 후속 확인사항을 안내합니다. 각 항목의 도트 3개는 위 파이프라인(코드검증·교차검증·인용검증) 통과 여부입니다.</p>'
+      + '<p style="margin-top:10px">근거가 없거나 불충분한 항목은 <b>확인 필요</b>로 표기하고 후속 확인사항을 안내합니다. 항목 요약줄에 「근거 약함」「2차 검토 하향」「문서 인용 없음」 표시가 있으면 위 과정 중 해당 단계에서 걸린 것이고, 표시가 없으면 모두 통과한 항목입니다.</p>'
       + '<p class="aifrs-note" style="margin-top:10px">※ 본 결과는 참고용이며, K-IFRS 적용·회계처리의 최종 판단과 책임은 담당자에게 있습니다. 판정이 <b>충족</b>이어도 원문 기준서 확인을 권장합니다.</p>'},
     tour1: {t:'① 키 등록 — 자세히', h:
         '<p><b>Gemini API Key (주 엔진 · 필수)</b></p>'
@@ -3083,7 +3085,7 @@ a:hover { text-decoration: underline; }
       + '<div class="g-step"><b>4.</b><span><b>최종 검증(AI감사)</b> — 문서에서 검증된 인용만 근거로 각 검토포인트의 충족 여부를 판정합니다.</span></div>'
       + '<p class="aifrs-note" style="margin-top:10px">※ 무료 API 분당 한도 보호를 위해 동시 정밀분석은 최대 3건입니다. 다른 거래의 문서가 섞이면 분석 전에 자동으로 경고합니다.</p>'},
     tour3: {t:'③ 근거 검증 — 자세히', h:
-        '<div class="g-step"><b>·</b><span><b>항목 클릭</b> — 감사·정밀분석 항목은 요약만 보이고, 클릭하면 검토포인트·문서 근거·감사의견·보완사항이 펼쳐집니다. 문제 항목(미흡·확인필요)은 자동으로 펼쳐집니다.</span></div>'
+        '<div class="g-step"><b>·</b><span><b>항목 클릭</b> — 감사·정밀분석 항목은 요약만 보이고, 클릭하면 검토포인트·문서 근거·감사의견·보완사항이 펼쳐집니다. 문제 항목(보완 필요·확인 필요)은 자동으로 펼쳐집니다.</span></div>'
       + '<div class="g-step"><b>·</b><span><b>§ 문단 칩</b> — 누르면 해당 문단의 기준서 원문(내장 DB 5,468개 문단)이 팝업으로 열립니다.</span></div>'
       + '<div class="g-step"><b>·</b><span><b>K-IFRS DB</b> — 기준서번호·명칭·문단·키워드·원문 전문을 직접 검색해 모든 분석 근거를 검증할 수 있습니다.</span></div>'
       + '<div class="g-step"><b>·</b><span><b>해결방향</b> — “보완·확인”, “판단불가사유”에 후속 확인사항이 구체적으로 제시됩니다. 이를 토대로 계약 문구 보완·추가 자료 확보를 진행하세요.</span></div>'
@@ -3146,7 +3148,7 @@ a:hover { text-decoration: underline; }
   function _prioReasonRow(reason){ return reason?'<div class="aifrs-pr-row aifrs-pr-muted-row"><b>우선순위 근거</b><span>'+esc(reason)+'</span></div>':''; }
   function renderPreciseResult(data, std, secs){
     var items=data.items||[];
-    var head='<div class="aifrs-an-head" title="조문별로 이 거래와의 적합 여부를 단계적으로 검토합니다. 핵심 항목은 빨간색, 검토 필요는 노란색으로 표시됩니다">'+_ico('scope',15)+' 정밀 분석 — 제'+esc(std.no)+'호 '+esc(std.name)+' <span>'+secs+'초 · 항목 '+items.length+'개</span>'
+    var head='<div class="aifrs-an-head" title="조문별로 이 거래와의 적합 여부를 단계적으로 검토합니다. 핵심 항목은 빨간색, 검토 필요는 노란색으로 표시됩니다">'+_ico('scope',15)+' 정밀 분석 — 제'+esc(std.no)+'호 '+esc(std.name)+' <span>항목 '+items.length+'개</span>'
       + '</div>'
       + '<div class="af-hint">📖 <b>§ 조문 칩</b>을 누르면 해당 기준서 원문이 바로 열립니다 · 항목 줄을 누르면 상세가 펼쳐집니다</div>';   // 첫 안내 1줄(커서 없이도 조작법이 보이게)
     if(data.__truncated){ head+='<div class="aifrs-api-stat err" style="margin:4px 0">⚠ 응답이 길어 일부 끝부분이 잘렸습니다 — 완성된 항목까지만 표시합니다. (마지막 항목은 내용이 누락될 수 있음 → 다시 정밀 분석 권장)</div>'; }
@@ -3176,7 +3178,6 @@ a:hover { text-decoration: underline; }
       var html='<details class="aifrs-pr-item af-item aifrs-cfb-'+v.level+'"'+(v.level==='green'?'':' open')+'>'
         + '<summary>'+_gl(cw.g)+'<span class="af-stat" style="color:'+cw.c+'">'+cw.w+'</span>'
           + _artChip(std.no, rangeNo, '§ '+esc(paraLabel))
-          + (v.pinpoint?'<span class="af-chip" title="DB 범위문단 '+esc(rangeNo)+' 내에서 코드로 특정"><b>범위</b>'+esc(rangeNo)+'</span>':'')
           + (brief?'<span class="af-sum-txt">'+brief+'</span>':'')
           + _prioBadge(prio, it['우선순위사유'])
         + '</summary>'
@@ -3199,22 +3200,22 @@ a:hover { text-decoration: underline; }
     var dTotal=items.length||1;
     var gPct=cnt.green/dTotal*360, aPct=cnt.amber/dTotal*360;
     var donutCss='conic-gradient(#2dd4bf 0deg '+gPct+'deg, #fbbf24 '+gPct+'deg '+(gPct+aPct)+'deg, #f87171 '+(gPct+aPct)+'deg 360deg)';
-    var donut='<div class="af-donut" style="background:'+donutCss+'" title="코드검증 통과율 '+Math.round(cnt.green/dTotal*100)+'%"><div class="af-donut-hole">'+Math.round(cnt.green/dTotal*100)+'%</div></div>';
+    var donut='<div class="af-donut" style="background:'+donutCss+'" title="조문 확인율 '+Math.round(cnt.green/dTotal*100)+'%"><div class="af-donut-hole">'+Math.round(cnt.green/dTotal*100)+'%</div></div>';
     var summary='<div class="aifrs-pr-summary">'
       + donut
-      + '<span class="af-vitem" style="margin-right:12px">'+_gl('ok')+'통과 <b>'+cnt.green+'</b></span>'
-      + '<span class="af-vitem" style="margin-right:12px">'+_gl('warn')+'미검증 <b>'+cnt.amber+'</b></span>'
-      + '<span class="af-vitem">'+_gl('bad')+'확인불가 <b>'+cnt.red+'</b></span></div>';
+      + '<span class="af-vitem" style="margin-right:12px">'+_gl('ok')+'확인됨 <b>'+cnt.green+'</b></span>'
+      + '<span class="af-vitem" style="margin-right:12px">'+_gl('warn')+'근거 약함 <b>'+cnt.amber+'</b></span>'
+      + '<span class="af-vitem">'+_gl('bad')+'조문 불일치 <b>'+cnt.red+'</b></span></div>';
     // 하단 "다음 확인" 히어로 — 문제 건수와 다음 행동(AI감사)을 한 줄로
     var hasAudit=!!(AiFRS._lastAudit&&AiFRS._lastAudit[std.no]);
     var probs=cnt.amber+cnt.red;
     var nextHero='<div class="af-hero-card" id="aifrs-nexthero-'+std.no+'" style="border-left-color:'+(probs?'#fbbf24':'var(--blue)')+'">'
       + '<div class="af-hero-t">'+_gl(probs?'warn':'ok',15)+'<span>다음 확인</span>'
-        + '<span class="af-hero-sub">'+(probs?'코드검증 주의 '+probs+'건':'코드검증 전 항목 통과')+'</span></div>'
+        + '<span class="af-hero-sub">'+(probs?'근거 확인 필요 '+probs+'건':'근거 확인 완료')+'</span></div>'
       + '<div class="af-next"><span>'
         + (probs
-            ? '<b>'+probs+'건</b>이 미검증·확인불가입니다. <b>AI감사</b>로 문서 근거를 대조해 충족 여부와 해결방향(보완·확인 사항)을 확인하세요.'
-            : '코드검증(조문 실존)은 모두 통과했습니다. 문서가 실제로 요건을 충족하는지는 <b>AI감사</b>에서 확정됩니다.')
+            ? '<b>'+probs+'건</b>은 근거가 약하거나 조문이 맞지 않습니다. <b>AI감사</b>로 문서 근거를 대조해 충족 여부와 해결방향(보완·확인 사항)을 확인하세요.'
+            : '조문 확인은 모두 끝났습니다. 문서가 실제로 요건을 충족하는지는 <b>AI감사</b>에서 확정됩니다.')
         + '</span>'
       + '</div>'
       + '<div style="margin-top:9px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runFinalAudit(\''+std.no+'\')">✅ 최종 검증(AI감사) 실행</button></div></div>';
@@ -3416,9 +3417,9 @@ a:hover { text-decoration: underline; }
   AiFRS.cancelAudit=function(no){ var c=AiFRS._auditCtl&&AiFRS._auditCtl[no]; if(c){ try{c.abort();}catch(e){} } };
   function _auditVerd(v){
     if(v==='충족') return {cls:'g', ico:'✅', cfb:'green', tip:'충족&#10;문서 내용이 요건을 명확히 충족(근거 조항·사실 제시).'};
-    if(v==='미흡') return {cls:'r', ico:'❗', cfb:'red', tip:'미흡&#10;요건 미충족·누락·위반. 보완 필요(가장 주목할 발견사항).'};
+    if(v==='미흡') return {cls:'r', ico:'❗', cfb:'red', tip:'보완 필요&#10;요건 미충족·누락·위반 — 가장 주목할 발견사항.'};
     if(v==='해당없음') return {cls:'a', ico:'➖', cfb:'', tip:'해당없음&#10;이 거래에는 적용되지 않는 요건.'};
-    return {cls:'a', ico:'⚠️', cfb:'amber', tip:'확인필요&#10;문서 정보만으로는 판단 불가. 추가 자료·수치 확인 필요.'};   // 확인필요(기본)
+    return {cls:'a', ico:'⚠️', cfb:'amber', tip:'확인 필요&#10;문서 정보만으로는 판단 불가. 추가 자료·수치 확인 필요.'};   // 확인필요(기본)
   }
   // ── 후속조치 플랜(0콜): 문제 항목을 행동 언어로 통합. 유형·다음 단계는 로컬 규칙, 상세 풀이는 [쉬운 설명](온디맨드 1콜) ──
   function _planKey(no, art){ return (String(no)+'-'+String(art)).replace(/[^0-9A-Za-z가-힣]/g,''); }
@@ -3650,8 +3651,8 @@ a:hover { text-decoration: underline; }
       var verd=match?match['판정']:'';
       var ico, cls, label;
       if(verd==='충족'){ico='✓';cls='#2dd4bf';label='충족';}
-      else if(verd==='미흡'){ico='✗';cls='#f87171';label='미흡';}
-      else if(verd==='확인필요'){ico='⚠';cls='#fbbf24';label='확인필요';}
+      else if(verd==='미흡'){ico='✗';cls='#f87171';label='보완 필요';}
+      else if(verd==='확인필요'){ico='⚠';cls='#fbbf24';label='확인 필요';}
       else if(verd==='해당없음'){ico='─';cls='var(--txt3)';label='해당없음';}
       else{ico='⬜';cls='var(--txt3)';label='미판정';}
       var safeKo=String(g.ko||'').replace(/[^0-9A-Za-z.\-~]/g,'');
@@ -3697,7 +3698,7 @@ a:hover { text-decoration: underline; }
       // 상태 표기 통합: 감사판정 로젠지 1개 + 파이프라인 도트 3개. 문제 항목(미흡·확인필요)만 기본 펼침.
       var open=(verd==='미흡'||verd==='확인필요');
       var html='<details class="aifrs-pr-item af-item aifrs-cfb-'+vm.cfb+'"'+(open?' open':'')+'>'
-        + '<summary>'+_gl(vw.g)+'<span class="af-stat aifrs-tip" style="color:'+vw.c+'" data-tip="'+vm.tip+'">'+esc(verd)+'</span>'
+        + '<summary>'+_gl(vw.g)+'<span class="af-stat aifrs-tip" style="color:'+vw.c+'" data-tip="'+vm.tip+'">'+esc(_verdLabel(verd))+'</span>'
           + _artChip(std.no, auRange, '§ '+esc(auLabel))
           + _pipeDots(code.level, a['교차'], quotes.length>0)
           + (a['__userFixed']?'<span class="aifrs-uchip">사용자확정</span>':'')
@@ -3711,7 +3712,7 @@ a:hover { text-decoration: underline; }
         + (a['감사의견']?'<div class="aifrs-pr-row aifrs-pr-violet"><b>AI감사의견</b><span>'+esc(a['감사의견'])+'</span></div>':'')
         + (verd!=='확인필요' && a['보완사항']?'<div class="aifrs-pr-row aifrs-pr-warn-row"><b>보완·확인</b><span>'+esc(a['보완사항'])+'</span></div>':'')
         + unable
-        + (a['교차']==='하향'?'<div class="aifrs-pr-row aifrs-pr-muted-row"><b>교차검증</b><span>2차 검토에서 확인필요로 하향된 항목입니다.</span></div>':'')
+        + (a['교차']==='하향'?'<div class="aifrs-pr-row aifrs-pr-muted-row"><b>2차 검토</b><span>2차 검토자가 과잉판단으로 보고 확인 필요로 낮춘 항목입니다.</span></div>':'')
         + _prioReasonRow(it['우선순위사유'])
         + hallucNote
         + '</div></details>';
@@ -3723,17 +3724,17 @@ a:hover { text-decoration: underline; }
     // 종합 판정 히어로: 분포 바(적합·검토필요·부적합·해당없음) + 다음 행동 한 줄
     var tot=items.length||1, probs=cnt['미흡']+cnt['확인필요'];
     var pct=function(n){ return (n*100/tot).toFixed(2)+'%'; };
-    var head1 = cnt['미흡']>0 ? {t:'부적합 항목 있음 — 보완 필요', c:'#f87171', g:'bad'}
-      : (cnt['확인필요']>0 ? {t:'추가 확인 필요', c:'#fbbf24', g:'warn'}
-      : {t:'적합 — 문제 항목 없음', c:'#2dd4bf', g:'ok'});
+    var head1 = cnt['미흡']>0 ? {t:'보완 필요 항목 있음', c:'#f87171', g:'bad'}
+      : (cnt['확인필요']>0 ? {t:'확인 필요 항목 있음', c:'#fbbf24', g:'warn'}
+      : {t:'전 항목 충족', c:'#2dd4bf', g:'ok'});
     var seg=function(n,c){ return n?'<i style="width:'+pct(n)+';background:'+c+'"></i>':''; };
     var lg=function(c,n,v){ return '<span><em style="background:'+c+'"></em>'+n+' <b>'+v+'</b></span>'; };
     var hero='<div class="af-hero-card" style="border-left-color:'+head1.c+'">'
       + '<div class="af-hero-t">'+_gl(head1.g,15)+'<span style="color:'+head1.c+'">'+head1.t+'</span>'
-        + '<span class="af-hero-sub">항목 '+items.length+'개 · '+secs+'초 · 3단계 근거기반 검증</span></div>'
+        + '<span class="af-hero-sub">항목 '+items.length+'개 · 문서 근거로 검증</span></div>'
       + '<div class="af-bar">'+seg(cnt['충족'],'#2dd4bf')+seg(cnt['확인필요'],'#fbbf24')+seg(cnt['미흡'],'#f87171')+seg(cnt['해당없음'],'var(--bg4)')+'</div>'
-      + '<div class="af-legend">'+lg('#2dd4bf','적합',cnt['충족'])+lg('#fbbf24','검토필요',cnt['확인필요'])
-        + lg('#f87171','부적합',cnt['미흡'])+lg('var(--bg4)','해당없음',cnt['해당없음'])+'</div>'
+      + '<div class="af-legend">'+lg('#2dd4bf','충족',cnt['충족'])+lg('#fbbf24','확인 필요',cnt['확인필요'])
+        + lg('#f87171','보완 필요',cnt['미흡'])+lg('var(--bg4)','해당없음',cnt['해당없음'])+'</div>'
       + '<div class="af-next">'+_gl(probs?'warn':'ok')+'<span>'
         + (probs
             ? '문제 <b>'+probs+'건</b>은 아래에서 자동으로 펼쳐집니다 — <b>문서 근거·보완·확인</b> 사항에서 해결방향을 확인하세요.'
@@ -4324,7 +4325,9 @@ a:hover { text-decoration: underline; }
           '판단 게이트에서 아직 판정되지 않은 항목에 "원문 보기" 바로가기 버튼 추가 — 확인할 조문으로 즉시 이동',
           '정밀분석 결과 요약에 통과율 도넛 차트 추가 — 텍스트 숫자만 있던 것을 색상으로 즉시 식별 가능하게 개선',
           '사용 가이드(코치마크 투어)에 4단계 추가 — 오늘 추가된 단계 표시·안내 배너·판단 게이트를 신규 사용자에게도 안내',
-          '판단 게이트 최상단 배치·조문 클릭 시 원문 확인은 기존 구현이 이미 반영돼 있음을 확인(추가 작업 없이 재사용)'
+          '판단 게이트 최상단 배치·조문 클릭 시 원문 확인은 기존 구현이 이미 반영돼 있음을 확인(추가 작업 없이 재사용)',
+          '표기 다이어트 — §조문 칩을 「📖 § 11 │ 원문 보기」 버튼형으로 바꾸고 첫 안내 1줄 추가, 신호등 점 3개는 문제 있을 때만 한국어 칩으로, 우선순위는 「핵심」만 배지(정렬은 점수 유지), 접힌 묶음·항목 상세는 들여쓰기+가이드선으로 계층 표시',
+          '용어 한 벌로 통일 — 감사 요약·항목 배지·판단 게이트·다음 할 일 모두 「충족 / 확인 필요 / 보완 필요 / 해당없음」, 정밀분석은 「확인됨 / 근거 약함 / 조문 불일치」. 처리시간·모델명·「코드검증」 등 개발자 용어와 행동 수단 없는 안내문 제거'
         ]
       },
       { date:'2026-09-01', title:'화면 전면 간소화 + 신규 문서 48종 전수검증(사이클4) 완주',
