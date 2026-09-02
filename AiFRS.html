@@ -70,6 +70,8 @@ html, body { margin:0; padding:0; height:100%; background:var(--bg); color:var(-
   font-size: 15px; font-weight: 400; line-height: 1.45; letter-spacing: -0.1px;
   -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
+  word-break: keep-all; overflow-wrap: break-word;   /* 한글은 이게 없으면 글자 단위로 아무데서나 줄바꿈됨 — 전역 적용, 개별 박스마다 따로 안 넣어도 됨 */
+  text-wrap: pretty;   /* 지원 브라우저(Chrome/Edge)에서 문단 마지막 줄 고아단어 완화. 미지원 브라우저는 조용히 무시(깨지지 않음) */
 }
 a { color: var(--blue-sky); text-decoration: none; }
 a:hover { text-decoration: underline; }
