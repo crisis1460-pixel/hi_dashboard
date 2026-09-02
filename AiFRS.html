@@ -89,12 +89,13 @@ a:hover { text-decoration: underline; }
 .af-brand { display:flex; align-items:baseline; gap:10px; cursor:pointer; }
 .af-brand-mark {
   font-size:22px; font-weight:800; letter-spacing:-0.5px; color:#fff;
-  background:linear-gradient(90deg, #ffffff, #bfe3ff, #2997ff, #bfe3ff, #ffffff, #7cc4ff, #ffffff);
-  background-size:300% 100%;
+  background:linear-gradient(90deg, #fff 0%, #fff 35%, #2997ff 50%, #fff 65%, #fff 100%);
+  background-size:250% 100%;
   -webkit-background-clip:text; -webkit-text-fill-color:transparent;
   background-clip:text;
-  animation:af-logoWave 5s ease-in-out infinite;
+  animation:af-logoSweep 3.2s linear infinite;   /* 중앙(히어로)과 다른 패턴 — 왼쪽→오른쪽 스윕 */
 }
+@keyframes af-logoSweep { 0%{background-position:200% 0} 100%{background-position:-50% 0} }
 @keyframes af-logoWave { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
 @media (prefers-reduced-motion: reduce) { .af-brand-mark, .af-hero-title { animation:none; } }
 .af-brand-tag { font-size:11px; font-weight:400; color:var(--txt3); letter-spacing:0.5px; text-transform:uppercase; }
@@ -450,7 +451,29 @@ a:hover { text-decoration: underline; }
     inset 6px 0 14px rgba(0,0,0,.25),
     inset -6px 0 14px rgba(0,0,0,.35);
 }
-.af-remote-led { width:6px; height:6px; border-radius:50%; margin-bottom:12px; background:radial-gradient(circle at 35% 30%, #9be7ff, #1b6fa8 70%); box-shadow:0 0 5px rgba(70,180,255,.8); }
+.af-remote-led-zone { padding:8px; margin:-8px -8px 4px; border-radius:12px; cursor:pointer; }
+.af-remote-led-zone:hover { background:rgba(255,255,255,.05); }
+.af-remote-led { width:6px; height:6px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #9be7ff, #1b6fa8 70%); box-shadow:0 0 5px rgba(70,180,255,.8); transition:box-shadow .15s; }
+/* 숨은 재미: LED를 20번 누르면 리모컨이 잠깐 무지개색으로 들썩임(기능과 무관, 순수 장식) */
+.af-remote.rainbow { animation:af-remoteShake .5s ease-in-out; }
+@keyframes af-remoteShake { 0%,100%{transform:rotate(0)} 20%{transform:rotate(-1.5deg)} 40%{transform:rotate(1.5deg)} 60%{transform:rotate(-1deg)} 80%{transform:rotate(1deg)} }
+.af-remote.rainbow .af-remote-item { animation:af-remoteRainbow 1.2s linear infinite; }
+.af-remote.rainbow .af-remote-item:nth-child(2){animation-delay:.15s}
+.af-remote.rainbow .af-remote-item:nth-child(3){animation-delay:.3s}
+.af-remote.rainbow .af-remote-item:nth-child(4){animation-delay:.45s}
+@keyframes af-remoteRainbow {
+  0%{box-shadow:0 2px 0 #050505,0 3px 4px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -3px 5px rgba(0,0,0,.5), 0 0 10px 2px #ff5252}
+  16%{box-shadow:0 2px 0 #050505,0 3px 4px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -3px 5px rgba(0,0,0,.5), 0 0 10px 2px #ffb752}
+  33%{box-shadow:0 2px 0 #050505,0 3px 4px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -3px 5px rgba(0,0,0,.5), 0 0 10px 2px #fff166}
+  50%{box-shadow:0 2px 0 #050505,0 3px 4px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -3px 5px rgba(0,0,0,.5), 0 0 10px 2px #66e07a}
+  66%{box-shadow:0 2px 0 #050505,0 3px 4px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -3px 5px rgba(0,0,0,.5), 0 0 10px 2px #52c7ff}
+  83%{box-shadow:0 2px 0 #050505,0 3px 4px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -3px 5px rgba(0,0,0,.5), 0 0 10px 2px #a67bff}
+  100%{box-shadow:0 2px 0 #050505,0 3px 4px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -3px 5px rgba(0,0,0,.5), 0 0 10px 2px #ff5252}
+}
+/* 펼침 이펙트(후광 글로우) — 클릭 위임으로 모든 버튼·아이콘박스 공통 적용 */
+.af-press-fx { animation:af-pressGlow .45s ease-out; }
+@keyframes af-pressGlow { 0%{filter:drop-shadow(0 0 2px rgba(41,151,255,.85))} 100%{filter:drop-shadow(0 0 13px rgba(41,151,255,0))} }
+@media (prefers-reduced-motion: reduce) { .af-press-fx, .af-remote.rainbow, .af-remote.rainbow .af-remote-item { animation:none; } }
 .af-remote-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .af-remote-item {
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; width:44px; height:44px; border-radius:13px; padding:0;
@@ -4800,7 +4823,7 @@ a:hover { text-decoration: underline; }
     var iGuide=ic('<circle cx="12" cy="12" r="9"/><path d="M9.6 9.6a2.4 2.4 0 1 1 3.4 2.2c-.7.4-1 .9-1 1.6"/><path d="M12 16.8h.01"/>');   // 물음표(도움)
     var iHome=ic('<path d="M12 4l8 7h-2.5v8h-4v-5h-3v5h-4v-8H4z"/>');                                   // 집(처음)
     // 배치: 왼쪽 위부터 시계방향 1 숨김 → 2 펼침 → 3 도움 → 4 처음 (DOM은 행 순서: 숨김·펼침 / 처음·도움)
-    d.innerHTML='<div class="af-remote-led"></div>'
+    d.innerHTML='<div class="af-remote-led-zone" id="aifrs-led-zone"><div class="af-remote-led" id="aifrs-led"></div></div>'
       + '<div class="af-remote-grid">'
       + '<button class="af-remote-item" title="펼쳐진 항목을 모두 접고 맨 위로" onclick="window.AiFRS.remoteCollapse()">'+iHide+'숨김</button>'
       + '<button class="af-remote-item" title="접힌 항목을 모두 펼치고 맨 위로" onclick="window.AiFRS.remoteExpand()">'+iOpen+'펼침</button>'
@@ -4811,7 +4834,37 @@ a:hover { text-decoration: underline; }
       + '<div class="af-remote-ci">HECTO<br>INNOVATION</div>';
     document.body.appendChild(d);
     _placeRemote(); window.addEventListener('resize', _placeRemote);
+    _wireLed();
   }
+  // 숨은 재미(이스터에그, 기능과 무관): LED 클릭 → 20색 중 랜덤(직전과 다른 색), 20회 연속 시 무지개 보너스
+  // 색은 색상환 360°를 20등분(18°씩)해 만든 값 — 최대한 서로 구분되도록
+  var AF_LED_COLORS = (function(){
+    var arr=[]; for(var i=0;i<20;i++){ var h=i*18; arr.push({c1:'hsl('+h+',90%,72%)', c2:'hsl('+h+',80%,46%)'}); } return arr;
+  })();
+  function _wireLed(){
+    var zone=document.getElementById('aifrs-led-zone'), led=document.getElementById('aifrs-led'), rc=document.getElementById('aifrs-remote');
+    if(!zone || zone._wired) return; zone._wired=true;
+    var lastIdx=-1, streak=0;
+    zone.addEventListener('click', function(){
+      var idx; do{ idx=Math.floor(Math.random()*AF_LED_COLORS.length); }while(idx===lastIdx && AF_LED_COLORS.length>1);
+      lastIdx=idx;
+      var col=AF_LED_COLORS[idx];
+      led.style.background='radial-gradient(circle at 35% 30%, '+col.c1+', '+col.c2+' 70%)';
+      led.style.boxShadow='0 0 8px 2px '+col.c2;
+      streak++;
+      if(streak>=20){
+        rc.classList.remove('rainbow'); void rc.offsetWidth; rc.classList.add('rainbow');
+        setTimeout(function(){ rc.classList.remove('rainbow'); }, 1300);
+        streak=0;
+      }
+    });
+  }
+  // 펼침 이펙트(후광 글로우) — 클릭 위임으로 버튼류 전체(리모컨·상단바 아이콘·하단바·팝업 버튼 등)에 공통 적용, 개별 등록 불필요
+  document.addEventListener('click', function(e){
+    var el=e.target.closest('.af-remote-item, .af-icon-btn, .af-attach-btn, .af-btn, .aifrs-btn, .aifrs-help-btn, .af-link-btn');
+    if(!el) return;
+    el.classList.remove('af-press-fx'); void el.offsetWidth; el.classList.add('af-press-fx');
+  }, true);
   // 본문(최대 1160px 중앙)의 오른쪽 여백 한가운데에 리모컨을 놓는다 — 여백이 좁으면 가장자리에 붙임
   function _placeRemote(){
     var d=document.getElementById('aifrs-remote'); if(!d) return;
