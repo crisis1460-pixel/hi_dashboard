@@ -3466,7 +3466,8 @@ a:hover { text-decoration: underline; }
     // 사이클7 R2-b: 문서에 언급 없는 관련 논점은 감사 대상에서 분리해 참고 목록으로만(접힘) — "확인필요" 편중의 상류 예방
     var refs=Array.isArray(data['참고논점'])?data['참고논점'].filter(function(r){ return r&&(r['조문번호']||r['논점']); }):[];
     var refHtml=refs.length
-      ? '<details class="aifrs-pr-fold"><summary>참고 — 이 문서에 언급 없는 관련 논점 '+refs.length+'개 (감사 대상 아님 · 필요 시 자료를 보완해 다시 검토)</summary>'
+      ? '<details class="aifrs-pr-fold"><summary>'+refs.length+'개 논점 — 첨부 문서 범위 밖 (감사 제외)</summary>'
+        + '<div class="aifrs-pr-row aifrs-pr-muted-row" style="padding:6px 10px 4px;font-size:.82em;color:var(--txt2)">아래 논점들은 이 기준서에 있지만 첨부 문서가 다루지 않아 감사 대상에서 제외했습니다. 해당 논점이 이 거래에도 적용된다면 그 내용이 담긴 자료를 추가하고 다시 검토하세요.</div>'
         + refs.map(function(r){ var rn=AiFRS.stripStdPrefix(std.no, String(r['조문번호']||''))||String(r['조문번호']||'-'); return '<div class="aifrs-pr-row aifrs-pr-muted-row"><b>'+_artChip(std.no, rn, '§ '+esc(rn))+'</b><span>'+esc(r['논점']||'')+'</span></div>'; }).join('')
         + '</details>'
       : '';
@@ -3646,13 +3647,14 @@ a:hover { text-decoration: underline; }
                   if(downReason) op='[교차검증 하향] '+downReason+(op?' (1차 의견: '+op+')':'');   // 하향 시 의견 텍스트도 갱신 — 충족 어조 의견이 그대로 남는 문제 방지
                   var evState=e.quotes.length?'확보':'부족';
                   if(verd==='자료부족'){
-                    // 사이클7 R1: 무정보 문구 금지 — 「이 문서에는 …내용이 없습니다. 보완 자료: …」 형식 강제(pass7에서 '검증된 근거 없음' 한 줄 의견 5건 관찰)
-                    var gapTxt=String(j['판단불가사유']||'').replace(/^검증된 문서 근거가 없어 자동 보류\.?\s*/,'').replace(/^\[근거부족\]\s*/,'').trim();
+                    // 사이클7 R1 (형식 개정): 두괄식 — "확인 불가" 결론 먼저, 그 다음 조문 요구사항, 마지막 준비 자료
                     var supp=(j['보완사항']||'').trim()||_supplementHint(e.it);
-                    if(!/이 문서에는/.test(op)){
-                      var topic=_brief(e.it['체크항목']||e.it['검토포인트']||'', 40);
-                      op='이 문서에는 '+(topic?'"'+topic+'"':'이 검토포인트')+'에 관한 내용이 없습니다.'+(gapTxt&&!/근거가 없/.test(gapTxt)?' '+gapTxt:'')+' 보완 자료: '+supp.replace(/\.$/,'')+'.';
-                    } else if(!/보완 자료/.test(op)){ op=op.replace(/\s*$/,'')+' 보완 자료: '+supp.replace(/\.$/,'')+'.'; }
+                    if(!/첨부 문서로는 확인 불가|이 문서에는/.test(op)){
+                      var topic=_brief(e.it['체크항목']||e.it['검토포인트']||'', 60);
+                      op='이 문단, 첨부 문서로는 확인 불가\n'
+                        +(topic?'이 조문이 확인하려는 것: '+topic+'.\n':'')
+                        +'준비할 자료: '+supp.replace(/\.$/,'')+'.';
+                    } else if(!/준비할 자료|보완 자료/.test(op)){ op=op.replace(/\s*$/,'')+'\n준비할 자료: '+supp.replace(/\.$/,'')+'.'; }
                     if(!(j['보완사항']||'').trim()) j['보완사항']=supp;
                   }
                   if(!op.trim()) op='[의견미생성] AI가 감사의견을 생성하지 않았습니다 — 재검토를 권장합니다.';
@@ -3980,7 +3982,7 @@ a:hover { text-decoration: underline; }
         + (code.pinpoint?'<div class="aifrs-pr-row aifrs-pr-src"><b>해당 세부조문(원문)</b><span>'+esc(code.pinpoint.no+code.pinpoint.idx)+' '+esc(code.pinpoint.t)+(auRange&&auRange!==auLabel?' <span class="aifrs-note">(DB 범위문단 '+esc(auRange)+' 내 코드 특정)</span>':'')+'</span></div>':'')
         + (it['검토포인트']?'<div class="aifrs-pr-row"><b>검토포인트</b><span>'+esc(it['검토포인트'])+'</span></div>':'')
         + quoteHtml
-        + (a['감사의견']?'<div class="aifrs-pr-row aifrs-pr-violet"><b>AI감사의견</b><span>'+esc(a['감사의견'])+'</span></div>':'')
+        + (a['감사의견']?'<div class="aifrs-pr-row aifrs-pr-violet"><b>AI감사의견</b><span>'+(verd==='자료부족'?esc(a['감사의견']).replace(/\n/g,'<br>'):esc(a['감사의견']))+'</span></div>':'')
         + (verd!=='확인필요' && a['보완사항']?'<div class="aifrs-pr-row aifrs-pr-warn-row"><b>'+(verd==='자료부족'?'보완 자료':'보완·확인')+'</b><span>'+esc(a['보완사항'])+'</span></div>':'')
         + unable
         + (a['교차']==='하향'?'<div class="aifrs-pr-row aifrs-pr-muted-row"><b>2차 검토</b><span>2차 검토자가 과잉판단으로 보고 확인 필요로 낮춘 항목입니다.</span></div>':'')
