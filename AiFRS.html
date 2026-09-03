@@ -581,6 +581,11 @@ a:hover { text-decoration: underline; }
 .af-gate-cta { font-size:10px; font-weight:600; color:var(--blue); background:rgba(96,165,250,.12); border-radius:var(--radius-pill); padding:2px 8px; flex-shrink:0; cursor:pointer; white-space:nowrap; }
 .af-gate-cta:hover { background:rgba(96,165,250,.22); }
 .af-gate-ev { display:block; font-size:10.5px; color:var(--txt3); line-height:1.5; margin-top:2px; font-style:italic; }
+.af-code-guide { padding:5px 10px; border-radius:6px; font-size:11.5px; margin:5px 0 2px; line-height:1.6; }
+.af-code-guide-amber { background:rgba(251,191,36,.10); border-left:2px solid #fbbf24; color:var(--txt2); }
+.af-code-guide-red { background:rgba(248,113,113,.10); border-left:2px solid #f87171; color:var(--txt2); }
+.af-supp-3 { display:grid; grid-template-columns:5.5em 1fr; gap:2px 6px; font-size:12px; margin:2px 0; }
+.af-supp-3 b { color:var(--txt3); font-size:11px; }
 
 .af-next-banner { display:flex; align-items:center; gap:8px; margin:10px 0; padding:9px 12px; background:rgba(96,165,250,.1); border:1px solid rgba(96,165,250,.3); border-radius:var(--radius-lg); }
 .af-next-ico { flex-shrink:0; display:flex; }
@@ -3553,7 +3558,7 @@ a:hover { text-decoration: underline; }
       '- 해당없음: 그 조문·요건이 이 거래에 적용되지 않음. (검토포인트 스스로 "직접 적용되지 않는다/무관하다"고 하면 대개 해당없음)',
       '- 미흡: 문서의 사실관계가 기준서 요건에 명백히 배치되어 그대로면 회계처리에 문제가 됨.',
       '- 확인필요: 문서 근거는 있으나(검증된 인용 1건 이상) 해석·적용이 불확실하거나, 결론을 좌우하는 핵심 수치·조건이 문서 밖에 있음. 판단불가사유에 "무엇이 불확실한지"를 한 문장으로 반드시 명시.',
-      '- 자료부족: 검토포인트를 판단할 사실이 문서에 전혀 없음(검증된 근거 0건). 감사의견은 반드시 「이 문서에는 [빠진 사실]에 관한 내용이 없습니다. 보완 자료: [구체 예시]」 두 문장 형식 — "근거 없음"류 한 줄 문구 금지. 보완사항에는 어떤 자료(계약 조항·정산서·품의서·내부 검토자료 등)를 추가하면 판단 가능한지 적을 것.',
+      '- 자료부족: 검토포인트를 판단할 사실이 문서에 전혀 없음(검증된 근거 0건). 감사의견은 「이 문서에는 [빠진 사실]에 관한 내용이 없습니다.」 한 문장 — "근거 없음"류 한 줄 문구 금지. 보완사항은 반드시 아래 3줄 형식으로 출력(항목명 그대로):\n빠진 사실: [검토포인트 판단에 필요한 구체 사실 — 어떤 거래·수치·조건이 없는지]\n찾는 곳: [그 사실이 담길 만한 문서 유형·시스템·담당자]\n준비할 서류: [실제 추가할 서류명 또는 데이터 — 계약서·품의서·정산서·시스템 화면 등 구체적으로]',
       '⚠ 거래의 성격이 문서로 확인되면 "문서에 회계 결론·용어가 없다"는 이유만으로 확인필요로 미루지 말 것 — 그 경우는 충족이다. 검증된 근거가 전혀 없을 때만 자료부족.',
       '확인필요·해당없음이면 판단불가사유에 이유와 후속 확인사항을 구체적으로. 감사의견은 제시된 근거를 인용해 1~2문장.',
       '반드시 아래 JSON으로만:',
@@ -3678,6 +3683,16 @@ a:hover { text-decoration: underline; }
   };
   AiFRS.cancelAudit=function(no){ var c=AiFRS._auditCtl&&AiFRS._auditCtl[no]; if(c){ try{c.abort();}catch(e){} } };
   // 사이클7 R1: 자료부족 항목의 "보완 자료" 기본 안내 — 검토포인트 성격별로 어떤 자료를 더하면 판단 가능한지(초보 담당자용)
+  // 자료부족 보완사항 "빠진 사실 / 찾는 곳 / 준비할 서류" 3단 파싱 렌더러 (사이클9 R5 Judge 3단)
+  function _supp3Html(text){
+    var KEY=['빠진 사실','찾는 곳','준비할 서류'];
+    var rows=[];
+    KEY.forEach(function(k){
+      var m=text.match(new RegExp(k+':\\s*([^\\n]+)'));
+      if(m) rows.push('<div class="af-supp-3"><b>'+esc(k)+'</b><span>'+esc(m[1].trim())+'</span></div>');
+    });
+    return rows.length ? rows.join('') : '<span>'+esc(text)+'</span>';
+  }
   function _supplementHint(it){
     var t=((it&&it['체크항목'])||'')+' '+((it&&it['검토포인트'])||'');
     if(/공시|주석|표시|분류|유동/.test(t)) return '주석 공시 초안 또는 재무제표 표시 내역(해당 항목의 기초·기말 금액과 변동 내역)';
@@ -3992,8 +4007,11 @@ a:hover { text-decoration: underline; }
         + (code.pinpoint?'<div class="aifrs-pr-row aifrs-pr-src"><b>해당 세부조문(원문)</b><span>'+esc(code.pinpoint.no+code.pinpoint.idx)+' '+esc(code.pinpoint.t)+(auRange&&auRange!==auLabel?' <span class="aifrs-note">(DB 범위문단 '+esc(auRange)+' 내 코드 특정)</span>':'')+'</span></div>':'')
         + (it['검토포인트']?'<div class="aifrs-pr-row"><b>검토포인트</b><span>'+esc(it['검토포인트'])+'</span></div>':'')
         + quoteHtml
+        + (code.level==='amber'?'<div class="af-code-guide af-code-guide-amber"><b>이 인용 불확실</b> — 조문은 DB에 있으나 키워드 단서가 약합니다. 원문을 직접 열어 검토포인트와 실제로 대응되는지 확인하세요.</div>'
+          :code.level==='red'?'<div class="af-code-guide af-code-guide-red"><b>이 인용 불확실</b> — 인용 조문이 이 기준서 DB 범위 밖이거나 번호가 다릅니다. AI 오인용 가능성이 있으므로 원문을 직접 열어 확인하세요.</div>'
+          :'')
         + (a['감사의견']?'<div class="aifrs-pr-row aifrs-pr-violet"><b>AI감사의견</b><span>'+(verd==='자료부족'?esc(a['감사의견']).replace(/\n/g,'<br>'):esc(a['감사의견']))+'</span></div>':'')
-        + (verd!=='확인필요' && a['보완사항']?'<div class="aifrs-pr-row aifrs-pr-warn-row"><b>'+(verd==='자료부족'?'보완 자료':'보완·확인')+'</b><span>'+esc(a['보완사항'])+'</span></div>':'')
+        + (verd!=='확인필요' && a['보완사항']?'<div class="aifrs-pr-row aifrs-pr-warn-row"><b>'+(verd==='자료부족'?'준비할 서류':'보완·확인')+'</b>'+(verd==='자료부족'?_supp3Html(a['보완사항']):'<span>'+esc(a['보완사항'])+'</span>')+'</div>':'')
         + unable
         + (a['교차']==='하향'?'<div class="aifrs-pr-row aifrs-pr-muted-row"><b>2차 검토</b><span>2차 검토자가 과잉판단으로 보고 확인 필요로 낮춘 항목입니다.</span></div>':'')
         + _prioReasonRow(it['우선순위사유'])
@@ -4626,10 +4644,20 @@ a:hover { text-decoration: underline; }
   }
   function buildHistHtml(){
     var items = [
-      { date:'2026-09-03', title:'확인필요 원인분석 — 판정 체계 개편 (사이클8 검증 대기)',
+      { date:'2026-09-03', title:'근거 약함·조문 불일치 인라인 가이드 + 자료부족 3단 준비 서류 (사이클9)',
+        bullets:[
+          '근거 약함(amber) — 항목 펼침 시 "이 인용 불확실" 경고 박스 자동 표시',
+          '조문 불일치(red) — 항목 펼침 시 "AI 오인용 가능성" 경고 박스 자동 표시',
+          '자료부족 보완사항: Judge가 빠진 사실·찾는 곳·준비할 서류 3단 구조로 출력',
+          '자료부족 보완 자료 렌더링 → 3단 그리드 파싱·표시(_supp3Html)',
+          'ZIP 업로드 완전 제거 (보안 이슈), 드롭존 텍스트·accept 정리',
+          '판단게이트 충족 행: 확인한 문서 근거 첫 구절 인라인 표시'
+        ]
+      },
+      { date:'2026-09-03', title:'확인필요 원인분석 — 판정 체계 개편 (사이클8 검증)',
         bullets:[
           '"자료부족" 판정 신설 — 근거 없음은 노란색이 아닌 슬레이트색으로 분리 표시',
-          '자료부족 시 「이 문서에는 …없습니다. 보완 자료: …」 형식 강제, 무정보 문구 금지',
+          '자료부족 시 「이 문서에는 …없습니다.」 형식 강제, 무정보 문구 금지',
           '다음 할 일 로드맵에 자료부족 건은 "자료 확보" 액션 자동 추가',
           '정밀분석 참고논점 분리 — 문서에 없는 논점은 감사 제외·접힌 목록 별도 표시',
           '검토포인트 수를 문서 논점 수에 비례, 흐름형 기준서는 단계 먼저 판정',
