@@ -580,6 +580,7 @@ a:hover { text-decoration: underline; }
 .af-gate-lbl { font-size:10.5px; font-weight:600; flex-shrink:0; }
 .af-gate-cta { font-size:10px; font-weight:600; color:var(--blue); background:rgba(96,165,250,.12); border-radius:var(--radius-pill); padding:2px 8px; flex-shrink:0; cursor:pointer; white-space:nowrap; }
 .af-gate-cta:hover { background:rgba(96,165,250,.22); }
+.af-gate-ev { display:block; font-size:10.5px; color:var(--txt3); line-height:1.5; margin-top:2px; font-style:italic; }
 
 .af-next-banner { display:flex; align-items:center; gap:8px; margin:10px 0; padding:9px 12px; background:rgba(96,165,250,.1); border:1px solid rgba(96,165,250,.3); border-radius:var(--radius-lg); }
 .af-next-ico { flex-shrink:0; display:flex; }
@@ -1076,7 +1077,7 @@ a:hover { text-decoration: underline; }
   AiFRS.SUPPORTED = {
     doc:     ['pdf','xlsx','xls','csv','docx','pptx'],
     image:   ['jpg','jpeg','png','bmp'],
-    archive: ['zip']
+    archive: []
   };
   AiFRS.LIBS = {
     pdfjs:   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
@@ -1085,7 +1086,7 @@ a:hover { text-decoration: underline; }
     zip:     'https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2/dist/zip-full.min.js'  // .zip(암호)·.pptx 해제용
   };
   // 표준 ZIP이 아니라 해제 불가한 압축 형식 (전용 안내 팝업용)
-  AiFRS.OTHER_ARCHIVE = ['alz','egg','7z','rar','tar','gz','tgz','bz2','lzh','lz','cab','arj','iso','xz','z'];
+  AiFRS.OTHER_ARCHIVE = ['zip','alz','egg','7z','rar','tar','gz','tgz','bz2','lzh','lz','cab','arj','iso','xz','z'];
 
   // ══ 상태 (다음 단계로 전달) ══
   // 각 rec: {id,name,ext,kind,size,status,text,error,dataUrl,file}
@@ -3296,7 +3297,7 @@ a:hover { text-decoration: underline; }
       + '<div class="g-step"><b>·</b><span>“당사가 누구인가”를 기준으로 거래 방향(수취/지급)과 적용 기준서를 판정합니다. 기본값은 헥토이노베이션이며, 다른 법인이면 변경 후 [Save].</span></div>'
       + '<p class="aifrs-note aifrs-note-mark" style="margin-top:10px"><i>※</i><span>키는 이 브라우저(localStorage)에만 저장되며 외부로 전송·공유되지 않습니다. 최초 1회만 등록하면 다음 실행부터 자동 적용됩니다.</span></p>'},
     tour2: {t:'② 올리고 분석 — 자세히', h:
-        '<div class="g-step"><b>1.</b><span><b>업로드</b> — 계약서·문서를 끌어다 놓거나 클릭해 첨부(PDF·엑셀·워드·이미지·ZIP·스캔 PDF). 업로드 후 [미리보기]로 추출 내용을 확인할 수 있습니다.</span></div>'
+        '<div class="g-step"><b>1.</b><span><b>업로드</b> — 계약서·문서를 끌어다 놓거나 클릭해 첨부(PDF·엑셀·워드·이미지·스캔 PDF). 업로드 후 [미리보기]로 추출 내용을 확인할 수 있습니다.</span></div>'
       + '<div class="g-step"><b>2.</b><span><b>AI 분석</b> — [AI 분석] 버튼 한 번으로 거래구조(당사 위치·관계·대금 방향)를 파악하고 후보 기준서를 선별합니다. 스캔 문서는 OCR도 함께 처리합니다.</span></div>'
       + '<div class="g-step"><b>3.</b><span><b>AI 전체 검토</b> — 후보 카드의 [AI 전체 검토]를 누르면 정밀 분석(조문별 체크항목·검토포인트)과 AI 감사가 자동으로 이어서 실행됩니다.</span></div>'
       + '<div class="g-step"><b>4.</b><span><b>최종 검증(AI감사)</b> — 문서에서 검증된 인용만 근거로 각 검토포인트의 충족 여부를 판정합니다.</span></div>'
@@ -3929,12 +3930,21 @@ a:hover { text-decoration: underline; }
       else if(verd==='해당없음'){ico='─';cls='var(--txt3)';label='해당없음';}
       else{ico='⬜';cls='var(--txt3)';label='미판정';}
       var safeKo=String(g.ko||'').replace(/[^0-9A-Za-z.\-~]/g,'');
-      var cta = (!verd && safeKo)
+      var ctaLink = safeKo
         ? '<span class="af-gate-cta" title="이 조문의 기준서 원문을 팝업으로 확인합니다" onclick="event.stopPropagation();event.preventDefault();window.AiFRS.showParaText(\''+std.no+'\',\''+safeKo+'\')">→ §'+esc(safeKo)+' 원문 보기</span>'
         : '';
-      return '<div class="af-gate-row">'
+      var cta = (!verd || verd==='충족') ? ctaLink : '';
+      // 충족 행: 확인한 문서 근거 첫 구절 + 감사의견 인라인 표시
+      var chukSub = '';
+      if(verd==='충족' && match){
+        var q0=(match['근거인용']||[])[0]||'';
+        var op=match['감사의견']||'';
+        if(q0) chukSub += '<span class="af-gate-ev">"'+esc(q0.length>90?q0.slice(0,90)+'…':q0)+'"</span>';
+        else if(op) chukSub += '<span class="af-gate-ev">'+esc(op.length>90?op.slice(0,90)+'…':op)+'</span>';
+      }
+      return '<div class="af-gate-row'+(verd==='충족'?' af-gate-row-ok':'')+'">'
         +'<span class="af-gate-ico" style="color:'+cls+'">'+ico+'</span>'
-        +'<span class="af-gate-q" title="조문 '+esc(g.ko)+' · '+esc(g.pass)+'">'+esc(g.q)+'</span>'
+        +'<span class="af-gate-q" title="조문 '+esc(g.ko)+' · '+esc(g.pass)+'">'+esc(g.q)+(chukSub?'<br>'+chukSub:'')+'</span>'
         +'<span class="af-gate-lbl" style="color:'+cls+'">'+label+'</span>'
         +cta
         +'</div>';
@@ -4451,8 +4461,8 @@ a:hover { text-decoration: underline; }
       '<div class="aifrs-modal">'
       + '<div class="m-ico">🗜️</div>'
       + '<div class="m-ttl">지원하지 않는 압축 형식</div>'
-      + '<div class="m-msg">' + esc(names.join(', ')) + '<br><br>압축 파일은 <b>표준 ZIP(.zip)</b>만 해제할 수 있습니다.'
-      +   '<br><span class="aifrs-note aifrs-note-mark"><i>※</i><span>알집(.alz·.egg) · 7-Zip(.7z) · RAR(.rar) 등은 <b>.zip</b>으로 다시 압축하거나, 내부 파일을 꺼내 직접 업로드해주세요.</span></span></div>'
+      + '<div class="m-msg">' + esc(names.join(', ')) + '<br><br>압축 파일은 지원하지 않습니다.'
+      +   '<br><span class="aifrs-note aifrs-note-mark"><i>※</i><span>압축을 해제한 뒤 내부 파일(PDF·엑셀·워드 등)을 직접 업로드해주세요.</span></span></div>'
       + '<div class="m-foot"><button class="aifrs-btn">확인</button></div>'
       + '</div>';
     function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
@@ -5393,9 +5403,9 @@ a:hover { text-decoration: underline; }
 
       + '<div class="af-bottom">'
       + '<div class="af-bottom-inner">'
-      +   '<input type="file" id="aifrs-file-input" multiple accept=".pdf,.xlsx,.xls,.csv,.docx,.pptx,.zip,.jpg,.jpeg,.png,.bmp" style="display:none">'
+      +   '<input type="file" id="aifrs-file-input" multiple accept=".pdf,.xlsx,.xls,.csv,.docx,.pptx,.jpg,.jpeg,.png,.bmp" style="display:none">'
       +   '<button class="af-attach-btn" id="aifrs-attach" title="Attach files">&#128206;</button>'
-      +   '<div class="af-drop" id="aifrs-drop"><span class="af-drop-text">Drop files here or click &mdash; PDF, Excel, CSV, Word, PPT, Image, ZIP</span></div>'
+      +   '<div class="af-drop" id="aifrs-drop"><span class="af-drop-text">Drop files here or click &mdash; PDF, Excel, CSV, Word, PPT, Image</span></div>'
       +   '<button class="af-btn af-btn-primary" id="aifrs-ai-btn" disabled>AI 분석</button>'
       +   '<button class="af-btn af-btn-ghost af-btn-sm" id="aifrs-tour-btn" title="주요 기능을 순서대로 안내합니다">사용 가이드</button>'
       +   '<button class="af-btn af-btn-ghost af-btn-sm" id="aifrs-clear-btn" style="display:none" title="업로드 파일 전체 삭제">&#10005;</button>'
