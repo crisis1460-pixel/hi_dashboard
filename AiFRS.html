@@ -2088,6 +2088,32 @@ a:hover { text-decoration: underline; }
     });
     cands.sort(function(a,b){ return (Number(b['관련성']||0))-(Number(a['관련성']||0)); });
   }
+  // ── 순위 후처리 가드(사이클7 R3·R3-b): 파생 범용 기준서·구기준 후보에 상한 캡 — 1위와 최소 10점 차 보장(순위 비결정성 차단) ──
+  // R3  : 1008(회계정책변경)·1012(법인세)는 모형전환·기준도입·세무효과 문서에서 90점대로 따라붙는 파생논점(pass7 idx6·11·20) → 1위가 아니면 캡. 1위면 주된 거래이므로 비대상
+  // R3-b: 구기준(1039)이 현행(1109)과 동시 소환되면 구기준 = min(원점수, 현행-10) — 시점안내 병기 규칙은 유지하되 순위 반전(pass6 idx21) 원천 차단
+  var _DERIVED_CAP={ '1008':true, '1012':true };
+  var _OLD_TO_NEW={ '1039':'1109' };
+  function _applyRankGuards(cands){
+    if(!cands || cands.length<2) return;
+    var byNo={}; cands.forEach(function(c){ byNo[_numNo(c['기준서번호'])]=c; });
+    // R3-b: 구기준은 1위 여부와 무관하게 현행 대비 -10 고정(반전 케이스 포함)
+    cands.forEach(function(c){
+      var no=_numNo(c['기준서번호']), cur=_OLD_TO_NEW[no];
+      if(cur && byNo[cur]){
+        var cap=Number(byNo[cur]['관련성']||0)-10, rel=Number(c['관련성']||0);
+        if(rel>cap){ c['관련성']=Math.max(0,cap); c.__capflag='구기준 — 현행 제'+cur+'호를 1위로 안내(시점 병기용, 원점수 '+rel+')'; }
+      }
+    });
+    cands.sort(function(a,b){ return (Number(b['관련성']||0))-(Number(a['관련성']||0)); });
+    // R3: 파생 범용 기준서는 1위가 아닐 때만 캡
+    var topRel=Number(cands[0]['관련성']||0);
+    cands.forEach(function(c,i){
+      if(i===0) return;
+      var no=_numNo(c['기준서번호']), rel=Number(c['관련성']||0);
+      if(_DERIVED_CAP[no] && rel>topRel-10){ c['관련성']=Math.max(0,topRel-10); c.__capflag='파생 논점(범용 기준서) — 주된 기준서와 10점 차 유지(원점수 '+rel+')'; }
+    });
+    cands.sort(function(a,b){ return (Number(b['관련성']||0))-(Number(a['관련성']||0)); });
+  }
   // ── 9단계: 모호/저신뢰 항목을 스캔해 객관식 보정 팝업 큐 생성 (순수 로직, UI 없음) ──
   function _numNo(s){ return String(s||'').replace(/[^0-9]/g,''); }
   function _buildClarifications(stdNo){
@@ -2287,7 +2313,7 @@ a:hover { text-decoration: underline; }
       }
     });
     // 하이브리드 리플로우: 거래구조 보정 시 방향가드 재적용(로컬·무료) → 방향 바뀌면 1115 등 후보 재정렬
-    if(structureChanged){ _applyDirectionGuard(gs, cands, gatherText()); }
+    if(structureChanged){ _applyDirectionGuard(gs, cands, gatherText()); _applyRankGuards(cands); }
     if(structureChanged || standardChanged){
       var box=document.getElementById('aifrs-ai');
       if(box && typeof renderAiResult==='function'){ box.innerHTML=renderAiResult(ai, ''); _restoreCachedResults(); }   // 재렌더 후 정밀분석·감사 결과 복원(재호출 불필요)
@@ -2348,6 +2374,7 @@ a:hover { text-decoration: underline; }
         if(!cands.length){ box.innerHTML=prev; _clarToast('재선정 결과가 비어 있어 기존 후보를 유지합니다.'); return; }
         cands.forEach(function(c){ c.__reselected=true; });
         _applyDirectionGuard(gs, cands, text);
+        _applyRankGuards(cands);
         AiFRS._lastAi.candidates=cands;
         box.innerHTML=renderAiResult(AiFRS._lastAi, '');
         _clarToast('보정된 거래구조로 후보 기준서를 재선정했습니다. (정밀분석·감사는 새 후보로 다시 실행하세요)');
@@ -2484,6 +2511,7 @@ a:hover { text-decoration: underline; }
               cands=cands.filter(function(c){ return AiFRS.findStandard(String(c['기준서번호']||c.no||'')); });
               if(st.candidates && st.candidates.length!==cands.length) st.candidates=cands;
               _applyDirectionGuard(gs, cands, text);   // 거래구조 방향과 어긋나는 수익/비용 기준서 강등 + 근거↔당사위치 교차검증
+              _applyRankGuards(cands);   // 사이클7 R3·R3-b: 파생(1008·1012)·구기준(1039) 후보 상한 캡 — 1위와 10점 차 보장
               var data={ '거래구조':gs, candidates:cands, normalizedTerms:norm.normalizedTerms||[], generalTerms:norm.generalTerms||[], __truncated:(norm.__truncated||st.__truncated) };
               AiFRS._lastAi=data;
               box.innerHTML=renderAiResult(data, ((Date.now()-t0)/1000).toFixed(1));
@@ -2818,6 +2846,8 @@ a:hover { text-decoration: underline; }
       '',
       '[지시]',
       '- 이 문서에 실제로 관련된 조문만 분석하세요(억지 매칭 금지). 항목은 최대 6개.',
+      '- ⚠ 검토포인트(items)는 문서에서 직접 다뤄진 논점에 한정. 기준서에는 있지만 문서에 언급이 전혀 없는 논점(예: 사례 문서의 공시·주석 요건, 측정만 다룬 문서의 리스 식별·면제 규정, 개념 설명 문서의 표시·분류 규정, 힘만 다룬 문서의 변동이익·연계 요소)은 items에 넣지 말고 "참고논점"에 조문번호와 한 줄 설명으로만 분리하라 — 참고논점은 감사 대상이 아니다.',
+      '- ⚠ 항목 수는 문서에서 직접 식별된 논점 수에 맞출 것(최소 1). 문서가 개념 설명·비교 논지·단일 이슈만 담고 있으면 items는 1~2개로 줄이고 나머지는 참고논점으로. 기준서에 처리 흐름(식별→인식→측정→변경→제거→공시)이 있으면 문서가 위치한 단계를 먼저 판정하고 그 단계의 조문만 items로.',
       '- ⚠ 검토포인트는 위 거래구조(당사 위치·핵심 논점)와 일치해야 한다. 거래구조에 어긋나는 자산화·수익화 결론을 만들지 말 것.',
       '- ⚠ 자산화 판단 시 물리적 실체·구입 사실만으로 자산 인식을 단정하지 말고, 아래 정의 게이트를 반드시 검토항목에 포함해 먼저 통과 여부를 따져라. ▷유형자산(1016): 정의(1016.6) — (a)영업활동(생산·제공·임대·관리)에 "사용"할 목적 보유 + (b)한 기간 초과 사용 예상, 그다음 인식(효익 유입 가능성 높음·원가 신뢰측정). ▷무형자산(1038): 정의(1038.8~17) — (a)식별가능성(분리가능 또는 계약·법적권리에서 발생) + (b)통제(효익을 통제) + (c)효익 유입 가능성. 내부창출이면 연구단계 지출은 비용(1038.54), 개발단계는 6요건(기술적 실현가능성·완성 의도·사용/판매 능력·효익 창출 방법·자원 확보·원가 신뢰측정) 모두 충족 시에만 자산화(1038.57). 광고·창업비·교육훈련·이전/재배치 지출은 발생시점 비용(1038.69). ▷공통: 문서에 "검토용·테스트·평가·샘플·파일럿·PoC·시제품·사전검토" 등 목적이 나타나면, 위 정의 요건이 문서로 뒷받침되지 않는 한 자산화로 단정하지 말고 "비용(소모품비·경상연구비 등) 우선 + 정의 미충족 가능성"을 검토포인트로 제시하라.',
       '- 검토포인트는 핵심만 2~3문장(항목당 200자 이내)으로 간결히. 장황한 서술·반복 금지.',
@@ -2830,7 +2860,7 @@ a:hover { text-decoration: underline; }
       '- 우선순위사유: 그 점수의 근거를 1줄(예: "변동대가 없어 형식적", "본인/대리인 판단이 총액·순액을 가르는 핵심 쟁점").',
       '- ⚠ "조문번호"에는 위 목록의 문단번호만 그대로 적으세요(예: "68~71"). 기준서번호를 접두로 붙이지 마세요(❌"'+std.no+'.68~71" ❌"제'+std.no+'호 68").',
       '- 반드시 아래 JSON 형식으로만 응답(자유 서술 금지):',
-      '{"items":[{"기준서번호":"'+std.no+'","조문번호":"","체크항목":"","검토포인트":"","분개예시":"","표시방법":"","검토우선순위":50,"우선순위사유":"","근거조문원문요약":""}]}'
+      '{"items":[{"기준서번호":"'+std.no+'","조문번호":"","체크항목":"","검토포인트":"","분개예시":"","표시방법":"","검토우선순위":50,"우선순위사유":"","근거조문원문요약":""}],"참고논점":[{"조문번호":"","논점":"문서에 언급 없는 관련 논점 한 줄(없으면 빈 배열)"}]}'
     ]).join('\n');
   }
   AiFRS._preciseBusy={};   // 기준서별 진행상태 → 여러 후보 동시 정밀분석 허용
@@ -3202,12 +3232,13 @@ a:hover { text-decoration: underline; }
     return {w:'조문 불일치', g:'bad', c:'#f87171'};
   }
   // 감사 판정 데이터값(충족/미흡/확인필요/해당없음)은 로직·프롬프트에서 쓰므로 유지, 화면 표시어만 한 벌로 통일
-  function _verdLabel(v){ return v==='미흡'?'보완 필요':(v==='확인필요'?'확인 필요':String(v||'')); }
+  function _verdLabel(v){ return v==='미흡'?'보완 필요':(v==='확인필요'?'확인 필요':(v==='자료부족'?'자료 부족':String(v||''))); }
   // 감사 판정 → 글리프·색
   function _verdWord(v){
     if(v==='충족')     return {g:'ok',   c:'#2dd4bf'};
     if(v==='미흡')     return {g:'bad',  c:'#f87171'};
     if(v==='해당없음') return {g:'na',   c:'var(--txt3)'};
+    if(v==='자료부족') return {g:'na',   c:'#94a3b8'};   // 사이클7 R1: 문서에 사실 없음(보완 안내) — 경고(amber)가 아닌 중립 슬레이트
     return {g:'warn', c:'#fbbf24'};
   }
   // 검증 항목 나열(글리프 + 한 구절) — [종류, 문구] 배열
@@ -3432,7 +3463,14 @@ a:hover { text-decoration: underline; }
     var auditSlot='<div class="aifrs-precise-slot" id="aifrs-audit-'+std.no+'"></div>';
     // 정밀분석 상세: 최종 검증(AI감사) 결과가 이미 있으면 접힌 상태로 시작, 없으면 펼침. 접혀도 클릭해 다시 볼 수 있음.
     var bodyWrap='<details class="aifrs-pr-detail" id="aifrs-prdetail-'+std.no+'"'+(hasAudit?'':' open')+'><summary>'+_ico('scope',13)+' 정밀분석 상세 '+items.length+'개 — 클릭하여 펼치기/접기</summary><div class="aifrs-pr-detail-body">'+body+'</div></details>';
-    return head+summary+bodyWrap+nextHero+auditSlot;
+    // 사이클7 R2-b: 문서에 언급 없는 관련 논점은 감사 대상에서 분리해 참고 목록으로만(접힘) — "확인필요" 편중의 상류 예방
+    var refs=Array.isArray(data['참고논점'])?data['참고논점'].filter(function(r){ return r&&(r['조문번호']||r['논점']); }):[];
+    var refHtml=refs.length
+      ? '<details class="aifrs-pr-fold"><summary>참고 — 이 문서에 언급 없는 관련 논점 '+refs.length+'개 (감사 대상 아님 · 필요 시 자료를 보완해 다시 검토)</summary>'
+        + refs.map(function(r){ var rn=AiFRS.stripStdPrefix(std.no, String(r['조문번호']||''))||String(r['조문번호']||'-'); return '<div class="aifrs-pr-row aifrs-pr-muted-row"><b>'+_artChip(std.no, rn, '§ '+esc(rn))+'</b><span>'+esc(r['논점']||'')+'</span></div>'; }).join('')
+        + '</details>'
+      : '';
+    return head+summary+bodyWrap+refHtml+nextHero+auditSlot;
   }
   // 감사 결과가 뜨면 정밀분석 상세를 접는다(펼치기로 다시 볼 수 있음)
   function _collapsePreciseDetail(no){ var d=document.getElementById('aifrs-prdetail-'+no); if(d) d.open=false; }
@@ -3467,6 +3505,7 @@ a:hover { text-decoration: underline; }
     return [
       '당신은 회계 감사 보조원입니다. 아래 [검토포인트]는 기준서를 적용한 회계적 "결론"이며, 그 결론·회계용어가 문서에 그대로 적혀 있지 않은 것이 정상입니다(문서는 회계기록이 아니라 계약서 등 원천 자료).',
       '당신의 임무는 검토포인트의 "결론 문장"을 찾는 것이 아니라, 그 결론의 전제가 되는 "거래 사실"을 보여주는 문서 원문을 그대로(verbatim) 추출하는 것입니다.',
+      '⚠ 검토포인트의 회계용어와 문서의 실무용어가 다를 수 있습니다(예: "비현금자산 분배·소유지분 분배"↔"현물배당·자회사 주식 배당", "규제이연계정잔액"↔"미수금·요금 회수", "사용권자산"↔"임차 점포"). 의미가 같은 거래 사실이면 어휘가 달라도 그 문장을 추출하세요 — 용어가 일치하지 않는다는 이유로 빈 배열을 반환하지 마세요.',
       '추출 대상 예시: 제공·수령하는 용역/재화의 범위·성격, 대가가 무엇에 대한 것인지(용역비·수수료·대금·정산), 산출물·콘텐츠·계정·IP 등 결과물의 권리 귀속, 계약 기간·당사자 역할·의무. (예: "무형자산 인식기준 미충족" 결론의 근거 → 계약서의 "마케팅 대행 용역 범위·산출물" 조항 원문)',
       '⚠ 절대 규칙: ① 결론·회계용어를 담은 문장을 지어내지 말 것(이런 문장은 문서에 없으므로 창작이 됨). ② 요약·의역·추측 금지 — 문서에 글자 그대로 있는 "사실" 구절만 복사. ③ 전제 사실 원문조차 없으면 억지로 만들지 말고 인용을 빈 배열로 두고 근거없음=true.',
       '',
@@ -3511,11 +3550,12 @@ a:hover { text-decoration: underline; }
       '  ⚠ 자산화 모순 체크: 검토포인트가 자산화(유형자산·무형자산 인식·취득원가 산입·감가상각 등)를 전제하는데, 검증된 근거가 그 자산의 "영업 사용 목적·한 기간 초과 사용"(무형자산이면 "식별가능성·통제")을 보여주지 못하거나 오히려 "검토용·테스트·평가·샘플·파일럿·시제품" 목적을 보여주면, 정의요건 미충족이므로 충족으로 판정하지 말 것 → 미흡(문서 사실이 자산화 결론과 배치) 또는 확인필요(사용목적·보유기간·식별가능성·통제가 문서 밖).',
       '- 해당없음: 그 조문·요건이 이 거래에 적용되지 않음. (검토포인트 스스로 "직접 적용되지 않는다/무관하다"고 하면 대개 해당없음)',
       '- 미흡: 문서의 사실관계가 기준서 요건에 명백히 배치되어 그대로면 회계처리에 문제가 됨.',
-      '- 확인필요: 문서가 거래의 기본 성격·사실조차 보여주지 못하거나(검증된 근거 없음), 결론을 좌우하는 핵심 수치·조건이 문서 밖에 있어야 함.',
-      '⚠ 거래의 성격이 문서로 확인되면 "문서에 회계 결론·용어가 없다"는 이유만으로 확인필요로 미루지 말 것 — 그 경우는 충족이다. 검증된 근거가 전혀 없을 때만 확인필요.',
+      '- 확인필요: 문서 근거는 있으나(검증된 인용 1건 이상) 해석·적용이 불확실하거나, 결론을 좌우하는 핵심 수치·조건이 문서 밖에 있음. 판단불가사유에 "무엇이 불확실한지"를 한 문장으로 반드시 명시.',
+      '- 자료부족: 검토포인트를 판단할 사실이 문서에 전혀 없음(검증된 근거 0건). 감사의견은 반드시 「이 문서에는 [빠진 사실]에 관한 내용이 없습니다. 보완 자료: [구체 예시]」 두 문장 형식 — "근거 없음"류 한 줄 문구 금지. 보완사항에는 어떤 자료(계약 조항·정산서·품의서·내부 검토자료 등)를 추가하면 판단 가능한지 적을 것.',
+      '⚠ 거래의 성격이 문서로 확인되면 "문서에 회계 결론·용어가 없다"는 이유만으로 확인필요로 미루지 말 것 — 그 경우는 충족이다. 검증된 근거가 전혀 없을 때만 자료부족.',
       '확인필요·해당없음이면 판단불가사유에 이유와 후속 확인사항을 구체적으로. 감사의견은 제시된 근거를 인용해 1~2문장.',
       '반드시 아래 JSON으로만:',
-      '{"audited":[{"조문번호":"","판정":"충족|미흡|확인필요|해당없음","감사의견":"","보완사항":"","판단불가사유":""}]}'
+      '{"audited":[{"조문번호":"","판정":"충족|미흡|확인필요|자료부족|해당없음","감사의견":"","보완사항":"","판단불가사유":""}]}'
     ].join('\n');
   }
   // 3단계: 2차 검토자가 1차 판정이 근거를 넘어서지 않았는지 재검증
@@ -3586,7 +3626,9 @@ a:hover { text-decoration: underline; }
             var judgedEv=itemsEv.map(function(e,i){
               var j=_alignByArt(jList, e.it['조문번호'], i)||{};
               var verd=j['판정']||'확인필요';
-              if(!e.quotes.length && (verd==='충족'||verd==='미흡')){ verd='확인필요'; j['판단불가사유']='검증된 문서 근거가 없어 자동 보류. '+(j['판단불가사유']||''); }
+              // 사이클7 R1: 검증 근거 0건이면 '자료부족' — "문서에 그 사실이 없다"(보완 안내)를 확인필요(근거는 있으나 판단 불확실)와 분리
+              if(!e.quotes.length){ if(verd!=='해당없음') verd='자료부족'; }
+              else if(verd==='자료부족'){ verd='확인필요'; }   // 근거가 있는데 자료부족이라 답하면 확인필요로 정정
               j['판정']=verd;
               return { it:e.it, quotes:e.quotes, halluc:e.halluc, judg:j };
             });
@@ -3599,11 +3641,20 @@ a:hover { text-decoration: underline; }
                 var audited=judgedEv.map(function(e,i){
                   var v=_alignByArt(vList, e.it['조문번호'], i)||{}; var j=e.judg;
                   var verd=j['판정']||'확인필요'; var downReason='';
-                  if(String(v['결과']||'')==='하향' && verd!=='확인필요'){ downReason=v['사유']||'2차 검증에서 근거 부족으로 하향'; verd='확인필요'; }
+                  if(String(v['결과']||'')==='하향' && verd!=='확인필요' && verd!=='자료부족'){ downReason=v['사유']||'2차 검증에서 근거 부족으로 하향'; verd='확인필요'; }
                   var op=j['감사의견']||'';
                   if(downReason) op='[교차검증 하향] '+downReason+(op?' (1차 의견: '+op+')':'');   // 하향 시 의견 텍스트도 갱신 — 충족 어조 의견이 그대로 남는 문제 방지
                   var evState=e.quotes.length?'확보':'부족';
-                  if(evState==='부족' && verd==='확인필요' && !downReason) op='[근거부족] '+op;   // 내용상 판단보류와 근거미확보를 구분 표기
+                  if(verd==='자료부족'){
+                    // 사이클7 R1: 무정보 문구 금지 — 「이 문서에는 …내용이 없습니다. 보완 자료: …」 형식 강제(pass7에서 '검증된 근거 없음' 한 줄 의견 5건 관찰)
+                    var gapTxt=String(j['판단불가사유']||'').replace(/^검증된 문서 근거가 없어 자동 보류\.?\s*/,'').replace(/^\[근거부족\]\s*/,'').trim();
+                    var supp=(j['보완사항']||'').trim()||_supplementHint(e.it);
+                    if(!/이 문서에는/.test(op)){
+                      var topic=_brief(e.it['체크항목']||e.it['검토포인트']||'', 40);
+                      op='이 문서에는 '+(topic?'"'+topic+'"':'이 검토포인트')+'에 관한 내용이 없습니다.'+(gapTxt&&!/근거가 없/.test(gapTxt)?' '+gapTxt:'')+' 보완 자료: '+supp.replace(/\.$/,'')+'.';
+                    } else if(!/보완 자료/.test(op)){ op=op.replace(/\s*$/,'')+' 보완 자료: '+supp.replace(/\.$/,'')+'.'; }
+                    if(!(j['보완사항']||'').trim()) j['보완사항']=supp;
+                  }
                   if(!op.trim()) op='[의견미생성] AI가 감사의견을 생성하지 않았습니다 — 재검토를 권장합니다.';
                   return { '조문번호':e.it['조문번호']||'', '판정':verd, '감사의견':op, '보완사항':j['보완사항']||'', '근거상태':evState,
                     '판단불가사유':(downReason?downReason+' ':'')+(j['판단불가사유']||''), '근거인용':e.quotes, '환각제외':e.halluc, '교차':String(v['결과']||'유지') };
@@ -3623,11 +3674,21 @@ a:hover { text-decoration: underline; }
         slot.innerHTML='<div class="aifrs-api-stat err">❌ '+esc(e.message)+'</div><div style="margin-top:8px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runFinalAudit(\''+no+'\')">🔄 다시 시도</button></div>'; _setStepBar(no,'audit-error',hasGate); });
   };
   AiFRS.cancelAudit=function(no){ var c=AiFRS._auditCtl&&AiFRS._auditCtl[no]; if(c){ try{c.abort();}catch(e){} } };
+  // 사이클7 R1: 자료부족 항목의 "보완 자료" 기본 안내 — 검토포인트 성격별로 어떤 자료를 더하면 판단 가능한지(초보 담당자용)
+  function _supplementHint(it){
+    var t=((it&&it['체크항목'])||'')+' '+((it&&it['검토포인트'])||'');
+    if(/공시|주석|표시|분류|유동/.test(t)) return '주석 공시 초안 또는 재무제표 표시 내역(해당 항목의 기초·기말 금액과 변동 내역)';
+    if(/할인율|현재가치|측정|공정가치|추정|가정/.test(t)) return '금액 산정 근거(할인율·추정 가정·평가서·계산 내역)';
+    if(/의무|요건|정의|해당 여부|적용/.test(t)) return '해당 사실관계가 기재된 계약서 조항·법령 근거·내부 검토 의견서';
+    if(/시점|기간|일자|개시|종료/.test(t)) return '시점·기간이 확인되는 계약서·이사회 의결·공표 자료';
+    return '해당 사실(조건·금액·시점)이 기재된 계약서·정산서·품의서·내부 검토자료';
+  }
   function _auditVerd(v){
     if(v==='충족') return {cls:'g', ico:'✅', cfb:'green', tip:'충족&#10;문서 내용이 요건을 명확히 충족(근거 조항·사실 제시).'};
     if(v==='미흡') return {cls:'r', ico:'❗', cfb:'red', tip:'보완 필요&#10;요건 미충족·누락·위반 — 가장 주목할 발견사항.'};
     if(v==='해당없음') return {cls:'a', ico:'➖', cfb:'', tip:'해당없음&#10;이 거래에는 적용되지 않는 요건.'};
-    return {cls:'a', ico:'⚠️', cfb:'amber', tip:'확인 필요&#10;문서 정보만으로는 판단 불가. 추가 자료·수치 확인 필요.'};   // 확인필요(기본)
+    if(v==='자료부족') return {cls:'a', ico:'📄', cfb:'', tip:'자료 부족&#10;이 문서에는 해당 사실이 없어 판단할 수 없습니다. 감사의견의 「보완 자료」를 추가하면 다시 검토할 수 있습니다.'};
+    return {cls:'a', ico:'⚠️', cfb:'amber', tip:'확인 필요&#10;문서 근거는 있으나 해석·적용이 불확실. 추가 수치·조건 확인 필요.'};   // 확인필요(기본)
   }
   // ── 후속조치 플랜(0콜): 문제 항목을 행동 언어로 통합. 유형·다음 단계는 로컬 규칙, 상세 풀이는 [쉬운 설명](온디맨드 1콜) ──
   function _planKey(no, art){ return (String(no)+'-'+String(art)).replace(/[^0-9A-Za-z가-힣]/g,''); }
@@ -3635,6 +3696,8 @@ a:hover { text-decoration: underline; }
     var t=(a['판단불가사유']||'')+' '+(a['보완사항']||'');
     if(a['판정']==='미흡')
       return {label:'보완 필요', c:'#f87171', next:'계약·문서 내용을 보완(수정·추가 합의)한 뒤, 변경본을 올려 다시 검토해 보세요.'};
+    if(a['판정']==='자료부족')
+      return {label:'자료 확보', c:'#94a3b8', next:'감사의견의 「보완 자료」에 적힌 자료를 확보해 파일로 추가한 뒤 다시 검토해 보세요.'};
     if(/확인되지 않|확인 불가|확인할 수 없|없음|누락|부재|제시되지 않|기재되지 않|찾을 수 없/.test(t))
       return {label:'자료 확보', c:'#fbbf24', next:'해당 내용이 담긴 자료(부속합의서·정산서·품의서 등)를 확보해 파일로 추가한 뒤 다시 검토해 보세요.'};
     return {label:'사실 확인', c:'#fbbf24', next:'계약 담당자·상대방에게 위 사항을 확인하고, 확인 내용이 담긴 자료를 추가해 다시 검토해 보세요.'};
@@ -3642,7 +3705,7 @@ a:hover { text-decoration: underline; }
   function _buildActionPlan(std, items, audited){
     var byArt={}; items.forEach(function(it){ byArt[String(it['조문번호']||'').trim()]=it; });
     // 충족 여부와 무관하게 전 항목을 하나의 의견칸으로 통합 — 기준서 흐름(조문 오름차순: 정의→요건→후속) 순서로 "§문단으로 무엇을 하고 → 다음 §문단으로 무엇을 한다" 요약
-    var probs=audited.filter(function(a){ return a['판정']==='미흡'||a['판정']==='확인필요'; });
+    var probs=audited.filter(function(a){ return a['판정']==='미흡'||a['판정']==='확인필요'||a['판정']==='자료부족'; });
     var okays=audited.filter(function(a){ return a['판정']==='충족'; });
     var list=probs.concat(okays);
     if(!list.length) return '';
@@ -3662,6 +3725,7 @@ a:hover { text-decoration: underline; }
       var verd=a['판정'], st='', c='', bg='', judg='';
       if(verd==='충족'){ c='#2dd4bf'; bg='rgba(45,212,191,.12)'; st='충족'; judg=a['감사의견']||'문서 근거로 확인됨'; }
       else if(verd==='미흡'){ c='#f87171'; bg='rgba(248,113,113,.12)'; st='보완 필요'; judg=a['보완사항']||a['감사의견']||''; }
+      else if(verd==='자료부족'){ c='#94a3b8'; bg='rgba(148,163,184,.14)'; st='자료 부족'; judg=a['감사의견']||a['보완사항']||''; }   // 사이클7 R1: 「이 문서에는 …없습니다. 보완 자료: …」 그대로 노출
       else { c='#fbbf24'; bg='rgba(251,191,36,.12)'; st='확인 필요'; judg=a['판단불가사유']||a['보완사항']||it['검토포인트']||''; }
       // 가독성: 1행 = 주제 + 상태 배지 + §조문(훑어보기용), 2행 = 판단 근거(연한 글씨, 필요할 때 읽기)
       return '<div class="af-plan-sline"><i>'+(idx+1)+'</i><span>'
@@ -3684,7 +3748,7 @@ a:hover { text-decoration: underline; }
       : '이 건의 방향은 확인 필요 사항이 해결된 뒤 확정됩니다.';
     rows+='<div class="af-plan-close">'
       + '<div class="af-plan-arrow"><i>→</i><span>'+concl+'</span></div>'
-      + (probs.length && rep ? '<div>다만 <b>확인 필요 '+probs.length+'건</b>이 해결되어야 확정됩니다.</div>' : '')   // "전 항목 충족…" 고정 문구 제거(요약바가 이미 같은 정보)
+      + (probs.length && rep ? '<div>다만 <b>확인·보완 필요 '+probs.length+'건</b>이 해결되어야 확정됩니다.</div>' : '')   // "전 항목 충족…" 고정 문구 제거(요약바가 이미 같은 정보)
       + '<div class="af-plan-hint">설명이 어렵다면 아래 <b>[ⓘ 쉬운 설명]</b>을 눌러 상세 풀이를 확인하세요.</div>'
       + '</div>';
     // 쉬운 설명이 이 로드맵을 그대로 풀어쓰도록 저장(프롬프트 주입용)
@@ -3694,7 +3758,7 @@ a:hover { text-decoration: underline; }
       return (i+1)+'. (§'+art+') '+(a['판정'])+' — '+j;
     });
     var sub=probs.length
-      ? '확인 필요 '+probs.length+'건 · 처리 방향 '+okays.length+'건'
+      ? '확인·보완 필요 '+probs.length+'건 · 처리 방향 '+okays.length+'건'
       : '전 항목 충족 — 항목별 처리 방향 안내';
     // 쉬운 설명은 카드당 1개(통합) — 기준서가 정의→조건→특이사항으로 이어지는 구조라 전체 흐름 풀이가 이해에 유리하고, 문단 수와 무관하게 API 1콜
     return '<div class="af-hero-card" style="border-left-color:'+(probs.length?'#fbbf24':'#2dd4bf')+'">'
@@ -3859,6 +3923,7 @@ a:hover { text-decoration: underline; }
       if(verd==='충족'){ico='✓';cls='#2dd4bf';label='충족';}
       else if(verd==='미흡'){ico='✗';cls='#f87171';label='보완 필요';}
       else if(verd==='확인필요'){ico='⚠';cls='#fbbf24';label='확인 필요';}
+      else if(verd==='자료부족'){ico='▫';cls='#94a3b8';label='자료 부족';}
       else if(verd==='해당없음'){ico='─';cls='var(--txt3)';label='해당없음';}
       else{ico='⬜';cls='var(--txt3)';label='미판정';}
       var safeKo=String(g.ko||'').replace(/[^0-9A-Za-z.\-~]/g,'');
@@ -3876,7 +3941,7 @@ a:hover { text-decoration: underline; }
   }
   function renderFinalAudit(std, items, audited, secs){
     var byNo={}; audited.forEach(function(a){ byNo[String(a['조문번호']||'').trim()]=a; });
-    var cnt={'충족':0,'미흡':0,'확인필요':0,'해당없음':0};
+    var cnt={'충족':0,'미흡':0,'확인필요':0,'자료부족':0,'해당없음':0};
     var rows=items.map(function(it,idx){
       var artNo=String(it['조문번호']||'').trim();
       var a=byNo[artNo]||audited[idx]||{};
@@ -3889,7 +3954,7 @@ a:hover { text-decoration: underline; }
       var quoteHtml = quotes.length
         ? '<div class="aifrs-pr-row aifrs-pr-src"><b>문서 근거(검증됨)</b><span>'+quotes.map(function(q){return '“'+esc(q)+'”';}).join(' &nbsp;/&nbsp; ')+'</span></div>'
         : '<div class="aifrs-pr-row aifrs-pr-muted-row"><b>문서 근거</b><span>검증된 인용 없음</span></div>';
-      var unable = (verd==='확인필요' && a['판단불가사유'] && String(a['판단불가사유']).trim())
+      var unable = ((verd==='확인필요'||verd==='자료부족') && a['판단불가사유'] && String(a['판단불가사유']).trim())
         ? '<div class="aifrs-pr-row aifrs-pr-warn-row"><b>판단불가사유</b><span>'+esc(a['판단불가사유'])+'</span></div>'
         : '';
       // 환각제외 안내는 경고 아이콘 한 줄로 축약(상세는 title)
@@ -3902,7 +3967,7 @@ a:hover { text-decoration: underline; }
       var auLabel=code.pinpoint?(code.pinpoint.no+code.pinpoint.idx):auRange;
       var brief=esc(_brief(it['검토포인트']||it['체크항목']||'', 44));
       // 상태 표기 통합: 감사판정 로젠지 1개 + 파이프라인 도트 3개. 문제 항목(미흡·확인필요)만 기본 펼침.
-      var open=(verd==='미흡'||verd==='확인필요');
+      var open=(verd==='미흡'||verd==='확인필요'||verd==='자료부족');
       var html='<details class="aifrs-pr-item af-item aifrs-cfb-'+vm.cfb+'"'+(open?' open':'')+'>'
         + '<summary>'+_gl(vw.g)+'<span class="af-stat aifrs-tip" style="color:'+vw.c+'" data-tip="'+vm.tip+'">'+esc(_verdLabel(verd))+'</span>'
           + _artChip(std.no, auRange, '§ '+esc(auLabel))
@@ -3916,7 +3981,7 @@ a:hover { text-decoration: underline; }
         + (it['검토포인트']?'<div class="aifrs-pr-row"><b>검토포인트</b><span>'+esc(it['검토포인트'])+'</span></div>':'')
         + quoteHtml
         + (a['감사의견']?'<div class="aifrs-pr-row aifrs-pr-violet"><b>AI감사의견</b><span>'+esc(a['감사의견'])+'</span></div>':'')
-        + (verd!=='확인필요' && a['보완사항']?'<div class="aifrs-pr-row aifrs-pr-warn-row"><b>보완·확인</b><span>'+esc(a['보완사항'])+'</span></div>':'')
+        + (verd!=='확인필요' && a['보완사항']?'<div class="aifrs-pr-row aifrs-pr-warn-row"><b>'+(verd==='자료부족'?'보완 자료':'보완·확인')+'</b><span>'+esc(a['보완사항'])+'</span></div>':'')
         + unable
         + (a['교차']==='하향'?'<div class="aifrs-pr-row aifrs-pr-muted-row"><b>2차 검토</b><span>2차 검토자가 과잉판단으로 보고 확인 필요로 낮춘 항목입니다.</span></div>':'')
         + _prioReasonRow(it['우선순위사유'])
@@ -3924,26 +3989,28 @@ a:hover { text-decoration: underline; }
         + '</div></details>';
       return {prio:prio, verd:verd, html:html};
     });
-    var vrank={'확인필요':3,'미흡':2,'해당없음':1,'충족':0};   // 동점이면 확인필요>미흡>해당없음>충족 먼저
+    var vrank={'확인필요':4,'자료부족':3,'미흡':2,'해당없음':1,'충족':0};   // 동점이면 확인필요>자료부족>미흡>해당없음>충족 먼저
     rows.sort(function(a,b){ return (b.prio-a.prio) || ((vrank[b.verd]||0)-(vrank[a.verd]||0)); });
     rows=rows.map(function(r){return r.html;}).join('');
     // 종합 판정 히어로: 분포 바(적합·검토필요·부적합·해당없음) + 다음 행동 한 줄
-    var tot=items.length||1, probs=cnt['미흡']+cnt['확인필요'];
+    var tot=items.length||1, probs=cnt['미흡']+cnt['확인필요']+cnt['자료부족'];
     var pct=function(n){ return (n*100/tot).toFixed(2)+'%'; };
     var head1 = cnt['미흡']>0 ? {t:'보완 필요 항목 있음', c:'#f87171', g:'bad'}
       : (cnt['확인필요']>0 ? {t:'확인 필요 항목 있음', c:'#fbbf24', g:'warn'}
-      : {t:'전 항목 충족', c:'#2dd4bf', g:'ok'});
+      : (cnt['자료부족']>0 ? {t:'자료 부족 항목 있음 — 보완 자료 추가 시 재검토', c:'#94a3b8', g:'na'}
+      : {t:'전 항목 충족', c:'#2dd4bf', g:'ok'}));
     var seg=function(n,c){ return n?'<i style="width:'+pct(n)+';background:'+c+'"></i>':''; };
     var lg=function(c,n,v){ return '<span><em style="background:'+c+'"></em>'+n+' <b>'+v+'</b></span>'; };
     var hero='<div class="af-hero-card" style="border-left-color:'+head1.c+'">'
       + '<div class="af-hero-t">'+_gl(head1.g,15)+'<span style="color:'+head1.c+'">'+head1.t+'</span>'
         + '<span class="af-hero-sub">항목 '+items.length+'개 · 문서 근거로 검증</span></div>'
-      + '<div class="af-bar">'+seg(cnt['충족'],'#2dd4bf')+seg(cnt['확인필요'],'#fbbf24')+seg(cnt['미흡'],'#f87171')+seg(cnt['해당없음'],'var(--bg4)')+'</div>'
-      + '<div class="af-legend">'+lg('#2dd4bf','충족',cnt['충족'])+lg('#fbbf24','확인 필요',cnt['확인필요'])
+      + '<div class="af-bar">'+seg(cnt['충족'],'#2dd4bf')+seg(cnt['확인필요'],'#fbbf24')+seg(cnt['자료부족'],'#94a3b8')+seg(cnt['미흡'],'#f87171')+seg(cnt['해당없음'],'var(--bg4)')+'</div>'
+      + '<div class="af-legend">'+lg('#2dd4bf','충족',cnt['충족'])+lg('#fbbf24','확인 필요',cnt['확인필요'])+lg('#94a3b8','자료 부족',cnt['자료부족'])
         + lg('#f87171','보완 필요',cnt['미흡'])+lg('var(--bg4)','해당없음',cnt['해당없음'])+'</div>'
       + '<div class="af-next">'+_gl(probs?'warn':'ok')+'<span>'
         + (probs
             ? '문제 <b>'+probs+'건</b>은 아래에서 자동으로 펼쳐집니다 — <b>문서 근거·보완·확인</b> 사항에서 해결방향을 확인하세요.'
+              + (cnt['자료부족']?' <b>자료 부족 '+cnt['자료부족']+'건</b>은 문서에 해당 사실이 없는 것이니, 각 항목의 「보완 자료」를 추가한 뒤 다시 검토하면 됩니다.':'')
             : '모든 항목이 문서 근거로 뒷받침됩니다. 각 항목을 클릭하면 근거와 감사의견을 확인할 수 있습니다.')
         + '</span></div></div>';
     // 면책 문구 상시 노출 제거(사용자 요청) — ⓘ 안내 시트(discPrecise·discAudit)에는 유지
