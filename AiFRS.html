@@ -4643,7 +4643,16 @@ a:hover { text-decoration: underline; }
   }
   function buildHistHtml(){
     var items = [
-      { date:'2026-09-04', title:'실문서 36건 수집 완료 — 48종 K-IFRS 전 기준서 실샘플 확보 (사이클12)',
+      { date:'2026-09-04', title:'실문서 33건 투입 완주 — DOC_INDIRECT 한계 실증 (사이클12)',
+        bullets:[
+          '실문서 36건 수집(PDF 33+XLSX 3) → 텍스트추출 35건 성공(kepco 이미지PDF 제외) → 33건 분석 완주(incheonairport 2건 raw_log 저장 실패)',
+          'top 분류 성공 3건(XLSX 팩트시트·재무제표) / top=null 30건 — 기준서 번호 미명시 실문서는 AiFRS 1단계 분류 불가 확인',
+          'DOC_INDIRECT 구조 한계 실증 — KIS 신용평가·감사보고서·ESG보고서 등 실무 문서 대부분 해당',
+          '쉬운설명 성공 3건(XLSX 계열만) — 분류 성공 시 쉬운설명 정상 생성 확인',
+          '1차 실행 결과 raw_logs/cycle12/ 33건 개별 저장, rebuild_pass12.py로 pass12_live.json 복구'
+        ]
+      },
+      { date:'2026-09-04', title:'실문서 36건 수집 완료 — 48종 K-IFRS 전 기준서 실샘플 확보 (사이클12 준비)',
         bullets:[
           '공개 IR 서버 직접 HTTP GET — DART DRM 우회, DRM 해제 불필요',
           '36건: PDF 33건 + XLSX 3건(카카오 팩트시트·삼성 재무제표) / 11개 업종 분산(반도체·배터리·자동차·금융·보험·건설·공기업 등)',
