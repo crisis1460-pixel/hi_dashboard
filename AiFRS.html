@@ -433,7 +433,7 @@ a:hover { text-decoration: underline; }
 .af-para-blk:last-of-type { margin-bottom:0; }
 .af-para-h { font-weight:700; color:var(--txt); font-size:13px; margin-bottom:6px; display:flex; gap:8px; align-items:baseline; flex-wrap:wrap; }
 .af-para-txt {
-  line-height:1.9; border-radius:8px; padding:16px 18px; font-size:14px; color:#dcdce0; word-break:keep-all;
+  line-height:1.9; border-radius:8px; padding:16px 18px; font-size:14px; color:#dcdce0; word-break:keep-all; white-space:pre-wrap;
   background:
     repeating-linear-gradient(0deg, rgba(255,255,255,.012) 0px, rgba(255,255,255,.012) 1px, transparent 1px, transparent 26px),
     linear-gradient(180deg,#242428 0%,#1d1d20 100%);
@@ -2673,7 +2673,9 @@ a:hover { text-decoration: underline; }
         + (ver.length?'<div class="aifrs-pr-row aifrs-pr-src" style="margin-top:4px;align-items:flex-start"><b>문서 근거(검증됨)</b><span>'
             + ver.map(function(q,i){
                 var tx=verTx[i]||'';
-                var same = tx && _qnorm(tx)===_qnorm(q);   // 이미 한국어 문서라 번역이 원문과 동일하면 중복 표시 생략
+                // U4: 완전 일치 + 80% 이상 유사(번역이 원문 한국어와 거의 같을 때) 모두 중복 처리
+                var _qn=_qnorm(q), _tn=_qnorm(tx);
+                var same = tx && (_tn===_qn || (_tn.length>10 && (_qn.includes(_tn.slice(0,Math.floor(_tn.length*0.8))) || _tn.includes(_qn.slice(0,Math.floor(_qn.length*0.8))))));
                 return '<div class="af-quote-blk">“'+esc(q)+'”'+(tx && !same?'<div class="af-quote-tx">🌐 '+esc(tx)+'</div>':'')+'</div>';
               }).join('')
             +'</span></div>'
@@ -3463,7 +3465,7 @@ a:hover { text-decoration: underline; }
             : '조문 확인은 모두 끝났습니다. 문서가 실제로 요건을 충족하는지는 <b>AI감사</b>에서 확정됩니다.')
         + '</span>'
       + '</div>'
-      + '<div style="margin-top:9px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runFinalAudit(\''+std.no+'\')">✅ 최종 검증(AI감사) 실행</button></div></div>';
+      + '<div style="margin-top:9px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" id="aifrs-audit-run-'+std.no+'" onclick="window.AiFRS.runFinalAudit(\''+std.no+'\')">✅ 최종 검증(AI감사) 실행</button></div></div>';
     if(hasAudit) nextHero='';   // 감사 결과가 이미 있으면 "다음 확인" CTA는 표시하지 않음(재실행은 감사 결과 헤더의 [다시 검증])
     // 면책 문구 상시 노출 제거(사용자 요청) — ⓘ 안내 시트(discPrecise·discAudit)에는 유지
     var auditSlot='<div class="aifrs-precise-slot" id="aifrs-audit-'+std.no+'"></div>';
@@ -3604,6 +3606,9 @@ a:hover { text-decoration: underline; }
     var _hipos=_gs['당사위치']||_gs['HI위치']||'';
     var docKind=(_gs['자료성격']||'원천 문서(계약서 등)')+(_hipos?' · 당사는 '+_hipos:'')+(_gs['관계유형']?'('+_gs['관계유형']+')':'');
     AiFRS._auditBusy[no]=true;
+    // U5: 실행 버튼 즉시 비활성화 — 체인 실행 중 중복 클릭 방지
+    var _runBtn=document.getElementById('aifrs-audit-run-'+no);
+    if(_runBtn){ _runBtn.disabled=true; _runBtn.textContent='⏳ 감사 실행 중…'; }
     var ctl=(typeof AbortController!=='undefined')?new AbortController():null;
     AiFRS._auditCtl[no]=ctl; var asig=ctl?ctl.signal:undefined;
     var t0=Date.now();
@@ -3683,6 +3688,14 @@ a:hover { text-decoration: underline; }
                     if(!(j['보완사항']||'').trim()) j['보완사항']=supp;
                   }
                   if(!op.trim()) op='[의견미생성] AI가 감사의견을 생성하지 않았습니다 — 재검토를 권장합니다.';
+                  // TP7: 감사의견이 검토포인트 문장을 그대로 반복하는 경우 제거
+                  (function(){
+                    var kp=_qnorm(e.it['검토포인트']||''); if(kp.length<20) return;
+                    op=op.split('\n').filter(function(line){
+                      var ln=_qnorm(line); if(ln.length<15) return true;
+                      return !(kp.includes(ln.slice(0,Math.floor(ln.length*0.85))) && ln.length > kp.length*0.7);
+                    }).join('\n');
+                  })();
                   return { '조문번호':e.it['조문번호']||'', '판정':verd, '감사의견':op, '보완사항':j['보완사항']||'', '근거상태':evState,
                     '판단불가사유':(downReason?downReason+' ':'')+(j['판단불가사유']||''), '근거인용':e.quotes, '환각제외':e.halluc, '교차':String(v['결과']||'유지'),
                     '확인할것':j['확인할것']||'', '어디서':j['어디서']||'' };  // A1: 다음할일 행동문 조립용
@@ -3909,12 +3922,21 @@ a:hover { text-decoration: underline; }
       (function(){
         // C14-6: 기준서별 상위 오해 교정 — 해당 기준서일 때만 삽입
         var mc={
-          '1103':['오해 교정: PPA(Purchase Price Allocation)는 "구매 대가 배분"이지, 용역 대금이 아닙니다. 사업결합 시 취득한 자산·부채의 공정가치를 배분하는 절차입니다.'],
-          '1036':['오해 교정: 공정가치는 시장 참여자 간 정상 거래 가격이며, 감정가(감정평가액)와 다를 수 있습니다. 공정가치는 시장 관찰 가능 여부에 따라 3단계로 구분됩니다.'],
-          '1113':['오해 교정: 공정가치 측정은 "얼마에 살 수 있는가"가 아니라 "시장 참여자들이 얼마에 거래할 것인가"입니다. 상각후원가와 공정가치는 다른 측정 기준입니다.'],
+          '1001':['오해 교정: 재무제표 표시 기준은 계정 배열 순서나 명칭보다 "정보 유용성"이 핵심입니다. 중요하지 않은 항목은 통합 표시가 허용됩니다.'],
+          '1007':['오해 교정: 퇴직급여(확정급여형)는 "퇴직 시 지급액"이 아니라 당기 서비스원가·이자원가 등 연간 비용 발생액을 인식합니다. 보험수리적손익은 기타포괄손익 처리가 원칙입니다.'],
           '1012':['오해 교정: 이연법인세에서 "영구적 차이"는 미래에도 세금 효과가 없어 이연세 인식 대상이 아닙니다. 인식 대상은 "일시적 차이"(미래에 세금 효과가 역전되는 것)입니다.'],
-          '1116':['오해 교정: 리스 부채는 "빚"이지만 리스이용자가 해당 자산을 "통제"한다고 보아 사용권자산을 인식합니다. 운용리스·금융리스 구분은 구 기준의 방식으로, K-IFRS 1116에서는 대부분 단일 모형을 적용합니다.'],
-          '2115':['오해 교정: 수익 인식 시점은 "청구 시점"이 아니라 "수행의무 이행 시점(고객이 통제를 획득한 시점)"입니다. 선수금 수령은 수익 인식이 아닌 계약부채입니다.']
+          '1016':['오해 교정: 유형자산 취득원가에는 구입가격 외에 취득세·운반·설치·시운전비도 포함됩니다. 복구의무가 있으면 복구충당부채도 취득원가에 포함합니다.'],
+          '1021':['오해 교정: 외화거래 환산 손익은 "실제 환전 차익"이 아닙니다. 화폐성 항목은 마감환율로 환산하며, 차이는 당기 손익으로 처리합니다.'],
+          '1036':['오해 교정: 공정가치는 시장 참여자 간 정상 거래 가격이며, 감정가(감정평가액)와 다를 수 있습니다. 공정가치는 시장 관찰 가능 여부에 따라 3단계로 구분됩니다.'],
+          '1037':['오해 교정: 충당부채는 "확정된 부채"가 아니라 "의무는 확실하지만 금액·시기가 불확실한 부채"입니다. 단순히 비용을 미리 쌓아두는 것과 다릅니다.'],
+          '1038':['오해 교정: 무형자산은 법적 권리가 없어도 인식 가능합니다. 핵심은 "식별가능성(분리 가능 또는 계약·법적 권리)" + "통제" + "미래경제적효익"입니다.'],
+          '1103':['오해 교정: PPA(Purchase Price Allocation)는 "구매 대가 배분"이지, 용역 대금이 아닙니다. 사업결합 시 취득한 자산·부채의 공정가치를 배분하는 절차입니다.'],
+          '1109':['오해 교정: 금융상품 분류(상각후원가·기타포괄손익·당기손익)는 "계약의 현금흐름 특성"과 "사업모형" 두 가지로 결정됩니다. 보유 의도만으로 결정되지 않습니다.'],
+          '1110':['오해 교정: 연결 대상은 지분율 50% 초과가 아니라 "지배력(의결권·이사 선임·정책 결정 권한 등)"으로 판단합니다. 30%라도 사실상 지배하면 연결 대상입니다.'],
+          '1113':['오해 교정: 공정가치 측정은 "얼마에 살 수 있는가"가 아니라 "시장 참여자들이 얼마에 거래할 것인가"입니다. 상각후원가와 공정가치는 다른 측정 기준입니다.'],
+          '1116':['오해 교정: 리스 부채는 "빚"이지만 리스이용자가 해당 자산을 "통제"한다고 보아 사용권자산을 인식합니다. 운용리스·금융리스 구분은 구 기준으로, K-IFRS 1116에서는 단일 모형을 적용합니다.'],
+          '2115':['오해 교정: 수익 인식 시점은 "청구 시점"이 아니라 "수행의무 이행 시점(고객이 통제를 획득한 시점)"입니다. 선수금 수령은 수익 인식이 아닌 계약부채입니다.'],
+          '2117':['오해 교정: 보험계약에서 "미경과보험료"는 보험사의 부채입니다. 계약서비스마진(CSM)은 미래 수익으로, 보험기간에 걸쳐 수익으로 인식합니다.']
         };
         var tips=mc[String(no)]||[];
         return tips.length?'\n[오해 교정 — 설명 첫머리에 반드시 포함]\n'+tips.join('\n'):'';
@@ -4100,7 +4122,7 @@ a:hover { text-decoration: underline; }
         + (code.level==='amber'?'<div class="af-code-guide af-code-guide-amber"><b>이 인용 불확실</b> — 조문은 DB에 있으나 키워드 단서가 약합니다. 원문을 직접 열어 검토포인트와 실제로 대응되는지 확인하세요.</div>'
           :code.level==='red'?'<div class="af-code-guide af-code-guide-red"><b>이 인용 불확실</b> — 인용 조문이 이 기준서 DB 범위 밖이거나 번호가 다릅니다. AI 오인용 가능성이 있으므로 원문을 직접 열어 확인하세요.</div>'
           :'')
-        + (a['감사의견']?'<div class="aifrs-pr-row aifrs-pr-violet"><b>AI감사의견</b><span>'+(verd==='자료부족'?esc(a['감사의견']).replace(/\n/g,'<br>'):esc(a['감사의견']))+'</span></div>':'')
+        + (a['감사의견']?'<div class="aifrs-pr-row aifrs-pr-violet"><b>AI감사의견</b><span>'+esc(a['감사의견']).replace(/\n/g,'<br>')+'</span></div>':'')
         + (verd!=='확인필요' && a['보완사항']?'<div class="aifrs-pr-row aifrs-pr-warn-row"><b>'+(verd==='자료부족'?'준비할 서류':'보완·확인')+'</b>'+(verd==='자료부족'?_supp3Html(a['보완사항']):'<span>'+esc(a['보완사항'])+'</span>')+'</div>':'')
         + unable
         + _prioReasonRow(it['우선순위사유'])
@@ -5590,7 +5612,7 @@ a:hover { text-decoration: underline; }
       +   '<input type="file" id="aifrs-file-input" multiple accept=".pdf,.xlsx,.xls,.csv,.docx,.pptx,.jpg,.jpeg,.png,.bmp" style="display:none">'
       +   '<button class="af-attach-btn" id="aifrs-attach" title="Attach files">&#128206;</button>'
       +   '<div class="af-drop" id="aifrs-drop"><span class="af-drop-text">Drop files here or click &mdash; PDF, Excel, CSV, Word, PPT, Image</span></div>'
-      +   '<button class="af-btn af-btn-primary" id="aifrs-ai-btn" disabled>AI 분석</button>'
+      +   '<button class="af-btn af-btn-primary" id="aifrs-ai-btn" disabled title="1단계: 거래구조 파악 + 적용 기준서 후보 선정 — 문서를 업로드한 뒤 눌러주세요">AI 분석</button>'
       +   '<button class="af-btn af-btn-ghost af-btn-sm" id="aifrs-tour-btn" title="주요 기능을 순서대로 안내합니다">사용 가이드</button>'
       +   '<button class="af-btn af-btn-ghost af-btn-sm" id="aifrs-clear-btn" style="display:none" title="업로드 파일 전체 삭제">&#10005;</button>'
       + '</div>'
