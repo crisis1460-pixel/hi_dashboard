@@ -330,6 +330,7 @@ a:hover { text-decoration: underline; }
 .aifrs-b-done { background:rgba(45,212,191,.12); color:#2dd4bf; }
 .aifrs-b-img  { background:rgba(251,191,36,.12); color:#fbbf24; }
 .aifrs-b-err  { background:rgba(248,113,113,.12); color:#f87171; }
+.aifrs-b-warn { background:rgba(251,191,36,.12); color:#fbbf24; }
 .aifrs-b-en   { background:rgba(41,151,255,.12); color:#2997ff; margin-right:6px; }
 .aifrs-bar { height:3px; background:var(--bg4); border-radius:2px; margin-top:6px; overflow:hidden; }
 .aifrs-bar-fill { height:100%; width:0; background:var(--blue); transition:width .2s; }
@@ -2711,7 +2712,7 @@ a:hover { text-decoration: underline; }
           + (c['사유']?'<div class="aifrs-an-para">'+esc(c['사유'])+'</div>':'')
           + (issues?'<div class="aifrs-an-para">쟁점: <span class="aifrs-an-hit">'+issues+'</span></div>':'')
           + (valid
-              ? '<div class="af-step-bar" id="aifrs-step-'+key+'">'+_stepBarHtml('init', !!_HIGH_GATE[key])+'</div>'
+              ? '<div class="af-step-bar" id="aifrs-step-'+key+'" title="'+(!!_HIGH_GATE[key]?'4단계: AI분석→정밀분석→AI감사→판단게이트(이 기준서는 핵심 조문 체크리스트 포함)':'3단계: AI분석→정밀분석→AI감사')+'">'+_stepBarHtml('init', !!_HIGH_GATE[key])+'</div>'
                 + ((top&&showBanner) ? '' : '<div style="margin-top:4px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runFullReview(\''+key+'\')" title="정밀 분석 → AI 감사 → 다음 할 일까지 한 번에 이어서 실행합니다">'+_ico('shield',13,'currentColor')+' AI 전체 검토</button></div>')
                 + '<div class="aifrs-precise-slot" id="aifrs-precise-'+key+'"></div>'
               : '<div class="aifrs-api-stat err" style="margin-top:4px">⚠ 내장 DB에 없는 기준서번호 — 6단계 검증 대상</div>')
@@ -3784,7 +3785,7 @@ a:hover { text-decoration: underline; }
       } else if(a['판정']==='확인필요'){
         // A1에서 저장한 확인할것·어디서 우선 사용
         var cw=(a['확인할것']||'').trim(), cwr=(a['어디서']||'').trim();
-        if(cw) actionText=cw+(cwr?' — '+cwr+'에서 확인':')+' 확인하세요.';
+        if(cw) actionText=cw+(cwr?' — '+cwr+'에서 확인':'')+' 확인하세요.';
         else {
           // 판단불가사유에서 내부용어 제거 후 사용
           var raw=(a['판단불가사유']||a['감사의견']||ac.next).replace(/1차\s*(감사의견|판정)?\s*[은는이가]?\s*/g,'').replace(/교차검증\s*(하향|결과)[.，\s]*/g,'').trim();
@@ -3867,7 +3868,7 @@ a:hover { text-decoration: underline; }
       +(probs.length?'<br>아래 항목을 순서대로 확인하면 결론이 납니다.':'<br>모든 항목이 문서에서 확인되었습니다.')
       +'</div>'
       +rows
-      +'<div style="margin-top:14px;text-align:center"><button class="aifrs-btn" style="background:var(--blue-sky);color:#fff;border-color:var(--blue-sky);font-weight:700;font-size:13px;padding:9px 22px" onclick="window.AiFRS.explainEasyAll(\''+std.no+'\')" title="위 항목 전체를 기준서 흐름(정의→조건→결론)에 따라 한 번에 쉬운 말로 풀이합니다">ⓘ 쉬운 설명 — 전체 한번에 풀이</button></div>'
+      +'<div style="margin-top:14px;text-align:center"><button class="aifrs-btn" id="aifrs-easybtn-'+std.no+'" style="background:var(--blue-sky);color:#fff;border-color:var(--blue-sky);font-weight:700;font-size:13px;padding:9px 22px" onclick="(function(no){var slot=document.getElementById(\'aifrs-easyall-\'+no),btn=document.getElementById(\'aifrs-easybtn-\'+no);if(slot&&btn){if(slot.querySelector(\'.af-easy\')){slot.innerHTML=\'\';btn.textContent=\'ⓘ 쉬운 설명 — 전체 한번에 풀이\';}else{btn.textContent=\'ⓘ 쉬운 설명 접기\';window.AiFRS.explainEasyAll(no);}}else window.AiFRS.explainEasyAll(no);})(\''+std.no+'\')" title="위 항목 전체를 기준서 흐름(정의→조건→결론)에 따라 한 번에 쉬운 말로 풀이합니다 — 한 번 더 누르면 닫힙니다">ⓘ 쉬운 설명 — 전체 한번에 풀이</button></div>'
       +'<div id="aifrs-easyall-'+std.no+'"></div>'
       +'</div>';
   }
@@ -5410,6 +5411,13 @@ a:hover { text-decoration: underline; }
     return '';
   }
   // 영문 우세 문서 감지 — 라틴 문자가 충분히 많고 한글이 그 15% 미만이면 영문 문서로 판단
+  // C14-4/TP8: 질의형 문서 감지 — "~이 가능한가?" 형태의 회계 질의서
+  function _isQueryDoc(rec){
+    var t=(rec.text||rec.ocrText||'').slice(0,800); if(t.length<50) return false;
+    var qHits=(t.match(/가능한가\?|가능한지\?|처리해야 하는가|맞는가\?|옳은가\?|적정한가\?|처리 방법은|해야\s*하는가|가능한가요|처리할 수 있는가/g)||[]).length;
+    var factHits=(t.match(/\d{4}\.\d{1,2}\.\d{1,2}|계약금액|원화|억\s*원|천만\s*원|달러|\$[0-9]|만\s*원/g)||[]).length;
+    return qHits>=1 && factHits<3;   // 질의 표현 있고 거래 사실(날짜·금액) 희소하면 질의형
+  }
   // TP10: K-IFRS 기준서 원문 감지 — 실거래 문서가 아닌 기준서 자체가 업로드된 경우
   function _isStdDoc(rec){
     var t=(rec.text||rec.ocrText||''); if(t.length<300) return false;
@@ -5439,7 +5447,8 @@ a:hover { text-decoration: underline; }
     var b=m[rec.status]||m.waiting;
     var en=_isEnDoc(rec)?'<span class="aifrs-file-badge aifrs-b-en aifrs-tip" data-tip="영문 문서&#10;AI 분석은 정상 지원. 한글 DB 기반이라 키워드 자동 매칭이 제한될 수 있습니다.">EN 영문</span>':'';
     var std=_isStdDoc(rec)?'<span class="aifrs-file-badge aifrs-b-err aifrs-tip" data-tip="⚠ 기준서 원문으로 보입니다&#10;실거래 문서(계약서·청구서·감사조서 등)를 올려주세요.&#10;기준서 자체를 올리면 전 항목 충족으로 잘못 판정될 수 있습니다.">기준서 원문?</span>':'';
-    return std+en+'<span class="aifrs-file-badge '+b[0]+'">'+b[1]+'</span>';
+    var qry=(!std&&_isQueryDoc(rec))?'<span class="aifrs-file-badge aifrs-b-warn aifrs-tip" data-tip="⚠ 질의형 문서로 보입니다&#10;거래 사실(계약서·전표·명세서 등)을 추가하면 더 정확한 판정이 가능합니다.&#10;질의만 올리면 구체적 근거 없이 일반론으로 판정될 수 있습니다.">질의형?</span>':'';
+    return std+qry+en+'<span class="aifrs-file-badge '+b[0]+'">'+b[1]+'</span>';
   }
   // 미리보기 전용 자동 정형화 — 내용은 그대로, 표시만 정리(문장·헤더·목록 단위 줄바꿈)
   function _fmtPreview(t){
