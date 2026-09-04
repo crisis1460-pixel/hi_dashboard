@@ -4757,6 +4757,23 @@ a:hover { text-decoration: underline; }
   }
   function buildHistHtml(){
     var items = [
+      { date:'2026-09-04', title:'사이클14 2차 — 즉시가능 7종 + U12/U14/C14-4 + JS 버그 수정',
+        bullets:[
+          'U3: af-para-txt 줄간격·패딩 개선(white-space:pre-wrap, line-height:1.9)',
+          'U4: 정밀분석 인용 중복 제거 — 80% 유사도 기반(_qnorm 활용)',
+          'U5: runFinalAudit 실행 중 버튼 disable + "⏳ 감사 실행 중…" 텍스트',
+          'U11: "AI 분석" 버튼 title 속성 — "이 기준서 전체를 처음부터 재분석" 명시',
+          'U13: af-para-txt CSS — font-size 14px, color #dcdce0 통일',
+          'TP6: buildAuditVerifyPrompt — 오해교정 시스템 메시지 삽입(용어·공정가치·PPA 등)',
+          'TP7: _buildActionPlan — _qnorm 기반 중복 문장 필터(80% 이상 겹치면 제거)',
+          'TP1: 스텝바 각 단계 tips 배열 + 가이드 투어 연결(정밀=조문존재, 감사=내용충족 구분)',
+          'U12: af-step-bar title 속성 — 3/4단계 수 hover 안내',
+          'U14: 쉬운설명 버튼 인라인 토글(열기↔접기) + id="aifrs-easybtn-{no}"',
+          'C14-4: _isQueryDoc() 질의형 문서 감지 + aifrs-b-warn "질의형?" 배지',
+          'CSS: .aifrs-b-warn 클래스 정의 추가',
+          'BUGFIX: _buildActionPlan 3788라인 — 삼항연산자 false 브랜치 \'\' 누락으로 JS 파싱 오류 수정(확인필요 항목 렌더링 크래시)'
+        ]
+      },
       { date:'2026-09-04', title:'페르소나 테스트 4인 + 코드 개선 7종 (사이클14)',
         bullets:[
           '페르소나 a(낮음)·b1·b2(재경관리사)·d(전문가) 5건×4인 CW 테스트 — 다음할일 Q2 전원 최저(2.2~2.4)',
