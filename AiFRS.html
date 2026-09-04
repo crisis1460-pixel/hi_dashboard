@@ -2565,9 +2565,8 @@ a:hover { text-decoration: underline; }
       +   '<div class="af-def-sec">검증 예외 표시 <span class="aifrs-note">(감사 항목 요약줄 — 문제가 있을 때만 나타남)</span></div>'
       +   '<div class="af-def-row"><span class="af-flag warn">근거 약함</span><span>조문은 있으나 키워드 단서가 약함</span></div>'
       +   '<div class="af-def-row"><span class="af-flag bad">조문 불일치</span><span>조문이 DB에 없거나 범위 밖 — AI 오인용 가능성</span></div>'
-      +   '<div class="af-def-row"><span class="af-flag warn">2차 검토 하향</span><span>2차 검토자가 과잉판단으로 보고 확인필요로 낮춤</span></div>'
       +   '<div class="af-def-row"><span class="af-flag bad">문서 인용 없음</span><span>문서에서 검증된 근거 인용을 찾지 못함</span></div>'
-      +   '<p class="aifrs-note">위 표시가 하나도 없으면 세 단계(조문 실존 → 2차 검토 → 문서 인용) 모두 정상 통과한 항목입니다.</p>'
+      +   '<p class="aifrs-note">위 표시가 하나도 없으면 두 단계(조문 실존 → 문서 인용) 모두 정상 통과한 항목입니다.</p>'
       +   '<p class="aifrs-note aifrs-note-mark" style="margin-top:10px"><i>※</i><span>ⓐ는 AI 인용의 실재성을 코드로 거르는 단계이고, ⓑ가 실제 <b>문서를 근거로 한 감사 판정</b>입니다.</span></p>'
       + '</div>'
       + '<div class="m-foot"><button class="aifrs-btn">확인</button></div></div>';
@@ -3262,10 +3261,9 @@ a:hover { text-decoration: underline; }
     var f=[];
     if(codeLevel==='red') f.push(['bad','조문 불일치']);
     else if(codeLevel==='amber') f.push(['warn','근거 약함']);
-    if(cross==='하향') f.push(['warn','2차 검토 하향']);
     if(!hasQuote) f.push(['bad','문서 인용 없음']);
     if(!f.length) return '';
-    return f.map(function(x){ return '<span class="af-flag '+x[0]+'" title="검증 과정(조문 실존 → 2차 검토 → 문서 인용 확인)에서 걸린 항목입니다. 펼치면 상세가 나옵니다">'+x[1]+'</span>'; }).join('');
+    return f.map(function(x){ return '<span class="af-flag '+x[0]+'" title="검증 과정에서 걸린 항목입니다. 펼치면 상세가 나옵니다">'+x[1]+'</span>'; }).join('');
   }
   function _prioSheetHtml(tie){
     return '<p>각 조문이 <b>이 거래의 회계 “결론”을 바꾸는 판단 길목</b>인지를 AI가 1~100으로 평가한 참고값입니다(거래 맥락 기준).</p>'
@@ -3292,8 +3290,7 @@ a:hover { text-decoration: underline; }
         '<p><b>3단계 근거기반 감사</b>로 산출된 결과입니다.</p>'
       + '<div class="g-step"><b>①</b><span>근거추출 — 문서에서 검토포인트 관련 구절을 원문 그대로(verbatim) 추출한 뒤, <b>코드로 인용의 실존을 검증</b>(할루시네이션 차단)</span></div>'
       + '<div class="g-step"><b>②</b><span>판정 — 검증된 근거만 사용해 충족 여부를 판단(근거가 없으면 임의 판단 없이 보류)</span></div>'
-      + '<div class="g-step"><b>③</b><span>교차검증 — 2차 검토자가 과잉판단을 재검증해 필요 시 <b>확인필요로 하향</b></span></div>'
-      + '<p style="margin-top:10px">근거가 없거나 불충분한 항목은 <b>확인 필요</b>로 표기하고 후속 확인사항을 안내합니다. 항목 요약줄에 「근거 약함」「2차 검토 하향」「문서 인용 없음」 표시가 있으면 위 과정 중 해당 단계에서 걸린 것이고, 표시가 없으면 모두 통과한 항목입니다.</p>'
+      + '<p style="margin-top:10px">근거가 없거나 불충분한 항목은 <b>확인 필요</b>로 표기하고 후속 확인사항을 안내합니다. 항목 요약줄에 「근거 약함」「문서 인용 없음」 표시가 있으면 위 과정에서 걸린 것이고, 표시가 없으면 모두 통과한 항목입니다.</p>'
       + '<p class="aifrs-note aifrs-note-mark" style="margin-top:10px"><i>※</i><span>본 결과는 참고용이며, K-IFRS 적용·회계처리의 최종 판단과 책임은 담당자에게 있습니다. 판정이 <b>충족</b>이어도 원문 기준서 확인을 권장합니다.</span></p>'},
     tour1: {t:'① 키 등록 — 자세히', h:
         '<p><b>Gemini API Key (주 엔진 · 필수)</b></p>'
@@ -3653,7 +3650,7 @@ a:hover { text-decoration: underline; }
                   var verd=j['판정']||'확인필요'; var downReason='';
                   if(String(v['결과']||'')==='하향' && verd!=='확인필요' && verd!=='자료부족'){ downReason=v['사유']||'2차 검증에서 근거 부족으로 하향'; verd='확인필요'; }
                   var op=j['감사의견']||'';
-                  if(downReason) op='[교차검증 하향] '+downReason+(op?' (1차 의견: '+op+')':'');   // 하향 시 의견 텍스트도 갱신 — 충족 어조 의견이 그대로 남는 문제 방지
+                  if(downReason) op=downReason;   // 하향 시 의견 텍스트도 갱신 — 충족 어조 의견이 그대로 남는 문제 방지
                   var evState=e.quotes.length?'확보':'부족';
                   if(verd==='자료부족'){
                     // 사이클7 R1 (형식 개정): 두괄식 — "확인 불가" 결론 먼저, 그 다음 조문 요구사항, 마지막 준비 자료
@@ -4016,7 +4013,6 @@ a:hover { text-decoration: underline; }
         + (a['감사의견']?'<div class="aifrs-pr-row aifrs-pr-violet"><b>AI감사의견</b><span>'+(verd==='자료부족'?esc(a['감사의견']).replace(/\n/g,'<br>'):esc(a['감사의견']))+'</span></div>':'')
         + (verd!=='확인필요' && a['보완사항']?'<div class="aifrs-pr-row aifrs-pr-warn-row"><b>'+(verd==='자료부족'?'준비할 서류':'보완·확인')+'</b>'+(verd==='자료부족'?_supp3Html(a['보완사항']):'<span>'+esc(a['보완사항'])+'</span>')+'</div>':'')
         + unable
-        + (a['교차']==='하향'?'<div class="aifrs-pr-row aifrs-pr-muted-row"><b>2차 검토</b><span>2차 검토자가 과잉판단으로 보고 확인 필요로 낮춘 항목입니다.</span></div>':'')
         + _prioReasonRow(it['우선순위사유'])
         + hallucNote
         + '</div></details>';
@@ -4647,6 +4643,24 @@ a:hover { text-decoration: underline; }
   }
   function buildHistHtml(){
     var items = [
+      { date:'2026-09-04', title:'실문서 36건 수집 완료 — 48종 K-IFRS 전 기준서 실샘플 확보 (사이클12)',
+        bullets:[
+          '공개 IR 서버 직접 HTTP GET — DART DRM 우회, DRM 해제 불필요',
+          '36건: PDF 33건 + XLSX 3건(카카오 팩트시트·삼성 재무제표) / 11개 업종 분산(반도체·배터리·자동차·금융·보험·건설·공기업 등)',
+          '보험계약(1117·2117): 삼성생명·한화생명·교보생명·신한라이프·KB라이프·DB손보 KIS 신용평가 6종 포함',
+          '서비스양허(2032): 인천공항공사 감사보고서 2건, 규제이연계정(1114): 한국전력·KT 포함',
+          '커버리지: 48종 중 약 45종 실문서 확보 — 기준서당 1~2건 요건 충족'
+        ]
+      },
+      { date:'2026-09-04', title:'전수검증 풀체인 48종 완주 + 골든셋 확정 + 재현성 측정',
+        bullets:[
+          '풀체인(AI분석→정밀→감사→쉬운설명→다음할일) 48종 전수 병렬 2탭 완주 — 형식통과 33/48',
+          '골든셋 33건(expected.json) 확정 — 사이클별 top 예측 비교 기준점',
+          '골든셋 10건 × 3회 flip률 측정 — top 재현성 100%(0 flip), verdicts 자연변동 허용 범위 확인',
+          '사후 검토 도구(review_tool.js) 구축 — A1~A10·P1~P4·E0~E5 항목별 자동 체크',
+          '실문서 수집 착수(삼성전자·LG에너지솔루션·LG디스플레이·SK하이닉스 공개 IR PDF)'
+        ]
+      },
       { date:'2026-09-03', title:'근거 약함·조문 불일치 인라인 가이드 + 자료부족 3단 준비 서류 (사이클9)',
         bullets:[
           '근거 약함(amber) — 항목 펼침 시 "이 인용 불확실" 경고 박스 자동 표시',
