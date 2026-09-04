@@ -3540,8 +3540,10 @@ a:hover { text-decoration: underline; }
   // 2단계: 코드로 검증된 근거만 가지고 판정
   function buildJudgePrompt(std, itemsEv, docKind){
     var lines=itemsEv.map(function(e,idx){
-      var q=e.quotes.length ? e.quotes.map(function(x){return '「'+x+'」';}).join(' / ') : '(검증된 근거 없음)';
-      return '['+(idx+1)+'] 조문 '+String(e.it['조문번호']||'')+'\n  · 검토포인트: '+(e.it['검토포인트']||'')+'\n  · 검증된 문서 근거: '+q;
+      var qn=e.quotes.length;
+      var q=qn ? e.quotes.map(function(x){return '「'+x+'」';}).join(' / ') : '(검증된 근거 없음)';
+      // TP3: 인용 수를 명시 — 모델이 "인용 있음 → 자료부족 불가" 자기 일관성을 직접 확인하게 함
+      return '['+(idx+1)+'] 조문 '+String(e.it['조문번호']||'')+' ▶ 검증된 인용 '+qn+'건\n  · 검토포인트: '+(e.it['검토포인트']||'')+'\n  · 검증된 문서 근거: '+q;
     }).join('\n\n');
     return [
       '당신은 신중하고 균형 잡힌 회계 검토자입니다. 각 검토포인트를, 아래 [검증된 문서 근거](문서에 실제 존재함이 코드로 확인된 인용)만 사용해 판정하세요.',
@@ -3563,7 +3565,9 @@ a:hover { text-decoration: underline; }
       '- 미흡: 문서의 사실관계가 기준서 요건에 명백히 배치되어 그대로면 회계처리에 문제가 됨.',
       '- 확인필요: 문서 근거는 있으나(검증된 인용 1건 이상) 해석·적용이 불확실하거나, 결론을 좌우하는 핵심 수치·조건이 문서 밖에 있음. 판단불가사유에 "무엇이 불확실한지"를 한 문장으로 반드시 명시.',
       '- 자료부족: 검토포인트를 판단할 사실이 문서에 전혀 없음(검증된 근거 0건). 감사의견은 「이 문서에는 [빠진 사실]에 관한 내용이 없습니다.」 한 문장 — "근거 없음"류 한 줄 문구 금지. 보완사항은 반드시 아래 3줄 형식으로 출력(항목명 그대로):\n빠진 사실: [검토포인트 판단에 필요한 구체 사실 — 어떤 거래·수치·조건이 없는지]\n찾는 곳: [그 사실이 담길 만한 문서 유형·시스템·담당자]\n준비할 서류: [실제 추가할 서류명 또는 데이터 — 계약서·품의서·정산서·시스템 화면 등 구체적으로]',
+      '⚠ TP3 인용 수 체크(절대 규칙): 위 항목 목록에서 "검증된 인용 N건"이 1 이상인 조문은 절대 자료부족으로 판정하지 마세요 — 자료부족은 오직 인용 0건일 때만 가능합니다. 인용이 있으면 최소 확인필요이며, 그 인용이 검토포인트의 핵심 사실을 직접 뒷받침하면 충족입니다.',
       '⚠ 거래의 성격이 문서로 확인되면 "문서에 회계 결론·용어가 없다"는 이유만으로 확인필요로 미루지 말 것 — 그 경우는 충족이다. 검증된 근거가 전혀 없을 때만 자료부족.',
+      '⚠ TP2 충족 시 방향 포함: 충족 판정의 감사의견 끝에 반드시 "→ [구체 처리 방향]" 형태로 회계처리·보고 방향 1문장을 추가하세요(예: "→ 수익으로 인식하고 계약 세부사항을 주석에 공시하세요.", "→ 비용으로 처리하고 관련 증빙을 보관하세요.", "→ 유형자산으로 인식 후 감가상각 일정을 수립하세요."). 자료부족·확인필요·미흡 판정에는 이 형식 불필요.',
       '확인필요·해당없음이면 판단불가사유에 이유와 후속 확인사항을 구체적으로. 감사의견은 제시된 근거를 인용해 1~2문장.',
       '반드시 아래 JSON으로만:',
       '{"audited":[{"조문번호":"","판정":"충족|미흡|확인필요|자료부족|해당없음","감사의견":"","보완사항":"","판단불가사유":""}]}'
@@ -3572,8 +3576,9 @@ a:hover { text-decoration: underline; }
   // 3단계: 2차 검토자가 1차 판정이 근거를 넘어서지 않았는지 재검증
   function buildAuditVerifyPrompt(std, judgedEv, docKind){
     var lines=judgedEv.map(function(e,idx){
-      var q=e.quotes.length ? e.quotes.map(function(x){return '「'+x+'」';}).join(' / ') : '(없음)';
-      return '['+(idx+1)+'] 조문 '+String(e.it['조문번호']||'')+'\n  · 검토포인트: '+(e.it['검토포인트']||'')+'\n  · 검증된 근거: '+q+'\n  · 1차 판정: '+(e.judg['판정']||'')+'\n  · 1차 감사의견: '+(e.judg['감사의견']||'');
+      var qn=e.quotes.length;
+      var q=qn ? e.quotes.map(function(x){return '「'+x+'」';}).join(' / ') : '(없음)';
+      return '['+(idx+1)+'] 조문 '+String(e.it['조문번호']||'')+' ▶ 검증된 인용 '+qn+'건\n  · 검토포인트: '+(e.it['검토포인트']||'')+'\n  · 검증된 근거: '+q+'\n  · 1차 판정: '+(e.judg['판정']||'')+'\n  · 1차 감사의견: '+(e.judg['감사의견']||'');
     }).join('\n\n');
     return [
       '당신은 1차 감사 결과를 검증하는 2차 검토자입니다. 각 판정이 "제시된 근거만으로" 타당한지 보수적으로 재검증하세요.',
@@ -3584,6 +3589,7 @@ a:hover { text-decoration: underline; }
       '',
       lines,
       '',
+      '⚠ TP3 인용 수 체크: "검증된 인용 N건"이 1 이상인 조문을 "자료부족"으로 하향하는 것은 절대 불가합니다 — 인용이 있으면 최소 확인필요이며, 자료부족은 인용 0건일 때만 가능합니다.',
       '하향이면 사유에 "왜 확인필요로 낮춰야 하는지 + 후속 확인사항". ⚠ 사유 문장에 "1차", "하향", "단정"이라는 단어 사용 금지 — 대신 어떤 사실이 불확실한지·무엇을 추가로 확인해야 하는지를 직접 서술. 하향이면 확인할것·어디서 필드에 구체적인 후속 확인사항 작성; 유지이면 빈 문자열로. 반드시 아래 JSON으로만:',
       '{"verified":[{"조문번호":"","결과":"유지|하향","사유":"","확인할것":"","어디서":""}]}'
     ].join('\n');
@@ -3819,8 +3825,13 @@ a:hover { text-decoration: underline; }
         var range=AiFRS.stripStdPrefix(std.no, art)||art;
         var para=null; try{ para=AiFRS.findArticle(std.no, art); }catch(e){}
         var topic=(para&&para.topic)||_brief(it['검토포인트']||it['체크항목']||'', 40);
+        // TP2: 충족 항목에도 "→ 처리 방향" 추출해 표시
+        var op=a['감사의견']||''; var am=op.match(/→\s*(.+?)(?:\.|$)/);
+        var dir=am?am[1].trim():'';
         return '<div class="af-plan-ok-item">✅ '+esc(topic)
-          +(art?'<span class="af-plan-ref" style="font-size:11px;margin-left:4px">'+_artChip(std.no, range, '§'+esc(range))+'</span>':'')+'</div>';
+          +(art?'<span class="af-plan-ref" style="font-size:11px;margin-left:4px">'+_artChip(std.no, range, '§'+esc(range))+'</span>':'')
+          +(dir?'<div style="font-size:11px;color:#94a3b8;margin-top:2px;margin-left:18px">→ '+esc(dir)+'</div>':'')
+          +'</div>';
       }).join('');
       rows+='<details class="af-plan-more"><summary>이미 확인된 것 ('+okays.length+'건) ▸</summary>'
         +'<div class="af-plan-ok">'+okHtml+'</div></details>';
@@ -3830,10 +3841,13 @@ a:hover { text-decoration: underline; }
     var concl;
     if(!probs.length){
       var repOk=okays[0];
-      var repOp=repOk?_brief(repOk['감사의견']||'', 80):'';
+      // TP2: 감사의견의 "→ 처리 방향" 부분 추출 — 없으면 전체 의견 요약
+      var fullOp=repOk?(repOk['감사의견']||''):'';
+      var arrowM=fullOp.match(/→\s*(.+)$/);
+      var repOp=arrowM?arrowM[1].trim():_brief(fullOp, 80);
       concl=repOp
-        ? '<b>이 건의 방향</b> — '+esc(repOp)
-        : '<b>이 건의 방향</b> — 전 항목 검토 완료, 문서 근거 확인됨';
+        ? '<b>이 건의 방향</b> — '+esc(repOp)+'<br><span style="color:#94a3b8;font-size:12px">▸ 결론을 감사인·상위 담당자와 공유하고 관련 문서(계약서·품의서 등)를 보관하세요.</span>'
+        : '<b>이 건의 방향</b> — 전 항목 검토 완료, 문서 근거 확인됨<br><span style="color:#94a3b8;font-size:12px">▸ 결론을 감사인·상위 담당자와 공유하고 관련 문서를 보관하세요.</span>';
     } else if(probs.length>=okays.length){
       concl='아직 방향을 정하기 어렵습니다 — 위 '+Math.min(probs.length,TOP_N)+'건을 먼저 확인하세요.';
     } else {
