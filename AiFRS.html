@@ -4643,6 +4643,15 @@ a:hover { text-decoration: underline; }
   }
   function buildHistHtml(){
     var items = [
+      { date:'2026-09-04', title:'DOC_INDIRECT A/B 모델 비교 완료 — 문서 자체 한계 확정 (사이클13)',
+        bullets:[
+          'DOC_INDIRECT 케이스 5건(1117·1117b·1110b·2117b·1001) — 탭A(auto/3.6-flash) vs 탭B(gemini-2.5-flash) 동시 투입',
+          'top 분류 5/5 동일(1117→1117, 1110b→1110, 2117b→2117, 1001→1117) — 모델 교체 효과 없음',
+          '판정: 문서 자체 한계 확정(DOC_INDIRECT) — 상위 모델 투입으로도 DOC_INDIRECT 케이스 분류 개선 불가',
+          '쉬운설명: A탭 4/5 성공, B탭 2/5 성공 — 쉬운설명은 모델 간 차이 있으나 top 분류와 무관',
+          '비교 리포트 pass13_compare.md 저장. 사이클13 완료'
+        ]
+      },
       { date:'2026-09-04', title:'실문서 33건 투입 완주 — DOC_INDIRECT 한계 실증 (사이클12)',
         bullets:[
           '실문서 36건 수집(PDF 33+XLSX 3) → 텍스트추출 35건 성공(kepco 이미지PDF 제외) → 33건 분석 완주(incheonairport 2건 raw_log 저장 실패)',
