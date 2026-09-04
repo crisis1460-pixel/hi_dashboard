@@ -3503,7 +3503,7 @@ a:hover { text-decoration: underline; }
     if(n.length<8) return false;
     var grams=0, hit=0;
     for(var i=0;i+6<=n.length;i+=3){ grams++; if(docNorm.indexOf(n.substr(i,6))>=0) hit++; }
-    return grams>=2 && (hit/grams)>=0.55;
+    return grams>=2 && (hit/grams)>=0.65;  // 사이클14 A3: 55%→65% 인용 실재성 임계 상향
   }
   // 1단계: 문서에서 검토포인트 관련 '원문 그대로' 인용만 추출
   function buildEvidencePrompt(std, items, docText){
@@ -3579,8 +3579,8 @@ a:hover { text-decoration: underline; }
       '',
       lines,
       '',
-      '하향이면 사유에 "왜 확인필요로 낮춰야 하는지 + 후속 확인사항". 반드시 아래 JSON으로만:',
-      '{"verified":[{"조문번호":"","결과":"유지|하향","사유":""}]}'
+      '하향이면 사유에 "왜 확인필요로 낮춰야 하는지 + 후속 확인사항". ⚠ 사유 문장에 "1차", "하향", "단정"이라는 단어 사용 금지 — 대신 어떤 사실이 불확실한지·무엇을 추가로 확인해야 하는지를 직접 서술. 하향이면 확인할것·어디서 필드에 구체적인 후속 확인사항 작성; 유지이면 빈 문자열로. 반드시 아래 JSON으로만:',
+      '{"verified":[{"조문번호":"","결과":"유지|하향","사유":"","확인할것":"","어디서":""}]}'
     ].join('\n');
   }
   AiFRS._auditBusy={};   // 기준서별 → 동시 감사 허용
@@ -3648,9 +3648,20 @@ a:hover { text-decoration: underline; }
                 var audited=judgedEv.map(function(e,i){
                   var v=_alignByArt(vList, e.it['조문번호'], i)||{}; var j=e.judg;
                   var verd=j['판정']||'확인필요'; var downReason='';
-                  if(String(v['결과']||'')==='하향' && verd!=='확인필요' && verd!=='자료부족'){ downReason=v['사유']||'2차 검증에서 근거 부족으로 하향'; verd='확인필요'; }
+                  if(String(v['결과']||'')==='하향' && verd!=='확인필요' && verd!=='자료부족'){
+                    downReason=v['사유']||'2차 검증에서 근거 부족으로 하향'; verd='확인필요';
+                    j['확인할것']=v['확인할것']||''; j['어디서']=v['어디서']||'';   // A1: 행동문 조립용
+                  }
                   var op=j['감사의견']||'';
-                  if(downReason) op=downReason;   // 하향 시 의견 텍스트도 갱신 — 충족 어조 의견이 그대로 남는 문제 방지
+                  if(downReason){
+                    // A1: 내부용어("1차","하향","단정") 제거 + "확인할 것 / 어디서" 2줄 형식
+                    var _cw=j['확인할것']||'', _cwr=j['어디서']||'';
+                    var _cleanReason=downReason.replace(/1차\s*(감사의견|판정)?\s*[은는이가]?\s*/g,'').replace(/교차검증\s*(하향|결과)[.，\s]*/g,'').trim();
+                    op='문서만으로는 결론을 내기 어렵습니다.'
+                      +(_cw?'\n확인할 것: '+_cw:'')
+                      +(_cwr?'\n어디서: '+_cwr:'')
+                      +(!_cw&&_cleanReason?'\n'+_cleanReason:'');
+                  }
                   var evState=e.quotes.length?'확보':'부족';
                   if(verd==='자료부족'){
                     // 사이클7 R1 (형식 개정): 두괄식 — "확인 불가" 결론 먼저, 그 다음 조문 요구사항, 마지막 준비 자료
@@ -3665,7 +3676,8 @@ a:hover { text-decoration: underline; }
                   }
                   if(!op.trim()) op='[의견미생성] AI가 감사의견을 생성하지 않았습니다 — 재검토를 권장합니다.';
                   return { '조문번호':e.it['조문번호']||'', '판정':verd, '감사의견':op, '보완사항':j['보완사항']||'', '근거상태':evState,
-                    '판단불가사유':(downReason?downReason+' ':'')+(j['판단불가사유']||''), '근거인용':e.quotes, '환각제외':e.halluc, '교차':String(v['결과']||'유지') };
+                    '판단불가사유':(downReason?downReason+' ':'')+(j['판단불가사유']||''), '근거인용':e.quotes, '환각제외':e.halluc, '교차':String(v['결과']||'유지'),
+                    '확인할것':j['확인할것']||'', '어디서':j['어디서']||'' };  // A1: 다음할일 행동문 조립용
                 });
                 (AiFRS._lastAudit=AiFRS._lastAudit||{})[no]={ items:audited, std:{no:std.no, name:std.name}, ts:Date.now() };   // 9단계(객관식 보정)·증빙용 구조화 보관
                 _snapSave();
@@ -3720,79 +3732,123 @@ a:hover { text-decoration: underline; }
       return {label:'자료 확보', c:'#fbbf24', next:'해당 내용이 담긴 자료(부속합의서·정산서·품의서 등)를 확보해 파일로 추가한 뒤 다시 검토해 보세요.'};
     return {label:'사실 확인', c:'#fbbf24', next:'계약 담당자·상대방에게 위 사항을 확인하고, 확인 내용이 담긴 자료를 추가해 다시 검토해 보세요.'};
   }
+  // B1+B2(사이클14): "지금 할 일 ≤3건 + 그 다음(접힘) + 이미 확인된 것(접힘)" 구조. _actionOf 실제 연결.
   function _buildActionPlan(std, items, audited){
     var byArt={}; items.forEach(function(it){ byArt[String(it['조문번호']||'').trim()]=it; });
-    // 충족 여부와 무관하게 전 항목을 하나의 의견칸으로 통합 — 기준서 흐름(조문 오름차순: 정의→요건→후속) 순서로 "§문단으로 무엇을 하고 → 다음 §문단으로 무엇을 한다" 요약
     var probs=audited.filter(function(a){ return a['판정']==='미흡'||a['판정']==='확인필요'||a['판정']==='자료부족'; });
     var okays=audited.filter(function(a){ return a['판정']==='충족'; });
-    var list=probs.concat(okays);
-    if(!list.length) return '';
+    if(!probs.length && !okays.length) return '';
     var _artNum=function(a){ var m=String(a['조문번호']||'').match(/\d+(\.\d+)?/); return m?parseFloat(m[0]):9999; };
-    list=list.slice().sort(function(x,y){ return _artNum(x)-_artNum(y); });
-    // 처음 보는 사람 기준의 단순 로드맵 — 한 줄 = "확인 주제: 상태" (긴 의견 발췌 없음, 상세는 쉬운 설명)
-    var usedTopics={};
-    var rows=list.map(function(a, idx){
+    probs=probs.slice().sort(function(x,y){ return _artNum(x)-_artNum(y); });
+    okays=okays.slice().sort(function(x,y){ return _artNum(x)-_artNum(y); });
+
+    // 행동 문장 조립 — _actionOf 레이블 + 구체 서류/확인처 추출
+    function _actionRow(a, idx){
       var art=String(a['조문번호']||'').trim(), it=byArt[art]||{};
       var range=AiFRS.stripStdPrefix(std.no, art)||art;
       var para=null; try{ para=AiFRS.findArticle(std.no, art); }catch(e){}
-      var topic=(para&&para.topic)||'';
-      if(!topic || usedTopics[topic]) topic=_brief(it['검토포인트']||it['체크항목']||topic||'검토 항목', 26);   // DB topic이 범위 중복이면 검토포인트로 구분
-      usedTopics[topic]=1;
-      // 첨부 문서에 대한 감사 판단을 한 줄로 — 주제 + 이 건의 결론 요약 + 상태
-      // 감사 결론은 생략 없이 전문 표시 — "어떻게 처리해야 한다"가 잘리면 방향 제시가 무의미
-      var verd=a['판정'], st='', c='', bg='', judg='';
-      if(verd==='충족'){ c='#2dd4bf'; bg='rgba(45,212,191,.12)'; st='충족'; judg=a['감사의견']||'문서 근거로 확인됨'; }
-      else if(verd==='미흡'){ c='#f87171'; bg='rgba(248,113,113,.12)'; st='보완 필요'; judg=a['보완사항']||a['감사의견']||''; }
-      else if(verd==='자료부족'){ c='#94a3b8'; bg='rgba(148,163,184,.14)'; st='자료 부족'; judg=a['감사의견']||a['보완사항']||''; }   // 사이클7 R1: 「이 문서에는 …없습니다. 보완 자료: …」 그대로 노출
-      else { c='#fbbf24'; bg='rgba(251,191,36,.12)'; st='확인 필요'; judg=a['판단불가사유']||a['보완사항']||it['검토포인트']||''; }
-      // 가독성: 1행 = 주제 + 상태 배지 + §조문(훑어보기용), 2행 = 판단 근거(연한 글씨, 필요할 때 읽기)
-      return '<div class="af-plan-sline"><i>'+(idx+1)+'</i><span>'
-        + '<div class="af-plan-h2"><b>'+esc(topic)+'</b><em class="af-plan-st" style="color:'+c+';background:'+bg+'">'+st+'</em>'
-        + (art?'<span class="af-plan-ref">'+_artChip(std.no, range, '§ '+esc(range))+'</span>':'')
-        + '</div>'
-        + '<div class="af-plan-j">'+esc(judg)+'</div>'
-        + '</span></div>';
-    }).join('');
-    // 이 건의 종합 방향·결과 — 최고 우선순위 충족 항목의 감사 결론을 대표로(없으면 확인 대기 안내)
-    var rep=null, repPr=-1;
-    okays.forEach(function(a){
-      var p=_clampPrio((byArt[String(a['조문번호']||'').trim()]||{})['검토우선순위']);
-      if((a['감사의견']||'').trim() && p>repPr){ repPr=p; rep=a; }
-    });
-    var repArt=rep?String(rep['조문번호']||'').trim():'';
-    var concl=rep
-      ? '<b>이 건의 방향</b> — '+esc(rep['감사의견'])
-        + (repArt?' <span class="af-plan-ref">'+_artChip(std.no, AiFRS.stripStdPrefix(std.no,repArt)||repArt, '§ '+esc(AiFRS.stripStdPrefix(std.no,repArt)||repArt))+'</span>':'')
-      : '이 건의 방향은 확인 필요 사항이 해결된 뒤 확정됩니다.';
+      var topic=(para&&para.topic)||_brief(it['검토포인트']||it['체크항목']||'검토 항목', 40);
+      var ac=_actionOf(a);
+      var supp=(a['보완사항']||'').trim();
+      var actionText='';
+      if(a['판정']==='자료부족'){
+        // 3단(빠진 사실/찾는 곳/준비할 서류)에서 핵심만 추출
+        var m3=supp.match(/준비할 서류:\s*([^\n]+)/);
+        var m2=supp.match(/찾는 곳:\s*([^\n]+)/);
+        var m1=supp.match(/빠진 사실:\s*([^\n]+)/);
+        var what=(m3?m3[1]:m1?m1[1]:'').trim().replace(/\.$/,'');
+        var where=(m2?m2[1]:'').trim().replace(/\.$/,'');
+        if(what) actionText=what+(where?' — '+where+'에서 준비':' 준비')+'하세요.';
+        else actionText=(a['감사의견']||supp||ac.next).replace(/\n.*/,'');
+      } else if(a['판정']==='확인필요'){
+        // A1에서 저장한 확인할것·어디서 우선 사용
+        var cw=(a['확인할것']||'').trim(), cwr=(a['어디서']||'').trim();
+        if(cw) actionText=cw+(cwr?' — '+cwr+'에서 확인':')+' 확인하세요.';
+        else {
+          // 판단불가사유에서 내부용어 제거 후 사용
+          var raw=(a['판단불가사유']||a['감사의견']||ac.next).replace(/1차\s*(감사의견|판정)?\s*[은는이가]?\s*/g,'').replace(/교차검증\s*(하향|결과)[.，\s]*/g,'').trim();
+          actionText=raw.replace(/\n.*/,'').replace(/\.$/,'')+' 확인하세요.';
+        }
+      } else if(a['판정']==='미흡'){
+        actionText=(supp||a['감사의견']||ac.next).replace(/\n.*/,'');
+      }
+      var verdColor=a['판정']==='미흡'?'#f87171':a['판정']==='자료부족'?'#94a3b8':'#fbbf24';
+      return '<div class="af-plan-sline"><i>'+idx+'</i><span>'
+        +'<div class="af-plan-h2">'
+        +'<b>'+esc(topic)+'</b>'
+        +'<em class="af-plan-st" style="color:'+verdColor+';background:rgba(0,0,0,.07)">'+esc(ac.label)+'</em>'
+        +(art?'<span class="af-plan-ref">'+_artChip(std.no, range, '§ '+esc(range))+'</span>':'')
+        +'</div>'
+        +'<div class="af-plan-j">'+esc(actionText)+'</div>'
+        +'</span></div>';
+    }
+
+    var TOP_N=3;
+    var topProbs=probs.slice(0,TOP_N), restProbs=probs.slice(TOP_N);
+    var rows=topProbs.map(function(a,i){ return _actionRow(a, i+1); }).join('');
+    if(restProbs.length){
+      rows+='<details class="af-plan-more"><summary>그 다음 ('+restProbs.length+'건) ▸</summary>'
+        +restProbs.map(function(a,i){ return _actionRow(a, topProbs.length+i+1); }).join('')
+        +'</details>';
+    }
+    if(okays.length){
+      var okHtml=okays.map(function(a){
+        var art=String(a['조문번호']||'').trim(), it=byArt[art]||{};
+        var range=AiFRS.stripStdPrefix(std.no, art)||art;
+        var para=null; try{ para=AiFRS.findArticle(std.no, art); }catch(e){}
+        var topic=(para&&para.topic)||_brief(it['검토포인트']||it['체크항목']||'', 40);
+        return '<div class="af-plan-ok-item">✅ '+esc(topic)
+          +(art?'<span class="af-plan-ref" style="font-size:11px;margin-left:4px">'+_artChip(std.no, range, '§'+esc(range))+'</span>':'')+'</div>';
+      }).join('');
+      rows+='<details class="af-plan-more"><summary>이미 확인된 것 ('+okays.length+'건) ▸</summary>'
+        +'<div class="af-plan-ok">'+okHtml+'</div></details>';
+    }
+
+    // B2: "이 건의 방향" — 판정 분포 기반, 충족 대표 의견 복붙 탈피
+    var concl;
+    if(!probs.length){
+      var repOk=okays[0];
+      var repOp=repOk?_brief(repOk['감사의견']||'', 80):'';
+      concl=repOp
+        ? '<b>이 건의 방향</b> — '+esc(repOp)
+        : '<b>이 건의 방향</b> — 전 항목 검토 완료, 문서 근거 확인됨';
+    } else if(probs.length>=okays.length){
+      concl='아직 방향을 정하기 어렵습니다 — 위 '+Math.min(probs.length,TOP_N)+'건을 먼저 확인하세요.';
+    } else {
+      var rep2=okays[0];
+      var repOp2=rep2?_brief(rep2['감사의견']||'', 80):'';
+      concl=(repOp2?'<b>이 건의 방향</b> — '+esc(repOp2):'<b>이 건의 방향</b> — 주요 사항 확인됨')
+        +' <span style="color:#fbbf24">(다만 <b>'+probs.length+'건</b> 확인 후 확정)</span>';
+    }
     rows+='<div class="af-plan-close">'
-      + '<div class="af-plan-arrow"><i>→</i><span>'+concl+'</span></div>'
-      + (probs.length && rep ? '<div>다만 <b>확인·보완 필요 '+probs.length+'건</b>이 해결되어야 확정됩니다.</div>' : '')   // "전 항목 충족…" 고정 문구 제거(요약바가 이미 같은 정보)
-      + '<div class="af-plan-hint">설명이 어렵다면 아래 <b>[ⓘ 쉬운 설명]</b>을 눌러 상세 풀이를 확인하세요.</div>'
-      + '</div>';
-    // 쉬운 설명이 이 로드맵을 그대로 풀어쓰도록 저장(프롬프트 주입용)
-    (AiFRS._lastPlan=AiFRS._lastPlan||{})[std.no]=list.map(function(a,i){
+      +'<div class="af-plan-arrow"><i>→</i><span>'+concl+'</span></div>'
+      +'<div class="af-plan-hint">설명이 어렵다면 아래 <b>[ⓘ 쉬운 설명]</b>을 눌러 상세 풀이를 확인하세요.</div>'
+      +'</div>';
+
+    // 쉬운 설명 프롬프트 주입용
+    var allSorted=probs.concat(okays).slice().sort(function(x,y){ return _artNum(x)-_artNum(y); });
+    (AiFRS._lastPlan=AiFRS._lastPlan||{})[std.no]=allSorted.map(function(a,i){
       var art=String(a['조문번호']||'').trim(), it=byArt[art]||{};
       var j=a['판정']==='충족'?(a['감사의견']||''):(a['판단불가사유']||a['보완사항']||it['검토포인트']||'');
-      return (i+1)+'. (§'+art+') '+(a['판정'])+' — '+j;
+      return (i+1)+'. (§'+art+') '+a['판정']+' — '+j;
     });
+
     var sub=probs.length
-      ? '확인·보완 필요 '+probs.length+'건 · 처리 방향 '+okays.length+'건'
-      : '전 항목 충족 — 항목별 처리 방향 안내';
-    // 쉬운 설명은 카드당 1개(통합) — 기준서가 정의→조건→특이사항으로 이어지는 구조라 전체 흐름 풀이가 이해에 유리하고, 문단 수와 무관하게 API 1콜
+      ? '지금 할 일 '+Math.min(probs.length,TOP_N)+'건'+(restProbs.length?' · 추가 '+restProbs.length:'')+(okays.length?' · 확인됨 '+okays.length:'')
+      : '전 항목 확인 완료 · '+okays.length+'건';
+    var gs=(AiFRS._lastAi&&AiFRS._lastAi['거래구조'])||{};
+    var issue=gs['핵심회계논점']||'';
     return '<div class="af-hero-card" style="border-left-color:'+(probs.length?'#fbbf24':'#2dd4bf')+'">'
-      + '<div class="af-hero-t">'+_ico('plan',15)+'<span>다음 할 일</span>'
-      +   '<span class="af-hero-sub">'+sub+'</span></div>'
-      + (function(){
-          var gs=(AiFRS._lastAi&&AiFRS._lastAi['거래구조'])||{};
-          var issue=gs['핵심회계논점']||'';
-          return '<div class="af-plan-guide">올리신 문서는 <b>제'+esc(std.no)+'호 「'+esc(std.name||'')+'」</b> 기준서로 검토합니다.'
-            + (issue?'<br>이번 문의에서 정해야 할 것: <b>'+esc(issue)+'</b>':'')
-            + '<br>아래 순서대로 확인하면 결론이 나옵니다.</div>';
-        })()
-      + rows
-      + '<div style="margin-top:14px;text-align:center"><button class="aifrs-btn" style="background:var(--blue-sky);color:#fff;border-color:var(--blue-sky);font-weight:700;font-size:13px;padding:9px 22px" onclick="window.AiFRS.explainEasyAll(\''+std.no+'\')" title="위 항목 전체를 기준서 흐름(정의→조건→결론)에 따라 한 번에 쉬운 말로 풀이합니다">쉬운 설명 — 전체 한번에 풀이</button></div>'
-      + '<div id="aifrs-easyall-'+std.no+'"></div>'
-      + '</div>';
+      +'<div class="af-hero-t">'+_ico('plan',15)+'<span>다음 할 일</span>'
+      +'<span class="af-hero-sub">'+sub+'</span></div>'
+      +'<div class="af-plan-guide">올리신 문서는 <b>제'+esc(std.no)+'호 「'+esc(std.name||'')+'」</b> 기준서로 검토합니다.'
+      +(issue?'<br>이번 문의에서 정해야 할 것: <b>'+esc(issue)+'</b>':'')
+      +(probs.length?'<br>아래 항목을 순서대로 확인하면 결론이 납니다.':'<br>모든 항목이 문서에서 확인되었습니다.')
+      +'</div>'
+      +rows
+      +'<div style="margin-top:14px;text-align:center"><button class="aifrs-btn" style="background:var(--blue-sky);color:#fff;border-color:var(--blue-sky);font-weight:700;font-size:13px;padding:9px 22px" onclick="window.AiFRS.explainEasyAll(\''+std.no+'\')" title="위 항목 전체를 기준서 흐름(정의→조건→결론)에 따라 한 번에 쉬운 말로 풀이합니다">ⓘ 쉬운 설명 — 전체 한번에 풀이</button></div>'
+      +'<div id="aifrs-easyall-'+std.no+'"></div>'
+      +'</div>';
   }
   // [쉬운 설명 — 전체 통합]: 감사 전 항목을 기준서 흐름(정의→조건→결론)으로 한 번에 풀이 — 문단 수와 무관하게 API 1콜, 세션 캐시
   AiFRS.explainEasyAll = function(no){
@@ -3830,7 +3886,7 @@ a:hover { text-decoration: underline; }
       '- 전문용어는 꼭 필요한 것만, 괄호 풀이는 5단어 이내. 관련 조문 번호는 (§번호)로 표기.',
       '- "왜": 이 기준서가 왜 존재하는지(없으면 어떤 문제가 생기는지)를 이 거래 맥락에서 1문장.',
       '- "무엇": 이 검토에서 정해야 할 것과 현재 결론 방향을 1~2문장으로.',
-      '- "어떻게": 단계마다 "N단계(기능단계): 질문형 게이트" 형식 — 기능단계는 적용범위/정의/인식/측정/표시/공시 중 하나, 문장은 "~인가?(§번호) 예/아니오에 따라 처리가 어떻게 갈리는지" 한 문장씩. 구체 판단 기준·예외는 §원문 확인으로 안내. 단계 번호는 1부터 빠짐없이 오름차순으로 출력할 것(순서를 뒤섞지 말 것).',
+      '- "어떻게": 단계마다 "N단계(기능): 질문?(§번호) 예이면 ○○, 아니오이면 △△" 형식. ⚠ "예/아니오에 따라 갈립니다/달라집니다/처리가 어떻게 갈리는지" 류 표현 절대 금지 — 예·아니오 각각의 결과를 반드시 구체적으로 써야 함. 기능단계: 적용범위/정의/인식/측정/표시/공시 중 하나. 좋은 예: "1단계(적용범위): 리스기간이 12개월 이하이거나 기초자산이 소액인가?(§5) 예이면 비용 처리하며, 아니오이면 2단계로 진행합니다." 단계 번호 1부터 오름차순 — 뒤섞지 말 것.',
       '- "주의": 판단이 갈리기 쉽거나 근거가 약한 지점이 있으면 1문장(없으면 빈 문자열). 근거가 부족한 부분은 단정하지 말고 "~로 보입니다/확인이 필요합니다" 유보 어미 사용.',
       '- 확신 어미 정렬: 문서 근거로 확정된 것만 단정형, 근거 부족·확인필요 항목은 유보형 — 근거 없는 단정 금지.',
       '- 아래 제공된 정보 밖의 사실을 추측하지 말 것.',
@@ -3844,13 +3900,13 @@ a:hover { text-decoration: underline; }
       '',
       '반드시 아래 JSON으로만: {"왜":"...","무엇":"...","어떻게":"...","주의":"..."}'
     ].join('\n');
-    AiFRS.callGemini(prompt, {json:true, temperature:0})
+    AiFRS.callGemini(prompt, {json:true, temperature:0, system:'쉬운 설명 전문가. 반드시 JSON만 출력. 각 단계는 "예이면 ○○, 아니오이면 △△" 형식으로 구체적 결과를 써야 함. "예/아니오에 따라 갈립니다/달라집니다" 표현 절대 금지.'})
       .then(function(t){
         var d=AiFRS.parseJsonResponse(t)||{};
         if(Array.isArray(d)) d=d[0]||{};
         var why=d['왜']||'', what=d['무엇']||'', how=d['어떻게']||'', caution=d['주의']||'';
         var legacy=d['쉬운설명']||d['설명']||'';
-        if(!what && !how && !legacy) throw new Error('응답 파싱 실패 — 다시 시도해 주세요.');
+        if(!what && !how && !legacy) throw new Error('쉬운 설명을 만들지 못했습니다 — 다시 시도해 주세요.');
         // "N단계:" 패턴을 줄내림 + 라벨 칩으로 분리(모델이 한 문단으로 뱉어도 항상 정렬)
         var howHtml='';
         if(how){
@@ -4643,6 +4699,18 @@ a:hover { text-decoration: underline; }
   }
   function buildHistHtml(){
     var items = [
+      { date:'2026-09-04', title:'페르소나 테스트 4인 + 코드 개선 7종 (사이클14)',
+        bullets:[
+          '페르소나 a(낮음)·b1·b2(재경관리사)·d(전문가) 5건×4인 CW 테스트 — 다음할일 Q2 전원 최저(2.2~2.4)',
+          '13개 통합 문제 심각도 평균 산출 — TP1 판정라벨불일치(3.5) 4명 전원 발견, TP2 행동없음(3.3)',
+          'A3: 인용 실재성 임계 55%→65% 상향(_quoteInDoc)',
+          'A1+A2: buildAuditVerifyPrompt — 1차·하향·단정 금지, 확인할것·어디서 필드 추가',
+          'B1+B2: _buildActionPlan 전체 교체 — 문제항목 TOP3 우선, _actionOf 실제 연결, B2 방향 문장',
+          'C1: 쉬운설명 프롬프트 — "예/아니오에 따라 갈립니다" 표현 금지, 각각 구체결과 강제',
+          'C3: explainEasyAll — system 지시 추가(갈립니다 금지), 오류 시 재시도 버튼',
+          'persona_summary.md 작성 — 4인 통합 심각도·행동구체성·CW FAIL 집계'
+        ]
+      },
       { date:'2026-09-04', title:'DOC_INDIRECT A/B 모델 비교 완료 — 문서 자체 한계 확정 (사이클13)',
         bullets:[
           'DOC_INDIRECT 케이스 5건(1117·1117b·1110b·2117b·1001) — 탭A(auto/3.6-flash) vs 탭B(gemini-2.5-flash) 동시 투입',
