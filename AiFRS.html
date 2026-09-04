@@ -743,7 +743,7 @@ a:hover { text-decoration: underline; }
 }
 .af-no-cand-icon { font-size:22px; line-height:1; }
 .af-no-cand-title { font-size:12.5px; font-weight:600; color:var(--txt2); }
-.af-no-cand-desc { font-size:11px; color:var(--txt3); line-height:1.65; max-width:300px; }
+.af-no-cand-desc { font-size:11px; color:var(--txt3); line-height:1.65; word-break:keep-all; overflow-wrap:break-word; }
 .af-no-cand-tags { display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin-top:0; }
 .af-no-cand-tag {
   font-size:10px; padding:3px 9px; border-radius:var(--radius-pill);
@@ -751,14 +751,16 @@ a:hover { text-decoration: underline; }
   border:1px solid rgba(255,255,255,.09);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
 }
-/* 낮은 관련성 소프트 경고 */
+/* 낮은 관련성 소프트 경고 — hanging indent: ⚠ 아이콘 고정, 텍스트 줄내림 시 텍스트 열에 정렬 */
 .af-low-rel-warn {
-  display:flex; align-items:flex-start; gap:6px; padding:7px 11px; margin:0 0 6px;
+  display:flex; align-items:flex-start; gap:5px; padding:7px 11px; margin:0 0 6px;
   background:linear-gradient(135deg,rgba(251,191,36,.07) 0%,rgba(251,191,36,.04) 100%);
   border:1px solid rgba(251,191,36,.2); border-radius:var(--radius-lg);
   font-size:11px; color:rgba(251,191,36,.88); line-height:1.55;
   box-shadow: inset 0 1px 0 rgba(251,191,36,.07);
 }
+.af-warn-ico { flex-shrink:0; margin-top:1px; }
+.af-warn-txt { flex:1; min-width:0; word-break:keep-all; overflow-wrap:break-word; }
 .aifrs-keyguide { display:none; }
 .aifrs-keylink { display:none; }
 .aifrs-drop { display:none; }
@@ -974,6 +976,9 @@ a:hover { text-decoration: underline; }
 .af-flag.bad { color:#f87171; background:rgba(248,113,113,.15); }
 .af-chip-top { background:linear-gradient(180deg,#4bacff 0%,#1e86e8 100%); color:#fff; font-weight:700; border:1px solid rgba(255,255,255,.15); box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 1px 3px rgba(0,0,0,.3); }
 .af-stat { display:inline-flex; align-items:center; font-size:12px; font-weight:700; white-space:nowrap; }
+/* 최종 판정값 glow — 충족(teal)·미흡(red)만 */
+.af-stat-glow-ok  { text-shadow: 0 0 8px rgba(45,212,191,.55), 0 0 18px rgba(45,212,191,.25); }
+.af-stat-glow-bad { text-shadow: 0 0 8px rgba(248,113,113,.55), 0 0 18px rgba(248,113,113,.25); }
 
 /* 항목 2단계 펼침(요약 → 클릭 시 상세) */
 .af-item > summary {
@@ -2740,21 +2745,18 @@ a:hover { text-decoration: underline; }
       h+='<div class="af-no-cand-card">'
         + '<div class="af-no-cand-icon-wrap"><div class="af-no-cand-icon">📋</div></div>'
         + '<div class="af-no-cand-title">K-IFRS 적용 대상 자료로 분류되지 않았습니다</div>'
-        + '<div class="af-no-cand-desc">AiFRS는 기업 회계처리와 K-IFRS 기준서 적용을 검토합니다.<br>아래와 같은 회계 관련 자료를 넣어보세요.</div>'
+        + '<div class="af-no-cand-desc">AiFRS는 기업 회계처리와 K-IFRS 기준서 적용을 검토합니다. 아래와 같은 회계 관련 자료를 넣어보세요.</div>'
         + '<div class="af-no-cand-tags">'
         + '<span class="af-no-cand-tag">계약서 · 거래명세서</span>'
         + '<span class="af-no-cand-tag">세금계산서</span>'
-        + '<span class="af-no-cand-tag">리스 계약서</span>'
-        + '<span class="af-no-cand-tag">손상 검토 보고서</span>'
-        + '<span class="af-no-cand-tag">재무제표 주석</span>'
-        + '<span class="af-no-cand-tag">내부 회계 검토 문서</span>'
+        + '<span class="af-no-cand-tag">기타 회계 관련 문서</span>'
         + '</div>'
         + '</div>';
     }
     else {
       // 관련성이 낮으면 소프트 경고 — 비전문가(P10)도 "아, 이 자료가 아닌 거구나"를 부드럽게 인식
       if(_topRel > 0 && _topRel <= 30){
-        h+='<div class="af-low-rel-warn">⚠ 이 자료의 K-IFRS 연관성이 낮습니다 — 회계 관련 문서인지 확인해보세요. 후보 기준서는 참고 목적으로만 제시됩니다.</div>';
+        h+='<div class="af-low-rel-warn"><span class="af-warn-ico">⚠</span><span class="af-warn-txt">이 자료의 K-IFRS 연관성이 낮습니다 — 회계 관련 문서인지 확인해보세요. 후보 기준서는 참고 목적으로만 제시됩니다.</span></div>';
       }
       // 1순위만 전면 노출(진한 파란 테두리 + 관련성 배지), 2순위 이하는 접어 둠 — 정보는 보존
       // 다음 할 일 배너: 1순위 기준서에 아직 정밀분석 결과가 없을 때만 표시(복원·재렌더 시 중복 안내 방지).
@@ -4191,7 +4193,7 @@ a:hover { text-decoration: underline; }
       // 상태 표기 통합: 감사판정 로젠지 1개 + 파이프라인 도트 3개. 문제 항목(미흡·확인필요)만 기본 펼침.
       var open=(verd==='미흡'||verd==='확인필요'||verd==='자료부족');
       var html='<details class="aifrs-pr-item af-item aifrs-cfb-'+vm.cfb+'"'+(open?' open':'')+'>'
-        + '<summary>'+_gl(vw.g)+'<span class="af-stat aifrs-tip" style="color:'+vw.c+'" data-tip="'+vm.tip+'">'+esc(_verdLabel(verd))+'</span>'
+        + '<summary>'+_gl(vw.g)+'<span class="af-stat aifrs-tip'+(verd==='충족'?' af-stat-glow-ok':verd==='미흡'?' af-stat-glow-bad':'')+'" style="color:'+vw.c+'" data-tip="'+vm.tip+'">'+esc(_verdLabel(verd))+'</span>'
           + _artChip(std.no, auRange, '§ '+esc(auLabel))
           + _pipeDots(code.level, a['교차'], quotes.length>0)
           + (a['__userFixed']?'<span class="aifrs-uchip">사용자확정</span>':'')
