@@ -3395,7 +3395,7 @@ a:hover { text-decoration: underline; }
     var items=data.items||[];
     var head='<div class="aifrs-an-head" title="조문별로 이 거래와의 적합 여부를 단계적으로 검토합니다. 핵심 항목은 빨간색, 검토 필요는 노란색으로 표시됩니다">'+_ico('scope',15)+' 정밀 분석 — 제'+esc(std.no)+'호 '+esc(std.name)+' <span>항목 '+items.length+'개</span>'
       + '</div>'
-      + '<div class="af-hint">📖 <b>§ 조문 칩</b>을 누르면 해당 기준서 원문이 바로 열립니다 · 항목 줄을 누르면 상세가 펼쳐집니다</div>';   // 첫 안내 1줄(커서 없이도 조작법이 보이게)
+      + '<div class="af-hint">📖 <b>§ 조문 칩</b>을 누르면 해당 기준서 원문이 바로 열립니다 · 항목 줄을 누르면 상세가 펼쳐집니다 · <b>이 단계는 조문 DB 일치 여부만 확인합니다</b> — 내용 충족 여부는 아래 AI감사에서 판정합니다</div>';
     if(data.__truncated){ head+='<div class="aifrs-api-stat err" style="margin:4px 0">⚠ 응답이 길어 일부 끝부분이 잘렸습니다 — 완성된 항목까지만 표시합니다. (마지막 항목은 내용이 누락될 수 있음 → 다시 정밀 분석 권장)</div>'; }
     if(!items.length){ return head+'<div class="aifrs-note">관련 조문 분석 결과가 없습니다.</div>'; }
     var cnt={green:0,amber:0,red:0}, lvlRank={red:2,amber:1,green:0};
@@ -3980,14 +3980,21 @@ a:hover { text-decoration: underline; }
     'audit-error':    ['done','done','error','pending']
   };
   function _stepBarHtml(stage, hasGate){
-    var labels=['AI분석','정밀분석','AI감사','판단게이트'];   // 버튼·헤더 명칭과 동일 용어 사용(정밀 분석·AI감사)
+    var labels=['AI분석','정밀분석','AI감사','판단게이트'];
+    // TP1: 각 단계가 무엇을 보는지 — 단계명만으로는 역할 구분 불가
+    var tips=[
+      'AI분석: 이 문서에 가장 맞는 K-IFRS 기준서를 선택하고 거래 구조를 파악합니다.',
+      '정밀분석: 인용된 조문이 실제 기준서 DB에 있는지, 키워드가 일치하는지 확인합니다. ※ 조문 존재 확인만 — 내용 충족 여부는 다음 AI감사에서 판정합니다.',
+      'AI감사: 문서 내용이 각 조문의 요건을 충족하는지 판정합니다. ※ 정밀분석 "확인됨"이어도 내용이 부족하면 "확인 필요"가 될 수 있습니다.',
+      '판단게이트: 핵심 조문의 감사 결과를 체크리스트로 요약합니다. AI감사 판정을 조문별로 정리한 최종 확인 단계입니다.'
+    ];
     var st=_STEP_TABLE[stage]||_STEP_TABLE['init'];
     var n=hasGate?4:3;
     var html='';
     for(var i=0;i<n;i++){
       var s=st[i]||'pending';
       var ico = s==='done'?'✓' : s==='error'?'!' : s==='active'?'…' : s==='next'?'›' : '';
-      html+='<span class="af-step af-step-'+s+'">'+(ico?'<i>'+ico+'</i>':'<i class="af-step-dot"></i>')+labels[i]+'</span>';
+      html+='<span class="af-step af-step-'+s+'" title="'+tips[i]+'">'+(ico?'<i>'+ico+'</i>':'<i class="af-step-dot"></i>')+labels[i]+'</span>';
     }
     return html;
   }
@@ -4128,7 +4135,8 @@ a:hover { text-decoration: underline; }
     // 면책 문구 상시 노출 제거(사용자 요청) — ⓘ 안내 시트(discPrecise·discAudit)에는 유지
     var headRow='<div class="aifrs-an-head" style="margin-top:8px;border-top:1px solid var(--border);padding-top:10px" title="문서 원문을 근거로 각 조항의 충족 여부를 판정합니다. 문제 항목은 자동으로 펼쳐집니다">'
       + '<span style="display:inline-flex;align-items:center;gap:6px">'+_ico('shield',15)+' AI감사 결과</span>'
-      + '<button class="aifrs-help-btn" onclick="window.AiFRS.runFinalAudit(\''+std.no+'\')" title="AI 감사를 처음부터 다시 실행합니다">↻ 다시 검증</button></div>';
+      + '<button class="aifrs-help-btn" onclick="window.AiFRS.runFinalAudit(\''+std.no+'\')" title="AI 감사를 처음부터 다시 실행합니다">↻ 다시 검증</button></div>'
+      + '<div class="af-hint">위 정밀분석은 <b>조문 DB 일치 여부</b>를 확인한 것이고, 이 AI감사는 <b>거래 내용이 각 요건을 충족하는지</b>를 판정합니다 — 두 단계의 배지가 다를 수 있으며, 이 AI감사 판정이 최종 기준입니다.</div>';
     var plan=_buildActionPlan(std, items, audited);
     var gatePanel=_buildGatePanel(std, audited);   // HIGH 17개 기준서만 판단 게이트 패널 표시
     return headRow+hero+gatePanel+rows+plan;   // 게이트 패널은 히어로 카드 바로 아래, 항목 리스트 위
