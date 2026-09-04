@@ -4771,6 +4771,15 @@ a:hover { text-decoration: underline; }
   }
   function buildHistHtml(){
     var items = [
+      { date:'2026-09-04', title:'사이클14 3차 — TP3 오판정 방지 + TP2 충족 행동 강화',
+        bullets:[
+          'TP3: buildJudgePrompt 각 항목에 "검증된 인용 N건" 수 명시(self-consistency priming) — 인용 있는데 자료부족 판정하는 오류 방지',
+          'TP3: buildJudgePrompt + buildAuditVerifyPrompt 양쪽에 "인용 1건 이상 → 자료부족 절대 불가" 명시적 규칙 추가',
+          'TP2: buildJudgePrompt — 충족 판정 시 "→ 처리 방향 1문장" 강제 지시',
+          'TP2: _buildActionPlan — !probs 전체 충족 케이스에 "감사인 공유·문서 보관" 행동 안내 추가',
+          'TP2: _buildActionPlan okHtml — 충족 개별 항목에 감사의견의 "→ 처리 방향" 추출 표시'
+        ]
+      },
       { date:'2026-09-04', title:'사이클14 2차 — 즉시가능 7종 + U12/U14/C14-4 + JS 버그 수정',
         bullets:[
           'U3: af-para-txt 줄간격·패딩 개선(white-space:pre-wrap, line-height:1.9)',
