@@ -1864,10 +1864,10 @@ a:hover { text-decoration: underline; }
   function _retryReason(e){
     var m=((e&&e.message)||'')+''; var st=e&&e.status;
     if(st===429 || /\b429\b|rate limit|quota|exceeded|RESOURCE_EXHAUSTED|limit:\s*0/i.test(m))
-      return '분당/일일 무료 한도 — 자동 대기 후 재시도(데이터 소진 아님)';
+      return '잠깐 숨 고르는 중이에요 — 곧 다시 시작합니다 (요금 아님)';
     if(st===503 || st===500 || /\b50[03]\b|overload|high demand|unavailable|try again later/i.test(m))
-      return '모델 혼잡(서버 일시 과부하) — 자동 대기 후 재시도';
-    return '일시 오류 — 자동 대기 후 재시도';
+      return 'AI가 잠깐 바쁜 것 같아요 — 자동으로 다시 시작합니다';
+    return '일시적인 오류예요 — 자동으로 다시 시작합니다';
   }
   // 일시적 과부하(503)·레이트리밋(429·분당한도)·쿼터 자동 재시도. 서버 권장 대기시간(retry in Xs) 존중. opts.retry(기본5), opts.onRetry(n,max)
   // 이 모델로 직접 호출(지정 모델, 일시오류 max회 재시도)
@@ -2580,10 +2580,10 @@ a:hover { text-decoration: underline; }
     var _sig=AiFRS._aiCtl?AiFRS._aiCtl.signal:undefined;
     var aiTimer=null;
     var t0=Date.now();
-    box.innerHTML=_aiLoad('ai',1,'AI 분석','문서 준비 중…',null,null,_aiCancelBtn());
+    box.innerHTML=_aiLoad('ai',1,'AI 분석','문서를 읽고 있어요…',null,null,_aiCancelBtn());
     // 1) 이미지 OCR(비전) 먼저 → 텍스트 합류
     AiFRS.ensureImagesOcr(function(n,total,name){
-      box.innerHTML=_aiLoad('img',1,'AI 분석','이미지 텍스트 추출(OCR) '+n+'/'+total+' — '+esc(name),null,null,_aiCancelBtn());
+      box.innerHTML=_aiLoad('img',1,'AI 분석','이미지에서 글자를 읽는 중이에요 ('+n+'/'+total+') — '+esc(name),null,null,_aiCancelBtn());
     }, _sig).then(function(){
       var text=gatherText();
       if(!text){
@@ -2599,13 +2599,13 @@ a:hover { text-decoration: underline; }
       var docNorm=_qnorm(text);   // 거래구조 근거인용 실존검증용
       aiTimer=setInterval(function(){ var el=document.getElementById('aifrs-ai-timer'); if(el) el.textContent=((Date.now()-t0)/1000).toFixed(1)+'초'; },100);
       // ── 1차: 용어 정규화 ──
-      box.innerHTML=_aiLoad('ai',1,'AI 분석 — 용어 정규화','회계용어 표준화 (1/2)','aifrs-ai-timer',((Date.now()-t0)/1000).toFixed(1)+'초',_aiCancelBtn());
+      box.innerHTML=_aiLoad('ai',1,'AI 분석 — 용어 정규화','문서 안의 회계 단어를 확인하는 중이에요 (1/2)','aifrs-ai-timer',((Date.now()-t0)/1000).toFixed(1)+'초',_aiCancelBtn());
       return AiFRS.callGemini(buildNormalizePrompt(text, off), {json:true, temperature:0.2, signal:_sig, system:'당신은 K-IFRS 전문가입니다. 실무 문서의 용어를 기준서 표준 용어로 정규화합니다. JSON으로만 답합니다.',
           onRetry:function(k,mx,mdl,e){ if(box) box.innerHTML=_aiLoad('ai',1,'AI 분석 — 용어 정규화','재시도 '+k+'/'+mx+' — '+_retryReason(e),'aifrs-ai-timer',((Date.now()-t0)/1000).toFixed(1)+'초',_aiCancelBtn()); }})
         .then(function(txt1){
           var norm=AiFRS.parseJsonResponse(txt1)||{};
           // ── 2차: 거래구조(당사 위치·관계) 확정 → 후보 기준서 ──
-          box.innerHTML=_aiLoad('compass',1,'AI 분석 — 거래구조','당사 위치 확정 → 후보 기준서 선정 (2/2)','aifrs-ai-timer',((Date.now()-t0)/1000).toFixed(1)+'초',_aiCancelBtn());
+          box.innerHTML=_aiLoad('compass',1,'AI 분석 — 거래구조','이 문서와 관련 있는 기준서를 찾는 중이에요 (2/2)','aifrs-ai-timer',((Date.now()-t0)/1000).toFixed(1)+'초',_aiCancelBtn());
           return AiFRS.callGemini(buildStructurePrompt(text, norm.normalizedTerms||[]), {json:true, temperature:0.1, signal:_sig, system:'당신은 K-IFRS 전문가입니다. 보고실체(당사) 관점에서 거래구조를 확정하고 적용 기준서를 정확히 판단합니다. JSON으로만 답합니다.',
               onRetry:function(k,mx,mdl,e){ if(box) box.innerHTML=_aiLoad('compass',1,'AI 분석 — 거래구조','재시도 '+k+'/'+mx+' — '+_retryReason(e),'aifrs-ai-timer',((Date.now()-t0)/1000).toFixed(1)+'초',_aiCancelBtn()); }})
             .then(function(txt2){
@@ -2766,7 +2766,7 @@ a:hover { text-decoration: underline; }
       if(gs['대금방향']&&gs['대금방향']!=='해당없음') _ch.push(_kvChip('대금', gs['대금방향']));
       var _infl=Array.isArray(gs['회계영향측'])?gs['회계영향측'].join(' · '):(gs['회계영향측']||'');
       if(_infl) _ch.push(_kvChip('영향 받는 계정', _infl));
-      if(gs['신뢰도'] && low) _ch.push('<span class="af-chip" style="color:#fbbf24"><b style="color:inherit;opacity:.7">판단 확신도</b>'+esc(gs['신뢰도'])+'</span>');   // 낮을 때만 노출(정상일 땐 소음)
+      if(gs['신뢰도']){ var _cv=gs['신뢰도'], _ct=_cv==='낮음'?'한 번 확인해 보세요':_cv==='보통'?'어느 정도 확실해요':'꽤 확실해요', _cc=_cv==='낮음'?'#fbbf24':_cv==='보통'?'var(--blue-sky)':'var(--teal)'; _ch.push('<span class="af-chip" style="color:'+_cc+'"><b style="color:inherit;opacity:.7">AI 확신도</b>'+_ct+'</span>'); }   // 낮을 때만 노출(정상일 땐 소음)
       h+='<div class="aifrs-tx-box'+(low?' warn':'')+'">'
         + '<div class="aifrs-tx-box-h">'+_ico('compass',14)+' 거래구조 (당사 위치·관계)'
         + (gs['자료성격']?' <span class="aifrs-tx-tag">'+esc(gs['자료성격'])+'</span>':'')
@@ -3034,7 +3034,7 @@ a:hover { text-decoration: underline; }
     function fin(){ clearInterval(timer); delete AiFRS._preciseBusy[no]; delete AiFRS._preciseCtl[no]; }
     var prCancel=_cancelBtn("window.AiFRS.cancelPrecise('"+no+"')", '정밀 분석 중단');
     var hasGate=!!_HIGH_GATE[no];
-    box.innerHTML=_aiLoad('scope',2,'정밀 분석 — 제'+esc(std.no)+'호','조문별 체크·검토포인트 산출',tid,'0.0초',prCancel);
+    box.innerHTML=_aiLoad('scope',2,'정밀 분석 — 제'+esc(std.no)+'호','기준서 조문별로 꼼꼼히 살피는 중이에요',tid,'0.0초',prCancel);
     _setStepBar(no,'precise-loading',hasGate);
     var _nh0=document.getElementById('aifrs-nextbanner-'+no); if(_nh0&&_nh0.parentNode) _nh0.parentNode.removeChild(_nh0);   // 정밀분석 시작 — "다음 할 일" 배너 제거(목적 달성). id는 정밀결과의 nexthero와 구분
     AiFRS.callGemini(prompt, {json:true, temperature:0.1, signal:psig, system:'당신은 K-IFRS 전문가입니다. 지정된 기준서·조문 범위에 근거하여 분석하고, 반드시 JSON으로만 답합니다.',
@@ -3747,7 +3747,7 @@ a:hover { text-decoration: underline; }
     function stage(t, sub){ slot.innerHTML=_aiLoad('shield',3,'AI 감사 '+t, sub,'aifrs-audit-timer-'+no,((Date.now()-t0)/1000).toFixed(1)+'초',auCancel); }
     // 1단계: 근거 추출 (감사 슬롯은 정밀분석 상세 아래에 있어 화면 밖일 수 있으므로 로딩 시작 시 스크롤로 보여줌)
     _setStepBar(no,'audit-loading',hasGate);
-    stage('1/3 근거 추출 중…', '문서에서 검토포인트 관련 원문을 그대로(verbatim) 추출');
+    stage('1/3 근거 추출 중…', '문서에서 관련 문장을 그대로 찾는 중이에요');
     slot.scrollIntoView({behavior:'smooth', block:'center'});
     AiFRS.callGemini(buildEvidencePrompt(std, items, docText), _aopts(asig, '문서에 실제로 존재하는 원문만 그대로 인용 추출. 요약·추측 금지. JSON만.', function(k,mx,mdl,e){ stage('1/3 근거추출 재시도 '+k+'/'+mx, _retryReason(e)); }))
       .then(function(t1){
@@ -3760,7 +3760,7 @@ a:hover { text-decoration: underline; }
           return { it:it, quotes:verified, halluc:halluc };
         });
         // 2단계: 검증된 근거로만 판정
-        stage('2/3 판정 중…', '코드로 검증된 근거만 사용해 충족 여부 판단(근거 없으면 판단불가)');
+        stage('2/3 판정 중…', '찾은 근거를 토대로 요건 충족 여부를 판단하는 중이에요');
         return AiFRS.callGemini(buildJudgePrompt(std, itemsEv, docKind), _aopts(asig, '제시된 검증 근거만 사용. 외부지식·추측 금지. 근거 없으면 확인필요. 원천문서에 회계용어 없는 건 미흡 아님. JSON만.', function(k,mx,mdl,e){ stage('2/3 판정 재시도 '+k+'/'+mx, _retryReason(e)); }))
           .then(function(t2){
             var jd=AiFRS.parseJsonResponse(t2); var jList=(jd&&jd.audited)||(Array.isArray(jd)?jd:[]);
@@ -4026,7 +4026,7 @@ a:hover { text-decoration: underline; }
     var pr=(AiFRS._lastPrecise||{})[no], prItems=(pr&&pr.items)||[];
     var byArt={}; prItems.forEach(function(x){ byArt[String(x['조문번호']||'').trim()]=x; });
     var std=AiFRS.findStandard(no);
-    slot.innerHTML=_aiLoad('plan',0,'쉬운 설명 생성 중','기준서 전체 흐름을 이 거래에 대입해 풀이합니다');
+    slot.innerHTML=_aiLoad('plan',0,'쉬운 설명 생성 중','회계 전문용어를 쉬운 말로 풀어드리는 중이에요');
     // 항목별 감사 결과 + 관련 조문 요약(내장 DB)을 통합 주입 — 기준서의 정의→조건→결론 흐름으로 풀이
     var lines=rec.items.map(function(a,i){
       var art=String(a['조문번호']||'').trim(), it=byArt[art]||{};
