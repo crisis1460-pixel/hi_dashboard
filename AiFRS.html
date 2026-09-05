@@ -1947,7 +1947,7 @@ a:hover { text-decoration: underline; }
     AiFRS._initGlossary();
     var seen={};
     texts.forEach(function(t){ if(!t) return; AiFRS._gtArr.forEach(function(term){ if(!seen[term]&&t.indexOf(term)>=0) seen[term]=true; }); });
-    var keys=Object.keys(seen); if(!keys.length) return '';
+    var keys=Object.keys(seen).sort(); if(!keys.length) return '';
     return '<div class="af-gloss-chip" onclick="this.classList.toggle(\'open\')">'
       +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>'
       +' 이 결과의 어려운 용어 <b>'+keys.length+'개</b> ▾'
@@ -5093,7 +5093,9 @@ a:hover { text-decoration: underline; }
           '팝업: 하단 오버플로우 처리 — 화면 밖으로 나갈 경우 앵커 위쪽에 역방향 표시(offsetHeight 기반 실시간 계산)',
           '팝업: Esc 키로 닫기 추가 (keydown 핸들러)',
           'DB탭: 용어사전 탭 신설 — easy 설명 보유 용어를 기준서별로 그룹화, 이칭·출처 배지 표시',
-          'DB탭: 용어사전 탭 카운터 — 현재 easy 보유 용어 수 실시간 표시'
+          'DB탭: 용어사전 탭 카운터 — 현재 easy 보유 용어 수 실시간 표시',
+          '제외어: 2자 이하 단어 제외 (_initGlossary length>=3) — 조사·접사·의존명사 등 비용어 자동 필터링',
+          '모바일: touchstart 핸들러 추가 — tap으로 팝업 pin 토글, 팝업 외부 tap으로 닫기 (passive:false로 스크롤 이벤트 간섭 방지)'
         ]
       },
       { date:'2026-09-05', title:'축4 조항↔회계영향 매핑 패널 구현',
