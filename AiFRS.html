@@ -5025,6 +5025,19 @@ a:hover { text-decoration: underline; }
   }
   function buildHistHtml(){
     var items = [
+      { date:'2026-09-05', title:'축1-C 용어사전 팝업 + 축2 확신도 칩 + 축3 대기 문구 순화 구현',
+        bullets:[
+          '축3: 대기 문구 8곳 비전공자 친화 문구로 교체 — "분당 무료 한도" 등 기술 용어 제거, "잠깐 숨 고르는 중" 등 자연어로 대체',
+          '축2: 확신도 칩 항상 표시(낮을 때만→항상), 3단계 문구 차등 — 꽤 확실해요/어느 정도 확실해요/한 번 확인해 보세요',
+          '축1-A: terms[].easy 원문 추출 93개 주입(inject_easy.js, easySrc:"extract"), 정확 매칭만 사용(오염 방지)',
+          '축1-C: _initGlossary(DB.standards 전체 순회, 262개 표면형 맵 구축) 구현',
+          '축1-C: _markTerms(텍스트→<span class="af-gt"> 래핑, longest-match-first) 구현',
+          '축1-C: _glossChip(결과 상단 "어려운 용어 N개" 요약 칩, 클릭 시 목록 펼침) 구현',
+          '축1-C: _afGpShow(position:fixed 팝업 — hover 미리보기, click pin, 외부클릭 해제) 구현',
+          '축1-C: renderAiResult 내 핵심회계논점·경제적실질·사유 필드에 _markTerms 적용 + 요약 칩 삽입',
+          '버그 수정: AiFRS.STANDARDS → AiFRS.DB.standards (존재하지 않는 경로 참조 오류)'
+        ]
+      },
       { date:'2026-09-05', title:'P06~P09 c4 재진행 완료 — DRM 스킵분 전체 분석 완주 + 비전공자 UX 피드백',
         bullets:[
           'P05-3 1109 통화선도: top1 → K-IFRS 1109 금융상품 ✓ (후보 3종)',
