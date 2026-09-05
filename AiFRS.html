@@ -786,8 +786,12 @@ a:hover { text-decoration: underline; }
   border-bottom:1px solid var(--border);
 }
 .aifrs-about-logo {
-  font-size:28px; font-weight:800; letter-spacing:-0.5px; color:var(--blue);
+  font-size:28px; font-weight:800; letter-spacing:-0.5px;
+  background:linear-gradient(90deg,#ffffff,#bfe3ff,#2997ff,#bfe3ff,#ffffff,#7cc4ff,#ffffff);
+  background-size:300% 100%;
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
   margin:0 0 5px;
+  animation:af-logoWave 5s ease-in-out infinite;
 }
 .aifrs-about-tagline {
   font-size:12px; font-weight:600; color:var(--txt3); margin:0 0 14px; letter-spacing:.3px;
@@ -802,8 +806,9 @@ a:hover { text-decoration: underline; }
   border-radius:9px; border:1px solid var(--border);
 }
 .aifrs-about-sh {
-  font-size:10.5px; font-weight:700; color:var(--blue-sky); letter-spacing:.9px;
-  text-transform:uppercase; margin:0 0 10px; display:flex; align-items:center; gap:7px;
+  font-size:11px; font-weight:700; color:var(--blue-sky); letter-spacing:.4px;
+  margin:0 0 10px; display:flex; align-items:center; gap:7px;
+  text-shadow:0 0 10px rgba(100,181,246,.45), 0 1px 3px rgba(0,0,0,.7);
 }
 .aifrs-about-sh::before {
   content:''; display:block; width:3px; height:11px;
@@ -5233,7 +5238,7 @@ a:hover { text-decoration: underline; }
       + '<div class="aifrs-about-sh">AiFRS 란?</div>'
       + '<p class="aifrs-about-p"><b>AiFRS</b>는 계약서·거래명세서·이메일 등 업무 문서를 AI에 넘기면 해당 문서에 관련된 K-IFRS 기준서 후보를 자동으로 찾아주는 단일 파일 분석 도구입니다.</p>'
       + '<p class="aifrs-about-p"><b>개발 의도</b> &mdash; 기준서 원문을 읽어도 이해하기 어려운 실무 회계담당자, 특히 처음 K-IFRS를 접하는 분들이 "이 문서, 어느 기준서랑 연결되는 거지?"를 빠르게 파악할 수 있도록 돕는 것이 목표입니다.</p>'
-      + '<p class="aifrs-about-p"><b>취지</b> &mdash; AI가 정답을 확정하는 도구가 아니라, 담당자가 올바른 방향을 빠르게 확인할 수 있도록 길을 안내하는 도구입니다. 최종 판단과 책임은 항상 담당자에게 있습니다.</p>'
+      + '<p class="aifrs-about-p"><b>취지</b> &mdash; AI가 정답을 확정하는 도구가 아니라, 담당자가 올바른 방향을 빠르게 확인할 수 있도록 길을 안내하는 도구입니다.</p>'
       + '</div>'
       + '<div class="aifrs-about-section">'
       + '<div class="aifrs-about-sh">개발자 정보</div>'
@@ -5242,8 +5247,7 @@ a:hover { text-decoration: underline; }
       + '<div class="aifrs-about-kv-row"><span class="aifrs-about-kv-key">이메일</span><span class="aifrs-about-kv-val"><a href="mailto:crisis1460@gmail.com">crisis1460@gmail.com</a></span></div>'
       + '<div class="aifrs-about-kv-row"><span class="aifrs-about-kv-key">출시</span><span class="aifrs-about-kv-val">2026. 09</span></div>'
       + '</div>'
-      + '</div>'
-      + '<div class="aifrs-about-foot">&#8251; 본 결과는 참고용이며 K-IFRS 적용의 최종 판단과 책임은 담당자에게 있습니다.</div>';
+      + '</div>';
   }
   AiFRS.toggleAboutView = function(){
     var view=document.getElementById('aifrs-about-view');
