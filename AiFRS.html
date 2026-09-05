@@ -1910,7 +1910,7 @@ a:hover { text-decoration: underline; }
       (s.terms||[]).forEach(function(t){
         if(!t.easy) return;
         [t.std].concat(t.aliases||[]).forEach(function(sf){
-          if(sf && sf.length>=2) AiFRS._gtMap[sf]={label:t.std, easy:t.easy, src:t.easySrc||'', stdNo:s.no||'', stdName:s.name||''};
+          if(sf && sf.length>=3) AiFRS._gtMap[sf]={label:t.std, easy:t.easy, src:t.easySrc||'', stdNo:s.no||'', stdName:s.name||''};
         });
       });
     });
@@ -2012,6 +2012,22 @@ a:hover { text-decoration: underline; }
       document.querySelectorAll('.af-gt-active').forEach(function(n){n.classList.remove('af-gt-active');});
     }
   });
+  document.addEventListener('touchstart',function(e){
+    var el=e.target.closest('.af-gt');
+    if(el){
+      e.preventDefault();
+      var term=el.getAttribute('data-gt');
+      var info=AiFRS._gtMap&&AiFRS._gtMap[term]; if(!info) return;
+      var p=document.getElementById('af-gp');
+      if(p&&p.classList.contains('af-gp-pin')&&p._gt===info.label){ p.classList.remove('af-gp-vis','af-gp-pin'); el.classList.remove('af-gt-active'); return; }
+      document.querySelectorAll('.af-gt-active').forEach(function(n){n.classList.remove('af-gt-active');});
+      el.classList.add('af-gt-active');
+      _afGpShow(info,el,true);
+    } else if(!e.target.closest('#af-gp')){
+      var p=document.getElementById('af-gp');
+      if(p&&p.classList.contains('af-gp-vis')){ p.classList.remove('af-gp-vis','af-gp-pin'); p._gt=null; document.querySelectorAll('.af-gt-active').forEach(function(n){n.classList.remove('af-gt-active');}); }
+    }
+  },{passive:false});
   document.addEventListener('keydown',function(e){
     if(e.key==='Escape'){
       var p=document.getElementById('af-gp');
