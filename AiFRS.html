@@ -1000,6 +1000,7 @@ a:hover { text-decoration: underline; }
 #af-gp .af-gp-close { float:right; background:none; border:none; color:var(--txt3); cursor:pointer; font-size:14px; line-height:1; margin:-2px -4px 0 6px; padding:2px 4px; }
 #af-gp .af-gp-close:hover { color:var(--txt); }
 #af-gp .af-gp-std { font-size:10px; color:var(--txt3); margin-bottom:4px; letter-spacing:.1px; }
+#af-gp .af-gp-aliases { font-size:10px; color:var(--txt3); margin-bottom:6px; }
 /* 용어사전 DB탭 */
 .af-terms-grp { margin-bottom:12px; }
 .af-terms-grp-h { font-size:11px; font-weight:700; color:var(--txt3); letter-spacing:.4px; text-transform:uppercase; padding:6px 0 4px; border-bottom:0.5px solid var(--border); margin-bottom:4px; }
@@ -1910,7 +1911,7 @@ a:hover { text-decoration: underline; }
       (s.terms||[]).forEach(function(t){
         if(!t.easy) return;
         [t.std].concat(t.aliases||[]).forEach(function(sf){
-          if(sf && sf.length>=3) AiFRS._gtMap[sf]={label:t.std, easy:t.easy, src:t.easySrc||'', stdNo:s.no||'', stdName:s.name||''};
+          if(sf && sf.length>=3) AiFRS._gtMap[sf]={label:t.std, aliases:t.aliases&&t.aliases.length?t.aliases:[], easy:t.easy, src:t.easySrc||'', stdNo:s.no||'', stdName:s.name||''};
         });
       });
     });
@@ -1963,13 +1964,16 @@ a:hover { text-decoration: underline; }
   };
   function _afGpShow(info,anchorEl,pin){
     var p=document.getElementById('af-gp'); if(!p) return;
-    p.innerHTML='<button class="af-gp-close" onclick="document.getElementById(\'af-gp\').classList.remove(\'af-gp-vis\',\'af-gp-pin\')">×</button>'
+    var closeAct="var _p=document.getElementById('af-gp');_p.classList.remove('af-gp-vis','af-gp-pin');document.querySelectorAll('.af-gt-active').forEach(function(n){n.classList.remove('af-gt-active');});";
+    p.innerHTML='<button class="af-gp-close" onclick="'+closeAct+'" ontouchend="event.preventDefault();'+closeAct+'">×</button>'
       +(info.stdNo?'<div class="af-gp-std">'+esc(info.stdNo)+(info.stdName?' · '+esc(info.stdName):'')+'</div>':'')
       +'<div class="af-gp-lbl">'+esc(info.label)+'</div>'
+      +(info.aliases&&info.aliases.length?'<div class="af-gp-aliases">= '+esc(info.aliases.slice(0,4).join(', '))+'</div>':'')
       +'<div class="af-gp-easy">'+esc(info.easy)+'</div>'
       +(info.src?'<div class="af-gp-src">'+(info.src==='extract'?'📄 K-IFRS 원문 추출':'🤖 AI 생성')+'</div>':'');
     p._gt=info.label;
     if(anchorEl){
+      p.style.transform='';
       var r=anchorEl.getBoundingClientRect();
       var lft=Math.max(8,Math.min(r.left,window.innerWidth-316));
       var topBelow=r.bottom+6;
@@ -1977,6 +1981,10 @@ a:hover { text-decoration: underline; }
       var top=(topBelow+ph>window.innerHeight-8 && r.top-ph-6>=8) ? r.top-ph-6 : topBelow;
       p.style.left=lft+'px';
       p.style.top=Math.max(8,top)+'px';
+    } else {
+      p.style.left='50%';
+      p.style.top='50%';
+      p.style.transform='translate(-50%,-50%)';
     }
     p.classList.add('af-gp-vis');
     if(pin) p.classList.add('af-gp-pin'); else p.classList.remove('af-gp-pin');
@@ -5087,6 +5095,14 @@ a:hover { text-decoration: underline; }
   }
   function buildHistHtml(){
     var items = [
+      { date:'2026-09-05', title:'용어 팝업 UX 세부 개선 4종',
+        bullets:[
+          '팝업: _afGlossShow(null) 위치 버그 수정 — anchorEl 없을 때 화면 중앙 표시(transform:translate(-50%,-50%))',
+          '팝업: 닫기 버튼에 ontouchend 추가 — 모바일에서 ✕ 탭 시 즉시 닫힘(event.preventDefault로 300ms 지연 방지)',
+          '팝업: aliases(이칭) 표시 — _gtMap에 aliases 저장 후 팝업 내 "= 이칭1, 이칭2" 형태로 표시',
+          'DB탭 용어사전: 실시간 검색 입력창 추가 — 용어명·이칭·쉬운설명 전체 대상, 빈 그룹 자동 숨김',
+        ]
+      },
       { date:'2026-09-05', title:'용어사전 팝업 개선 + DB탭 용어사전 탭 신설',
         bullets:[
           '팝업: 기준서 번호·명칭을 팝업 상단에 회색 소문자로 표시 (_gtMap에 stdNo·stdName 추가)',
@@ -5405,12 +5421,17 @@ a:hover { text-decoration: underline; }
     if(termCount===0){
       h+='<div class="af-terms-empty">쉬운 설명이 준비된 용어가 없습니다.<br>잠시 후 다시 확인해 주세요.</div>';
     } else {
+      h+='<div style="padding:8px 0 10px;">'
+        +'<input id="af-term-q" type="search" placeholder="용어 검색…" oninput="window._afTermFilter(this.value)"'
+        +' style="width:100%;padding:7px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--txt);font-size:12px;">'
+        +'</div>';
       (AiFRS.DB.standards||[]).forEach(function(s){
         var withEasy=(s.terms||[]).filter(function(t){return t.easy;});
         if(!withEasy.length) return;
-        h+='<div class="af-terms-grp"><div class="af-terms-grp-h">'+esc(s.no)+' '+esc(s.name)+'</div>';
+        h+='<div class="af-terms-grp" data-grp><div class="af-terms-grp-h">'+esc(s.no)+' '+esc(s.name)+'</div>';
         withEasy.forEach(function(t){
-          h+='<div class="af-term-row">'
+          var ds=esc((t.std+' '+(t.aliases||[]).join(' ')+' '+(t.easy||'')).toLowerCase());
+          h+='<div class="af-term-row" data-s="'+ds+'">'
             +'<div class="af-term-name">'+esc(t.std)+'</div>'
             +(t.aliases&&t.aliases.length?'<div class="af-term-aliases">= '+esc(t.aliases.slice(0,4).join(', '))+'</div>':'')
             +'<div class="af-term-easy">'+esc(t.easy)+'</div>'
@@ -5423,6 +5444,17 @@ a:hover { text-decoration: underline; }
     h+='</div>';
     return h+'</div>';
   }
+  // ── 용어사전 탭 검색 ──
+  window._afTermFilter=function(q){
+    var ql=(q||'').toLowerCase().trim();
+    var rows=document.querySelectorAll('[data-ty="terms"] .af-term-row');
+    rows.forEach(function(r){ r.style.display=(ql.length<2||r.getAttribute('data-s').indexOf(ql)!==-1)?'':'none'; });
+    var grps=document.querySelectorAll('[data-ty="terms"] [data-grp]');
+    grps.forEach(function(g){
+      var visible=Array.prototype.some.call(g.querySelectorAll('.af-term-row'),function(r){return r.style.display!=='none';});
+      g.style.display=visible?'':'none';
+    });
+  };
   // ── DB 뷰어 검색: 기준서번호·명칭·문단번호·topic·요약·키워드·원문 전역 검색 ──
   function _escRe(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
   function _qhl(txt, q){
