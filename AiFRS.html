@@ -1960,15 +1960,18 @@ a:hover { text-decoration: underline; }
   window._afGlossShow=function(term){
     AiFRS._initGlossary();
     var info=AiFRS._gtMap&&AiFRS._gtMap[term]; if(!info) return;
-    _afGpShow(info,null,true);
+    var p=document.getElementById('af-gp');
+    if(p&&p.classList.contains('af-gp-pin')&&p._gt===info.label){ p.classList.remove('af-gp-vis','af-gp-pin'); p._gt=null; return; }
+    _afGpShow(info,null,true,term);
   };
-  function _afGpShow(info,anchorEl,pin){
+  function _afGpShow(info,anchorEl,pin,surface){
     var p=document.getElementById('af-gp'); if(!p) return;
     var closeAct="var _p=document.getElementById('af-gp');_p.classList.remove('af-gp-vis','af-gp-pin');document.querySelectorAll('.af-gt-active').forEach(function(n){n.classList.remove('af-gt-active');});";
+    var dispAliases=(info.aliases||[]).filter(function(a){ return a!==info.label && a!==surface; });
     p.innerHTML='<button class="af-gp-close" onclick="'+closeAct+'" ontouchend="event.preventDefault();'+closeAct+'">×</button>'
       +(info.stdNo?'<div class="af-gp-std">'+esc(info.stdNo)+(info.stdName?' · '+esc(info.stdName):'')+'</div>':'')
       +'<div class="af-gp-lbl">'+esc(info.label)+'</div>'
-      +(info.aliases&&info.aliases.length?'<div class="af-gp-aliases">= '+esc(info.aliases.slice(0,4).join(', '))+'</div>':'')
+      +(dispAliases.length?'<div class="af-gp-aliases">= '+esc(dispAliases.slice(0,4).join(', '))+'</div>':'')
       +'<div class="af-gp-easy">'+esc(info.easy)+'</div>'
       +(info.src?'<div class="af-gp-src">'+(info.src==='extract'?'📄 K-IFRS 원문 추출':'🤖 AI 생성')+'</div>':'');
     p._gt=info.label;
@@ -1995,7 +1998,7 @@ a:hover { text-decoration: underline; }
     var info=AiFRS._gtMap&&AiFRS._gtMap[term]; if(!info) return;
     var p=document.getElementById('af-gp');
     if(p&&p.classList.contains('af-gp-pin')) return;
-    _afGpShow(info,el,false);
+    _afGpShow(info,el,false,term);
   });
   document.addEventListener('mouseout',function(e){
     var el=e.target.closest('.af-gt'); if(!el) return;
@@ -2009,9 +2012,9 @@ a:hover { text-decoration: underline; }
       var term=el.getAttribute('data-gt');
       var info=AiFRS._gtMap&&AiFRS._gtMap[term]; if(!info) return;
       var p=document.getElementById('af-gp');
-      if(p&&p.classList.contains('af-gp-pin')&&p._gt===info.label){ p.classList.remove('af-gp-vis','af-gp-pin'); return; }
+      if(p&&p.classList.contains('af-gp-pin')&&p._gt===info.label){ p.classList.remove('af-gp-vis','af-gp-pin'); el.classList.remove('af-gt-active'); return; }
       el.classList.add('af-gt-active');
-      _afGpShow(info,el,true);
+      _afGpShow(info,el,true,term);
       return;
     }
     if(!e.target.closest('#af-gp')){
@@ -2030,7 +2033,7 @@ a:hover { text-decoration: underline; }
       if(p&&p.classList.contains('af-gp-pin')&&p._gt===info.label){ p.classList.remove('af-gp-vis','af-gp-pin'); el.classList.remove('af-gt-active'); return; }
       document.querySelectorAll('.af-gt-active').forEach(function(n){n.classList.remove('af-gt-active');});
       el.classList.add('af-gt-active');
-      _afGpShow(info,el,true);
+      _afGpShow(info,el,true,term);
     } else if(!e.target.closest('#af-gp')){
       var p=document.getElementById('af-gp');
       if(p&&p.classList.contains('af-gp-vis')){ p.classList.remove('af-gp-vis','af-gp-pin'); p._gt=null; document.querySelectorAll('.af-gt-active').forEach(function(n){n.classList.remove('af-gt-active');}); }
@@ -2953,7 +2956,7 @@ a:hover { text-decoration: underline; }
       if(gs['대금방향']&&gs['대금방향']!=='해당없음') _ch.push(_kvChip('대금', gs['대금방향']));
       var _infl=Array.isArray(gs['회계영향측'])?gs['회계영향측'].join(' · '):(gs['회계영향측']||'');
       if(_infl) _ch.push(_kvChip('영향 받는 계정', _infl));
-      if(gs['신뢰도']){ var _cv=gs['신뢰도'], _ct=_cv==='낮음'?'한 번 확인해 보세요':_cv==='보통'?'어느 정도 확실해요':'꽤 확실해요', _cc=_cv==='낮음'?'#fbbf24':_cv==='보통'?'var(--blue-sky)':'var(--teal)'; _ch.push('<span class="af-chip" style="color:'+_cc+'"><b style="color:inherit;opacity:.7">AI 확신도</b>'+_ct+'</span>'); }   // 낮을 때만 노출(정상일 땐 소음)
+      if(gs['신뢰도']){ var _cv=gs['신뢰도'], _ct=_cv==='낮음'?'한 번 확인해 보세요':_cv==='보통'?'어느 정도 확실해요':'꽤 확실해요', _cc=_cv==='낮음'?'#fbbf24':_cv==='보통'?'var(--blue-sky)':'var(--teal)'; _ch.push('<span class="af-chip" style="color:'+_cc+'"><b style="color:inherit;opacity:.7">AI 확신도</b>'+_ct+'</span>'); }   // 항상 표시, 3단계 문구 차등
       h+='<div class="aifrs-tx-box'+(low?' warn':'')+'">'
         + '<div class="aifrs-tx-box-h">'+_ico('compass',14)+' 거래구조 (당사 위치·관계)'
         + (gs['자료성격']?' <span class="aifrs-tx-tag">'+esc(gs['자료성격'])+'</span>':'')
