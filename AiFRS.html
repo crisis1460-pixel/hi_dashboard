@@ -5505,6 +5505,13 @@ a:hover { text-decoration: underline; }
     } else {
       var aiBox=document.getElementById('aifrs-ai');
       var html=aiBox?aiBox.innerHTML:'';
+      // 정밀분석·AI감사 결과도 캡처 (즐겨찾기 누른 시점의 진척 상태 전체 보존)
+      var preciseHtml='';
+      document.querySelectorAll('[id^="aifrs-precise"]').forEach(function(b){
+        if(b.innerHTML&&b.style.display!=='none'&&b.innerHTML.trim().length>10){
+          preciseHtml+='<div class="aifrs-analysis" style="display:block;margin-top:16px">'+b.innerHTML+'</div>';
+        }
+      });
       var fname='파일 미지정';
       if(AiFRS.state&&AiFRS.state.files&&AiFRS.state.files.length)
         fname=AiFRS.state.files.map(function(f){return f.name;}).join(', ');
@@ -5512,7 +5519,7 @@ a:hover { text-decoration: underline; }
       var stdName=stdEl?stdEl.textContent.trim():'';
       list.unshift({ id:bmKey,
         date:new Date().toLocaleString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}),
-        fileName:fname, stdName:stdName, html:html });
+        fileName:fname, stdName:stdName, html:html, preciseHtml:preciseHtml });
       _bmSave(list);
       var btn=document.querySelector('.af-bm-star[data-bm="'+bmKey+'"]');
       if(btn) btn.classList.add('active');
@@ -5575,8 +5582,11 @@ a:hover { text-decoration: underline; }
     var list=_bmGet(); var item=list[idx]; if(!item) return;
     var main=document.getElementById('af-bm-main'); if(!main) return;
     main._shown=true;
-    main.innerHTML='<div class="af-bm-viewer-label">저장: '+esc(item.date)+' &nbsp;·&nbsp; '+esc(item.fileName)+'</div>'
-      +'<div class="aifrs-analysis" style="display:block">'+item.html+'</div>';
+    main.innerHTML='<div class="af-bm-viewer-label">저장: '+esc(item.date)+' &nbsp;·&nbsp; '+esc(item.fileName)
+      +(item.preciseHtml?'<span style="margin-left:8px;font-size:10px;color:var(--teal)">정밀분석·AI감사 포함</span>':'')
+      +'</div>'
+      +'<div class="aifrs-analysis" style="display:block">'+item.html+'</div>'
+      +(item.preciseHtml||'');
     document.querySelectorAll('.af-bm-item').forEach(function(el,i){ el.classList.toggle('selected',i===idx); });
   };
   AiFRS._bmDel=function(id){
