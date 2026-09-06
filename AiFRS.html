@@ -4437,6 +4437,7 @@ a:hover { text-decoration: underline; }
     if(AiFRS._easyCache[key]){
       if(slot.querySelector('.af-easy')){ slot.innerHTML=''; return; }  // TP9: 열려있으면 토글 닫기
       slot.innerHTML=AiFRS._easyCache[key];
+      _bmUpdateBadge();
       slot.scrollIntoView({behavior:'smooth', block:'nearest'});
       return;
     }
@@ -4532,6 +4533,7 @@ a:hover { text-decoration: underline; }
             }).join('');
           } else { howHtml=esc(how); }
         }
+        var _ebk=(AiFRS._bmKeys||{})[String(no)]||('bm-easy-'+no);
         var html='<div class="af-easy">'
           + (why?'<div class="af-easy-row"><b>왜</b><span>'+esc(why)+'</span></div>':'')
           + (what?'<div class="af-easy-row"><b>무엇을</b><span>'+esc(what)+'</span></div>':'')
@@ -4539,6 +4541,7 @@ a:hover { text-decoration: underline; }
           + (caution?'<div class="af-easy-row"><b style="color:#fbbf24">주의</b><span>'+esc(caution)+'</span></div>':'')
           + (!what&&!how?esc(legacy):'')
           + '<div class="af-easy-note">※ 여기는 방향 안내입니다 — 구체적 요건·예외는 위 관련 문단(§)을 눌러 기준서 원문으로 판단하세요.</div>'
+          + '<div style="margin-top:8px;display:flex;justify-content:flex-end"><button class="af-bm-star" data-bm="'+_ebk+'" data-bm-std="'+no+'" onclick="window.AiFRS.toggleBookmark(\''+_ebk+'\')" title="즐겨찾기 — AI감사·쉬운설명까지 완료된 전체 분석 결과를 보관합니다" style="position:static;font-size:15px;padding:2px 5px;border-radius:5px;background:none;border:none;cursor:pointer;color:var(--txt3);transition:color .15s;line-height:1"></button></div>'
           + '</div>';
         AiFRS._easyCache[key]=html; slot.innerHTML=html;
         slot.scrollIntoView({behavior:'smooth', block:'nearest'});  // TP9: 생성 후 자동 스크롤
@@ -4870,9 +4873,7 @@ a:hover { text-decoration: underline; }
   };
   function renderJournal(d, secs){
     var basis=(d['금액기준']==='실제')?'<span class="aifrs-jn-basis real">실제 금액</span>':'<span class="aifrs-jn-basis ex">예시 금액(실제로 교체 필요)</span>';
-    var _jbk=Object.values(AiFRS._bmKeys||{})[0]||'bm-journal';
     var head='<div class="aifrs-an-head">— 회계처리안 <span>'+secs+'초 · '+esc(AiFRS.getModel())+'</span>'
-      + '<button class="af-bm-star" data-bm="'+_jbk+'" onclick="window.AiFRS.toggleBookmark(\''+_jbk+'\')" title="즐겨찾기 — 회계처리안까지 포함한 전체 결과를 보관·업데이트합니다" style="position:static;font-size:15px;padding:2px 5px;border-radius:5px;margin-left:auto;background:none;border:none;cursor:pointer;color:var(--txt3);transition:color .15s;line-height:1"></button>'
       + '<button class="aifrs-help-btn" onclick="window.AiFRS.downloadJournalExcel()" title="분개표+요약 2시트 엑셀로 저장">⬇ 엑셀 다운로드</button></div>'
       + '<div style="margin:2px 0 7px">'+(d['제목']?'<b style="font-size:13px">'+esc(d['제목'])+'</b> ':'')+basis+'</div>';
     var rows=(d['분개']||[]).map(function(j){
@@ -5506,7 +5507,7 @@ a:hover { text-decoration: underline; }
   AiFRS.toggleBookmark=function(bmKey){
     var list=_bmGet();
     var idx=-1; list.forEach(function(x,i){ if(x.id===bmKey) idx=i; });
-    // 캡처: AI분석 + 정밀분석 + AI감사 + 쉬운설명(audit 내) + 분개표(회계처리안) 전량
+    // 캡처: AI분석 + 정밀분석 + AI감사 + 쉬운설명(audit 내) 전량
     var aiBox=document.getElementById('aifrs-ai');
     var html=aiBox?aiBox.innerHTML:'';
     var preciseHtml='';
@@ -5514,9 +5515,6 @@ a:hover { text-decoration: underline; }
       if(b.innerHTML&&b.style.display!=='none'&&b.innerHTML.trim().length>10)
         preciseHtml+='<div class="aifrs-analysis" style="display:block;margin-top:16px">'+b.innerHTML+'</div>';
     });
-    var jBox=document.getElementById('aifrs-journal');
-    if(jBox&&jBox.style.display!=='none'&&jBox.innerHTML.trim().length>10)
-      preciseHtml+='<div class="aifrs-analysis" style="display:block;margin-top:16px">'+jBox.innerHTML+'</div>';
     var fname='파일 미지정';
     if(AiFRS.state&&AiFRS.state.files&&AiFRS.state.files.length)
       fname=AiFRS.state.files.map(function(f){return f.name;}).join(', ');
