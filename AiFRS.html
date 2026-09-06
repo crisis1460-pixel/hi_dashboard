@@ -4870,7 +4870,9 @@ a:hover { text-decoration: underline; }
   };
   function renderJournal(d, secs){
     var basis=(d['금액기준']==='실제')?'<span class="aifrs-jn-basis real">실제 금액</span>':'<span class="aifrs-jn-basis ex">예시 금액(실제로 교체 필요)</span>';
+    var _jbk=Object.values(AiFRS._bmKeys||{})[0]||'bm-journal';
     var head='<div class="aifrs-an-head">— 회계처리안 <span>'+secs+'초 · '+esc(AiFRS.getModel())+'</span>'
+      + '<button class="af-bm-star" data-bm="'+_jbk+'" onclick="window.AiFRS.toggleBookmark(\''+_jbk+'\')" title="즐겨찾기 — 회계처리안까지 포함한 전체 결과를 보관·업데이트합니다" style="position:static;font-size:15px;padding:2px 5px;border-radius:5px;margin-left:auto;background:none;border:none;cursor:pointer;color:var(--txt3);transition:color .15s;line-height:1"></button>'
       + '<button class="aifrs-help-btn" onclick="window.AiFRS.downloadJournalExcel()" title="분개표+요약 2시트 엑셀로 저장">⬇ 엑셀 다운로드</button></div>'
       + '<div style="margin:2px 0 7px">'+(d['제목']?'<b style="font-size:13px">'+esc(d['제목'])+'</b> ':'')+basis+'</div>';
     var rows=(d['분개']||[]).map(function(j){
@@ -5504,34 +5506,31 @@ a:hover { text-decoration: underline; }
   AiFRS.toggleBookmark=function(bmKey){
     var list=_bmGet();
     var idx=-1; list.forEach(function(x,i){ if(x.id===bmKey) idx=i; });
-    if(idx>-1){
-      list.splice(idx,1); _bmSave(list);
-      var btn=document.querySelector('.af-bm-star[data-bm="'+bmKey+'"]');
-      if(btn) btn.classList.remove('active');
-    } else {
-      var aiBox=document.getElementById('aifrs-ai');
-      var html=aiBox?aiBox.innerHTML:'';
-      // 정밀분석·AI감사 결과도 캡처 (즐겨찾기 누른 시점의 진척 상태 전체 보존)
-      var preciseHtml='';
-      document.querySelectorAll('[id^="aifrs-precise"],[id^="aifrs-audit"]').forEach(function(b){
-        if(b.innerHTML&&b.style.display!=='none'&&b.innerHTML.trim().length>10){
-          preciseHtml+='<div class="aifrs-analysis" style="display:block;margin-top:16px">'+b.innerHTML+'</div>';
-        }
-      });
-      var fname='파일 미지정';
-      if(AiFRS.state&&AiFRS.state.files&&AiFRS.state.files.length)
-        fname=AiFRS.state.files.map(function(f){return f.name;}).join(', ');
-      var _bmBtn=document.querySelector('.af-bm-star[data-bm="'+bmKey+'"]');
-      var _stdNo=_bmBtn?_bmBtn.getAttribute('data-bm-std'):'';
-      var _std=_stdNo?AiFRS.findStandard(_stdNo):null;
-      var stdName=_std?('K-IFRS 제'+_std.no+'호 '+(_std.name||'')):(document.querySelector('.af-conc-std')||{textContent:''}).textContent.trim();
-      list.unshift({ id:bmKey,
-        date:new Date().toLocaleString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}),
-        fileName:fname, stdName:stdName, html:html, preciseHtml:preciseHtml });
-      _bmSave(list);
-      var btn=document.querySelector('.af-bm-star[data-bm="'+bmKey+'"]');
-      if(btn) btn.classList.add('active');
-    }
+    // 캡처: AI분석 + 정밀분석 + AI감사 + 쉬운설명(audit 내) + 분개표(회계처리안) 전량
+    var aiBox=document.getElementById('aifrs-ai');
+    var html=aiBox?aiBox.innerHTML:'';
+    var preciseHtml='';
+    document.querySelectorAll('[id^="aifrs-precise"],[id^="aifrs-audit"]').forEach(function(b){
+      if(b.innerHTML&&b.style.display!=='none'&&b.innerHTML.trim().length>10)
+        preciseHtml+='<div class="aifrs-analysis" style="display:block;margin-top:16px">'+b.innerHTML+'</div>';
+    });
+    var jBox=document.getElementById('aifrs-journal');
+    if(jBox&&jBox.style.display!=='none'&&jBox.innerHTML.trim().length>10)
+      preciseHtml+='<div class="aifrs-analysis" style="display:block;margin-top:16px">'+jBox.innerHTML+'</div>';
+    var fname='파일 미지정';
+    if(AiFRS.state&&AiFRS.state.files&&AiFRS.state.files.length)
+      fname=AiFRS.state.files.map(function(f){return f.name;}).join(', ');
+    var _bmBtn=document.querySelector('.af-bm-star[data-bm="'+bmKey+'"]');
+    var _stdNo=_bmBtn?_bmBtn.getAttribute('data-bm-std'):'';
+    var _std=_stdNo?AiFRS.findStandard(_stdNo):null;
+    var stdName=_std?('K-IFRS 제'+_std.no+'호 '+(_std.name||'')):(document.querySelector('.af-conc-std')||{textContent:''}).textContent.trim();
+    var item={ id:bmKey,
+      date:new Date().toLocaleString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}),
+      fileName:fname, stdName:stdName, html:html, preciseHtml:preciseHtml };
+    if(idx>-1){ list[idx]=item; }   // 이미 저장됨 → 현재 상태로 업데이트
+    else { list.unshift(item); }     // 신규 저장
+    _bmSave(list);
+    document.querySelectorAll('.af-bm-star[data-bm="'+bmKey+'"]').forEach(function(b){ b.classList.add('active'); });
     _bmUpdateBadge();
   };
   AiFRS.openBookmarkViewer=function(){
