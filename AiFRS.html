@@ -5620,9 +5620,8 @@ a:hover { text-decoration: underline; }
     }
   }
   function _bmUpdateBadge(){
-    var cnt=document.getElementById('aifrs-bm-cnt'); if(!cnt) return;
     var list=_bmGet(); var n=list.length;
-    cnt.textContent=n; cnt.hidden=(n===0);
+    var cnt=document.getElementById('aifrs-bm-cnt'); if(cnt){ cnt.textContent=n; cnt.hidden=(n===0); }   // 헤더 건수 뱃지는 제거됨(있을 때만 갱신) — ☆ 동기화는 항상 수행
     var saved={}; list.forEach(function(x){ saved[x.id]=1; });
     document.querySelectorAll('.af-bm-star').forEach(function(btn){
       var bk=btn.getAttribute('data-bm'); if(!bk) return;
@@ -5808,7 +5807,8 @@ a:hover { text-decoration: underline; }
           '리모컨 숨김/펼침 범위를 메인 화면 전체로 확대 — 모든 details·어려운 용어 칩·파일 미리보기·쉬운설명 결과(캐시 복원), 조문 카드 "쉽게 말해" 라벨 → "해설"',
           '하단 [사용 가이드] 투어 8단계로 확장 — 키 등록→올리고 분석→진행 단계→근거 검증·DB→즐겨찾기→리모컨→기록→소개, 즐겨찾기·기록·소개 [자세히] 시트 신설',
           '복수 파일 안내 단일화 — 업로드 즉시 팝업 제거, 추출 완료 후 사전 매칭 불일치면 상세 경고만·일치면 일반 안내(세션 1회)만 표시(중복 팝업 2개 → 1개)',
-          '예상질문 칩 문체 통일 — 프롬프트에 격식체 의문문 강제 + _fmtQChip 후처리("~했나?"→"~했습니까?", "~하나?"→"~합니까?", "~인가?"→"~입니까?", 서술형은 "— 확인했습니까?")'
+          '예상질문 칩 문체 통일 — 프롬프트에 격식체 의문문 강제 + _fmtQChip 후처리("~했나?"→"~했습니까?", "~하나?"→"~합니까?", "~인가?"→"~입니까?", 서술형은 "~을 확인했습니까?")',
+          '헤더 [즐겨찾기] 건수 뱃지 제거 — 건수는 뷰어에서 확인, _bmUpdateBadge는 뱃지 유무와 무관하게 ☆ 동기화'
         ]
       },
       { date:'2026-09-07', title:'사용가이드 PPTX 제작 — 12슬라이드 다크 네이비 테마',
@@ -6522,7 +6522,7 @@ a:hover { text-decoration: underline; }
     {sel:'#aifrs-db-toggle',       title:'④ 근거 검증 · K-IFRS DB', info:'tour3', pre:_tourCloseDb,
       msg:'- 감사 결과 항목을 클릭하면 근거·감사의견이 펼쳐짐 (문제 항목은 자동 펼침)\n- § 문단 칩·쉬운설명의 §표기를 누르면 기준서 원문(내장 DB)을 즉시 확인\n- 상단 [DB]는 50개 기준서·5,468개 문단을 직접 검색하는 새 창'},
     {sel:'#aifrs-bm-toggle',       title:'⑤ 즐겨찾기', info:'tour5',
-      msg:'- AI감사 결과 상단 또는 쉬운설명 하단의 [☆ 즐겨찾기 추가]로 분석 결과 전체를 저장\n- 상단 [즐겨찾기]를 누르면 저장 목록이 새 창으로 열림(뱃지 숫자 = 저장 건수)\n- [공유 파일 내보내기]로 동료에게 전달, 받은 파일은 [가져오기]로 즉시 열람'},
+      msg:'- AI감사 결과 상단 또는 쉬운설명 하단의 [☆ 즐겨찾기 추가]로 분석 결과 전체를 저장\n- 상단 [즐겨찾기]를 누르면 저장 목록이 새 창으로 열림\n- [공유 파일 내보내기]로 동료에게 전달, 받은 파일은 [가져오기]로 즉시 열람'},
     {sel:'.af-remote',             title:'⑥ 리모컨',
       msg:'- 숨김: 펼쳐진 항목을 모두 접고 맨 위로(접을 게 없으면 안내만)\n- 펼침: 접힌 항목을 모두 펼치고 맨 위로(펼칠 게 없으면 안내만)\n- 처음: 지금까지 작업을 모두 초기화하고 메인 화면으로\n- 도움: 지금 단계에서 다음에 눌러야 할 것을 화면에 바로 표시'},
     {sel:'#aifrs-hist-toggle',     title:'⑦ 기록', info:'tour7',
@@ -7021,7 +7021,7 @@ a:hover { text-decoration: underline; }
       +   '<div class="af-topbar-actions">'
       +     '<button class="af-icon-btn" id="aifrs-about-toggle" title="AiFRS 소개">'+_ico('info',15,'currentColor')+'<span class="af-icon-label">소개</span></button>'
       +     '<button class="af-icon-btn" id="aifrs-hist-toggle" title="개발 히스토리">'+_ico('hist',15,'currentColor')+'<span class="af-icon-label">기록</span></button>'
-      +     '<button class="af-icon-btn" id="aifrs-bm-toggle" title="즐겨찾기 — 분석 결과를 저장하고 동료와 공유" onclick="window.AiFRS.openBookmarkViewer()" style="position:relative">'+_ico('bookmark',15,'currentColor')+'<span class="af-icon-label">즐겨찾기</span><span class="af-bm-cnt" id="aifrs-bm-cnt" hidden>0</span></button>'
+      +     '<button class="af-icon-btn" id="aifrs-bm-toggle" title="즐겨찾기 — 분석 결과를 저장하고 동료와 공유" onclick="window.AiFRS.openBookmarkViewer()" style="position:relative">'+_ico('bookmark',15,'currentColor')+'<span class="af-icon-label">즐겨찾기</span></button>'
       +     '<button class="af-icon-btn" id="aifrs-db-toggle" title="K-IFRS DB">&#128452;<span class="af-icon-label">DB</span></button>'
       +     '<button class="af-icon-btn" id="aifrs-settings-toggle" title="설정">&#9881;<span class="af-icon-label">설정</span></button>'
       +   '</div>'
