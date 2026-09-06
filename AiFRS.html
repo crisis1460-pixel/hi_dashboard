@@ -5642,10 +5642,18 @@ a:hover { text-decoration: underline; }
           '_restoreCachedResults(전체 복원 루프) 후 _bmUpdateBadge() 추가 — 복수 항목 복원 시 ★ 초기화 방지'
         ]
       },
+      { date:'2026-09-07', title:'발표자료 수정 — 정렬·아이콘·수치 업데이트',
+        bullets:[
+          'Problem 카드 3개: align-items: flex-start → center로 수직 중앙 정렬',
+          '⏱(U+23F1 폴백 렌더) → 🕐로 교체 — 일부 브라우저에서 텍스트 모드로 표시되던 문제 수정',
+          'Solution feat-pill 4개: flex:1 + justify-content:center 로 pipeline 너비에 맞춤 정렬',
+          'Impact 수치 "수 분" → "30분 이내" 수정 (슬라이드 제목·big card·one-pager 동기화)'
+        ]
+      },
       { date:'2026-09-06', title:'사내 해커톤 발표자료 제작 — 슬라이드 3장 + 원페이저',
         bullets:[
-          '헤커톤 제출용 HTML 프레젠테이션(4슬라이드) 제작 — Problem/Solution/Impact/One-pager',
-          '경영진·비개발자 청중 기준 임팩트 중심 구성 — "3~4시간 → 수 분" 핵심 수치 강조',
+          '헥토이노베이션 해커톤 제출용 HTML 프레젠테이션(4슬라이드) 제작 — Problem/Solution/Impact/One-pager',
+          '경영진·비개발자 청중 기준 임팩트 중심 구성 — 핵심 수치 강조',
           '4단계 AI 파이프라인(분석→정밀→감사→쉬운설명) 시각화, 기능 요약 pill 행',
           '타이포그래피 규칙 전면 적용 — word-break:keep-all · hanging indent · 컨테이너 overflow 차단'
         ]
