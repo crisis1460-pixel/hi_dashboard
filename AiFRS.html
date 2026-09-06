@@ -3192,8 +3192,8 @@ a:hover { text-decoration: underline; }
           _ctaBtn='<button class="aifrs-btn aifrs-btn-sm" style="margin-top:7px" onclick="'+_ctaFn+'">'+_ctaTxt+'</button>';
         }
         var _bmKey='bm-'+(+new Date())+'-'+(Math.random().toString(36).slice(2,6));
-        h+='<div class="af-conc-card af-conc-'+_g.cls+'" style="position:relative">'
-          +'<button class="af-bm-star" data-bm="'+_bmKey+'" onclick="window.AiFRS.toggleBookmark(\''+_bmKey+'\')" title="즐겨찾기에 저장 — 이 분석 결과를 보관하고 언제든 다시 열람합니다"></button>'
+        (AiFRS._bmKeys=AiFRS._bmKeys||{})[String(_c1['기준서번호']||'unknown')] = _bmKey;
+        h+='<div class="af-conc-card af-conc-'+_g.cls+'">'
           +'<div class="af-conc-hd">'+_g.lbl+'</div>'
           +'<div class="af-conc-std">K-IFRS 제'+esc(_c1['기준서번호']||'')+'호 '+esc(_nm1)+'</div>'
           +(gs&&gs['핵심회계논점']?'<div class="af-conc-issue">'+esc(gs['핵심회계논점'])+'</div>':'')
@@ -4724,9 +4724,11 @@ a:hover { text-decoration: underline; }
             : '모든 항목이 문서 근거로 뒷받침됩니다. 각 항목을 클릭하면 근거와 감사의견을 확인할 수 있습니다.')
         + '</span></div></div>';
     // 면책 문구 상시 노출 제거(사용자 요청) — ⓘ 안내 시트(discPrecise·discAudit)에는 유지
+    var _bk=(AiFRS._bmKeys||{})[String(std.no||'')]||('bm-f-'+std.no);
     var headRow='<div class="aifrs-an-head" style="margin-top:8px;border-top:1px solid var(--border);padding-top:10px" title="문서 원문을 근거로 각 조항의 충족 여부를 판정합니다. 문제 항목은 자동으로 펼쳐집니다">'
       + '<span style="display:inline-flex;align-items:center;gap:6px">'+_ico('shield',15)+' AI감사 — <span style="color:'+head1.c+'">'+head1.t+'</span></span>'
       + '<span class="af-an-sub">— 실제 문서 원문 근거로 요건 충족 여부를 확정합니다</span>'
+      + '<button class="af-bm-star" data-bm="'+_bk+'" data-bm-std="'+std.no+'" onclick="window.AiFRS.toggleBookmark(\''+_bk+'\')" title="즐겨찾기 — AI감사까지 완료된 분석 결과 전체를 보관합니다" style="position:static;font-size:15px;padding:2px 5px;border-radius:5px;margin-left:auto;background:none;border:none;cursor:pointer;color:var(--txt3);transition:color .15s;line-height:1"></button>'
       + '<button class="aifrs-help-btn" onclick="window.AiFRS.runFinalAudit(\''+std.no+'\')" title="AI 감사를 처음부터 다시 실행합니다">↻ 다시 검증</button></div>';
     var plan=_buildActionPlan(std, items, audited);
     var gatePanel=_buildGatePanel(std, audited);   // HIGH 17개 기준서만 판단 게이트 패널 표시
@@ -5494,6 +5496,10 @@ a:hover { text-decoration: underline; }
   function _bmUpdateBadge(){
     var cnt=document.getElementById('aifrs-bm-cnt'); if(!cnt) return;
     var n=_bmGet().length; cnt.textContent=n; cnt.hidden=(n===0);
+    var saved={}; _bmGet().forEach(function(x){ saved[x.id]=1; });
+    document.querySelectorAll('.af-bm-star').forEach(function(btn){
+      var bk=btn.getAttribute('data-bm'); if(bk) btn.classList.toggle('active',!!saved[bk]);
+    });
   }
   AiFRS.toggleBookmark=function(bmKey){
     var list=_bmGet();
@@ -5507,7 +5513,7 @@ a:hover { text-decoration: underline; }
       var html=aiBox?aiBox.innerHTML:'';
       // 정밀분석·AI감사 결과도 캡처 (즐겨찾기 누른 시점의 진척 상태 전체 보존)
       var preciseHtml='';
-      document.querySelectorAll('[id^="aifrs-precise"]').forEach(function(b){
+      document.querySelectorAll('[id^="aifrs-precise"],[id^="aifrs-audit"]').forEach(function(b){
         if(b.innerHTML&&b.style.display!=='none'&&b.innerHTML.trim().length>10){
           preciseHtml+='<div class="aifrs-analysis" style="display:block;margin-top:16px">'+b.innerHTML+'</div>';
         }
@@ -5515,8 +5521,10 @@ a:hover { text-decoration: underline; }
       var fname='파일 미지정';
       if(AiFRS.state&&AiFRS.state.files&&AiFRS.state.files.length)
         fname=AiFRS.state.files.map(function(f){return f.name;}).join(', ');
-      var stdEl=document.querySelector('.af-conc-std');
-      var stdName=stdEl?stdEl.textContent.trim():'';
+      var _bmBtn=document.querySelector('.af-bm-star[data-bm="'+bmKey+'"]');
+      var _stdNo=_bmBtn?_bmBtn.getAttribute('data-bm-std'):'';
+      var _std=_stdNo?AiFRS.findStandard(_stdNo):null;
+      var stdName=_std?('K-IFRS 제'+_std.no+'호 '+(_std.name||'')):(document.querySelector('.af-conc-std')||{textContent:''}).textContent.trim();
       list.unshift({ id:bmKey,
         date:new Date().toLocaleString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}),
         fileName:fname, stdName:stdName, html:html, preciseHtml:preciseHtml });
