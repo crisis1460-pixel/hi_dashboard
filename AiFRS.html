@@ -5309,8 +5309,10 @@ a:hover { text-decoration: underline; }
     var answer=document.getElementById('af-qa-answer'); if(!answer) return;
     var btn=document.querySelector('.af-qa-btn');
     var ai=AiFRS._lastAi||{}; var gs=ai['거래구조']||{}; var cands=ai.candidates||[];
-    var ctx='거래성격: '+(gs['거래성격']||'')+'\n회계이슈: '+(gs['회계이슈']||'')
-      +'\n후보 기준서: '+cands.slice(0,5).map(function(c){ return c['기준서번호']+'호(관련성 '+c['관련성']+'%)'; }).join(', ');
+    // 거래구조 실제 스키마 키(자료성격·핵심회계논점·경제적실질·당사·상대방·관계·대금방향) — 화면에 보이는 본문을 그대로 전달
+    var ctx='자료성격: '+(gs['자료성격']||'')+'\n당사: '+(gs['당사']||'')+' / 상대방: '+(gs['상대방']||'')+' / 관계: '+(gs['관계']||'')+' / 대금방향: '+(gs['대금방향']||'')
+      +'\n핵심회계논점: '+(gs['핵심회계논점']||'')+'\n경제적실질: '+(gs['경제적실질']||'')
+      +'\n후보 기준서:\n'+cands.slice(0,5).map(function(c){ return '- '+c['기준서번호']+'호 '+(c['기준서명']||'')+' (관련성 '+c['관련성']+'%) — '+String(c['사유']||'').slice(0,200); }).join('\n');
     var sys='당신은 K-IFRS(한국채택국제회계기준) 전문가입니다. 아래는 AI가 분석한 이 거래의 결과입니다.\n'+ctx+'\n\n초보 회계담당자가 이해할 수 있도록 쉽고 구체적으로 답변하세요. 답변은 입니다체로 작성하세요.';
     answer.className='af-qa-answer visible'; answer.textContent='분석 중...';
     input.disabled=true; if(btn) btn.disabled=true;
