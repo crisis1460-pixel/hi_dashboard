@@ -1005,6 +1005,14 @@ a:hover { text-decoration: underline; }
 #af-gp .af-gp-close:hover { color:var(--txt); }
 #af-gp .af-gp-std { font-size:10px; color:var(--txt3); margin-bottom:4px; letter-spacing:.1px; }
 #af-gp .af-gp-aliases { font-size:10px; color:var(--txt3); margin-bottom:6px; }
+#af-gp .af-gp-orig { margin-top:7px; border-top:1px dotted var(--border); padding-top:6px; font-size:11px; color:var(--txt3); }
+#af-gp .af-gp-orig summary { cursor:pointer; list-style:none; user-select:none; }
+#af-gp .af-gp-orig summary::-webkit-details-marker { display:none; }
+#af-gp .af-gp-orig[open] summary { color:var(--txt2); }
+#af-gp .af-gp-orig div { margin-top:5px; color:var(--txt2); line-height:1.55; word-break:keep-all; }
+/* 조문 카드 쉬운설명(paragraph.easy, 0콜 내장 DB) */
+.af-para-easy, .aifrs-art-easy { margin-top:8px; padding:7px 10px; border-left:2px solid rgba(90,200,250,.55); background:rgba(90,200,250,.06); border-radius:0 6px 6px 0; font-size:12px; line-height:1.7; color:var(--txt); word-break:keep-all; }
+.af-para-easy b, .aifrs-art-easy b { color:var(--blue-sky); font-weight:600; margin-right:5px; }
 /* 용어사전 DB탭 */
 .af-terms-grp { margin-bottom:12px; }
 .af-terms-grp-h { font-size:11px; font-weight:700; color:var(--txt3); letter-spacing:.4px; text-transform:uppercase; padding:6px 0 4px; border-bottom:0.5px solid var(--border); margin-bottom:4px; }
@@ -1929,7 +1937,7 @@ a:hover { text-decoration: underline; }
       (s.terms||[]).forEach(function(t){
         if(!t.easy) return;
         [t.std].concat(t.aliases||[]).forEach(function(sf){
-          if(sf && sf.length>=3) AiFRS._gtMap[sf]={label:t.std, aliases:t.aliases&&t.aliases.length?t.aliases:[], easy:t.easy, src:t.easySrc||'', stdNo:s.no||'', stdName:s.name||'', difficulty:t.difficulty||1};
+          if(sf && sf.length>=3) AiFRS._gtMap[sf]={label:t.std, aliases:t.aliases&&t.aliases.length?t.aliases:[], easy:t.easy, src:t.easySrc||'', stdNo:s.no||'', stdName:s.name||'', difficulty:t.difficulty||1, orig:t.easyOrig||''};
         });
       });
     });
@@ -2003,7 +2011,9 @@ a:hover { text-decoration: underline; }
       +'<div class="af-gp-lbl">'+esc(info.label)+'</div>'
       +(dispAliases.length?'<div class="af-gp-aliases">= '+esc(dispAliases.slice(0,4).join(', '))+'</div>':'')
       +'<div class="af-gp-easy">'+esc(info.easy)+'</div>'
-      +(info.src?'<div class="af-gp-src">'+(info.src==='extract'?'📄 K-IFRS 원문 추출':'🤖 AI 생성')+'</div>':'');
+      +(info.src?'<div class="af-gp-src">'+(info.src==='extract'?'📄 K-IFRS 원문 추출':'🤖 AI 생성')+'</div>':'')
+      // 재생성된 3점 용어는 기준서 원문 정의를 접이식으로 함께 제공 — 쉬운 말과 정확한 정의를 둘 다 확인 가능(핀 고정 시 클릭)
+      +(info.orig?'<details class="af-gp-orig"><summary>📄 기준서 원문 정의</summary><div>'+esc(info.orig)+'</div></details>':'');
     p._gt=info.label;
     if(anchorEl){
       p.style.transform='';
@@ -3718,6 +3728,7 @@ a:hover { text-decoration: underline; }
     if(!para) return '<div class="af-para-blk"><div class="af-para-h">문단 '+esc(label)+'</div><div class="aifrs-note">이 문단은 내장 DB에 없습니다. (원본 기준서를 직접 확인하세요)</div></div>';
     return '<div class="af-para-blk"><div class="af-para-h">문단 '+esc(label)+(para.topic?' <span class="aifrs-pr-violet">'+esc(para.topic)+'</span>':'')+'</div>'
       + '<div class="af-para-txt">'+_fmtExcerptHtml(para.excerpt||para.summary||'(원문 없음)')+'</div>'
+      + (para.easy?'<div class="af-para-easy"><b>쉽게 말해</b>'+esc(para.easy)+'</div>':'')
       + (para.summary && para.excerpt?'<div class="aifrs-note" style="margin-top:8px"><b>요약</b> '+esc(para.summary)+'</div>':'')
       + (para.keywords&&para.keywords.length?'<div class="aifrs-note" style="margin-top:6px"><b>핵심어</b> '+para.keywords.map(function(k){return esc(k.t);}).join(' · ')+'</div>':'')
       + '</div>';
@@ -5135,6 +5146,7 @@ a:hover { text-decoration: underline; }
       h+='<div class="aifrs-art">'
         + '<div class="aifrs-art-t">문단 '+esc(p.no)+' · '+esc(p.topic||'')+'</div>'
         + '<div class="aifrs-art-s">'+esc(p.summary||'')+'</div>'
+        + (p.easy?'<div class="aifrs-art-easy"><b>쉽게 말해</b>'+esc(p.easy)+'</div>':'')
         + (kw?'<div class="aifrs-art-k">'+kw+'</div>':'')
         + ck + ex + jn
         + '</div>';
