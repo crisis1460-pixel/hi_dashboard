@@ -4926,6 +4926,40 @@ a:hover { text-decoration: underline; }
     document.body.appendChild(ov);
   }
 
+  // ══ DRM(문서보안) 감지 — 파일 앞 2KB 헤더 마커 검사 (파서가 아예 실패하는 PDF/DOCX/XLSX/PPTX용) ══
+  var DRM_MARK=/DOCUMENTSAFER|FASOO|SOFTCAMP|MarkAny|SECUDOC|DRM-?ENCRYPT|EncryptedPackage/i;
+  function _drmSniff(file){
+    return new Promise(function(res){
+      try{
+        var fr=new FileReader();
+        fr.onload=function(){ res(DRM_MARK.test(String(fr.result||''))); };
+        fr.onerror=function(){ res(false); };
+        fr.readAsText(file.slice(0,2048),'latin1');
+      }catch(e){ res(false); }
+    });
+  }
+  var DRM_MSG='DRM(문서보안)으로 암호화된 파일이라 내용을 읽을 수 없어요. DRM을 해제한 사본이나 원본 시스템에서 내보낸 파일로 다시 올려주세요.';
+  // DRM 안내 모달 — 파일 카드 인라인 문구만으론 놓치기 쉬워 업로드 즉시 한 번 띄움(같은 배치에서 여러 파일이면 묶어서)
+  AiFRS._drmModalQ=[]; AiFRS._drmModalT=null;
+  function showDrmModal(name){
+    AiFRS._drmModalQ.push(name);
+    if(AiFRS._drmModalT) return;
+    AiFRS._drmModalT=setTimeout(function(){
+      var names=AiFRS._drmModalQ.slice(); AiFRS._drmModalQ=[]; AiFRS._drmModalT=null;
+      var ov=document.createElement('div'); ov.className='aifrs-modal-ov';
+      ov.innerHTML='<div class="aifrs-modal">'
+        +'<div class="m-ico">🔒</div>'
+        +'<div class="m-ttl">DRM으로 잠긴 파일이에요</div>'
+        +'<div class="m-msg">'+esc(names.join(', '))+'<br><br>회사 문서보안(DRM) 때문에 내용을 읽을 수 없어 분석에서 제외했어요.<br><b>DRM을 해제한 사본</b>이나 <b>원본 시스템에서 내보낸 파일</b>로 다시 올려주세요.'
+        +'<br><span class="aifrs-note aifrs-note-mark"><i>※</i><span>파일 이름은 그대로인데 내용이 암호화된 상태라, PDF로 변환해도 같은 결과예요.</span></span></div>'
+        +'<div class="m-foot"><button class="aifrs-btn">확인</button></div></div>';
+      function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
+      ov.addEventListener('click',function(e){ if(e.target===ov) close(); });
+      ov.querySelector('button').addEventListener('click',close);
+      document.body.appendChild(ov);
+    },250);
+  }
+
   // ══ 파일 추가 → 분류 → 추출 ══
   AiFRS.addFiles = function(fileList){
     var arr = Array.prototype.slice.call(fileList||[]);
@@ -5084,15 +5118,21 @@ a:hover { text-decoration: underline; }
       for(var _i=0;_i<_n;_i++){ var _c=text.charCodeAt(_i); if(_c===0xFFFD||(_c<32&&_c!==9&&_c!==10&&_c!==13)) _bad++; }
       if(_drmHead || (_n>200 && _bad/_n>0.2)){
         rec.text=''; rec.status='error';
-        rec.error=_drmHead?'DRM(문서보안)으로 암호화된 파일이라 내용을 읽을 수 없어요. DRM을 해제한 사본이나 원본 시스템에서 내보낸 파일로 다시 올려주세요.'
-                          :'글자를 읽을 수 없는 파일이에요(암호화·손상 또는 이미지 전용). 텍스트가 있는 원본 파일로 다시 올려주세요.';
+        rec.error=_drmHead?DRM_MSG:'글자를 읽을 수 없는 파일이에요(암호화·손상 또는 이미지 전용). 텍스트가 있는 원본 파일로 다시 올려주세요.';
+        if(_drmHead) showDrmModal(rec.name);
         renderFileList(); return;
       }
       rec.text=text; rec.status='done';
       if(rec.ext==='pdf' && rec.text.replace(/\s/g,'').length<20){ rec.needsOcr=true; }  // 스캔 PDF → AI 분석 시 OCR
       renderFileList();
     }).catch(function(err){
-      rec.error=(err&&err.message)?err.message:'추출 실패'; rec.status='error'; renderFileList();
+      // 파서 실패(PDF/DOCX/XLSX/PPTX가 아예 안 열림)도 DRM일 수 있음 → 헤더 스니핑 후 사유를 DRM으로 특정
+      _drmSniff(rec.file).then(function(isDrm){
+        rec.status='error';
+        rec.error=isDrm?DRM_MSG:((err&&err.message)?err.message:'추출 실패');
+        if(isDrm) showDrmModal(rec.name);
+        renderFileList();
+      });
     });
   }
 
@@ -5159,6 +5199,7 @@ a:hover { text-decoration: underline; }
         bullets:[
           '분석 실패 3건(1024·1117·2032) 후속: 앱이 실패 사유를 노출하지 않아 루프가 timeout으로만 기록되던 구조 → _lastAiErr{phase,msg} 노출, 루프 드라이버가 즉시 사유 기록. 1117은 c13 재시도에서 정상(top=1117) — 일시적 API 오류로 확정',
           'DRM(DocumentSafer 등)·바이너리 문서 감지: 헤더 마커 또는 제어문자·U+FFFD 20%↑면 추출 단계에서 차단 + "DRM으로 암호화된 파일이라 읽을 수 없어요" 안내. 깨진 바이트가 AI로 가서 응답 불능이 되던 경로 차단',
+          'DRM 감지 전 경로 확장: 텍스트가 나오는 경우(txt/csv/zip 내부)뿐 아니라 파서가 아예 실패하는 PDF/DOCX/XLSX/PPTX도 파일 앞 2KB 헤더 스니핑(_drmSniff)으로 DRM 특정 → 파일 카드 문구 + 🔒 안내 모달(같은 배치 파일은 묶어 1회). csv·pdf·docx 3종 주입 테스트 통과',
           'paragraph.easy 배치: checklist 있는 핵심 단락 1,294개에 "이 조문이 결국 무슨 말인지" 설명(lite 모델 158배치, 실패 0). 조문 카드(_paraBlock)·DB탭 문단에 "쉽게 말해" 줄로 0콜 표시',
           '용어 팝업: 재생성한 3점 용어에 📄 기준서 원문 정의 접이식(easyOrig) 추가 — 쉬운 말과 정확한 정의를 함께 확인',
           '텍스트 전수 검수(서브에이전트 3명, 용어설명 854 + 목적/범위 100 전독): 지적 100건 중 확실한 것만 적용 — 오탈자("건구나"), 정의 2~3개가 한 줄에 붙은 원문추출(1020 정부·1028 관계기업), 회계적 오류(1102 비가득조건·1110 간주별도실체 방향 반대·F 신중성 구개념 등 26건), 글자 그대로 반복. 주관적 52건은 보류 목록으로 보관',
