@@ -699,8 +699,37 @@ a:hover { text-decoration: underline; }
 .af-qa-btn{flex-shrink:0;font-size:12px;font-weight:700;color:#fff;background:linear-gradient(180deg,#4bacff 0%,#2997ff 55%,#0f74e0 100%);border:1px solid #063a6b;border-radius:8px;padding:7px 13px;cursor:pointer;white-space:nowrap}
 .af-qa-btn:disabled{opacity:.35;cursor:not-allowed}
 .af-qa-nokey{font-size:11px;color:var(--txt3);padding:5px 0;word-break:keep-all}
-.af-qa-answer{margin-top:9px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;font-size:12px;color:var(--txt2);line-height:1.7;word-break:keep-all;white-space:pre-wrap;display:none}
+.af-qa-answer{margin-top:9px;display:none}
 .af-qa-answer.visible{display:block}
+/* 후속 Q&A 답변 카드 — 기존 결과 카드(정밀분석·AI감사)와 같은 글자 크기·줄간격, 상단 접기 토글 */
+.af-qa-ans{background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:0}
+.af-qa-ans>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:11px;color:var(--txt3);border-bottom:1px solid transparent}
+.af-qa-ans>summary::-webkit-details-marker{display:none}
+.af-qa-ans[open]>summary{border-bottom-color:var(--border)}
+.af-qa-ans-q{flex:1;min-width:0;color:var(--txt2);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.af-qa-ans-meta{flex-shrink:0}
+.af-qa-ans-tg{flex-shrink:0;font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--border);color:var(--txt3);background:var(--bg2)}
+.af-qa-ans-tg::before{content:attr(data-closed)} .af-qa-ans[open] .af-qa-ans-tg::before{content:attr(data-open)}
+.af-qa-md{padding:10px 14px 12px;font-size:12px;color:var(--txt2);line-height:1.75;word-break:keep-all}
+.af-qa-md b{color:var(--txt)} .af-qa-md code{font-family:inherit;background:rgba(41,151,255,.12);border-radius:3px;padding:0 4px}
+.af-md-h{font-size:12px;font-weight:700;color:#2dd4bf;margin:10px 0 4px;padding-bottom:3px;border-bottom:1px dotted var(--border)}
+.af-md-h:first-child{margin-top:0}
+.af-md-p{margin:0 0 8px} .af-md-p:last-child{margin-bottom:0}
+.af-md-hr{border:none;border-top:1px dotted var(--border);margin:8px 0}
+.af-md-list{margin:2px 0 8px} .af-md-li{display:flex;gap:7px;align-items:flex-start;margin:2px 0} .af-md-li>i{flex-shrink:0;font-style:normal;color:var(--txt3);min-width:14px} .af-md-li>span{flex:1;min-width:0}
+/* 즐겨찾기 ☆ 옆 한글 라벨 */
+.af-bm-star em{font-style:normal;font-size:11px;font-weight:600;margin-left:5px;vertical-align:2px;color:var(--txt3)}
+.af-bm-star.active em{color:#f59e0b}
+/* 상단바 아이콘 클릭 — 은은한 글로우 확산(새 창 열림 표시) */
+.af-icon-btn.af-press-fx{animation:af-iconGlow .6s ease-out}
+@keyframes af-iconGlow{0%{box-shadow:0 0 0 0 rgba(41,151,255,.75),0 1.5px 0 #050505}100%{box-shadow:0 0 0 14px rgba(41,151,255,0),0 1.5px 0 #050505}}
+/* 쉬운설명 안 조문 표기(§12) — 점선 밑줄 + 마우스오버 요약 + 클릭 시 새 창 원문 */
+.af-pref{color:var(--blue-sky);border-bottom:1px dotted rgba(90,200,250,.8);cursor:pointer;position:relative;white-space:nowrap}
+.af-pref:hover{background:rgba(41,151,255,.13);border-radius:3px}
+.af-pref[data-tip]:hover::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 6px);z-index:50;width:320px;max-width:70vw;white-space:normal;word-break:keep-all;font-size:11px;line-height:1.6;color:var(--txt2);background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;box-shadow:0 8px 24px rgba(0,0,0,.5);font-weight:400}
+/* 개발 히스토리 — 날짜별 그룹 */
+.af-hist-ttl{font-size:12px;font-weight:700;color:var(--txt);margin-top:6px}
+.af-hist-rest{font-size:11px;color:var(--txt3);margin-top:6px;line-height:1.7;word-break:keep-all}
 
 .af-step-bar { display:flex; gap:4px; margin:8px 0 2px; flex-wrap:wrap; }
 .af-step { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:600; padding:3px 8px; border-radius:var(--radius-pill); background:var(--bg3); color:var(--txt3); }
@@ -2731,6 +2760,7 @@ a:hover { text-decoration: underline; }
   // 시작 시 스냅샷이 있으면 복원 배너 제안(자동 복원 아님 — 새 작업 방해 금지)
   AiFRS._offerRestore=function(){
     try {
+      if(/aifrs-(bm|view|para)=/.test(location.search)) return;   // 즐겨찾기 뷰어·소개/기록/DB·조문 새 창에서는 복원 배너 표시 안 함
       var raw=localStorage.getItem(SNAP_KEY); if(!raw) return;
       var snap=JSON.parse(raw); if(!snap||!snap.ai) return;
       if((AiFRS.state.files||[]).length || AiFRS._lastAi) return;
@@ -2847,7 +2877,7 @@ a:hover { text-decoration: underline; }
         _applyRankGuards(cands);
         AiFRS._lastAi.candidates=cands;
         box.innerHTML=renderAiResult(AiFRS._lastAi, '');
-        _clarToast('보정된 거래구조로 후보 기준서를 재선정했습니다. (정밀분석·감사는 새 후보로 다시 실행하세요)');
+        _clarToast('보정된 거래구조로 후보 기준서를 재선정했습니다. (정밀분석·감사는 새 후보로 다시 실행이 필요합니다)');
       })
       .catch(function(e){
         AiFRS._reselBusy=false; box.innerHTML=prev;
@@ -2949,8 +2979,8 @@ a:hover { text-decoration: underline; }
         AiFRS._lastAiErr={phase:'extract',msg:'추출된 텍스트 없음',ts:Date.now()};
         var errs=AiFRS.state.files.filter(function(r){return r.ocrErr;}).map(function(r){return esc(r.name)+' → '+esc(r.ocrErr);});
         box.innerHTML='<div class="aifrs-api-stat err">추출된 텍스트가 없습니다.</div>'
-          + (errs.length?'<div class="aifrs-note" style="margin-top:6px"><b>OCR 오류</b><br>'+errs.join('<br>')+'</div>':'<div class="aifrs-note" style="margin-top:6px">OCR 대상이 없거나 실패했습니다. 파일 카드 상태를 확인하세요.</div>')
-          + '<div class="aifrs-note" style="margin-top:6px">무료 한도(분당/일일) 초과면 잠시(약 30초~1분) 뒤 재시도하세요.</div>'
+          + (errs.length?'<div class="aifrs-note" style="margin-top:6px"><b>OCR 오류</b><br>'+errs.join('<br>')+'</div>':'<div class="aifrs-note" style="margin-top:6px">OCR 대상이 없거나 실패했습니다. 파일 카드 상태 확인이 필요합니다.</div>')
+          + '<div class="aifrs-note" style="margin-top:6px">무료 한도(분당/일일) 초과면 잠시(약 30초~1분) 뒤 재시도가 필요합니다.</div>'
           + '<div style="margin-top:8px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runAiAnalysis()">다시 시도</button></div>';
         return;
       }
@@ -2970,7 +3000,7 @@ a:hover { text-decoration: underline; }
             .then(function(txt2){
               clearInterval(aiTimer); AiFRS._aiBusy=false;
               var st=AiFRS.parseJsonResponse(txt2);
-              if(!st){ AiFRS._lastAiErr={phase:'structure',msg:'JSON 파싱 실패',ts:Date.now()}; box.innerHTML='<div class="aifrs-api-stat err">응답 JSON 파싱 실패 — 원문 일부:</div><pre class="aifrs-preview">'+esc(txt2.slice(0,1500))+'</pre>'; return; }
+              if(!st){ AiFRS._lastAiErr={phase:'structure',msg:'JSON 파싱 실패',ts:Date.now()}; box.innerHTML='<div class="aifrs-api-stat err">응답 형식 오류 — 원문 일부:</div><pre class="aifrs-preview">'+esc(txt2.slice(0,1500))+'</pre>'; return; }
               var gs=st['거래구조']||{};
               var raw=gs['근거인용']||[];
               var rawTx=gs['근거인용_한글역']||[];
@@ -3001,7 +3031,7 @@ a:hover { text-decoration: underline; }
           + '<div style="margin-top:8px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runAiAnalysis()">다시 분석</button></div>';
         return;
       }
-      var hint=/retry in|quota|exceeded|429|rate/i.test((e&&e.message)||'')?'<div class="aifrs-note" style="margin-top:6px">무료 한도(분당/일일) 초과일 수 있습니다. 잠시(약 30초~1분) 뒤 다시 시도하거나, 한 번에 올리는 파일 수를 줄여보세요.</div>':'';
+      var hint=/retry in|quota|exceeded|429|rate/i.test((e&&e.message)||'')?'<div class="aifrs-note" style="margin-top:6px">무료 한도(분당/일일) 초과일 수 있습니다. 잠시(약 30초~1분) 뒤 다시 시도하거나, 한 번에 올리는 파일 수를 줄이는 것이 좋습니다.</div>':'';
       box.innerHTML='<div class="aifrs-api-stat err">— '+esc(e.message)+'</div>'+hint
         + '<div style="margin-top:8px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.runAiAnalysis()">다시 시도</button></div>';
     });
@@ -3128,7 +3158,7 @@ a:hover { text-decoration: underline; }
       if(gs['대금방향']&&gs['대금방향']!=='해당없음') _ch.push(_kvChip('대금', gs['대금방향']));
       var _infl=Array.isArray(gs['회계영향측'])?gs['회계영향측'].join(' · '):(gs['회계영향측']||'');
       if(_infl) _ch.push(_kvChip('영향 받는 계정', _infl));
-      if(gs['신뢰도']){ var _cv=gs['신뢰도'], _ct=_cv==='낮음'?'한 번 확인해 보세요':_cv==='보통'?'어느 정도 확실해요':'꽤 확실해요', _cc=_cv==='낮음'?'#fbbf24':_cv==='보통'?'var(--blue-sky)':'var(--teal)'; _ch.push('<span class="af-chip" style="color:'+_cc+'"><b style="color:inherit;opacity:.7">AI 확신도</b>'+_ct+'</span>'); }   // 항상 표시, 3단계 문구 차등
+      if(gs['신뢰도']){ var _cv=gs['신뢰도'], _ct=_cv==='낮음'?'확인 필요':_cv==='보통'?'보통':'높음', _cc=_cv==='낮음'?'#fbbf24':_cv==='보통'?'var(--blue-sky)':'var(--teal)'; _ch.push('<span class="af-chip" style="color:'+_cc+'"><b style="color:inherit;opacity:.7">AI 확신도</b>'+_ct+'</span>'); }   // 항상 표시, 3단계 문구 차등
       h+='<div class="aifrs-tx-box'+(low?' warn':'')+'">'
         + '<div class="aifrs-tx-box-h">'+_ico('compass',14)+' 거래구조 (당사 위치·관계)'
         + (gs['자료성격']?' <span class="aifrs-tx-tag">'+esc(gs['자료성격'])+'</span>':'')
@@ -3146,7 +3176,7 @@ a:hover { text-decoration: underline; }
               }).join('')
             +'</span></div>'
             :(rawn?'<div class="aifrs-pr-warn-row aifrs-pr-row" style="margin-top:4px"><b>문서 근거</b><span>검증된 인용 없음(AI 제시 '+rawn+'건이 문서와 불일치)</span></div>':''))
-        + (low?'<div style="margin-top:7px" class="aifrs-note aifrs-note-mark"><i>※</i><span>당사 위치가 모호해 후보가 달라질 수 있습니다 — ⚙ 설정의 당사명(Reporting Entity)을 확인하세요.</span></div>':'')   // 행동 수단 없는 "알려주세요" 문구 제거, 모호할 때만 설정 안내
+        + (low?'<div style="margin-top:7px" class="aifrs-note aifrs-note-mark"><i>※</i><span>당사 위치가 모호해 후보가 달라질 수 있습니다 — ⚙ 설정의 당사명(Reporting Entity) 확인이 필요합니다.</span></div>':'')   // 행동 수단 없는 "알려주세요" 문구 제거, 모호할 때만 설정 안내
         + (gs['방향경고']?'<div class="aifrs-api-stat err" style="margin-top:6px">'+esc(gs['방향경고'])+'</div>':'')
         + (gs['__userFixed']?'<div style="margin-top:8px;text-align:center"><button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.reselectCandidates()" title="확정한 거래구조를 전제로 적용 기준서 후보를 AI가 다시 선정(API 1콜)">AI로 후보 재선정 (1콜)</button></div>':'')
         + '</div>';
@@ -3465,7 +3495,7 @@ a:hover { text-decoration: underline; }
         fin();
         var data=AiFRS.parseJsonResponse(txt);
         if(Array.isArray(data)) data={items:data};   // 3.x는 래퍼 없이 최상위 배열로 응답하기도 함
-        if(!data){ box.innerHTML='<div class="aifrs-api-stat err">JSON 파싱 실패 — 원문 일부:</div><pre class="aifrs-preview">'+esc(txt.slice(0,1500))+'</pre>'; _setStepBar(no,'precise-error',hasGate); return; }
+        if(!data){ box.innerHTML='<div class="aifrs-api-stat err">응답 형식 오류 — 원문 일부:</div><pre class="aifrs-preview">'+esc(txt.slice(0,1500))+'</pre>'; _setStepBar(no,'precise-error',hasGate); return; }
         AiFRS._lastPrecise=AiFRS._lastPrecise||{}; AiFRS._lastPrecise[std.no]=data; _snapSave();
         box.innerHTML=renderPreciseResult(data, std, ((Date.now()-t0)/1000).toFixed(1));
         _setStepBar(no,'precise-done',hasGate);
@@ -3891,19 +3921,26 @@ a:hover { text-decoration: underline; }
   function _fmtExcerptHtml(t, hl){
     hl = hl || function(s){ return s; };
     var lines=_fmtExcerpt(t).split('\n').filter(function(s){ return s.trim(); });
-    return lines.map(function(line){
+    // 번호 항목 뒤에 이어지는 설명 줄("즉, …", "이 경우 …")은 같은 항목으로 묶어 번호 폭만큼 들여쓰기가 유지되게(줄바꿈 후 시작 열 통일)
+    var out=[], cur=null;
+    lines.forEach(function(line){
       var m=line.match(/^(\(\d{1,2}\)|\([가-힣]\)|[⑴-⒇㈎-㈛])\s*(.*)$/);
-      if(m) return '<div class="af-para-li"><i>'+esc(m[1])+'</i><span>'+hl(esc(m[2]))+'</span></div>';
-      return '<div class="af-para-p">'+hl(esc(line))+'</div>';
+      if(m){ cur={m:m[1], t:[m[2]]}; out.push(cur); }
+      else if(cur){ cur.t.push(line); }
+      else out.push({p:line});
+    });
+    return out.map(function(o){
+      if(o.p!==undefined) return '<div class="af-para-p">'+hl(esc(o.p))+'</div>';
+      return '<div class="af-para-li"><i>'+esc(o.m)+'</i><span>'+o.t.map(function(s){ return hl(esc(s)); }).join('<br>')+'</span></div>';
     }).join('');
   }
   function _paraBlock(std, pno){
     var para=AiFRS.findArticle(std.no, pno);
     var label=AiFRS.stripStdPrefix(std.no, pno)||pno;
-    if(!para) return '<div class="af-para-blk"><div class="af-para-h">문단 '+esc(label)+'</div><div class="aifrs-note">이 문단은 내장 DB에 없습니다. (원본 기준서를 직접 확인하세요)</div></div>';
+    if(!para) return '<div class="af-para-blk"><div class="af-para-h">문단 '+esc(label)+'</div><div class="aifrs-note">이 문단은 내장 DB에 없습니다. (원본 기준서 직접 확인이 필요합니다)</div></div>';
     return '<div class="af-para-blk"><div class="af-para-h">문단 '+esc(label)+(para.topic?' <span class="aifrs-pr-violet">'+esc(para.topic)+'</span>':'')+'</div>'
       + '<div class="af-para-txt">'+_fmtExcerptHtml(para.excerpt||para.summary||'(원문 없음)')+'</div>'
-      + (para.easy?'<div class="af-para-easy"><b>쉽게 말해</b>'+esc(para.easy)+'</div>':'')
+      + (para.easy?'<div class="af-para-easy"><b>해설</b>'+esc(para.easy)+'</div>':'')
       + (para.summary && para.excerpt?'<div class="aifrs-note" style="margin-top:8px"><b>요약</b> '+esc(para.summary)+'</div>':'')
       + (para.keywords&&para.keywords.length?'<div class="aifrs-note" style="margin-top:6px"><b>핵심어</b> '+para.keywords.map(function(k){return esc(k.t);}).join(' · ')+'</div>':'')
       + '</div>';
@@ -3914,7 +3951,7 @@ a:hover { text-decoration: underline; }
     var parts=String(paraNo||'').split(/[,，、]/).map(function(s){ return s.trim(); }).filter(Boolean);
     if(!parts.length) parts=[String(paraNo||'')];
     var body=parts.map(function(p){ return _paraBlock(std, p); }).join('')
-      + '<div class="aifrs-note aifrs-note-mark" style="margin-top:10px"><i>※</i><span>내장 DB 발췌본입니다. 정확한 전문은 원본 K-IFRS 기준서를 확인하세요.</span></div>';
+      + '<div class="aifrs-note aifrs-note-mark" style="margin-top:10px"><i>※</i><span>내장 DB 발췌본입니다. 정확한 전문은 원본 K-IFRS 기준서에서 확인이 필요합니다.</span></div>';
     var label=parts.map(function(p){ return AiFRS.stripStdPrefix(std.no, p)||p; }).join(', ');
     var ov=document.createElement('div'); ov.className='aifrs-modal-ov';
     ov.innerHTML='<div class="aifrs-modal" style="max-width:760px;text-align:left;max-height:84vh;overflow:auto">'
@@ -4443,14 +4480,16 @@ a:hover { text-decoration: underline; }
       slot.scrollIntoView({behavior:'smooth', block:'nearest'});
       return;
     }
-    if(!AiFRS.getApiKey() && !AiFRS.getOrKey()){ slot.innerHTML='<div class="aifrs-note">먼저 설정에서 API 키를 저장·연결하세요.</div>'; return; }
+    if(!AiFRS.getApiKey() && !AiFRS.getOrKey()){ slot.innerHTML='<div class="aifrs-note">먼저 설정에서 API 키 저장·연결이 필요합니다.</div>'; return; }
     var _rg=AiFRS.rateGuard(); if(!_rg.ok){ showRateWaitPopup(_rg.waitSec); return; }
     var rec=(AiFRS._lastAudit||{})[no];
-    if(!rec||!rec.items||!rec.items.length){ slot.innerHTML='<div class="aifrs-note">항목 데이터를 찾을 수 없습니다 — 감사를 다시 실행해 보세요.</div>'; return; }
+    if(!rec||!rec.items||!rec.items.length){ slot.innerHTML='<div class="aifrs-note">항목 데이터를 찾을 수 없습니다 — 감사 재실행이 필요합니다.</div>'; return; }
     var pr=(AiFRS._lastPrecise||{})[no], prItems=(pr&&pr.items)||[];
     var byArt={}; prItems.forEach(function(x){ byArt[String(x['조문번호']||'').trim()]=x; });
     var std=AiFRS.findStandard(no);
-    slot.innerHTML=_aiLoad('plan',0,'쉬운 설명 생성 중','회계 전문용어를 쉬운 말로 풀어드리는 중입니다');
+    var _et0=Date.now(), _etid='aifrs-easy-timer-'+no;
+    slot.innerHTML=_aiLoad('plan',0,'쉬운 설명 생성 중','회계 전문용어를 쉬운 말로 풀어드리는 중입니다',_etid,'0.0초');   // 다른 API 로딩과 같은 카드(초 흐름 포함)
+    var _etm=setInterval(function(){ var el=document.getElementById(_etid); if(el) el.textContent=((Date.now()-_et0)/1000).toFixed(1)+'초'; },100);
     // 항목별 감사 결과 + 관련 조문 요약(내장 DB)을 통합 주입 — 기준서의 정의→조건→결론 흐름으로 풀이
     var lines=rec.items.map(function(a,i){
       var art=String(a['조문번호']||'').trim(), it=byArt[art]||{};
@@ -4530,25 +4569,27 @@ a:hover { text-decoration: underline; }
           if(parts.length>=2){
             howHtml=parts.map(function(p){
               var m=p.match(/^(\d+\s*단계(?:\s*\([^)]*\))?)\s*[:：]?\s*([\s\S]*)$/) || p.match(/^(\d+)\.\s*([\s\S]*)$/);
-              return m ? '<div class="af-easy-step"><i>'+esc(String(m[1]).replace(/\s+/g,''))+'</i><span>'+esc(m[2])+'</span></div>'
-                       : '<div class="af-easy-step"><span>'+esc(p)+'</span></div>';
+              return m ? '<div class="af-easy-step"><i>'+esc(String(m[1]).replace(/\s+/g,''))+'</i><span>'+_linkParaRefs(esc(m[2]),no)+'</span></div>'
+                       : '<div class="af-easy-step"><span>'+_linkParaRefs(esc(p),no)+'</span></div>';
             }).join('');
-          } else { howHtml=esc(how); }
+          } else { howHtml=_linkParaRefs(esc(how),no); }
         }
         var _ebk=(AiFRS._bmKeys||{})[String(no)]||('bm-easy-'+no);
         var html='<div class="af-easy">'
-          + (why?'<div class="af-easy-row"><b>왜</b><span>'+esc(why)+'</span></div>':'')
-          + (what?'<div class="af-easy-row"><b>무엇을</b><span>'+esc(what)+'</span></div>':'')
+          + (why?'<div class="af-easy-row"><b>왜</b><span>'+_linkParaRefs(esc(why),no)+'</span></div>':'')
+          + (what?'<div class="af-easy-row"><b>무엇을</b><span>'+_linkParaRefs(esc(what),no)+'</span></div>':'')
           + (how?'<div class="af-easy-row"><b>어떻게</b><span>'+howHtml+'</span></div>':'')
-          + (caution?'<div class="af-easy-row"><b style="color:#fbbf24">주의</b><span>'+esc(caution)+'</span></div>':'')
-          + (!what&&!how?esc(legacy):'')
-          + '<div class="af-easy-note">※ 여기는 방향 안내입니다 — 구체적 요건·예외는 위 관련 문단(§)을 눌러 기준서 원문으로 판단하세요.</div>'
-          + '<div style="margin-top:8px;display:flex;justify-content:flex-end"><button class="af-bm-star" data-bm="'+_ebk+'" data-bm-std="'+no+'" onclick="window.AiFRS.toggleBookmark(\''+_ebk+'\')" title="즐겨찾기 — AI감사·쉬운설명까지 완료된 전체 분석 결과를 보관합니다" style="position:static;font-size:15px;padding:2px 5px;border-radius:5px;background:none;border:none;cursor:pointer;color:var(--txt3);transition:color .15s;line-height:1"></button></div>'
+          + (caution?'<div class="af-easy-row"><b style="color:#fbbf24">주의</b><span>'+_linkParaRefs(esc(caution),no)+'</span></div>':'')
+          + (!what&&!how?_linkParaRefs(esc(legacy),no):'')
+          + '<div class="af-easy-note">※ 여기는 방향 안내입니다 — 구체적 요건·예외는 조문 표기(§)에 마우스를 올리면 요약, 클릭하면 새 창에서 기준서 원문을 확인할 수 있습니다.</div>'
+          + '<div style="margin-top:8px;display:flex;justify-content:flex-end"><button class="af-bm-star" data-bm="'+_ebk+'" data-bm-std="'+no+'" onclick="window.AiFRS.toggleBookmark(\''+_ebk+'\')" title="즐겨찾기 — AI감사·쉬운설명까지 완료된 전체 분석 결과를 보관합니다" style="position:static;font-size:15px;padding:2px 5px;border-radius:5px;background:none;border:none;cursor:pointer;color:var(--txt3);transition:color .15s;line-height:1"><em>즐겨찾기 추가</em></button></div>'
           + '</div>';
+        clearInterval(_etm);
         AiFRS._easyCache[key]=html; slot.innerHTML=html;
         slot.scrollIntoView({behavior:'smooth', block:'nearest'});  // TP9: 생성 후 자동 스크롤
       })
       .catch(function(e){
+        clearInterval(_etm);
         slot.innerHTML='<div class="aifrs-api-stat err">— '+esc(e.message)+'</div>'
           + '<div style="margin-top:5px;text-align:center"><button class="aifrs-help-btn" onclick="window.AiFRS.explainEasyAll(\''+no+'\')">다시 시도</button></div>';
       });
@@ -4733,7 +4774,7 @@ a:hover { text-decoration: underline; }
     var headRow='<div class="aifrs-an-head" style="margin-top:8px;border-top:1px solid var(--border);padding-top:10px" title="문서 원문을 근거로 각 조항의 충족 여부를 판정합니다. 문제 항목은 자동으로 펼쳐집니다">'
       + '<span style="display:inline-flex;align-items:center;gap:6px">'+_ico('shield',15)+' AI감사 — <span style="color:'+head1.c+'">'+head1.t+'</span></span>'
       + '<span class="af-an-sub">— 실제 문서 원문 근거로 요건 충족 여부를 확정합니다</span>'
-      + '<button class="af-bm-star" data-bm="'+_bk+'" data-bm-std="'+std.no+'" onclick="window.AiFRS.toggleBookmark(\''+_bk+'\')" title="즐겨찾기 — AI감사까지 완료된 분석 결과 전체를 보관합니다" style="position:static;font-size:15px;padding:2px 5px;border-radius:5px;margin-left:auto;background:none;border:none;cursor:pointer;color:var(--txt3);transition:color .15s;line-height:1"></button>'
+      + '<button class="af-bm-star" data-bm="'+_bk+'" data-bm-std="'+std.no+'" onclick="window.AiFRS.toggleBookmark(\''+_bk+'\')" title="즐겨찾기 — AI감사까지 완료된 분석 결과 전체를 보관합니다" style="position:static;font-size:15px;padding:2px 5px;border-radius:5px;margin-left:auto;background:none;border:none;cursor:pointer;color:var(--txt3);transition:color .15s;line-height:1"><em>즐겨찾기 추가</em></button>'
       + '<button class="aifrs-help-btn" onclick="window.AiFRS.runFinalAudit(\''+std.no+'\')" title="AI 감사를 처음부터 다시 실행합니다">↻ 다시 검증</button></div>';
     var plan=_buildActionPlan(std, items, audited);
     var gatePanel=_buildGatePanel(std, audited);   // HIGH 17개 기준서만 판단 게이트 패널 표시
@@ -5376,7 +5417,7 @@ a:hover { text-decoration: underline; }
       h+='<div class="aifrs-art">'
         + '<div class="aifrs-art-t">문단 '+esc(p.no)+' · '+esc(p.topic||'')+'</div>'
         + '<div class="aifrs-art-s">'+esc(p.summary||'')+'</div>'
-        + (p.easy?'<div class="aifrs-art-easy"><b>쉽게 말해</b>'+esc(p.easy)+'</div>':'')
+        + (p.easy?'<div class="aifrs-art-easy"><b>해설</b>'+esc(p.easy)+'</div>':'')
         + (kw?'<div class="aifrs-art-k">'+kw+'</div>':'')
         + ck + ex + jn
         + '</div>';
@@ -5464,17 +5505,55 @@ a:hover { text-decoration: underline; }
     var ctx='자료성격: '+(gs['자료성격']||'')+'\n당사: '+(gs['당사']||'')+' / 상대방: '+(gs['상대방']||'')+' / 관계: '+(gs['관계']||'')+' / 대금방향: '+(gs['대금방향']||'')
       +'\n핵심회계논점: '+(gs['핵심회계논점']||'')+'\n경제적실질: '+(gs['경제적실질']||'')
       +'\n후보 기준서:\n'+cands.slice(0,5).map(function(c){ return '- '+c['기준서번호']+'호 '+(c['기준서명']||'')+' (관련성 '+c['관련성']+'%) — '+String(c['사유']||'').slice(0,200); }).join('\n');
-    var sys='당신은 K-IFRS(한국채택국제회계기준) 전문가입니다. 아래는 AI가 분석한 이 거래의 결과입니다.\n'+ctx+'\n\n초보 회계담당자가 이해할 수 있도록 쉽고 구체적으로 답변하세요. 답변은 입니다체로 작성하세요.';
-    answer.className='af-qa-answer visible'; answer.textContent='분석 중...';
+    var sys='당신은 K-IFRS(한국채택국제회계기준) 전문가입니다. 아래는 AI가 분석한 이 거래의 결과입니다.\n'+ctx+'\n\n초보 회계담당자가 이해할 수 있도록 쉽고 구체적으로 답변하세요. 답변은 입니다체로 작성하세요. 마크다운(### 소제목, **강조**, 번호 목록)을 사용해 구조적으로 작성하세요.';
+    var _rg=AiFRS.rateGuard(); if(!_rg.ok){ showRateWaitPopup(_rg.waitSec); return; }
+    if(AiFRS._qaCtl){ try{ AiFRS._qaCtl.abort(); }catch(e){} }
+    var ctl=(typeof AbortController!=='undefined')?new AbortController():null; AiFRS._qaCtl=ctl;
+    var t0=Date.now(), tid='aifrs-qa-timer';
+    // 통일 로딩 카드(제목·부제·진행바·초 흐름·중단) — 정밀분석·AI감사와 같은 형태
+    answer.className='af-qa-answer visible'; answer.style.color='';
+    answer.innerHTML=_aiLoad('compass',0,'후속 질문 — 답변 작성','분석 결과와 기준서를 바탕으로 답변을 정리하는 중입니다',tid,'0.0초',_cancelBtn("window.AiFRS.cancelFollowUp()",'답변 중단'));
+    var timer=setInterval(function(){ var el=document.getElementById(tid); if(el) el.textContent=((Date.now()-t0)/1000).toFixed(1)+'초'; },100);
     input.disabled=true; if(btn) btn.disabled=true;
-    AiFRS.callGemini(q,{system:sys,temperature:0.4,retry:1}).then(function(t){
-      answer.style.color=''; answer.textContent=t;
-      input.disabled=false; if(btn) btn.disabled=false;
+    function done(){ clearInterval(timer); input.disabled=false; if(btn) btn.disabled=false; if(AiFRS._qaCtl===ctl) AiFRS._qaCtl=null; }
+    AiFRS.callGemini(q,{system:sys,temperature:0.4,retry:1,signal:ctl?ctl.signal:undefined,
+      onRetry:function(k,mx,mdl,e){ var el=answer.querySelector('.af-task-sub'); if(el) el.textContent='재시도 '+k+'/'+mx+' — '+_retryReason(e); }
+    }).then(function(t){
+      done(); var secs=((Date.now()-t0)/1000).toFixed(1);
+      // 답변 카드: <details>라 리모컨 [숨김]/[펼침] 대상에 자동 포함 + 상단 작은 토글로 수동 숨기기
+      answer.innerHTML='<details class="af-qa-ans" open><summary><span class="af-qa-ans-q">Q. '+esc(q)+'</span><span class="af-qa-ans-meta">'+secs+'초 · '+esc(AiFRS.getModel())+'</span><span class="af-qa-ans-tg" data-open="답변 숨기기" data-closed="답변 보기"></span></summary>'
+        +'<div class="af-qa-md">'+_mdLite(t)+'</div></details>';
+      input.value='';
     }).catch(function(e){
-      answer.style.color='#ef4444'; answer.textContent='오류: '+String(e.message||e);
-      input.disabled=false; if(btn) btn.disabled=false;
+      done();
+      var aborted=/abort/i.test(String((e&&e.name)||'')+String((e&&e.message)||''));
+      answer.innerHTML='<div class="aifrs-api-stat err">— '+esc(aborted?'답변을 중단했습니다.':String((e&&e.message)||e))+'</div>';
     });
   };
+  AiFRS.cancelFollowUp=function(){ if(AiFRS._qaCtl){ try{ AiFRS._qaCtl.abort(); }catch(e){} } };
+  // 마크다운 경량 렌더 — 후속 Q&A 답변을 기존 결과 카드 양식(소제목·본문·번호목록 매달린들여쓰기)으로 변환
+  function _mdLite(src){
+    var lines=String(src||'').replace(/\r/g,'').split('\n'), out=[], para=[], list=null;
+    function inline(s){
+      s=esc(s);
+      s=s.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/(^|[^*])\*(?!\*)([^*\n]+)\*(?!\*)/g,'$1<i>$2</i>').replace(/`([^`]+)`/g,'<code>$1</code>');
+      return s;
+    }
+    function flushP(){ if(para.length){ out.push('<p class="af-md-p">'+inline(para.join(' '))+'</p>'); para=[]; } }
+    function flushL(){ if(list){ out.push('<div class="af-md-list">'+list.map(function(it){ return '<div class="af-md-li"><i>'+esc(it.m)+'</i><span>'+inline(it.t)+'</span></div>'; }).join('')+'</div>'); list=null; } }
+    lines.forEach(function(ln){
+      var t=ln.trim();
+      if(!t){ flushP(); flushL(); return; }
+      var h=t.match(/^#{1,6}\s+(.*)$/); if(h){ flushP(); flushL(); out.push('<div class="af-md-h">'+inline(h[1].replace(/\*\*/g,''))+'</div>'); return; }
+      if(/^(-{3,}|\*{3,}|_{3,})$/.test(t)){ flushP(); flushL(); out.push('<hr class="af-md-hr">'); return; }
+      var li=t.match(/^(\d{1,2}[.)]|[-*•·])\s+(.*)$/);
+      if(li){ flushP(); if(!list) list=[]; list.push({m:/^\d/.test(li[1])?li[1].replace(')','.'):'·', t:li[2]}); return; }
+      if(list && /^\s{2,}/.test(ln)){ list[list.length-1].t+=' '+t; return; }   // 들여쓴 후속 줄은 직전 항목에 이어붙임(첫 행 글자 시작열 유지)
+      flushL(); para.push(t);
+    });
+    flushP(); flushL();
+    return out.join('');
+  }
   // 키 미등록 상태로 렌더된 Q&A 안내문을 키 등록 직후 입력창으로 교체(재분석 없이)
   function _initQaWrap(){
     var noKey=document.querySelector('.af-qa-wrap .af-qa-nokey'); if(!noKey) return;
@@ -5501,7 +5580,7 @@ a:hover { text-decoration: underline; }
     try{ localStorage.setItem(_BM_KEY, JSON.stringify(list)); }
     catch(e){
       if(e && (e.name==='QuotaExceededError'||e.code===22||e.code===1014))
-        alert('브라우저 저장 공간이 부족합니다.\n즐겨찾기 뷰어에서 오래된 항목을 삭제한 뒤 다시 시도해 주세요.');
+        alert('브라우저 저장 공간이 부족합니다.\n즐겨찾기 뷰어에서 오래된 항목을 삭제한 뒤 다시 시도해야 합니다.');
     }
   }
   function _bmUpdateBadge(){
@@ -5510,7 +5589,9 @@ a:hover { text-decoration: underline; }
     cnt.textContent=n; cnt.hidden=(n===0);
     var saved={}; list.forEach(function(x){ saved[x.id]=1; });
     document.querySelectorAll('.af-bm-star').forEach(function(btn){
-      var bk=btn.getAttribute('data-bm'); if(bk) btn.classList.toggle('active',!!saved[bk]);
+      var bk=btn.getAttribute('data-bm'); if(!bk) return;
+      var on=!!saved[bk]; btn.classList.toggle('active',on);
+      var lbl=btn.querySelector('em'); if(lbl) lbl.textContent=on?'즐겨찾기 저장됨':'즐겨찾기 추가';   // ☆만 덩그러니 있지 않도록 한글 라벨 동기화
     });
   }
   AiFRS.toggleBookmark=function(bmKey){
@@ -5550,7 +5631,8 @@ a:hover { text-decoration: underline; }
     var json=JSON.stringify(list, null, 2);
     var a=document.createElement('a');
     a.href='data:application/json;charset=utf-8,'+encodeURIComponent(json);
-    a.download='aifrs-bookmarks-'+new Date().toISOString().slice(0,10)+'.json';
+    var d=new Date(), p=function(n){ return (n<10?'0':'')+n; };
+    a.download='AiFRS_분석기록_'+String(d.getFullYear()).slice(2)+p(d.getMonth()+1)+p(d.getDate())+p(d.getHours())+p(d.getMinutes())+'.json';   // 예: AiFRS_분석기록_2609070820
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
   };
   AiFRS.importBookmarks=function(file){
@@ -5569,7 +5651,7 @@ a:hover { text-decoration: underline; }
         _bmSave(list); _bmUpdateBadge();
         alert(added+'개를 가져왔습니다.'+(imported.length-added>0?' ('+( imported.length-added)+'개 중복 제외)':''));
         _renderBmList();
-      }catch(x){ alert('파일을 읽을 수 없습니다. AiFRS 즐겨찾기 JSON 파일인지 확인하세요.'); }
+      }catch(x){ alert('파일을 읽을 수 없습니다. AiFRS에서 내보낸 공유 파일인지 확인이 필요합니다.'); }
     };
     r.readAsText(file,'utf-8');
   };
@@ -5580,7 +5662,7 @@ a:hover { text-decoration: underline; }
     var list=_bmGet();
     if(!list.length){
       sidebar.innerHTML='<div class="af-bm-empty">저장된 즐겨찾기가 없습니다.</div>';
-      if(main && !main._shown) main.innerHTML='<div class="af-bm-empty">목록에서 항목을 클릭하세요.</div>';
+      if(main && !main._shown) main.innerHTML='<div class="af-bm-empty">목록에서 항목을 선택하면 여기에 표시됩니다.</div>';
       return;
     }
     sidebar.innerHTML=list.map(function(item,i){
@@ -5607,8 +5689,54 @@ a:hover { text-decoration: underline; }
     _bmSave(_bmGet().filter(function(x){ return x.id!==id; }));
     _bmUpdateBadge(); _renderBmList();
     var main=document.getElementById('af-bm-main');
-    if(main){ main._shown=false; main.innerHTML='<div class="af-bm-empty">목록에서 항목을 클릭하세요.</div>'; }
+    if(main){ main._shown=false; main.innerHTML='<div class="af-bm-empty">목록에서 항목을 선택하면 여기에 표시됩니다.</div>'; }
   };
+  // ── 새 창 공통: 상단바 + 소개/기록/DB 뷰어 + 조문 원문 뷰어 ──
+  function _subTopbar(tag){
+    return '<div class="af-topbar" style="display:block!important"><div class="af-topbar-inner"><div class="af-brand"><span class="af-brand-mark">AiFRS</span><span class="af-brand-tag">'+esc(tag)+'</span></div></div></div>';
+  }
+  AiFRS.openSubView=function(kind){
+    var url=location.href.replace(/[?#].*/,'')+'?aifrs-view='+kind;
+    var sz=kind==='db'?'width=1100,height=820':'width=900,height=760';
+    window.open(url,'aifrs-view-'+kind,sz+',menubar=no,toolbar=no,location=no,scrollbars=yes,resizable=yes');
+  };
+  function _initSubViewer(kind){
+    var root=document.getElementById('aifrs-root'); if(!root) return;
+    var meta={about:{tag:'AiFRS 소개',title:'소개 — AiFRS',w:'860px'},hist:{tag:'개발 히스토리',title:'개발 히스토리 — AiFRS',w:'900px'},db:{tag:'K-IFRS 기준서 DB',title:'K-IFRS DB — AiFRS',w:'1100px'}}[kind];
+    if(!meta) return;
+    document.title=meta.title;
+    if(kind==='db' && AiFRS._initGlossary){ try{ AiFRS._initGlossary(); }catch(e){} }   // 용어사전 지연 초기화 — 새 창에서도 용어 수·용어 팝업 정상
+    var inner=kind==='about'?buildAboutHtml():kind==='hist'?buildHistHtml():buildDbHtml();
+    root.innerHTML=_subTopbar(meta.tag)
+      +'<div class="af-main" style="padding-top:16px"><div style="max-width:'+meta.w+';margin:0 auto">'
+      +'<div id="aifrs-'+kind+'-view" class="aifrs-'+kind+'-view" style="display:block">'+inner+'</div></div></div>';
+  }
+  // 쉬운설명 안의 "§12" 조문 표기 → 점선 밑줄 + 마우스오버 요약(내장 DB) + 클릭 시 새 창 원문
+  function _linkParaRefs(html, stdNo){
+    if(!html||!stdNo) return html||'';
+    return String(html).replace(/§\s*(\d{1,3}[A-Z]?(?:\.\d+)?)/g, function(m, p){
+      var para=AiFRS.findArticle(stdNo, p), tip='';
+      if(para){ tip=String(para.summary||para.easy||para.excerpt||'').replace(/\s+/g,' ').slice(0,160); if(para.topic) tip=para.topic+' — '+tip; }
+      else tip='내장 DB에 없는 문단입니다 — 클릭하면 안내를 표시합니다';
+      return '<span class="af-pref" data-tip="'+esc(tip)+'" title="클릭: 새 창에서 조문 원문 보기" onclick="event.stopPropagation();window.AiFRS.openParaWindow(\''+esc(String(stdNo))+'\',\''+esc(p)+'\')">§'+esc(p)+'</span>';
+    });
+  }
+  AiFRS.openParaWindow=function(stdNo, pno){
+    var url=location.href.replace(/[?#].*/,'')+'?aifrs-para='+encodeURIComponent(stdNo+':'+pno);
+    window.open(url,'aifrs-para-'+stdNo+'-'+pno,'width=760,height=640,menubar=no,toolbar=no,location=no,scrollbars=yes,resizable=yes');
+  };
+  function _initParaViewer(){
+    var root=document.getElementById('aifrs-root'); if(!root) return;
+    var raw=''; try{ raw=decodeURIComponent((location.search.match(/aifrs-para=([^&]+)/)||[])[1]||''); }catch(e){}
+    var m=raw.split(':'), stdNo=m[0]||'', pno=m.slice(1).join(':')||'';
+    var std=AiFRS.findStandard(stdNo);
+    document.title='제'+stdNo+'호 문단 '+pno+' — AiFRS';
+    var body=std?_paraBlock(std,pno):'<div class="aifrs-note">기준서를 찾을 수 없습니다.</div>';
+    root.innerHTML=_subTopbar('기준서 원문')
+      +'<div class="af-main" style="padding-top:16px"><div style="max-width:860px;margin:0 auto">'
+      +'<div class="aifrs-analysis" style="display:block"><div class="aifrs-an-head">제'+esc(stdNo)+'호 「'+esc(std?(std.name||''):'')+'」 · 문단 '+esc(pno)+'</div>'+body
+      +'<div class="aifrs-note aifrs-note-mark" style="margin-top:10px"><i>※</i><span>내장 DB 발췌본입니다. 정확한 전문은 원본 K-IFRS 기준서에서 확인이 필요합니다.</span></div></div></div></div>';
+  }
   function _initBookmarkViewer(){
     var root=document.getElementById('aifrs-root'); if(!root) return;
     document.title='즐겨찾기 — AiFRS';
@@ -5619,20 +5747,31 @@ a:hover { text-decoration: underline; }
       +'<div class="af-main" style="padding-top:16px">'
       +'<div style="max-width:1160px;margin:0 auto">'
       +'<div class="af-bm-io-bar">'
-      +'<button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.exportBookmarks()">&#8595; JSON 내보내기</button>'
-      +'<label class="aifrs-btn aifrs-btn-sm" style="cursor:pointer">&#8593; JSON 가져오기<input type="file" accept=".json" style="display:none" onchange="if(this.files&&this.files[0])window.AiFRS.importBookmarks(this.files[0])"></label>'
-      +'<span style="font-size:11px;color:var(--txt3)">— 즐겨찾기를 JSON으로 내보내 동료에게 공유하거나, 받은 파일을 가져와 열람합니다</span>'
+      +'<button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.exportBookmarks()">&#8595; 공유 파일 내보내기</button>'
+      +'<button class="aifrs-btn aifrs-btn-sm" onclick="document.getElementById(\'af-bm-import\').click()">&#8593; 공유 파일 가져오기</button>'   // label 대신 같은 button — 두 버튼 크기·입체감 동일
+      +'<input type="file" id="af-bm-import" accept=".json" style="display:none" onchange="if(this.files&&this.files[0]){window.AiFRS.importBookmarks(this.files[0]);this.value=\'\';}">'
+      +'<span style="font-size:11px;color:var(--txt3)">— 저장된 분석 기록을 공유 파일로 내보내 동료에게 전달하거나, 받은 파일을 가져와 열람합니다</span>'
       +'</div>'
       +'<div class="af-bm-viewer-wrap">'
       +'<div class="af-bm-sidebar"><div class="af-bm-sidebar-head"><h3>저장된 분석 기록</h3></div>'
       +'<div class="af-bm-list" id="af-bm-sidebar-list"></div></div>'
-      +'<div class="af-bm-main" id="af-bm-main"><div class="af-bm-empty">← 목록에서 항목을 클릭하세요.</div></div>'
+      +'<div class="af-bm-main" id="af-bm-main"><div class="af-bm-empty">← 목록에서 항목을 선택하면 여기에 표시됩니다.</div></div>'
       +'</div></div></div>';
     _renderBmList();
   }
   // ───────────────────────────────────────────────────────────────────────────
   function buildHistHtml(){
     var items = [
+      { date:'2026-09-07', title:'UX 정비 18건 — 후속 Q&A 카드화·새 창 이관·개발자 용어 제거·~다체 통일',
+        bullets:[
+          '후속 Q&A: 통일 로딩 카드(진행바·초·중단) + 마크다운 답변을 결과 카드 양식으로 렌더(_mdLite) + 상단 [답변 숨기기] 토글(리모컨 숨김/펼침 대상 포함)',
+          '소개·기록·DB 헤더 버튼 → 새 창(?aifrs-view=) 이관, 파란 고정 대신 클릭 글로우만. 기록 창은 개발 히스토리 전용(날짜별 그룹·주요 2건만 세부)',
+          '쉬운설명 §조문 → 점선 밑줄 + 마우스오버 요약 + 클릭 시 새 창 원문(?aifrs-para=)',
+          '즐겨찾기: ☆ 옆 "즐겨찾기 추가/저장됨" 라벨, JSON → 공유 파일 용어 통일, 내보내기 파일명 AiFRS_분석기록_YYMMDDHHMM, 뷰어 버튼 크기 통일, 뷰어에서 복원 배너 미표시',
+          '조문 팝업 (1)(2) 항목의 이어지는 설명 줄 매달린들여쓰기 유지, 고정 안내 문구 ~요체 → ~다체, 쉬운설명 로딩에 초 흐름 추가',
+          '리모컨 숨김/펼침 범위를 메인 화면 전체로 확대 — 모든 details·어려운 용어 칩·파일 미리보기·쉬운설명 결과(캐시 복원), 조문 카드 "쉽게 말해" 라벨 → "해설"'
+        ]
+      },
       { date:'2026-09-07', title:'사용가이드 PPTX 제작 — 12슬라이드 다크 네이비 테마',
         bullets:[
           '표지 → Problem(왜 필요한가) → Impact(효과) → 4단계 파이프라인 사용법 순으로 12장 구성 (원페이저 내용 이관)',
@@ -6047,31 +6186,23 @@ a:hover { text-decoration: underline; }
         ]
       }
     ];
-    var _ve=_histEntries(), _pad=function(n){return(n<10?'0':'')+n;};
-    var h='<div class="af-vault-hd"><span>분석 이력</span><span style="font-size:10px;font-weight:400;color:var(--txt3)">'+_ve.length+'건</span></div>';
-    if(!_ve.length){
-      h+='<div class="af-vault-empty">아직 분석 이력이 없습니다 — 문서를 분석하면 자동으로 저장됩니다.</div>';
-    } else {
-      _ve.forEach(function(item){
-        var v=item.v, d=new Date(v.ts||0);
-        var when=d.getFullYear()+'-'+_pad(d.getMonth()+1)+'-'+_pad(d.getDate())+' '+_pad(d.getHours())+':'+_pad(d.getMinutes());
-        var relColor=v.top1Rel>=80?'#34c759':v.top1Rel>=50?'#fbbf24':'#ef4444';
-        var relTx=v.top1Rel>=80?'확인됨':v.top1Rel>=50?'확인필요':'확인불가';
-        var dateHtml=esc(when)+(v.top1No?' · '+esc(v.top1No)+'호 '+esc(v.top1Name)+' <span style="color:'+relColor+'">'+esc(relTx)+'</span>':'');
-        h+='<div class="af-vault-item">'
-          +'<div class="af-vault-ico">'+esc((v.ext||'FILE').slice(0,4))+'</div>'
-          +'<div class="af-vault-meta"><div class="af-vault-name">'+esc(v.name||'이름 없음')+'</div><div class="af-vault-date">'+dateHtml+'</div></div>'
-          +'<button class="af-vault-load" onclick="window.AiFRS.loadHistEntry(\''+esc(item.key)+'\')">불러오기</button>'
-          +'</div>';
-      });
-    }
-    h+='<div class="aifrs-hist-hd" style="margin-top:16px">개발 히스토리</div>';
-    items.forEach(function(it){
-      var ul='<ul style="margin:4px 0 4px 4px;padding-left:18px">'+it.bullets.map(function(b){ return '<li>'+esc(b)+'</li>'; }).join('')+'</ul>';
+    // 기록 창은 개발 히스토리 전용(분석 이력은 즐겨찾기 뷰어에서만 관리). 날짜별 그룹 — 주요 항목(상위 2건) 세부 최대 3줄, 나머지는 제목만 약식 표기
+    var groups=[], byDate={};
+    items.forEach(function(it){ if(!byDate[it.date]){ byDate[it.date]=[]; groups.push(it.date); } byDate[it.date].push(it); });
+    var _short=function(it){ return String(it&&it.title||it||'').split(' — ')[0]; };
+    var h='<div class="aifrs-hist-hd">개발 히스토리 <span style="font-size:10px;font-weight:400;color:var(--txt3)">날짜별 요약 — 주요 항목만 세부 표기</span></div>';
+    groups.forEach(function(d){
+      var list=byDate[d], major=list.slice(0,2), rest=list.slice(2);
       h+='<details class="aifrs-hist-item">'
-        +'<summary><span class="aifrs-hist-date">'+esc(it.date)+'</span>'+esc(it.title)+'</summary>'
-        +'<div class="aifrs-hist-detail">'+ul+'</div>'
-        +'</details>';
+        +'<summary><span class="aifrs-hist-date">'+esc(d)+'</span>'+esc(major.map(_short).join(' · '))+(rest.length?' <span style="color:var(--txt3)">외 '+rest.length+'건</span>':'')+'</summary>'
+        +'<div class="aifrs-hist-detail">';
+      major.forEach(function(it){
+        h+='<div class="af-hist-ttl">'+esc(it.title)+'</div>'
+          +'<ul style="margin:2px 0 8px 4px;padding-left:18px">'+it.bullets.slice(0,3).map(function(b){ return '<li>'+esc(b)+'</li>'; }).join('')
+          +(it.bullets.length>3?'<li style="color:var(--txt3)">외 세부 작업 '+(it.bullets.length-3)+'건</li>':'')+'</ul>';
+      });
+      if(rest.length) h+='<div class="af-hist-rest"><b>그 외 작업</b> — '+esc(rest.map(_short).join(' · '))+'</div>';
+      h+='</div></details>';
     });
     return h;
   }
@@ -6269,7 +6400,7 @@ a:hover { text-decoration: underline; }
       + '<div class="aifrs-about-section">'
       + '<div class="aifrs-about-sh">주요 기능</div>'
       + '<p class="aifrs-about-p"><b>① AI 분석 → 정밀분석 → AI감사 → 쉬운설명</b> &mdash; 문서를 업로드하면 관련 K-IFRS 기준서 후보를 자동으로 찾고, 원문 요건 대조(정밀분석)·요건 충족 여부 확정(AI감사)·비전공자 향 해설(쉬운설명) 순서로 단계적으로 심화합니다.</p>'
-      + '<p class="aifrs-about-p"><b>② 즐겨찾기(★)</b> &mdash; AI감사 완료 후 headRow의 ☆ 또는 쉬운설명 결과 하단의 ☆를 클릭하면 해당 기준서의 분석 결과 전체를 브라우저에 저장합니다. 헤더 ⭐ 아이콘으로 저장 목록을 새 창에서 열어 참고자료로 활용하거나, JSON으로 내보내 동료와 공유할 수 있습니다.</p>'
+      + '<p class="aifrs-about-p"><b>② 즐겨찾기(★)</b> &mdash; AI감사 결과 상단의 ☆ 또는 쉬운설명 결과 하단의 ☆를 클릭하면 해당 기준서의 분석 결과 전체를 브라우저에 저장합니다. 헤더 ⭐ 아이콘으로 저장 목록을 새 창에서 열어 참고자료로 활용하거나, 공유 파일로 내보내 동료와 공유할 수 있습니다.</p>'
       + '<p class="aifrs-about-p"><b>③ 기준서 원문 DB</b> &mdash; 50개 K-IFRS 기준서·5,468개 문단이 내장되어 있어 오프라인에서도 원문 검색·용어 팝업·조문 클릭이 가능합니다.</p>'
       + '</div>'
       + '<div class="aifrs-about-section">'
@@ -6350,7 +6481,7 @@ a:hover { text-decoration: underline; }
     {sel:'#aifrs-db-toggle',       title:'③ 근거 검증', info:'tour3', pre:_tourCloseDb,
       msg:'- 감사 결과 항목을 클릭하면 근거·감사의견이 펼쳐짐 (문제 항목은 자동 펼침)\n- § 문단 칩을 누르면 기준서 원문(내장 DB)을 즉시 확인\n- [보완·확인]·[판단불가사유]에서 문제 해결방향을 도출'},
     {sel:'.af-step-bar',           title:'④ 진행 단계 확인',
-      msg:'- 후보 카드마다 「AI분석→정밀분석→AI감사」 단계 표시로 지금 어디까지 왔는지 한눈에 확인\n- 파란 배너의 [AI 전체 검토 시작] 버튼 하나로 정밀분석→AI감사→다음 할 일까지 자동 진행\n- 감사 결과 상단 판단 게이트에서 핵심 체크포인트를 ✓/⬜로 확인하세요'},
+      msg:'- 후보 카드마다 「AI분석→정밀분석→AI감사」 단계 표시로 지금 어디까지 왔는지 한눈에 확인\n- 파란 배너의 [AI 전체 검토 시작] 버튼 하나로 정밀분석→AI감사→다음 할 일까지 자동 진행\n- 감사 결과 상단 판단 게이트에서 핵심 체크포인트를 ✓/⬜로 확인합니다'},
     {sel:'.af-remote',             title:'⑤ 리모컨',
       msg:'- 숨김: 펼쳐진 항목을 모두 접고 맨 위로(접을 게 없으면 안내만)\n- 펼침: 접힌 항목을 모두 펼치고 맨 위로(펼칠 게 없으면 안내만)\n- 처음: 지금까지 작업을 모두 초기화하고 메인 화면으로\n- 도움: 지금 단계에서 다음에 눌러야 할 것을 화면에 바로 표시'}
   ];
@@ -6542,20 +6673,36 @@ a:hover { text-decoration: underline; }
   function _dbStdBodies(){ return Array.prototype.slice.call(document.querySelectorAll('#aifrs-db-view .aifrs-std-body')); }
   function _dbStdIdx(el){ return el.id.replace('aifrs-std-body-',''); }
   // 1 숨김: 펼쳐진 항목을 모두 접고 맨 위로 — 접을 게 없으면 팝업만
+  // 적용 범위(메인 화면 전체, 새 창 제외): <details> 전부(정밀분석 항목·상세·접기 블록·다른 후보·다음 할 일·후속 Q&A 답변) + 어려운 용어 칩 + 파일 미리보기 + 쉬운설명 결과(캐시 있으면 펼침 복원) + (구)DB 탭 펼침 단위
+  function _easySlots(){ return Array.prototype.slice.call(document.querySelectorAll('[id^="aifrs-easyall-"]')); }
+  function _easyBtnText(no, open){ var b=document.getElementById('aifrs-easybtn-'+no); if(b) b.textContent=open?'ⓘ 쉬운 설명 접기':'ⓘ 쉬운 설명 — 전체 한번에 풀이'; }
   AiFRS.remoteCollapse=function(){
-    var ds=document.querySelectorAll('#aifrs-ai details[open]');
+    var ds=document.querySelectorAll('#aifrs-root details[open]');
+    var chips=document.querySelectorAll('#aifrs-root .af-gloss-chip.open');
+    var pvs=document.querySelectorAll('#aifrs-root [id^="aifrs-body-"].open');
+    var easy=_easySlots().filter(function(s){ return !!s.querySelector('.af-easy'); });
     var stds=_dbStdBodies().filter(function(b){ return b.style.display==='block'; });
-    if(!ds.length && !stds.length){ _remoteToast('지금 화면에 펼쳐진 항목이 없습니다.'); return; }
+    if(!ds.length && !chips.length && !pvs.length && !easy.length && !stds.length){ _remoteToast('지금 화면에 펼쳐진 항목이 없습니다.'); return; }
     for(var i=0;i<ds.length;i++) ds[i].open=false;
+    for(var j=0;j<chips.length;j++) chips[j].classList.remove('open');
+    for(var k=0;k<pvs.length;k++) AiFRS.togglePreview(pvs[k].id.replace('aifrs-body-',''));
+    easy.forEach(function(s){ var no=s.id.replace('aifrs-easyall-',''); s.innerHTML=''; _easyBtnText(no,false); });   // 결과는 세션 캐시에 남아 [펼침]으로 즉시 복원
     stds.forEach(function(b){ AiFRS.toggleStd(_dbStdIdx(b)); });
     _scrollTopAll();
   };
   // 2 펼침: 접힌 항목을 모두 펼치고 맨 위로 — 펼칠 게 없으면 팝업만
   AiFRS.remoteExpand=function(){
-    var ds=document.querySelectorAll('#aifrs-ai details:not([open])');
+    var ds=document.querySelectorAll('#aifrs-root details:not([open])');
+    var chips=document.querySelectorAll('#aifrs-root .af-gloss-chip:not(.open)');
+    var pvs=Array.prototype.filter.call(document.querySelectorAll('#aifrs-root [id^="aifrs-body-"]'), function(b){ return !b.classList.contains('open'); });
+    var easy=_easySlots().filter(function(s){ var no=s.id.replace('aifrs-easyall-',''); return !s.querySelector('.af-easy') && !!((AiFRS._easyCache||{})[_planKey(no,'all')]); });
     var stds=_dbStdBodies().filter(function(b){ return b.style.display!=='block'; });
-    if(!ds.length && !stds.length){ _remoteToast('지금 화면에 접힌 항목이 없습니다.'); return; }
+    if(!ds.length && !chips.length && !pvs.length && !easy.length && !stds.length){ _remoteToast('지금 화면에 접힌 항목이 없습니다.'); return; }
     for(var i=0;i<ds.length;i++) ds[i].open=true;
+    for(var j=0;j<chips.length;j++) chips[j].classList.add('open');
+    pvs.forEach(function(b){ AiFRS.togglePreview(b.id.replace('aifrs-body-','')); });
+    easy.forEach(function(s){ var no=s.id.replace('aifrs-easyall-',''); s.innerHTML=AiFRS._easyCache[_planKey(no,'all')]; _easyBtnText(no,true); });
+    _bmUpdateBadge();   // 복원된 쉬운설명 하단 ☆ 상태 동기화
     stds.forEach(function(b){ AiFRS.toggleStd(_dbStdIdx(b)); });
     _scrollTopAll();
   };
@@ -6574,21 +6721,21 @@ a:hover { text-decoration: underline; }
   // 현재 진행 상태를 보고 "바로 다음에 눌러야 할 것" 하나만 골라 안내(다음 단계만 — 그 뒤 단계는 보여주지 않음)
   function _nextStepInfo(){
     var files=(AiFRS.state&&AiFRS.state.files)||[];
-    if(!AiFRS.getApiKey() && !(AiFRS.getOrKey&&AiFRS.getOrKey())) return {sel:'#aifrs-settings-toggle', title:'API 키 등록', msg:'- ⚙ 설정을 열어 Gemini API Key를 저장하세요(무료 발급)\n- 최초 1회만 등록하면 다음부터 자동 적용'};
-    if(!files.length) return {sel:'#aifrs-drop', title:'문서 올리기', msg:'- 계약서·문서를 끌어다 놓거나 클릭해 첨부하세요\n- PDF·엑셀·워드·이미지·ZIP·스캔 PDF 가능'};
-    if(Object.keys(AiFRS._preciseBusy||{}).length) return {sel:'.af-task', title:'정밀분석 진행 중', msg:'- 끝나면 AI감사가 자동으로 이어집니다 — 잠시만 기다리세요'};
-    if(Object.keys(AiFRS._auditBusy||{}).length) return {sel:'.af-task', title:'AI감사 진행 중', msg:'- 문서 근거를 대조해 판정하는 중입니다 — 잠시만 기다리세요'};
+    if(!AiFRS.getApiKey() && !(AiFRS.getOrKey&&AiFRS.getOrKey())) return {sel:'#aifrs-settings-toggle', title:'API 키 등록', msg:'- ⚙ 설정을 열어 Gemini API Key를 저장합니다(무료 발급)\n- 최초 1회만 등록하면 다음부터 자동 적용됩니다'};
+    if(!files.length) return {sel:'#aifrs-drop', title:'문서 올리기', msg:'- 계약서·문서를 끌어다 놓거나 클릭해 첨부합니다\n- PDF·엑셀·워드·이미지·ZIP·스캔 PDF 가능'};
+    if(Object.keys(AiFRS._preciseBusy||{}).length) return {sel:'.af-task', title:'정밀분석 진행 중', msg:'- 끝나면 AI감사가 자동으로 이어집니다 — 잠시 대기가 필요합니다'};
+    if(Object.keys(AiFRS._auditBusy||{}).length) return {sel:'.af-task', title:'AI감사 진행 중', msg:'- 문서 근거를 대조해 판정하는 중입니다 — 잠시 대기가 필요합니다'};
     if(!AiFRS._lastAi) return {sel:'#aifrs-ai-btn', title:'AI 분석', msg:'- [AI 분석]을 누르면 거래구조를 파악하고 후보 기준서를 찾습니다'};
     var pk=Object.keys(AiFRS._lastPrecise||{}), ak=Object.keys(AiFRS._lastAudit||{});
-    if(!pk.length) return {sel:'.af-next-btn, .aifrs-an-std button', title:'AI 전체 검토', msg:'- 결론 카드 하단 [AI 전체 검토 시작]을 누르세요\n- 정밀분석 → AI감사 → 다음 할 일까지 자동으로 이어집니다'};
+    if(!pk.length) return {sel:'.af-next-btn, .aifrs-an-std button', title:'AI 전체 검토', msg:'- 결론 카드 하단 [AI 전체 검토 시작]을 누릅니다\n- 정밀분석 → AI감사 → 다음 할 일까지 자동으로 이어집니다'};
     if(!ak.length) return {sel:'[id^="aifrs-nexthero-"] button', title:'AI감사 실행', msg:'- [최종 검증(AI감사) 실행]을 누르면 문서 근거로 충족 여부를 판정합니다'};
     var hasEasy=AiFRS._easyCache && Object.keys(AiFRS._easyCache).length>0;
-    if(!hasEasy) return {sel:'button[onclick*="explainEasyAll"]', title:'다음 할 일 · 쉬운 설명', msg:'- 「다음 할 일」에서 항목별 처리 방향을 확인하세요\n- 설명이 어렵다면 [쉬운 설명 — 전체 한번에 풀이]를 누르세요\n- 아직 판정되지 않은 게이트 항목은 [원문 보기]로 조문을 확인'};
-    return {sel:'.af-bm-star', title:'즐겨찾기 저장', msg:'- AI감사·쉬운설명까지 완료됐습니다\n- 쉬운설명 하단(또는 AI감사 헤더) ☆를 눌러 결과를 저장하세요\n- 헤더 ⭐ 아이콘으로 저장 목록을 새 창에서 열 수 있어요\n- JSON 내보내기로 동료와 결과를 공유할 수 있어요'};
+    if(!hasEasy) return {sel:'button[onclick*="explainEasyAll"]', title:'다음 할 일 · 쉬운 설명', msg:'- 「다음 할 일」에서 항목별 처리 방향을 확인합니다\n- 설명이 어렵다면 [쉬운 설명 — 전체 한번에 풀이]를 누릅니다\n- 아직 판정되지 않은 게이트 항목은 [원문 보기]로 조문을 확인합니다'};
+    return {sel:'.af-bm-star', title:'즐겨찾기 저장', msg:'- AI감사·쉬운설명까지 완료됐습니다\n- 쉬운설명 하단(또는 AI감사 결과 상단) [☆ 즐겨찾기 추가]를 눌러 결과를 저장합니다\n- 헤더 ⭐ 아이콘으로 저장 목록을 새 창에서 열 수 있습니다\n- 공유 파일 내보내기로 동료와 결과를 공유할 수 있습니다'};
   }
   // 기준서 DB 탭이 열려있을 때는 AI 분석 흐름 안내 대신 DB 조회 방법을 안내
   function _dbGuideInfo(){
-    return {sel:'#aifrs-db-q', title:'K-IFRS DB 조회', msg:'- 기준서번호·명칭·문단·키워드로 검색하세요\n- 기준서를 눌러 펼치면 문단별 원문을 볼 수 있어요\n- 리모컨 [숨김]·[펼침]으로 목록을 한 번에 접고 펼 수 있어요'};
+    return {sel:'#aifrs-db-q', title:'K-IFRS DB 조회', msg:'- 기준서번호·명칭·문단·키워드로 검색합니다\n- 기준서를 눌러 펼치면 문단별 원문을 볼 수 있습니다\n- 리모컨 [숨김]·[펼침]으로 목록을 한 번에 접고 펼 수 있습니다'};
   }
   AiFRS.remoteGuide=function(){ _remoteClose();
     var dbView=document.getElementById('aifrs-db-view');
@@ -6805,7 +6952,7 @@ a:hover { text-decoration: underline; }
     if(info) info.textContent = files.length ? ('추출 완료 '+done+'건 · 이미지 '+imgs+'건'+(busy?' · 처리 중…':'')) : '아직 업로드된 파일이 없습니다.';
     if(btn){
       btn.disabled = busy || (withText===0);
-      btn.title = (withText===0 && (scanOnly+imgs)>0) ? '텍스트 추출이 안 된(스캔·이미지) 파일만 있습니다 — [AI 분석]을 이용하세요' : '빠른 1차 검색 (인터넷 연결 없이, 텍스트 문서만 가능)';
+      btn.title = (withText===0 && (scanOnly+imgs)>0) ? '텍스트 추출이 안 된(스캔·이미지) 파일만 있습니다 — [AI 분석] 이용이 필요합니다' : '빠른 1차 검색 (인터넷 연결 없이, 텍스트 문서만 가능)';
     }
     var aiBtn=document.getElementById('aifrs-ai-btn');
     if(aiBtn) aiBtn.disabled = busy || (done+imgs===0);  // 텍스트 문서 또는 이미지(OCR)면 가능
@@ -6817,6 +6964,9 @@ a:hover { text-decoration: underline; }
     if(!root) return;
     // 즐겨찾기 뷰어 모드 — ?aifrs-bm=view 파라미터로 열린 경우
     if(location.search.indexOf('aifrs-bm=view') > -1){ _initBookmarkViewer(); return; }
+    // 소개·기록·DB 새 창 / 조문 원문 새 창
+    var _sv=location.search.match(/aifrs-view=(about|hist|db)/); if(_sv){ _initSubViewer(_sv[1]); return; }
+    if(location.search.indexOf('aifrs-para=') > -1){ _initParaViewer(); return; }
     if(AiFRS._rendered){ renderFileList(); return; }
 
     root.innerHTML =
@@ -6897,7 +7047,7 @@ a:hover { text-decoration: underline; }
       +   '<input type="file" id="aifrs-file-input" multiple accept=".pdf,.xlsx,.xls,.csv,.docx,.pptx,.jpg,.jpeg,.png,.bmp" style="display:none">'
       +   '<button class="af-attach-btn" id="aifrs-attach" title="Attach files">&#128206;</button>'
       +   '<div class="af-drop" id="aifrs-drop"><span class="af-drop-text">파일을 끌어다 놓거나 클릭하세요 &mdash; PDF, Excel, CSV, Word, PPT, 이미지</span></div>'
-      +   '<button class="af-btn af-btn-primary" id="aifrs-ai-btn" disabled title="1단계: 거래구조 파악 + 적용 기준서 후보 선정 — 문서를 업로드한 뒤 눌러주세요">AI 분석</button>'
+      +   '<button class="af-btn af-btn-primary" id="aifrs-ai-btn" disabled title="1단계: 거래구조 파악 + 적용 기준서 후보 선정 — 문서 업로드 후 실행합니다">AI 분석</button>'
       +   '<button class="af-btn af-btn-ghost af-btn-sm" id="aifrs-tour-btn" title="주요 기능을 순서대로 안내합니다">사용 가이드</button>'
       +   '<button class="af-btn af-btn-ghost af-btn-sm" id="aifrs-clear-btn" style="display:none" title="업로드 파일 전체 삭제">&#10005;</button>'
       + '</div>'
@@ -6920,20 +7070,10 @@ a:hover { text-decoration: underline; }
 
     var clearBtn = document.getElementById('aifrs-clear-btn');
     if(clearBtn) clearBtn.addEventListener('click', AiFRS.clearAll);
-    var aboutToggle = document.getElementById('aifrs-about-toggle');
-    if(aboutToggle) aboutToggle.addEventListener('click', function(){
-      AiFRS.toggleAboutView();
-      aboutToggle.classList.toggle('active');
-    });
-    var histToggle = document.getElementById('aifrs-hist-toggle');
-    if(histToggle) histToggle.addEventListener('click', function(){
-      AiFRS.toggleHistView();
-      histToggle.classList.toggle('active');
-    });
-    var dbToggle = document.getElementById('aifrs-db-toggle');
-    if(dbToggle) dbToggle.addEventListener('click', function(){
-      AiFRS.toggleDbView();
-      dbToggle.classList.toggle('active');
+    // 소개·기록·DB는 화면 내 접기/펼치기 대신 새 창(즐겨찾기 뷰어와 동일 방식) — 버튼은 파란 고정 대신 클릭 글로우만(af-press-fx 위임)
+    [['aifrs-about-toggle','about'],['aifrs-hist-toggle','hist'],['aifrs-db-toggle','db']].forEach(function(pair){
+      var b=document.getElementById(pair[0]);
+      if(b) b.addEventListener('click', function(){ AiFRS.openSubView(pair[1]); });
     });
     var aiBtn = document.getElementById('aifrs-ai-btn');
     if(aiBtn) aiBtn.addEventListener('click', AiFRS.runAiAnalysis);
