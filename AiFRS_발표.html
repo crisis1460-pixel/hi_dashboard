@@ -1,0 +1,529 @@
+<title>AiFRS 발표</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap">
+<style>
+  :root {
+    --bg: #080e1d;
+    --bg1: #0d1628;
+    --bg2: #121f3a;
+    --bg3: #1a2d52;
+    --border: #1e3060;
+    --txt1: #f1f5f9;
+    --txt2: #94a3b8;
+    --txt3: #4a6090;
+    --teal: #14b8a6;
+    --blue: #3b82f6;
+    --amber: #f59e0b;
+    --purple: #8b5cf6;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: #040812;
+    font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+    word-break: keep-all; overflow-wrap: break-word;
+  }
+
+  /* ── Stage & Deck ── */
+  .stage { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+  .deck {
+    position: relative;
+    width: min(100vw, calc(100vh * 16/9));
+    height: min(100vh, calc(100vw * 9/16));
+    background: var(--bg); overflow: hidden;
+  }
+  .deck::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(59,130,246,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none; z-index: 0;
+  }
+  .glow-tl {
+    position: absolute; top: -10%; left: -5%;
+    width: 40%; padding-top: 40%;
+    background: radial-gradient(circle, rgba(20,184,166,.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .glow-br {
+    position: absolute; bottom: -10%; right: -5%;
+    width: 35%; padding-top: 35%;
+    background: radial-gradient(circle, rgba(59,130,246,.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ── Slides ── */
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    padding: 4.5% 6.5% 10%;
+    opacity: 0; pointer-events: none;
+    transition: opacity .35s, transform .35s;
+    transform: translateX(36px);
+    z-index: 1; overflow: hidden;
+  }
+  .slide.active { opacity: 1; pointer-events: all; transform: translateX(0); }
+  .slide.out-left { opacity: 0; transform: translateX(-36px); }
+
+  /* ── Eyebrow ── */
+  .eyebrow {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(8px, 1vw, 12px); font-weight: 500;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--txt3);
+    margin-bottom: .7em;
+    display: flex; align-items: center; gap: .7em; flex-shrink: 0;
+  }
+  .eyebrow::before {
+    content: ''; display: inline-block; width: 2.2em; height: 1px;
+    background: var(--teal); opacity: .6; flex-shrink: 0;
+  }
+
+  /* ── Slide title ── */
+  .slide-title {
+    font-size: clamp(16px, 2.8vw, 34px); font-weight: 700;
+    line-height: 1.3; color: var(--txt1);
+    text-wrap: balance; word-break: keep-all; overflow-wrap: break-word;
+    margin-bottom: .5em; flex-shrink: 0;
+  }
+  .slide-title em { font-style: normal; color: var(--teal); }
+
+  /* ── Logo ── */
+  .logo-corner {
+    position: absolute; top: 3.5%; right: 5%;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(11px, 1.6vw, 20px); font-weight: 700;
+    color: var(--teal); opacity: .55; z-index: 5; letter-spacing: -.02em;
+  }
+
+  /* ══ SLIDE 1 ══ */
+  .s1-hero {
+    display: flex; align-items: flex-end; gap: 5%;
+    margin-bottom: 4%; flex-shrink: 0; min-width: 0;
+  }
+  .s1-nums { flex-shrink: 0; }
+  .s1-n1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(32px, 6.5vw, 82px); font-weight: 700;
+    line-height: 1; color: var(--txt1);
+  }
+  .s1-n1 span { color: var(--teal); }
+  .s1-n2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(14px, 2.5vw, 30px); font-weight: 500;
+    color: var(--txt3); margin-top: .15em;
+  }
+  .s1-divider { width: 1px; align-self: stretch; background: var(--border); flex-shrink: 0; }
+  .s1-desc {
+    font-size: clamp(9px, 1.15vw, 14px); color: var(--txt2);
+    line-height: 1.7; font-weight: 300; flex: 1; min-width: 0;
+    word-break: keep-all; overflow-wrap: break-word;
+  }
+  .prob-list { display: flex; flex-direction: column; gap: 2.5%; flex: 1; min-height: 0; }
+  .prob-item {
+    display: flex; align-items: center; gap: 3%;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 2.8% 3.5%; flex: 1; min-height: 0; overflow: hidden;
+  }
+  .prob-icon { font-size: clamp(14px, 2vw, 24px); flex-shrink: 0; line-height: 1; margin-top: .1em; }
+  .prob-body { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+  .prob-head {
+    font-size: clamp(10px, 1.3vw, 16px); font-weight: 700; color: var(--txt1);
+    margin-bottom: .3em; word-break: keep-all; overflow-wrap: break-word;
+    flex-shrink: 0;
+  }
+  .prob-desc {
+    font-size: clamp(8px, 1vw, 12px); color: var(--txt2);
+    line-height: 1.55; font-weight: 300;
+    word-break: keep-all; overflow-wrap: break-word;
+  }
+
+  /* ══ SLIDE 2 ══ */
+  .pipeline {
+    display: flex; align-items: stretch; gap: 0;
+    flex: 1; min-height: 0; margin-bottom: 3%;
+  }
+  .pipe-step {
+    flex: 1; background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 3.5% 3.5%;
+    display: flex; flex-direction: column;
+    position: relative; overflow: hidden; min-width: 0;
+  }
+  .pipe-step + .pipe-step { margin-left: 2%; }
+  .pipe-step::after {
+    content: '→'; position: absolute;
+    right: calc(-12% + 1px); top: 50%; transform: translateY(-50%);
+    font-size: clamp(9px, 1.2vw, 15px); color: var(--txt3);
+    font-family: 'Space Grotesk', sans-serif; z-index: 2;
+  }
+  .pipe-step:last-child::after { display: none; }
+  .pipe-n {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(8px, .9vw, 11px); font-weight: 600;
+    letter-spacing: .08em; margin-bottom: .5em; flex-shrink: 0;
+  }
+  .pipe-icon { font-size: clamp(13px, 1.8vw, 22px); margin-bottom: .35em; flex-shrink: 0; }
+  .pipe-title {
+    font-size: clamp(10px, 1.2vw, 14px); font-weight: 700;
+    color: var(--txt1); margin-bottom: .3em; flex-shrink: 0;
+    word-break: keep-all;
+  }
+  .pipe-desc {
+    font-size: clamp(7.5px, .9vw, 11px); color: var(--txt2);
+    line-height: 1.5; font-weight: 300; flex: 1;
+    word-break: keep-all; overflow-wrap: break-word;
+  }
+  .pipe-badge {
+    margin-top: .7em; display: inline-block; flex-shrink: 0;
+    font-size: clamp(6.5px, .78vw, 9.5px); padding: 2px 6px;
+    border-radius: 4px; font-weight: 600; letter-spacing: .03em;
+    white-space: nowrap;
+  }
+  .pipe-step.step1 { border-top: 2px solid var(--blue); }
+  .pipe-step.step1 .pipe-n { color: var(--blue); }
+  .pipe-step.step1 .pipe-badge { background: #1e3a8a22; color: var(--blue); border: 1px solid #1e3a8a55; }
+  .pipe-step.step2 { border-top: 2px solid var(--teal); }
+  .pipe-step.step2 .pipe-n { color: var(--teal); }
+  .pipe-step.step2 .pipe-badge { background: #0f766e22; color: var(--teal); border: 1px solid #0f766e55; }
+  .pipe-step.step3 { border-top: 2px solid var(--amber); }
+  .pipe-step.step3 .pipe-n { color: var(--amber); }
+  .pipe-step.step3 .pipe-badge { background: #78350f22; color: var(--amber); border: 1px solid #78350f55; }
+  .pipe-step.step4 { border-top: 2px solid var(--purple); }
+  .pipe-step.step4 .pipe-n { color: var(--purple); }
+  .pipe-step.step4 .pipe-badge { background: #4c1d9522; color: var(--purple); border: 1px solid #4c1d9555; }
+
+  .feat-row {
+    display: flex; gap: 2%; flex-wrap: wrap; flex-shrink: 0;
+  }
+  .feat-pill {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 30px; padding: 1.2% 2.5%;
+    font-size: clamp(7.5px, .9vw, 11px); color: var(--txt2);
+    display: flex; align-items: center; justify-content: center; gap: .4em;
+    flex: 1; white-space: nowrap; overflow: hidden;
+  }
+  .feat-pill b { color: var(--txt1); font-weight: 600; }
+
+  /* ══ SLIDE 3 ══ */
+  .impact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 2.5%; flex: 1; min-height: 0;
+  }
+  .impact-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 5% 6%;
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .impact-card.big { grid-column: 1; grid-row: 1 / 3; padding: 6% 7%; }
+  .impact-before {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(11px, 1.6vw, 20px); font-weight: 600;
+    color: var(--txt3); text-decoration: line-through; margin-bottom: .3em;
+  }
+  .impact-arrow { color: var(--teal); font-size: clamp(13px, 1.8vw, 22px); margin: .2em 0; }
+  .impact-after {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(22px, 4vw, 52px); font-weight: 700;
+    color: var(--amber); line-height: 1;
+  }
+  .impact-label {
+    font-size: clamp(8px, 1.1vw, 13px); color: var(--txt2);
+    margin-top: .7em; line-height: 1.5;
+    word-break: keep-all; overflow-wrap: break-word;
+  }
+  .impact-note {
+    margin-top: auto; padding-top: 6%;
+    font-size: clamp(7px, .9vw, 11px); color: var(--txt3);
+    line-height: 1.6; word-break: keep-all;
+  }
+  .impact-small-num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(18px, 2.8vw, 36px); font-weight: 700; line-height: 1;
+    margin-bottom: .3em;
+  }
+  .impact-small-label {
+    font-size: clamp(8px, 1vw, 12px); color: var(--txt2); line-height: 1.45;
+    word-break: keep-all; overflow-wrap: break-word;
+  }
+  .impact-card.c1 .impact-small-num { color: var(--teal); }
+  .impact-card.c2 .impact-small-num { color: var(--blue); }
+  .impact-card.c3 .impact-small-num { color: var(--purple); }
+
+  /* ══ SLIDE 4 ONE-PAGER ══ */
+  .onepager-grid {
+    display: grid; grid-template-columns: 1.1fr 1fr 1fr;
+    gap: 2.5%; flex: 1; min-height: 0;
+  }
+  .op-col {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 4.5%;
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .op-col-head {
+    font-size: clamp(8px, 1vw, 12px); font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase;
+    margin-bottom: .8em; padding-bottom: .5em;
+    border-bottom: 1px solid var(--border); flex-shrink: 0;
+  }
+  .op-col.c1 .op-col-head { color: var(--blue); }
+  .op-col.c2 .op-col-head { color: var(--teal); }
+  .op-col.c3 .op-col-head { color: var(--amber); }
+  .op-list { flex: 1; display: flex; flex-direction: column; gap: .65em; min-height: 0; }
+  /* Hanging indent: bullet as flex-shrink:0, text as flex:1 min-width:0 */
+  .op-item {
+    display: flex; align-items: flex-start; gap: .5em;
+    font-size: clamp(7.5px, .95vw, 11.5px); color: var(--txt2); line-height: 1.45;
+  }
+  .op-bullet { flex-shrink: 0; font-weight: 700; margin-top: .05em; }
+  .op-col.c1 .op-bullet { color: var(--blue); }
+  .op-col.c2 .op-bullet { color: var(--teal); }
+  .op-col.c3 .op-bullet { color: var(--amber); }
+  .op-text { flex: 1; min-width: 0; word-break: keep-all; overflow-wrap: break-word; }
+  .op-text b { color: var(--txt1); font-weight: 600; }
+  .op-bottom {
+    margin-top: .8em; padding-top: .6em;
+    border-top: 1px solid var(--border); flex-shrink: 0;
+    font-size: clamp(7px, .85vw, 10px); color: var(--txt3);
+    line-height: 1.5; word-break: keep-all;
+  }
+
+  /* ── Nav ── */
+  .nav {
+    position: absolute; bottom: 3.5%; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 1.2vw; z-index: 10;
+  }
+  .nav-dot {
+    width: clamp(5px, .65vw, 8px); height: clamp(5px, .65vw, 8px);
+    border-radius: 50%; background: var(--txt3);
+    cursor: pointer; transition: all .25s; border: none;
+  }
+  .nav-dot.active { background: var(--teal); transform: scale(1.45); }
+  .nav-arr {
+    background: var(--bg3); border: 1px solid var(--border);
+    color: var(--txt2); border-radius: 50%;
+    width: clamp(20px, 2.8vw, 36px); height: clamp(20px, 2.8vw, 36px);
+    cursor: pointer; font-size: clamp(10px, 1.2vw, 15px);
+    display: flex; align-items: center; justify-content: center;
+    transition: all .2s; font-family: inherit;
+  }
+  .nav-arr:hover { background: var(--bg2); color: var(--teal); border-color: var(--teal); }
+  .nav-arr:disabled { opacity: .22; cursor: default; }
+  .slide-counter {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(8px, .9vw, 11px); color: var(--txt3);
+    min-width: 3.5em; text-align: center;
+  }
+</style>
+
+<div class="stage">
+<div class="deck" id="deck">
+  <div class="glow-tl"></div>
+  <div class="glow-br"></div>
+  <div class="logo-corner">AiFRS</div>
+
+  <!-- ── SLIDE 1: 문제 ── -->
+  <div class="slide active" id="slide-0">
+    <div class="eyebrow">Problem &mdash; 01 / 04</div>
+    <div class="slide-title">K-IFRS 실무, 지금 <em>어떻게</em> 하고 있나요?</div>
+    <div class="s1-hero">
+      <div class="s1-nums">
+        <div class="s1-n1"><span>50</span>개</div>
+        <div class="s1-n2">기준서 · 5,468개 문단</div>
+      </div>
+      <div class="s1-divider"></div>
+      <div class="s1-desc">
+        상장기업·금융회사에 의무 적용되는 K-IFRS.<br>
+        어느 거래에 어느 기준서가 적용되는지 파악하는 것 자체가 진입 장벽입니다.
+      </div>
+    </div>
+    <div class="prob-list">
+      <div class="prob-item">
+        <div class="prob-icon">🕐</div>
+        <div class="prob-body">
+          <div class="prob-head">기준서 탐색에만 수 시간</div>
+          <div class="prob-desc">계약서 한 건에 연관 기준서를 찾고, 원문을 확인하고, 요건을 체크하는 데 숙련 담당자도 3~4시간 소요</div>
+        </div>
+      </div>
+      <div class="prob-item">
+        <div class="prob-icon">📖</div>
+        <div class="prob-body">
+          <div class="prob-head">읽어도 이해 안 되는 원문</div>
+          <div class="prob-desc">법령 형식의 전문 용어·조문 체계 — 처음 K-IFRS를 접하는 실무 담당자에게는 이중 장벽</div>
+        </div>
+      </div>
+      <div class="prob-item">
+        <div class="prob-icon">🔗</div>
+        <div class="prob-body">
+          <div class="prob-head">교차 참조·상충 기준 파악 불가</div>
+          <div class="prob-desc">기준서마다 다른 인식·측정·공시 요건과 상호 참조 조문을 수작업으로 추적</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 2: 솔루션 ── -->
+  <div class="slide" id="slide-1">
+    <div class="eyebrow">Solution &mdash; 02 / 04</div>
+    <div class="slide-title"><em>AiFRS</em> — 문서 넣으면 기준서·감사·설명이 나옵니다</div>
+    <div class="pipeline">
+      <div class="pipe-step step1">
+        <div class="pipe-n">STEP 01</div>
+        <div class="pipe-icon">🔍</div>
+        <div class="pipe-title">AI 분석</div>
+        <div class="pipe-desc">업로드 문서의 거래구조 파악 · 관련 K-IFRS 기준서 후보 자동 선정</div>
+        <div class="pipe-badge">후보 기준서 순위</div>
+      </div>
+      <div class="pipe-step step2">
+        <div class="pipe-n">STEP 02</div>
+        <div class="pipe-icon">📋</div>
+        <div class="pipe-title">정밀분석</div>
+        <div class="pipe-desc">기준서 원문 요건 항목별 대조 · 충족/미충족/확인필요 분류</div>
+        <div class="pipe-badge">원문 § 근거 연결</div>
+      </div>
+      <div class="pipe-step step3">
+        <div class="pipe-n">STEP 03</div>
+        <div class="pipe-icon">🛡</div>
+        <div class="pipe-title">AI감사</div>
+        <div class="pipe-desc">실제 문서 원문 근거로 각 요건 충족 여부 확정 · 판정 게이트</div>
+        <div class="pipe-badge">근거 있는 판정</div>
+      </div>
+      <div class="pipe-step step4">
+        <div class="pipe-n">STEP 04</div>
+        <div class="pipe-icon">💡</div>
+        <div class="pipe-title">쉬운설명</div>
+        <div class="pipe-desc">왜·무엇을·어떻게 — 비전공자도 이해하는 단계별 가이드 생성</div>
+        <div class="pipe-badge">초보 담당자용</div>
+      </div>
+    </div>
+    <div class="feat-row">
+      <div class="feat-pill">📦 <b>단일 HTML</b> — 설치·서버 불필요</div>
+      <div class="feat-pill">🗄 <b>오프라인 DB</b> — 50개 기준서 · 5,468문단</div>
+      <div class="feat-pill">⭐ <b>즐겨찾기·공유</b> — JSON 내보내기</div>
+      <div class="feat-pill">📖 <b>용어 팝업</b> — 854개 K-IFRS 용어</div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 3: 임팩트 ── -->
+  <div class="slide" id="slide-2">
+    <div class="eyebrow">Impact &mdash; 03 / 04</div>
+    <div class="slide-title">담당자의 시간을 <em>3~4시간에서 30분 이내로</em></div>
+    <div class="impact-grid">
+      <div class="impact-card big">
+        <div>
+          <div class="impact-before">3 ~ 4 시간</div>
+          <div class="impact-arrow">↓</div>
+          <div class="impact-after">30분 이내</div>
+          <div class="impact-label">기준서 탐색 · 원문 확인 · 요건 체크<br>전 과정 자동화</div>
+        </div>
+        <div class="impact-note">
+          API 비용 없이 Gemini 무료 키로 구동<br>
+          브라우저만 있으면 어디서나 실행
+        </div>
+      </div>
+      <div class="impact-card c1">
+        <div class="impact-small-num">50</div>
+        <div class="impact-small-label">K-IFRS 기준서 전체 커버<br>(IAS + IFRS 전 범위)</div>
+      </div>
+      <div class="impact-card c2">
+        <div class="impact-small-num">5,468</div>
+        <div class="impact-small-label">내장 문단 — 오프라인에서도<br>원문 검색·인용 가능</div>
+      </div>
+      <div class="impact-card c3">
+        <div class="impact-small-num">854</div>
+        <div class="impact-small-label">용어 해설 + 쉬운설명으로<br>비전공자도 즉시 활용</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 4: ONE-PAGER ── -->
+  <div class="slide" id="slide-3">
+    <div class="eyebrow">One-pager &mdash; 04 / 04</div>
+    <div class="slide-title" style="font-size:clamp(13px,2vw,24px);margin-bottom:.35em">
+      <em>AiFRS</em> — K-IFRS 자동 분석 도구 · 요약
+    </div>
+    <div class="onepager-grid">
+      <div class="op-col c1">
+        <div class="op-col-head">⚡ 문제 · 배경</div>
+        <div class="op-list">
+          <div class="op-item"><span class="op-bullet">·</span><span class="op-text">상장기업 K-IFRS 의무 적용 — 기준서 탐색만 <b>수 시간</b> 소요</span></div>
+          <div class="op-item"><span class="op-bullet">·</span><span class="op-text">50개 기준서 × 5,468문단 — 적용 기준서 파악 자체가 장벽</span></div>
+          <div class="op-item"><span class="op-bullet">·</span><span class="op-text">원문 전문 용어·조문 체계 — 비전공자 독해 불가</span></div>
+          <div class="op-item"><span class="op-bullet">·</span><span class="op-text">교차 참조·상충 기준 수작업 추적</span></div>
+        </div>
+        <div class="op-bottom">대상: K-IFRS 실무 담당자 (특히 초보)</div>
+      </div>
+      <div class="op-col c2">
+        <div class="op-col-head">🛠 솔루션 · 기능</div>
+        <div class="op-list">
+          <div class="op-item"><span class="op-bullet">·</span><span class="op-text"><b>4단계 AI 파이프라인</b> — 분석→정밀→감사→쉬운설명</span></div>
+          <div class="op-item"><span class="op-bullet">·</span><span class="op-text"><b>단일 HTML 파일</b> — 설치·서버 불필요, 오프라인 동작</span></div>
+          <div class="op-item"><span class="op-bullet">·</span><span class="op-text"><b>원문 DB 내장</b> — 50개 기준서 / 854개 용어 해설</span></div>
+          <div class="op-item"><span class="op-bullet">·</span><span class="op-text"><b>즐겨찾기 ⭐</b> — AI감사·쉬운설명 완료 후 저장·공유</span></div>
+          <div class="op-item"><span class="op-bullet">·</span><span class="op-text"><b>리모컨</b> — 단계 가이드 / 숨김·펼침 / 처음</span></div>
+        </div>
+        <div class="op-bottom">기술: Gemini API · localStorage · 순수 HTML/JS/CSS</div>
+      </div>
+      <div class="op-col c3">
+        <div class="op-col-head">📈 임팩트</div>
+        <div class="op-list">
+          <div class="op-item"><span class="op-bullet">·</span><span class="op-text">기준서 탐색 <b>3~4시간 → 30분 이내</b></span></div>
+          <div class="op-item"><span class="op-bullet">·</span><span class="op-text">비전공자도 쉬운설명으로 <b>즉시 활용</b></span></div>
+          <div class="op-item"><span class="op-bullet">·</span><span class="op-text">오프라인·무료 API — <b>추가 비용 없음</b></span></div>
+          <div class="op-item"><span class="op-bullet">·</span><span class="op-text">JSON 공유로 <b>팀 협업</b> 가능</span></div>
+        </div>
+        <div class="op-bottom">
+          개발: JIHO KIM · 헥토이노베이션<br>
+          버전: 2026.09 · 단일 파일 아키텍처
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <div class="nav">
+    <button class="nav-arr" id="btn-prev" onclick="go(-1)" disabled>‹</button>
+    <button class="nav-dot active" onclick="goTo(0)"></button>
+    <button class="nav-dot" onclick="goTo(1)"></button>
+    <button class="nav-dot" onclick="goTo(2)"></button>
+    <button class="nav-dot" onclick="goTo(3)"></button>
+    <button class="nav-arr" id="btn-next" onclick="go(1)">›</button>
+    <span class="slide-counter" id="counter">1 / 4</span>
+  </div>
+</div>
+</div>
+
+<script>
+  var cur = 0, total = 4;
+  var slides = document.querySelectorAll('.slide');
+  var dots   = document.querySelectorAll('.nav-dot');
+  var prev   = document.getElementById('btn-prev');
+  var next   = document.getElementById('btn-next');
+  var ctr    = document.getElementById('counter');
+
+  function goTo(n) {
+    if (n < 0 || n >= total || n === cur) return;
+    slides[cur].classList.remove('active');
+    slides[cur].classList.add('out-left');
+    var old = cur; cur = n;
+    requestAnimationFrame(function(){
+      slides[old].classList.remove('out-left');
+      render();
+    });
+    render();
+  }
+  function go(d) { goTo(cur + d); }
+  function render() {
+    slides.forEach(function(s, i){ s.classList.toggle('active', i === cur); });
+    dots.forEach(function(d, i){ d.classList.toggle('active', i === cur); });
+    prev.disabled = cur === 0;
+    next.disabled = cur === total - 1;
+    ctr.textContent = (cur + 1) + ' / ' + total;
+  }
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   go(-1);
+  });
+</script>
