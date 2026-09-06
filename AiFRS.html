@@ -1314,6 +1314,31 @@ a:hover { text-decoration: underline; }
 .af-cand-fold > summary { cursor:pointer; padding:8px 0; font-size:12px; font-weight:600; color:var(--txt2); }
 .af-cand-fold > summary::before { content:'↳ '; color:var(--txt3); }
 .af-cand-fold > summary:hover { color:var(--blue-sky); }
+/* ── 즐겨찾기 ── */
+.af-bm-cnt { display:inline-flex; align-items:center; justify-content:center; min-width:15px; height:15px; border-radius:8px; background:var(--blue); color:#fff; font-size:10px; font-weight:700; padding:0 3px; margin-left:3px; vertical-align:2px; }
+.af-bm-star { position:absolute; top:8px; right:8px; background:none; border:none; cursor:pointer; font-size:17px; line-height:1; color:var(--txt3); transition:color .15s; padding:3px 4px; border-radius:6px; }
+.af-bm-star:hover { color:#f59e0b; background:rgba(245,158,11,.1); }
+.af-bm-star.active { color:#f59e0b; }
+.af-bm-star.active::before { content:'★'; }
+.af-bm-star:not(.active)::before { content:'☆'; }
+/* 즐겨찾기 뷰어 */
+.af-bm-viewer-wrap { display:grid; grid-template-columns:300px 1fr; gap:16px; min-height:60vh; }
+.af-bm-sidebar { border:1px solid var(--border); border-radius:10px; overflow:hidden; display:flex; flex-direction:column; }
+.af-bm-sidebar-head { padding:10px 14px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.af-bm-sidebar-head h3 { margin:0; font-size:13px; font-weight:700; color:var(--txt); }
+.af-bm-list { overflow-y:auto; flex:1; }
+.af-bm-item { padding:10px 14px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .1s; }
+.af-bm-item:hover { background:var(--bg2); }
+.af-bm-item.selected { background:rgba(41,151,255,.12); border-left:3px solid var(--blue); padding-left:11px; }
+.af-bm-item-date { font-size:10px; color:var(--txt3); margin-bottom:3px; display:flex; align-items:center; justify-content:space-between; }
+.af-bm-item-title { font-size:12px; font-weight:700; color:var(--txt); word-break:keep-all; }
+.af-bm-item-std { font-size:11px; color:var(--txt3); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.af-bm-item-del { background:none; border:none; color:var(--txt3); cursor:pointer; font-size:13px; padding:0 2px; flex-shrink:0; }
+.af-bm-item-del:hover { color:#f87171; }
+.af-bm-main { border:1px solid var(--border); border-radius:10px; overflow-y:auto; padding:0 16px 16px; max-height:80vh; }
+.af-bm-empty { text-align:center; padding:40px; color:var(--txt3); font-size:13px; }
+.af-bm-io-bar { display:flex; gap:8px; margin:14px 0; flex-wrap:wrap; align-items:center; }
+.af-bm-viewer-label { font-size:11px; color:var(--txt3); padding:10px 0 6px; border-bottom:1px solid var(--border); margin-bottom:12px; }
 
 /* 파이프라인 도트(코드검증·교차검증·인용검증) */
 .af-dots { display:inline-flex; align-items:center; gap:4px; cursor:help; }
@@ -1324,7 +1349,7 @@ a:hover { text-decoration: underline; }
 
 @media print {
   body { background:#fff !important; color:#1d1d1f !important; }
-  .af-topbar, .af-bottom, .af-settings, .af-hero, .aifrs-btn, .aifrs-help-btn, .aifrs-toggle, #aifrs-db-view, #aifrs-hist-view, #aifrs-about-view { display:none !important; }
+  .af-topbar, .af-bottom, .af-settings, .af-hero, .aifrs-btn, .aifrs-help-btn, .aifrs-toggle, #aifrs-db-view, #aifrs-hist-view, #aifrs-about-view, #aifrs-bm-view { display:none !important; }
   .af-main { overflow:visible !important; padding:0 !important; }
   .aifrs-pr-item { border-color:#e0e0e0 !important; background:#fff !important; break-inside:avoid; }
   .aifrs-analysis, .aifrs-pr-h, .aifrs-section-title { color:#1d1d1f !important; }
@@ -3166,7 +3191,9 @@ a:hover { text-decoration: underline; }
             :'(function(){var pl=document.querySelector(\'.af-plan-wrap\');if(pl)pl.scrollIntoView({behavior:\'smooth\'});})()';
           _ctaBtn='<button class="aifrs-btn aifrs-btn-sm" style="margin-top:7px" onclick="'+_ctaFn+'">'+_ctaTxt+'</button>';
         }
-        h+='<div class="af-conc-card af-conc-'+_g.cls+'">'
+        var _bmKey='bm-'+(+new Date())+'-'+(Math.random().toString(36).slice(2,6));
+        h+='<div class="af-conc-card af-conc-'+_g.cls+'" style="position:relative">'
+          +'<button class="af-bm-star" data-bm="'+_bmKey+'" onclick="window.AiFRS.toggleBookmark(\''+_bmKey+'\')" title="즐겨찾기에 저장 — 이 분석 결과를 보관하고 언제든 다시 열람합니다"></button>'
           +'<div class="af-conc-hd">'+_g.lbl+'</div>'
           +'<div class="af-conc-std">K-IFRS 제'+esc(_c1['기준서번호']||'')+'호 '+esc(_nm1)+'</div>'
           +(gs&&gs['핵심회계논점']?'<div class="af-conc-issue">'+esc(gs['핵심회계논점'])+'</div>':'')
@@ -3737,7 +3764,8 @@ a:hover { text-decoration: underline; }
       img:'<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M3.5 16.5l4.5-4 4 3.5 3.5-3 5 4"/>',
       plan:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 2.5h6v3H9z"/><path d="M8.5 13l2.2 2.2 4.3-4.3"/>',
       hist:'<circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 15.5,14.5"/>',
-      info:'<circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="8.01" stroke-linecap="round" stroke-width="3.5"/><line x1="12" y1="11.5" x2="12" y2="16.5"/>'
+      info:'<circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="8.01" stroke-linecap="round" stroke-width="3.5"/><line x1="12" y1="11.5" x2="12" y2="16.5"/>',
+      bookmark:'<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>'
     }[kind]||'';
     return '<svg viewBox="0 0 24 24" fill="none" stroke="'+c+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:'+px+'px;height:'+px+'px;vertical-align:-3px;flex-shrink:0;filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.6)) drop-shadow(0 0 1px rgba(255,255,255,.15))">'+d+'</svg>';
   }
@@ -5459,8 +5487,138 @@ a:hover { text-decoration: underline; }
         +'<button class="aifrs-btn aifrs-btn-sm" onclick="var t=document.getElementById(\'aifrs-settings-toggle\');if(t)t.click();" style="font-size:10px;padding:4px 10px">설정 열기</button></div>'
       +'<div class="af-ob-step af-ob-muted"><div class="af-ob-num">3</div><div class="af-ob-text">회계 문서 업로드 후 분석 시작</div><div class="af-ob-badge">대기 중</div></div>';
   }
+  // ── 즐겨찾기 ───────────────────────────────────────────────────────────────
+  var _BM_KEY='aifrs-bookmarks';
+  function _bmGet(){ try{ return JSON.parse(localStorage.getItem(_BM_KEY)||'[]'); }catch(e){ return []; } }
+  function _bmSave(list){ try{ localStorage.setItem(_BM_KEY, JSON.stringify(list)); }catch(e){} }
+  function _bmUpdateBadge(){
+    var cnt=document.getElementById('aifrs-bm-cnt'); if(!cnt) return;
+    var n=_bmGet().length; cnt.textContent=n; cnt.hidden=(n===0);
+  }
+  AiFRS.toggleBookmark=function(bmKey){
+    var list=_bmGet();
+    var idx=-1; list.forEach(function(x,i){ if(x.id===bmKey) idx=i; });
+    if(idx>-1){
+      list.splice(idx,1); _bmSave(list);
+      var btn=document.querySelector('.af-bm-star[data-bm="'+bmKey+'"]');
+      if(btn) btn.classList.remove('active');
+    } else {
+      var aiBox=document.getElementById('aifrs-ai');
+      var html=aiBox?aiBox.innerHTML:'';
+      var fname='파일 미지정';
+      if(AiFRS.state&&AiFRS.state.files&&AiFRS.state.files.length)
+        fname=AiFRS.state.files.map(function(f){return f.name;}).join(', ');
+      var stdEl=document.querySelector('.af-conc-std');
+      var stdName=stdEl?stdEl.textContent.trim():'';
+      list.unshift({ id:bmKey,
+        date:new Date().toLocaleString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}),
+        fileName:fname, stdName:stdName, html:html });
+      _bmSave(list);
+      var btn=document.querySelector('.af-bm-star[data-bm="'+bmKey+'"]');
+      if(btn) btn.classList.add('active');
+    }
+    _bmUpdateBadge();
+  };
+  AiFRS.openBookmarkViewer=function(){
+    var url=location.href.replace(/[?#].*/,'')+'?aifrs-bm=view';
+    window.open(url,'aifrs-bm-viewer','width=1100,height=800,menubar=no,toolbar=no,location=no,scrollbars=yes,resizable=yes');
+  };
+  AiFRS.exportBookmarks=function(){
+    var list=_bmGet();
+    if(!list.length){ alert('저장된 즐겨찾기가 없습니다.'); return; }
+    var json=JSON.stringify(list, null, 2);
+    var a=document.createElement('a');
+    a.href='data:application/json;charset=utf-8,'+encodeURIComponent(json);
+    a.download='aifrs-bookmarks-'+new Date().toISOString().slice(0,10)+'.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  };
+  AiFRS.importBookmarks=function(file){
+    if(!file) return;
+    var r=new FileReader();
+    r.onload=function(e){
+      try{
+        var imported=JSON.parse(e.target.result);
+        if(!Array.isArray(imported)) throw new Error('형식 오류');
+        var list=_bmGet();
+        var existIds={}; list.forEach(function(x){ existIds[x.id]=1; });
+        var added=0;
+        imported.forEach(function(item){
+          if(item&&item.id&&!existIds[item.id]){ list.push(item); added++; }
+        });
+        _bmSave(list); _bmUpdateBadge();
+        alert(added+'개를 가져왔습니다.'+(imported.length-added>0?' ('+( imported.length-added)+'개 중복 제외)':''));
+        _renderBmList();
+      }catch(x){ alert('파일을 읽을 수 없습니다. AiFRS 즐겨찾기 JSON 파일인지 확인하세요.'); }
+    };
+    r.readAsText(file,'utf-8');
+  };
+  function _renderBmList(){
+    var sidebar=document.getElementById('af-bm-sidebar-list');
+    var main=document.getElementById('af-bm-main');
+    if(!sidebar) return;
+    var list=_bmGet();
+    if(!list.length){
+      sidebar.innerHTML='<div class="af-bm-empty">저장된 즐겨찾기가 없습니다.</div>';
+      if(main && !main._shown) main.innerHTML='<div class="af-bm-empty">목록에서 항목을 클릭하세요.</div>';
+      return;
+    }
+    sidebar.innerHTML=list.map(function(item,i){
+      return '<div class="af-bm-item" data-idx="'+i+'" onclick="window.AiFRS._bmShow('+i+')">'
+        +'<div class="af-bm-item-date"><span>'+esc(item.date)+'</span>'
+        +'<button class="af-bm-item-del" onclick="event.stopPropagation();window.AiFRS._bmDel(\''+item.id.replace(/'/g,"\\'")+'\')" title="삭제">✕</button></div>'
+        +'<div class="af-bm-item-title">'+esc(item.fileName||'파일 미지정')+'</div>'
+        +(item.stdName?'<div class="af-bm-item-std">'+esc(item.stdName)+'</div>':'')
+        +'</div>';
+    }).join('');
+  }
+  AiFRS._bmShow=function(idx){
+    var list=_bmGet(); var item=list[idx]; if(!item) return;
+    var main=document.getElementById('af-bm-main'); if(!main) return;
+    main._shown=true;
+    main.innerHTML='<div class="af-bm-viewer-label">저장: '+esc(item.date)+' &nbsp;·&nbsp; '+esc(item.fileName)+'</div>'
+      +'<div class="aifrs-analysis" style="display:block">'+item.html+'</div>';
+    document.querySelectorAll('.af-bm-item').forEach(function(el,i){ el.classList.toggle('selected',i===idx); });
+  };
+  AiFRS._bmDel=function(id){
+    _bmSave(_bmGet().filter(function(x){ return x.id!==id; }));
+    _bmUpdateBadge(); _renderBmList();
+    var main=document.getElementById('af-bm-main');
+    if(main){ main._shown=false; main.innerHTML='<div class="af-bm-empty">목록에서 항목을 클릭하세요.</div>'; }
+  };
+  function _initBookmarkViewer(){
+    var root=document.getElementById('aifrs-root'); if(!root) return;
+    document.title='즐겨찾기 — AiFRS';
+    root.innerHTML=''
+      +'<div class="af-topbar" style="display:block!important"><div class="af-topbar-inner">'
+      +'<div class="af-brand"><span class="af-brand-mark">AiFRS</span><span class="af-brand-tag">즐겨찾기 뷰어</span></div>'
+      +'</div></div>'
+      +'<div class="af-main" style="padding-top:16px">'
+      +'<div style="max-width:1160px;margin:0 auto">'
+      +'<div class="af-bm-io-bar">'
+      +'<button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.exportBookmarks()">&#8595; JSON 내보내기</button>'
+      +'<label class="aifrs-btn aifrs-btn-sm" style="cursor:pointer">&#8593; JSON 가져오기<input type="file" accept=".json" style="display:none" onchange="if(this.files&&this.files[0])window.AiFRS.importBookmarks(this.files[0])"></label>'
+      +'<span style="font-size:11px;color:var(--txt3)">— 즐겨찾기를 JSON으로 내보내 동료에게 공유하거나, 받은 파일을 가져와 열람합니다</span>'
+      +'</div>'
+      +'<div class="af-bm-viewer-wrap">'
+      +'<div class="af-bm-sidebar"><div class="af-bm-sidebar-head"><h3>저장된 분석 기록</h3></div>'
+      +'<div class="af-bm-list" id="af-bm-sidebar-list"></div></div>'
+      +'<div class="af-bm-main" id="af-bm-main"><div class="af-bm-empty">← 목록에서 항목을 클릭하세요.</div></div>'
+      +'</div></div></div>';
+    _renderBmList();
+  }
+  // ───────────────────────────────────────────────────────────────────────────
   function buildHistHtml(){
     var items = [
+      { date:'2026-09-06', title:'즐겨찾기(★) 기능 추가',
+        bullets:[
+          '결론 카드 우상단 ☆ 버튼 — 클릭 즉시 현재 AI 분석 결과 전체(HTML)를 localStorage에 저장, ★로 전환',
+          '헤더 상단 즐겨찾기 아이콘 추가(개발이력 오른쪽) — 저장 건수 뱃지 표시',
+          '즐겨찾기 버튼 클릭 → 새창(window.open)으로 AiFRS.html ?aifrs-bm=view 모드 진입 — 좌측 목록 + 우측 결과 전체 렌더링',
+          'JSON 내보내기/가져오기 — 저장한 분석 결과를 .json으로 다운로드, 동료에게 전달하면 그쪽 즐겨찾기에 바로 추가(중복 id 자동 제외)',
+          '듀얼 모니터 환경 최적화 — 새창을 옆 모니터에 띄워두고 참고자료로 활용 가능',
+          '저장 단위: #aifrs-ai innerHTML 전체 + 메타(파일명·기준서·저장시각) — CSS는 AiFRS.html 자체를 재사용해 동일 렌더링 보장'
+        ]
+      },
       { date:'2026-09-06', title:'S1~S10 UX 다이어트 전면 적용 (46791c6)',
         bullets:[
           'S1 stat-row(P2) 삭제 — A1 결론 카드에 판단 정보가 모두 있어 중복, 화면 노이즈 제거',
@@ -6582,6 +6740,8 @@ a:hover { text-decoration: underline; }
   AiFRS.render = function(){
     var root = document.getElementById('aifrs-root');
     if(!root) return;
+    // 즐겨찾기 뷰어 모드 — ?aifrs-bm=view 파라미터로 열린 경우
+    if(location.search.indexOf('aifrs-bm=view') > -1){ _initBookmarkViewer(); return; }
     if(AiFRS._rendered){ renderFileList(); return; }
 
     root.innerHTML =
@@ -6591,6 +6751,7 @@ a:hover { text-decoration: underline; }
       +   '<div class="af-topbar-actions">'
       +     '<button class="af-icon-btn" id="aifrs-about-toggle" title="AiFRS 소개">'+_ico('info',15,'currentColor')+'<span class="af-icon-label">소개</span></button>'
       +     '<button class="af-icon-btn" id="aifrs-hist-toggle" title="개발 히스토리">'+_ico('hist',15,'currentColor')+'<span class="af-icon-label">기록</span></button>'
+      +     '<button class="af-icon-btn" id="aifrs-bm-toggle" title="즐겨찾기 — 분석 결과를 저장하고 동료와 공유" onclick="window.AiFRS.openBookmarkViewer()" style="position:relative">'+_ico('bookmark',15,'currentColor')+'<span class="af-icon-label">즐겨찾기</span><span class="af-bm-cnt" id="aifrs-bm-cnt" hidden>0</span></button>'
       +     '<button class="af-icon-btn" id="aifrs-db-toggle" title="K-IFRS DB">&#128452;<span class="af-icon-label">DB</span></button>'
       +     '<button class="af-icon-btn" id="aifrs-settings-toggle" title="설정">&#9881;<span class="af-icon-label">설정</span></button>'
       +   '</div>'
@@ -6653,6 +6814,7 @@ a:hover { text-decoration: underline; }
       +   '<div id="aifrs-db-view" class="aifrs-db-view" style="display:none"></div>'
       +   '<div id="aifrs-hist-view" class="aifrs-hist-view" style="display:none"></div>'
       +   '<div id="aifrs-about-view" class="aifrs-about-view" style="display:none"></div>'
+      +   '<div id="aifrs-bm-view" style="display:none"></div>'
       + '</div>'
 
       + '<div class="af-bottom">'
@@ -6769,6 +6931,7 @@ a:hover { text-decoration: underline; }
     AiFRS._rendered = true;
     renderFileList();
     _initOnboarding();
+    _bmUpdateBadge();   // 즐겨찾기 뱃지 초기화
   };
 
   // Hero visibility: hide when files exist, show when empty
