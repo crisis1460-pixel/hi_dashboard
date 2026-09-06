@@ -5473,6 +5473,29 @@ a:hover { text-decoration: underline; }
   }
   function buildHistHtml(){
     var items = [
+      { date:'2026-09-06', title:'A1 결론카드 + A2 등급배지 + B1 원문인용모달 + C2 판단트리 플로우 (3c93e89)',
+        bullets:[
+          'A1 결론 카드: stat-row 직후, top1 관련성 기반 3등급(확인됨 ≥80% / 추가검토필요 50~79% / 참고용 <50%). 핵심회계논점·행동지침 텍스트 포함',
+          'A2 등급 배지: 각 후보 기준서 관련성 바 아래 "관련성 높음/중간/낮음" 배지 + 즉시 행동 문구(af-grade-badge·af-grade-action)',
+          'B1 원문 인용 모달: af-quote-blk 클릭 → AiFRS.showQuoteCtx → gatherText() 원문 전체에서 구절 검색 → 280자 컨텍스트 팝업. 형광 하이라이트(af-qctx-hl). 미발견·텍스트 없음 fallback',
+          'C2 판단 트리 플로우: _buildGatePanel을 af-gate-flow 스텝 기반으로 개편. 번호 버블(border-color = 상태 색) + CSS ::before 수직 연결선 + 상태 배지(af-gate-lbl2) + CTA. flat af-gate-row 제거'
+        ]
+      },
+      { date:'2026-09-06', title:'C1 예상질문 칩 + 감사 완료 후 progressive append (e6f5ca9)',
+        bullets:[
+          'buildStructurePrompt JSON 스키마에 "예상질문" 배열 필드 추가 — 추가 API 호출 없이 종합검토 응답에서 문서 맞춤 질문 3개 생성',
+          'renderAiResult 결론 블록 하단에 af-qchip 칩 렌더링(칩 클릭 → af-qa-input 자동채움 → 사용자가 전송)',
+          'AI 감사 완료 후 확인필요·보완필요 항목 최대 2개를 AiFRS._appendQChips로 progressive append (중복 제거 포함)'
+        ]
+      },
+      { date:'2026-09-06', title:'_HIGH_GATE 55개 K-IFRS 원문 대조 검증 — 오류 3건 수정 (ba7dd64)',
+        bullets:[
+          '검증 범위: HIGH 17개 기준서 × 게이트 = 실제 55개 ({q, ko, pass} 전수 원문 대조)',
+          '수정 1 — K-IFRS 1038 미래경제효익: ko:"17" → "18" (§17 DB 미존재, §18 "미래경제적효익 가능성" 조문)',
+          '수정 2 — K-IFRS 1107 민감도분석: ko:"40~42" → "40~41" (§42는 K-IFRS 1109 최초 적용 공시로 민감도분석 무관)',
+          '수정 3 — K-IFRS 1115 배분+인식: ko:"31~38" → "73~86, 31~38" (배분 단계4가 §73~86에 있고 인식 단계5가 §31~38 — 기존에 단계5 조문만 기입해 단계4 근거 누락)'
+        ]
+      },
       { date:'2026-09-06', title:'UX P1~P6 구현 — 이력·온보딩·관련성 바·다음 할 일·요약 stat·후속 Q&A',
         bullets:[
           'P1 다음 할 일 패널: AI 분석 완료 후 3종 동적 액션(AI전체검토·근거약함 기준서·증빙출력) 표시',
