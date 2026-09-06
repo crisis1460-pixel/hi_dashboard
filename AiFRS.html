@@ -646,6 +646,18 @@ a:hover { text-decoration: underline; }
 .af-ob-badge{font-size:10px;color:var(--txt3);flex-shrink:0}
 .af-ob-active{border:1px solid rgba(41,151,255,.3)!important;background:rgba(0,102,204,.1)!important}
 .af-ob-muted{opacity:.5}
+/* P6: 후속 Q&A */
+.af-qa-wrap{border-top:1px solid var(--border2);margin-top:12px;padding-top:10px}
+.af-qa-hd{font-size:11px;font-weight:700;color:var(--txt3);margin-bottom:7px;letter-spacing:.04em}
+.af-qa-row{display:flex;gap:6px;align-items:flex-end}
+.af-qa-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--txt);font-size:12px;font-family:inherit;padding:7px 10px;resize:none;min-height:52px;line-height:1.5;outline:none;word-break:keep-all}
+.af-qa-input:focus{border-color:rgba(41,151,255,.5)}
+.af-qa-input:disabled{opacity:.4;cursor:not-allowed}
+.af-qa-btn{flex-shrink:0;font-size:12px;font-weight:700;color:#fff;background:linear-gradient(180deg,#4bacff 0%,#2997ff 55%,#0f74e0 100%);border:1px solid #063a6b;border-radius:8px;padding:7px 13px;cursor:pointer;white-space:nowrap}
+.af-qa-btn:disabled{opacity:.35;cursor:not-allowed}
+.af-qa-nokey{font-size:11px;color:var(--txt3);padding:5px 0;word-break:keep-all}
+.af-qa-answer{margin-top:9px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;font-size:12px;color:var(--txt2);line-height:1.7;word-break:keep-all;white-space:pre-wrap;display:none}
+.af-qa-answer.visible{display:block}
 
 .af-step-bar { display:flex; gap:4px; margin:8px 0 2px; flex-wrap:wrap; }
 .af-step { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:600; padding:3px 8px; border-radius:var(--radius-pill); background:var(--bg3); color:var(--txt3); }
@@ -2308,7 +2320,7 @@ a:hover { text-decoration: underline; }
           if(/per-day|free-models-per-day|unlock|add \d+ credit/i.test(allmsg)){
             stat.innerHTML='— <b>OpenRouter 무료 일일 한도(하루 50건) 소진</b> — 미국 태평양시 자정(한국 오후 4~5시경) 리셋 전까지 무료 호출 불가. 충전 없이는 50건/일이 상한입니다($10 충전 시 1000건/일). <br><span class="aifrs-note">키·CORS는 정상 — 한도만 찬 상태입니다.</span>';
           } else {
-            stat.innerHTML='— 후보 무료모델이 모두 <b>업스트림 일시 오류</b>(다운/과부하) — 키·CORS는 정상입니다. 잠시 후 재시도하세요. <br><span class="aifrs-note">'+esc(errs.map(function(x){return x.m.split('/').pop()+': '+x.msg;}).join(' / ')).slice(0,260)+'</span>';
+            stat.innerHTML='— 후보 무료모델이 모두 <b>업스트림 일시 오류</b>(다운/과부하) — 키·CORS는 정상입니다. 잠시 후 재시도하세요. <br><span class="aifrs-note">'+esc(errs.map(function(x){return x.m.split('/').pop()+': '+x.msg;}).join(' / ').slice(0,260))+'</span>';
           }
           return;
         }
@@ -3157,6 +3169,16 @@ a:hover { text-decoration: underline; }
       if(_wk.length) _ti.push('<div class="af-todo-item"><div class="af-todo-text"><b>'+esc(String(_wk[0]['기준서번호']||''))+'호 근거 약함</b>'+(_wk.length>1?' 외 '+(_wk.length-1)+'종':'')+' — AI감사로 실질 적합성을 판정하세요.</div></div>');
       _ti.push('<div class="af-todo-item"><div class="af-todo-text">결과를 <b>증빙 출력</b>하면 감사 대응용 체크리스트가 포함됩니다.</div></div>');
       h+='<div class="af-todo-panel"><div class="af-todo-ttl">다음 할 일</div>'+_ti.join('')+'</div>';
+      // P6: 후속 Q&A (Q1: AI 분석 완료 후 진입 / Q3: 쉬운설명 자동·Q&A 수동 역할 분리)
+      var _qaHasKey=!!(AiFRS.getApiKey&&AiFRS.getApiKey());
+      h+='<div class="af-qa-wrap"><div class="af-qa-hd">후속 질문</div>';
+      if(!_qaHasKey){
+        h+='<div class="af-qa-nokey">Gemini API 키를 등록하면 이 분석 결과에 대해 추가 질문을 할 수 있습니다.</div>';
+      }else{
+        h+='<div class="af-qa-row"><textarea id="af-qa-input" class="af-qa-input" placeholder="이 거래에 대해 궁금한 점을 질문하세요..." rows="2"></textarea>'
+          +'<button class="af-qa-btn" onclick="AiFRS.askFollowUp()">전송</button></div>';
+      }
+      h+='<div id="af-qa-answer" class="af-qa-answer"></div></div>';
     }
     return h;   // (하단 안내문 제거 — 배너·버튼 툴팁이 같은 내용을 안내)
   }
@@ -4839,7 +4861,7 @@ a:hover { text-decoration: underline; }
   }
   function fmtSize(b){ if(b<1024) return b+' B'; if(b<1048576) return (b/1024).toFixed(1)+' KB'; return (b/1048576).toFixed(1)+' MB'; }
   function _afState(){ var e=document.getElementById('af-sig-wm'); return !!(e && e.textContent && e.textContent.trim()); }   // 화면 상태 점검용 내부 헬퍼
-  function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function esc(s){ return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
   function iconFor(kind,e){ if(kind==='archive') return '[ZIP]'; if(kind==='image') return '[IMG]'; if(e==='pdf') return '[PDF]'; if(e==='docx') return '[DOC]'; if(e==='pptx') return '[PPT]'; if(e==='csv') return '[CSV]'; return '[DOC]'; }
 
   // ══ 라이브러리 지연 로드 (탭/형식 사용 시점에만 CDN 로드) ══
@@ -5280,6 +5302,33 @@ a:hover { text-decoration: underline; }
       AiFRS.toggleHistView();
     } catch(e){}
   };
+  // ── P6: 후속 Q&A 전송 ──
+  AiFRS.askFollowUp=function(){
+    var input=document.getElementById('af-qa-input'); if(!input) return;
+    var q=(input.value||'').trim(); if(!q) return;
+    var answer=document.getElementById('af-qa-answer'); if(!answer) return;
+    var btn=document.querySelector('.af-qa-btn');
+    var ai=AiFRS._lastAi||{}; var gs=ai['거래구조']||{}; var cands=ai.candidates||[];
+    var ctx='거래성격: '+(gs['거래성격']||'')+'\n회계이슈: '+(gs['회계이슈']||'')
+      +'\n후보 기준서: '+cands.slice(0,5).map(function(c){ return c['기준서번호']+'호(관련성 '+c['관련성']+'%)'; }).join(', ');
+    var sys='당신은 K-IFRS(한국채택국제회계기준) 전문가입니다. 아래는 AI가 분석한 이 거래의 결과입니다.\n'+ctx+'\n\n초보 회계담당자가 이해할 수 있도록 쉽고 구체적으로 답변하세요. 답변은 입니다체로 작성하세요.';
+    answer.className='af-qa-answer visible'; answer.textContent='분석 중...';
+    input.disabled=true; if(btn) btn.disabled=true;
+    AiFRS.callGemini(q,{system:sys,temperature:0.4,retry:1}).then(function(t){
+      answer.style.color=''; answer.textContent=t;
+      input.disabled=false; if(btn) btn.disabled=false;
+    }).catch(function(e){
+      answer.style.color='#ef4444'; answer.textContent='오류: '+String(e.message||e);
+      input.disabled=false; if(btn) btn.disabled=false;
+    });
+  };
+  // 키 미등록 상태로 렌더된 Q&A 안내문을 키 등록 직후 입력창으로 교체(재분석 없이)
+  function _initQaWrap(){
+    var noKey=document.querySelector('.af-qa-wrap .af-qa-nokey'); if(!noKey) return;
+    if(!(AiFRS.getApiKey&&AiFRS.getApiKey())) return;
+    noKey.outerHTML='<div class="af-qa-row"><textarea id="af-qa-input" class="af-qa-input" placeholder="이 거래에 대해 궁금한 점을 질문하세요..." rows="2"></textarea>'
+      +'<button class="af-qa-btn" onclick="AiFRS.askFollowUp()">전송</button></div>';
+  }
   // ── P8: 온보딩 체크리스트 ──
   function _initOnboarding(){
     var panel=document.getElementById('af-ob-panel'); if(!panel) return;
@@ -5294,6 +5343,16 @@ a:hover { text-decoration: underline; }
   }
   function buildHistHtml(){
     var items = [
+      { date:'2026-09-06', title:'UX P1~P6 구현 — 이력·온보딩·관련성 바·다음 할 일·요약 stat·후속 Q&A',
+        bullets:[
+          'P1 다음 할 일 패널: AI 분석 완료 후 3종 동적 액션(AI전체검토·근거약함 기준서·증빙출력) 표시',
+          'P2 요약 stat-row: 후보 수·확인됨(≥80%)·확인필요(50~79%)·확인불가(<50%) 4칸 요약',
+          'P5 관련성 바: 기준서 카드 제목 직후 4px 컬러 바 + % 수치(초록/노랑/빨강 임계)',
+          'P7 분석 이력: localStorage aifrs-hist-* 최대 10건 LRU, 기록탭 최상단 표시, loadHistEntry 공개',
+          'P8 온보딩: API 키 미등록 시 3단계 체크리스트 자동 표시, 키 저장 시 자동 숨김',
+          'P6 후속 Q&A: AI 분석 완료 후 결과 하단에 입력창 표시. API 키 없으면 안내 문구만. callGemini 재사용(모델체인·폴백 공유). 거래구조+후보기준서 컨텍스트 주입, temperature 0.4'
+        ]
+      },
       { date:'2026-09-06', title:'사전 텍스트 전수 검수 + paragraph.easy 1,294개 + DRM 문서 감지',
         bullets:[
           '분석 실패 3건(1024·1117·2032) 후속: 앱이 실패 사유를 노출하지 않아 루프가 timeout으로만 기록되던 구조 → _lastAiErr{phase,msg} 노출, 루프 드라이버가 즉시 사유 기록. 1117은 c13 재시도에서 정상(top=1117) — 일시적 API 오류로 확정',
@@ -6531,7 +6590,7 @@ a:hover { text-decoration: underline; }
     if(apiSave) apiSave.addEventListener('click', function(){
       _applyApiInputs();
       if(apiStat){ apiStat.className='af-set-stat ok'; apiStat.textContent = AiFRS.getApiKey()?'Key saved':'Key cleared'; }
-      _initOnboarding();
+      _initOnboarding(); _initQaWrap();
     });
     if(apiTest) apiTest.addEventListener('click', function(){ _applyApiInputs(); AiFRS.testApiUI(); });
     var apiGuide = document.getElementById('aifrs-api-guide');
