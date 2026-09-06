@@ -5461,6 +5461,20 @@ a:hover { text-decoration: underline; }
   }
   function buildHistHtml(){
     var items = [
+      { date:'2026-09-06', title:'S1~S10 UX 다이어트 전면 적용 (46791c6)',
+        bullets:[
+          'S1 stat-row(P2) 삭제 — A1 결론 카드에 판단 정보가 모두 있어 중복, 화면 노이즈 제거',
+          'S2 배너·다음할일패널 삭제, A1 결론 카드 CTA 통합 — showBanner 여부에 따라 버튼 문구 분기(AI 전체 검토 시작 → / 결론 보기 ↓)',
+          'S3 등급 배지를 헤더 오른쪽(margin-left:auto)으로 이동, af-grade-action 즉시 행동 문구 삭제',
+          'S4 af-impact-map 영향경로 패널 삭제, 관련쟁점 줄 끝에 inflSuffix("→ 영향: 비용·자산" 등) 병기',
+          'S5 스텝바(_stepBarHtml)를 top===true 카드에만 렌더링, 항상 3단계(var n=3)로 고정',
+          'S6 정밀분석: af-hint 삭제, 도넛+통계 요약(summary) 삭제 — details 한 줄 접기만 유지',
+          'S7 AI감사 headRow에 head1.t 판정요약 인라인 표시, af-hint 삭제, 0카운트 범례 항목 동적 제거',
+          'S8 전항목충족(probs===0)이면 항목 리스트 전체를 details로 접기(클릭하면 확인 가능)',
+          'S9 예상질문 칩+후속 Q&A를 결론 카드 바로 아래로 이동, 다른 후보 접힘을 맨 마지막으로',
+          'S10 게이트 패널 border blue(rgba 41,151,255,.5), 섹션헤더 "분석 결과 / N종"으로 간소화, (해당 시) → 해당 없음 라벨 처리 + CTA noApply 가드'
+        ]
+      },
       { date:'2026-09-06', title:'A1 결론카드 + A2 등급배지 + B1 원문인용모달 + C2 판단트리 플로우 (3c93e89)',
         bullets:[
           'A1 결론 카드: stat-row 직후, top1 관련성 기반 3등급(확인됨 ≥80% / 추가검토필요 50~79% / 참고용 <50%). 핵심회계논점·행동지침 텍스트 포함',
