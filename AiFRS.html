@@ -6538,7 +6538,7 @@ a:hover { text-decoration: underline; }
     if(Object.keys(AiFRS._auditBusy||{}).length) return {sel:'.af-task', title:'AI감사 진행 중', msg:'- 문서 근거를 대조해 판정하는 중입니다 — 잠시만 기다리세요'};
     if(!AiFRS._lastAi) return {sel:'#aifrs-ai-btn', title:'AI 분석', msg:'- [AI 분석]을 누르면 거래구조를 파악하고 후보 기준서를 찾습니다'};
     var pk=Object.keys(AiFRS._lastPrecise||{}), ak=Object.keys(AiFRS._lastAudit||{});
-    if(!pk.length) return {sel:'.af-next-btn, .aifrs-an-std button', title:'AI 전체 검토', msg:'- 파란 배너의 [AI 전체 검토 시작]을 누르세요\n- 정밀분석 → AI감사 → 다음 할 일까지 자동으로 이어집니다'};
+    if(!pk.length) return {sel:'.af-next-btn, .aifrs-an-std button', title:'AI 전체 검토', msg:'- 결론 카드 하단 [AI 전체 검토 시작]을 누르세요\n- 정밀분석 → AI감사 → 다음 할 일까지 자동으로 이어집니다'};
     if(!ak.length) return {sel:'[id^="aifrs-nexthero-"] button', title:'AI감사 실행', msg:'- [최종 검증(AI감사) 실행]을 누르면 문서 근거로 충족 여부를 판정합니다'};
     var hasEasy=AiFRS._easyCache && Object.keys(AiFRS._easyCache).length>0;
     if(!hasEasy) return {sel:'button[onclick*="explainEasyAll"]', title:'다음 할 일 · 쉬운 설명', msg:'- 「다음 할 일」에서 항목별 처리 방향을 확인하세요\n- 설명이 어렵다면 [쉬운 설명 — 전체 한번에 풀이]를 누르세요\n- 아직 판정되지 않은 게이트 항목은 [원문 보기]로 조문을 확인'};
