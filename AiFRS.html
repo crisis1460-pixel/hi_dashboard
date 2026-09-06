@@ -2796,6 +2796,7 @@ a:hover { text-decoration: underline; }
     // 이전에 실패한 OCR은 재시도 가능하도록 초기화
     AiFRS.state.files.forEach(function(r){ if(r.ocrErr){ r.ocrDone=false; r.ocrErr=''; r._pdfErr=''; } });
     AiFRS._aiBusy=true;
+    AiFRS._lastAiErr=null;   // 실패 사유 노출용({phase,msg,ts}) — 자동 루프·진단이 "결과 없음"과 "실패"를 구분할 수 있게 (사이클10 timeout 3건 원인 미기록 교훈)
     AiFRS._aiCtl=(typeof AbortController!=='undefined')?new AbortController():null;
     var _sig=AiFRS._aiCtl?AiFRS._aiCtl.signal:undefined;
     var aiTimer=null;
@@ -2808,6 +2809,7 @@ a:hover { text-decoration: underline; }
       var text=gatherText();
       if(!text){
         AiFRS._aiBusy=false;
+        AiFRS._lastAiErr={phase:'extract',msg:'추출된 텍스트 없음',ts:Date.now()};
         var errs=AiFRS.state.files.filter(function(r){return r.ocrErr;}).map(function(r){return esc(r.name)+' → '+esc(r.ocrErr);});
         box.innerHTML='<div class="aifrs-api-stat err">추출된 텍스트가 없습니다.</div>'
           + (errs.length?'<div class="aifrs-note" style="margin-top:6px"><b>OCR 오류</b><br>'+errs.join('<br>')+'</div>':'<div class="aifrs-note" style="margin-top:6px">OCR 대상이 없거나 실패했습니다. 파일 카드 상태를 확인하세요.</div>')
@@ -2831,7 +2833,7 @@ a:hover { text-decoration: underline; }
             .then(function(txt2){
               clearInterval(aiTimer); AiFRS._aiBusy=false;
               var st=AiFRS.parseJsonResponse(txt2);
-              if(!st){ box.innerHTML='<div class="aifrs-api-stat err">응답 JSON 파싱 실패 — 원문 일부:</div><pre class="aifrs-preview">'+esc(txt2.slice(0,1500))+'</pre>'; return; }
+              if(!st){ AiFRS._lastAiErr={phase:'structure',msg:'JSON 파싱 실패',ts:Date.now()}; box.innerHTML='<div class="aifrs-api-stat err">응답 JSON 파싱 실패 — 원문 일부:</div><pre class="aifrs-preview">'+esc(txt2.slice(0,1500))+'</pre>'; return; }
               var gs=st['거래구조']||{};
               var raw=gs['근거인용']||[];
               var rawTx=gs['근거인용_한글역']||[];
@@ -2853,6 +2855,7 @@ a:hover { text-decoration: underline; }
         });
     }).catch(function(e){
       AiFRS._aiBusy=false; if(aiTimer) clearInterval(aiTimer);
+      AiFRS._lastAiErr={phase:_isAbort(e)?'abort':'api',msg:(e&&e.message)||String(e),ts:Date.now()};
       if(_isAbort(e)){
         box.innerHTML='<div class="aifrs-api-stat">⏹ 분석을 중단했습니다.</div>'
           + '<div class="aifrs-note" style="margin-top:6px">진행 중이던 API 호출을 취소했습니다. (이미 추출 완료된 OCR 텍스트는 유지되어 다시 분석 시 재사용됩니다.)</div>'
@@ -5062,7 +5065,19 @@ a:hover { text-decoration: underline; }
       var bar=document.getElementById('aifrs-bar-'+rec.id);
       if(bar) bar.style.width=Math.round(p*100)+'%';
     }).then(function(text){
-      rec.text=text||''; rec.status='done';
+      text=text||'';
+      // DRM(DocumentSafer 등)·바이너리 문서 감지 — 깨진 바이트를 AI에 보내면 응답 불능·무한 대기(사이클10 timeout 3건의 유력 원인)
+      // 헤더 마커 또는 제어문자·U+FFFD 비율 20% 초과 시 추출 실패로 처리하고 사용자에게 원인 안내
+      var _drmHead=/<DOCUMENTSAFER|<FASOO|<SOFTCAMP|MarkAny/i.test(text.slice(0,200));
+      var _bad=0, _n=Math.min(text.length,4000);
+      for(var _i=0;_i<_n;_i++){ var _c=text.charCodeAt(_i); if(_c===0xFFFD||(_c<32&&_c!==9&&_c!==10&&_c!==13)) _bad++; }
+      if(_drmHead || (_n>200 && _bad/_n>0.2)){
+        rec.text=''; rec.status='error';
+        rec.error=_drmHead?'DRM(문서보안)으로 암호화된 파일이라 내용을 읽을 수 없어요. DRM을 해제한 사본이나 원본 시스템에서 내보낸 파일로 다시 올려주세요.'
+                          :'글자를 읽을 수 없는 파일이에요(암호화·손상 또는 이미지 전용). 텍스트가 있는 원본 파일로 다시 올려주세요.';
+        renderFileList(); return;
+      }
+      rec.text=text; rec.status='done';
       if(rec.ext==='pdf' && rec.text.replace(/\s/g,'').length<20){ rec.needsOcr=true; }  // 스캔 PDF → AI 분석 시 OCR
       renderFileList();
     }).catch(function(err){
