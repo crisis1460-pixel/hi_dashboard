@@ -1740,7 +1740,10 @@ a:hover { text-decoration: underline; }
     if(done.length<2 || AiFRS._mixOkSig===sig || AiFRS._mixWarnedSig===sig) return;
     if(AiFRS.state.files.some(function(r){return r.status==='processing'||r.status==='waiting';})) return;   // 추출 끝나면 다시 호출됨
     var warn=_detectMixedFiles(done);
-    if(warn){ AiFRS._mixWarnedSig=sig; _showMixWarning(warn, function(){}); }
+    AiFRS._mixWarnedSig=sig;
+    // 복수 파일 안내 단일화: 불일치 신호가 있으면 상세 경고(파일별 근거 + 함께 분석/정리 선택)만, 없으면 일반 안내를 세션당 1회만
+    if(warn){ AiFRS._multiFileWarned=true; _showMixWarning(warn, function(){}); }
+    else if(!AiFRS._multiFileWarned){ AiFRS._multiFileWarned=true; showMultiFileWarnModal(true); }
   }
 
   // 오프라인 매칭 실제 실행부(팝업 없음) — 버튼 클릭과 자동 새로고침이 공유
@@ -5154,7 +5157,7 @@ a:hover { text-decoration: underline; }
   // ══ 비지원 형식 모달 ══
   function showUnsupportedModal(names){
     var hasOffice = names.some(function(n){ return /\.(doc|ppt)$/i.test(n); });
-    var msg = esc(names.join(', ')) + '<br><br><b>해당 파일은 PDF로 변환 후 업로드해주세요.</b>';
+    var msg = esc(names.join(', ')) + '<br><br><b>해당 파일은 PDF로 변환 후 업로드가 필요합니다.</b>';
     if(hasOffice) msg += '<br><span class="aifrs-note aifrs-note-mark"><i>※</i><span>구버전 .doc / .ppt 는 <b>.docx / .pptx</b> 또는 <b>PDF</b>로 저장한 뒤 올려주세요.</span></span>';
     var ov=document.createElement('div');
     ov.className='aifrs-modal-ov';
@@ -5220,17 +5223,13 @@ a:hover { text-decoration: underline; }
     });
     if(otherArch.length)   showArchiveHelpModal(otherArch);
     if(unsupported.length) showUnsupportedModal(unsupported);
-    // 파일이 2개 이상 됐는데 이번 호출로 실제 새 파일이 늘어났으면(중복 업로드 등 무변화 제외) — 세션당 1회만 안내
-    if((added.length+archives.length)>0 && AiFRS.state.files.length>=2 && !AiFRS._multiFileWarned){
-      AiFRS._multiFileWarned=true;
-      showMultiFileWarnModal();
-    }
+    // 복수 파일 안내는 추출 완료 후 _autoCheckMixedFiles에서 한 번만(사전 매칭 불일치면 상세 경고, 일치면 일반 안내) — 업로드 즉시 팝업은 중복이라 제거
     renderFileList();
     added.forEach(processRec);
     archives.forEach(showPasswordModal);  // .zip → 비밀번호 입력 → 해제
   };
   // ══ 파일 2개 이상 업로드 시 1회 안내: 같은 계약/거래 자료가 아니면 따로 분석해야 함 ══
-  function showMultiFileWarnModal(){
+  function showMultiFileWarnModal(matched){
     var ov=document.createElement('div');
     ov.className='aifrs-modal-ov';
     ov.innerHTML=
@@ -5238,8 +5237,9 @@ a:hover { text-decoration: underline; }
       + '<div class="m-ico">⚠️</div>'
       + '<div class="m-ttl">파일이 여러 개입니다 — 같은 건인가요?</div>'
       + '<div class="m-msg">AI는 업로드된 파일을 <b>하나의 거래(계약) 자료</b>로 보고 함께 분석합니다.'
-      +   '<br><br>지금 올리신 파일들이 <b>서로 다른 계약·거래</b>에 관한 것이라면, 섞어서 분석하면 결과가 부정확해질 수 있습니다.'
-      +   '<br><span class="aifrs-note aifrs-note-mark"><i>※</i><span>같은 건의 첨부·별지·번역본 등이면 그대로 함께 올리셔도 됩니다. 서로 다른 건이면 [처음]으로 초기화한 뒤 건별로 따로 분석해주세요.</span></span></div>'
+      +   (matched?'<br>파일별 사전 매칭 결과(거래처·기준서 방향)는 <b>같은 거래</b>로 보입니다.':'')
+      +   '<br><br>올린 파일들이 <b>서로 다른 계약·거래</b>에 관한 것이라면, 섞어서 분석할 때 결과가 부정확해질 수 있습니다.'
+      +   '<br><span class="aifrs-note aifrs-note-mark"><i>※</i><span>같은 건의 첨부·별지·번역본 등이면 그대로 함께 분석해도 됩니다. 서로 다른 건이면 [처음]으로 초기화한 뒤 건별로 따로 분석합니다.</span></span></div>'
       + '<div class="m-foot"><button class="aifrs-btn">확인</button></div>'
       + '</div>';
     function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
@@ -5784,7 +5784,8 @@ a:hover { text-decoration: underline; }
           '즐겨찾기: ☆ 옆 "즐겨찾기 추가/저장됨" 라벨, JSON → 공유 파일 용어 통일, 내보내기 파일명 AiFRS_분석기록_YYMMDDHHMM, 뷰어 버튼 크기 통일, 뷰어에서 복원 배너 미표시',
           '조문 팝업 (1)(2) 항목의 이어지는 설명 줄 매달린들여쓰기 유지, 고정 안내 문구 ~요체 → ~다체, 쉬운설명 로딩에 초 흐름 추가',
           '리모컨 숨김/펼침 범위를 메인 화면 전체로 확대 — 모든 details·어려운 용어 칩·파일 미리보기·쉬운설명 결과(캐시 복원), 조문 카드 "쉽게 말해" 라벨 → "해설"',
-          '하단 [사용 가이드] 투어 8단계로 확장 — 키 등록→올리고 분석→진행 단계→근거 검증·DB→즐겨찾기→리모컨→기록→소개, 즐겨찾기·기록·소개 [자세히] 시트 신설'
+          '하단 [사용 가이드] 투어 8단계로 확장 — 키 등록→올리고 분석→진행 단계→근거 검증·DB→즐겨찾기→리모컨→기록→소개, 즐겨찾기·기록·소개 [자세히] 시트 신설',
+          '복수 파일 안내 단일화 — 업로드 즉시 팝업 제거, 추출 완료 후 사전 매칭 불일치면 상세 경고만·일치면 일반 안내(세션 1회)만 표시(중복 팝업 2개 → 1개)'
         ]
       },
       { date:'2026-09-07', title:'사용가이드 PPTX 제작 — 12슬라이드 다크 네이비 테마',
