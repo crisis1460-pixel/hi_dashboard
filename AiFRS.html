@@ -3946,9 +3946,9 @@ a:hover { text-decoration: underline; }
       else if(cur){ cur.t.push(line); }
       else out.push({p:line});
     });
-    return out.map(function(o){
-      if(o.p!==undefined) return '<div class="af-para-p">'+hl(esc(o.p))+'</div>';
-      return '<div class="af-para-li"><i>'+esc(o.m)+'</i><span>'+o.t.map(function(s){ return hl(esc(s)); }).join('<br>')+'</span></div>';
+    return out.map(function(o,i){
+      if(o.p!==undefined) return '<div class="af-para-p"'+(i?' style="margin-top:12px"':'')+'>'+(hl(esc(o.p)))+'</div>';
+      return '<div class="af-para-li"'+(i?' style="margin-top:12px"':'')+'><i>'+esc(o.m)+'</i><span>'+o.t.map(function(s){ return hl(esc(s)); }).join('<br>')+'</span></div>';
     }).join('');
   }
   function _paraBlock(std, pno){
@@ -5759,11 +5759,12 @@ a:hover { text-decoration: underline; }
   // 쉬운설명 안의 "§12" 조문 표기 → 점선 밑줄 + 마우스오버 요약(내장 DB) + 클릭 시 새 창 원문
   function _linkParaRefs(html, stdNo){
     if(!html||!stdNo) return html||'';
-    return String(html).replace(/§\s*(\d{1,3}[A-Z]?(?:\.\d+)?)/g, function(m, p){
+    return String(html).replace(/§\s*(\d{1,3}[A-Z]?(?:\.\d+)?)(?:~(\d{1,3}[A-Z]?))?/g, function(m, p, p2){
       var para=AiFRS.findArticle(stdNo, p), tip='';
       if(para){ tip=String(para.summary||para.easy||para.excerpt||'').replace(/\r\n|\r/g,' ').replace(/\n/g,' ').replace(/ {2,}/g,' ').slice(0,300); if(para.topic) tip=para.topic+' — '+tip; }
       else tip='내장 DB에 없는 문단입니다 — 클릭하면 안내를 표시합니다';
-      return '<span class="af-pref" data-tip="'+esc(tip)+'" onclick="event.stopPropagation();window.AiFRS.openParaWindow(\''+esc(String(stdNo))+'\',\''+esc(p)+'\')">§'+esc(p)+'</span>';
+      var label=p2?p+'~'+p2:p;
+      return '<span class="af-pref" data-tip="'+esc(tip)+'" onclick="event.stopPropagation();window.AiFRS.openParaWindow(\''+esc(String(stdNo))+'\',\''+esc(p)+'\')">§'+esc(label)+'</span>';
     });
   }
   AiFRS.openParaWindow=function(stdNo, pno){
@@ -5810,6 +5811,9 @@ a:hover { text-decoration: underline; }
       { date:'2026-09-07', title:'UX 2차 정비 — 용어·신뢰도·§조문 툴팁·글로우 후보',
         bullets:[
           '§조문 툴팁 JS 기반 교체 — CSS ::after(평문) → JS 동적 div(innerHTML), (1)(2) 항목 자동 줄바꿈, 뷰포트 경계 감지 상/하 동적 배치, title attr 제거(클릭 안내문 겹침 제거), 내용 160자→300자 확장',
+          '§11~17 범위 표기 단일 span 처리 — _linkParaRefs regex 확장(~p2 그룹 추가), "§11~17" 전체가 점선 밑줄·파란색 링크로 렌더(기존엔 §11만 적용되고 ~17은 평문 잔류)',
+          '§조문 툴팁 너비 320px→380px 확장 + 문장 경계 자동 줄바꿈(단일 문단도 "한다. " 패턴에서 분리), 항목간 여백 6→10px',
+          '조문 원문 뷰어(새 창) (1)(2) 번호 항목간 빈 행 추가(margin-top 12px) — 번호 나열 가독성 개선',
           '헤더 "기록" → "개발이력" 표기 변경, 소개 배지 픽셀 노이즈(🧠 이모지) 제거',
           '"동료" → "다른 사용자" 전체 8곳 용어 통일 — 즐겨찾기 뷰어·사용가이드·소개·헤더 title 포함',
           '소개 창 "개발자 정보" → "기획·제작" 표기(1인 바이브코더 맥락에 맞게 완화)',
@@ -7153,7 +7157,7 @@ a:hover { text-decoration: underline; }
     // §조문 JS 툴팁 — ::after 대체. 줄바꿈·위치 동적 계산, 클릭 안내 제거
     (function(){
       var _p=document.createElement('div'); _p.id='af-ptip';
-      _p.setAttribute('style','position:fixed;z-index:9999;display:none;width:320px;max-width:min(90vw,320px);background:var(--bg2);border:1px solid var(--border2);border-radius:9px;padding:11px 14px;box-shadow:0 8px 28px rgba(0,0,0,.6);font-size:12px;line-height:1.75;color:var(--txt2);word-break:keep-all;overflow-wrap:break-word;pointer-events:none');
+      _p.setAttribute('style','position:fixed;z-index:9999;display:none;width:380px;max-width:min(92vw,380px);background:var(--bg2);border:1px solid var(--border2);border-radius:9px;padding:11px 14px;box-shadow:0 8px 28px rgba(0,0,0,.6);font-size:12px;line-height:1.75;color:var(--txt2);word-break:keep-all;overflow-wrap:break-word;pointer-events:none');
       document.body.appendChild(_p);
       function _e(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
       function _fmt(raw){
@@ -7162,7 +7166,14 @@ a:hover { text-decoration: underline; }
         if(parts.length>1){
           return parts.filter(Boolean).map(function(p,i){
             var t=p.trim();
-            return '<div style="margin-top:'+(i?'6':'0')+'px">' + _e(t) + '</div>';
+            return '<div style="margin-top:'+(i?'10':'0')+'px">' + _e(t) + '</div>';
+          }).join('');
+        }
+        // 단일 문단: 한국어 문장 종결 경계에서 줄바꿈(가독성 개선)
+        var sents=raw.replace(/([다됩함임합습]\.)\s+(?=[가-힣A-Z\(①-⑨])/g,'$1\n').split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
+        if(sents.length>1){
+          return sents.map(function(s,i){
+            return '<div style="margin-top:'+(i?'6':'0')+'px">'+_e(s)+'</div>';
           }).join('');
         }
         return _e(raw);
@@ -7171,7 +7182,7 @@ a:hover { text-decoration: underline; }
         _p.innerHTML=_fmt(el.getAttribute('data-tip')||'');
         _p.style.display='block';
         var r=el.getBoundingClientRect(), th=_p.offsetHeight||100;
-        var left=Math.max(8,Math.min(r.left,window.innerWidth-330));
+        var left=Math.max(8,Math.min(r.left,window.innerWidth-390));
         var top=r.bottom+7;
         if(top+th>window.innerHeight-8) top=Math.max(8,r.top-th-7);
         _p.style.left=left+'px'; _p.style.top=top+'px';
