@@ -6722,8 +6722,8 @@ button.aifrs-btn[onclick*="runFullReview"],
     AiFRS._tourIdx=i;
     var s=steps[i], r=el.getBoundingClientRect();
     var hl=document.getElementById('aifrs-tour-hl'), tip=document.getElementById('aifrs-tour-tip');
-    hl.style.left=(r.left-16)+'px'; hl.style.top=(r.top-18)+'px';
-    hl.style.width=(r.width+32)+'px'; hl.style.height=(r.height+30)+'px';
+    hl.style.left=(r.left-22)+'px'; hl.style.top=(r.top-26)+'px';
+    hl.style.width=(r.width+44)+'px'; hl.style.height=(r.height+38)+'px';
     // 콘텐츠 먼저 설정 → 실제 폭 측정 → 위치 계산 (텍스트 자동 줄내림 방지)
     tip.querySelector('b').textContent=s.title;
     // '- ' 개조식 줄은 hanging indent(줄내림 시 시작열 유지), 그 외 줄은 소제목 처리
