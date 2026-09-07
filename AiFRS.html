@@ -116,7 +116,7 @@ a:hover { text-decoration: underline; }
   display:flex; align-items:center; justify-content:center; transition:transform .1s, box-shadow .1s;
   box-shadow:0 1.5px 0 #050505, 0 2px 3px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.18), inset 0 -2px 4px rgba(0,0,0,.4);
 }
-.af-icon-label { font-size:9px; letter-spacing:.3px; white-space:nowrap; color:var(--txt3); }
+.af-icon-label { font-size:9.5px; letter-spacing:.3px; white-space:nowrap; color:var(--txt3); }
 .af-icon-btn:hover { color:#fff; }
 .af-icon-btn:active { transform:translateY(1px); box-shadow:0 1px 0 #050505, inset 0 1px 0 rgba(255,255,255,.1), inset 0 -1px 3px rgba(0,0,0,.6); }
 .af-icon-btn.active {
@@ -242,19 +242,33 @@ a:hover { text-decoration: underline; }
   animation:af-step-glow 2.8s ease-in-out infinite;
 }
 @media (prefers-reduced-motion: reduce) { #aifrs-tour-btn.af-guide-glow { animation:none; box-shadow:0 0 0 1px rgba(212,175,55,.6); } }
-/* 단계 버튼 글로우 — 앤틱 골드 링(G2): AI분석·AI전체검토·쉬운설명 */
+/* 단계 버튼 글로우 — 대각선 오비트: 좌상↔우하 왕복 */
 @keyframes af-step-glow {
-  0%,100% { box-shadow:0 0 0 0.5px rgba(212,175,55,.28), 0 3px 10px rgba(0,0,0,.4) }
-  50%      { box-shadow:0 0 0 1px rgba(212,175,55,.88), 0 0 10px 2px rgba(212,175,55,.26), 0 3px 10px rgba(0,0,0,.4) }
+  0%,100% { box-shadow:0 0 0 1px rgba(212,175,55,.55), -6px -5px 16px 1px rgba(212,175,55,.58), 4px 3px 10px 0 rgba(212,175,55,.14), 0 3px 10px rgba(0,0,0,.4) }
+  50%      { box-shadow:0 0 0 1px rgba(212,175,55,.85),  6px  5px 18px 2px rgba(212,175,55,.6), -4px -3px 10px 0 rgba(212,175,55,.16), 0 3px 10px rgba(0,0,0,.4) }
 }
 #aifrs-ai-btn:not(:disabled),
 button.aifrs-btn[onclick*="runFullReview"],
-[id^="aifrs-easybtn-"] { animation:af-step-glow 2.8s ease-in-out infinite; }
+[id^="aifrs-easybtn-"] { animation:af-step-glow 2.6s ease-in-out infinite; }
 @media (prefers-reduced-motion:reduce) {
   #aifrs-ai-btn:not(:disabled),
   button.aifrs-btn[onclick*="runFullReview"],
-  [id^="aifrs-easybtn-"] { animation:none; box-shadow:0 0 0 1px rgba(212,175,55,.6); }
+  [id^="aifrs-easybtn-"] { animation:none; box-shadow:0 0 0 1px rgba(212,175,55,.7), -4px -4px 10px rgba(212,175,55,.35); }
 }
+/* ── 웰컴 힌트 — 최초 1회 전체 암전 + 중앙 카드 ── */
+.aifrs-welcome-ov{position:fixed;inset:0;z-index:10200;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;animation:wov-in .35s ease}
+@keyframes wov-in{from{opacity:0}to{opacity:1}}
+.aifrs-welcome-card{background:var(--bg2);border:1px solid rgba(212,175,55,.3);border-radius:18px;padding:26px 28px 22px;max-width:268px;width:90vw;text-align:center;box-shadow:0 0 0 1px rgba(212,175,55,.12),0 12px 48px rgba(0,0,0,.65);animation:wcard-in .38s .1s both ease}
+@keyframes wcard-in{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+.aifrs-welcome-ico{font-size:26px;margin-bottom:12px;display:block}
+.aifrs-welcome-title{font-size:14.5px;font-weight:700;color:var(--txt);margin-bottom:7px}
+.aifrs-welcome-msg{font-size:12px;color:var(--txt2);line-height:1.75;margin-bottom:16px;word-break:keep-all}
+.aifrs-welcome-msg b{color:var(--txt)}
+.aifrs-welcome-btns{display:flex;flex-direction:column;gap:7px}
+.aifrs-welcome-ok{background:rgba(212,175,55,.14);border:1px solid rgba(212,175,55,.38);color:rgba(230,195,65,.95);border-radius:9px;padding:8px 22px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s}
+.aifrs-welcome-ok:hover{background:rgba(212,175,55,.26)}
+.aifrs-welcome-skip{background:none;border:none;color:var(--txt3);border-radius:9px;padding:5px 22px;font-size:11.5px;cursor:pointer;font-family:inherit;transition:color .15s}
+.aifrs-welcome-skip:hover{color:var(--txt2)}
 /* 코치마크 투어 — 스포트라이트(하이라이트 박스의 거대 그림자로 주변 암전) */
 .aifrs-tour-ov { position:fixed; inset:0; z-index:10500; }
 .aifrs-tour-hl {
@@ -5814,11 +5828,12 @@ button.aifrs-btn[onclick*="runFullReview"],
   // ───────────────────────────────────────────────────────────────────────────
   function buildHistHtml(){
     var items = [
-      { date:'2026-09-07', title:'단계 버튼 앤틱 골드 링 글로우 + §조문·사용가이드 세부 정비',
+      { date:'2026-09-07', title:'단계 버튼 글로우·웰컴 팝업·투어 문구 정비',
         bullets:[
-          '단계 버튼 글로우 적용(G2 앤틱 골드 링) — AI 분석(:not(:disabled))·AI 전체검토(runFullReview)·쉬운 설명(aifrs-easybtn-*)·사용가이드(최초 1회 af-guide-glow) 4종 통일. @keyframes af-step-glow: base 0.5px→peak 1px, rgba(212,175,55)',
+          '단계 버튼 글로우 — 대각선 오비트(좌상↔우하 2.6s 왕복) 적용. AI 분석·AI 전체검토·쉬운 설명·사용가이드(최초 1회) 4종 통일',
+          '최초 1회 웰컴 팝업 — "사용 가이드 시작하기 →" / "이미 알아요" 2버튼 구조. 가이드 버튼 클릭 시 팝업 닫힘 + 사용가이드 투어 자동 실행',
           '인트로 문구 "(1분)." → "(1분)" 마침표 제거',
-          '사용가이드 투어 ⑦ 제목 "기록" → "개발이력" 통일(스텝 타이틀·상세 시트·주석 3곳), 리모컨-도움 안내 방향은 변경 없음'
+          '사용가이드 ⑥ 리모컨 — 숨김/펼침 설명 괄호 제거, ⑦ 개발이력·⑧ 소개 — 자세히 버튼 제거(약식 설명만 유지)'
         ]
       },
       { date:'2026-09-07', title:'UX 2차 정비 — 용어·신뢰도·§조문 툴팁·글로우 후보',
@@ -6562,10 +6577,10 @@ button.aifrs-btn[onclick*="runFullReview"],
     {sel:'#aifrs-bm-toggle',       title:'⑤ 즐겨찾기', info:'tour5',
       msg:'- AI감사 결과 상단 또는 쉬운설명 하단의 [☆ 즐겨찾기 추가]로 분석 결과 전체를 저장\n- 상단 [즐겨찾기]를 누르면 저장 목록이 새 창으로 열림\n- [공유 파일 내보내기]로 다른 사용자에게 전달, 받은 파일은 [가져오기]로 즉시 열람'},
     {sel:'.af-remote',             title:'⑥ 리모컨',
-      msg:'- 숨김: 펼쳐진 항목을 모두 접고 맨 위로(접을 게 없으면 안내만)\n- 펼침: 접힌 항목을 모두 펼치고 맨 위로(펼칠 게 없으면 안내만)\n- 처음: 지금까지 작업을 모두 초기화하고 메인 화면으로\n- 도움: 지금 단계에서 다음에 눌러야 할 것을 화면에 바로 표시'},
-    {sel:'#aifrs-hist-toggle',     title:'⑦ 개발이력', info:'tour7',
-      msg:'- AiFRS의 개발 히스토리를 날짜별로 정리한 새 창\n- 최근에 무엇이 바뀌었는지, 어떤 기능이 추가됐는지 확인\n- 분석 결과(저장한 것)는 여기가 아니라 [즐겨찾기]에서 관리'},
-    {sel:'#aifrs-about-toggle',    title:'⑧ 소개', info:'tour8',
+      msg:'- 숨김: 펼쳐진 항목을 모두 접고 맨 위로\n- 펼침: 접힌 항목을 모두 펼치고 맨 위로\n- 처음: 지금까지 작업을 모두 초기화하고 메인 화면으로\n- 도움: 지금 단계에서 다음에 눌러야 할 것을 화면에 바로 표시'},
+    {sel:'#aifrs-hist-toggle',     title:'⑦ 개발이력',
+      msg:'- AiFRS의 개발 히스토리를 날짜별로 정리한 새 창\n- 최근에 무엇이 바뀌었는지, 어떤 기능이 추가됐는지 확인'},
+    {sel:'#aifrs-about-toggle',    title:'⑧ 소개',
       msg:'- K-IFRS가 무엇인지, AiFRS가 왜 만들어졌는지 설명하는 새 창\n- 주요 기능 요약과 문의·건의 연락처\n- 처음 접하는 다른 사용자에게 안내할 때 이 창을 공유'}
   ];
   AiFRS.startTour = function(){
@@ -7164,6 +7179,26 @@ button.aifrs-btn[onclick*="runFullReview"],
     if(tourBtn){
       tourBtn.addEventListener('click', AiFRS.startTour);
       if(!localStorage.getItem('aifrs-tour-seen')) tourBtn.classList.add('af-guide-glow');
+    }
+    // 웰컴 힌트 — aifrs-hint-seen 미설정 + 미투어 시 최초 1회
+    if(!localStorage.getItem('aifrs-hint-seen') && !localStorage.getItem('aifrs-tour-seen')){
+      setTimeout(function(){
+        var ov=document.createElement('div'); ov.className='aifrs-welcome-ov';
+        function _wClose(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
+        function _wGuide(){ _wClose(); var tb=document.getElementById('aifrs-tour-btn'); if(tb) tb.click(); }
+        ov.innerHTML='<div class="aifrs-welcome-card">'
+          +'<span class="aifrs-welcome-ico">✦</span>'
+          +'<div class="aifrs-welcome-title">처음 오셨군요</div>'
+          +'<div class="aifrs-welcome-msg">기능이 많아 보여도 괜찮아요<br><b>사용 가이드</b>가 순서대로 안내합니다</div>'
+          +'<div class="aifrs-welcome-btns">'
+          +'<button class="aifrs-welcome-ok" onclick="(function(){var o=this.closest(\'.aifrs-welcome-ov\');if(o&&o.parentNode)o.parentNode.removeChild(o);var t=document.getElementById(\'aifrs-tour-btn\');if(t)t.click();}).call(this)">사용 가이드 시작하기 →</button>'
+          +'<button class="aifrs-welcome-skip" onclick="this.closest(\'.aifrs-welcome-ov\').remove()">이미 알아요</button>'
+          +'</div>'
+          +'</div>';
+        ov.addEventListener('click',function(e){ if(e.target===ov) _wClose(); });
+        document.body.appendChild(ov);
+        localStorage.setItem('aifrs-hint-seen','1');
+      },600);
     }
     _mountRemote();   // 리모컨(플로팅 퀵버튼)
     _mountSignature();   // 숨김 시그니처(우측 하단 흐릿하게)
