@@ -724,18 +724,6 @@ button.aifrs-btn[onclick*="runFullReview"],
 .af-vault-date{font-size:10px;color:var(--txt3);margin-top:1px}
 .af-vault-load{font-size:10px;font-weight:600;color:var(--blue-sky);background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:3px 8px;cursor:pointer;white-space:nowrap;flex-shrink:0}
 .af-vault-load:hover{background:var(--bg4)}
-/* P8: 온보딩 */
-.af-ob-panel{background:rgba(0,102,204,.07);border:1px solid rgba(41,151,255,.2);border-radius:11px;padding:12px 14px;margin:12px 0 0}
-.af-ob-ttl{font-size:12px;font-weight:700;color:var(--blue-sky);margin-bottom:9px}
-.af-ob-step{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:var(--bg4);margin-bottom:5px}
-.af-ob-step:last-child{margin-bottom:0}
-.af-ob-num{width:20px;height:20px;border-radius:50%;background:var(--bg3);border:2px solid rgba(41,151,255,.5);color:var(--txt3);font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.af-ob-num.done{background:#34c759;border-color:#34c759;color:#fff}
-.af-ob-num.active{border-color:var(--blue-sky);color:var(--blue-sky)}
-.af-ob-text{font-size:12px;color:var(--txt2);flex:1;word-break:keep-all;text-align:left}
-.af-ob-badge{font-size:10px;color:var(--txt3);flex-shrink:0}
-.af-ob-active{border:1px solid rgba(41,151,255,.3)!important;background:rgba(0,102,204,.1)!important}
-.af-ob-muted{opacity:.5}
 /* A1: 결론 카드 */
 .af-conc-card{border-radius:10px;padding:11px 13px;margin-bottom:10px;border-left:3px solid transparent}
 .af-conc-card.af-conc-hi{background:rgba(52,199,89,.08);border-color:#34c759}
@@ -5678,28 +5666,6 @@ button.aifrs-btn[onclick*="runFullReview"],
     noKey.outerHTML='<div class="af-qa-row"><textarea id="af-qa-input" class="af-qa-input" placeholder="이 거래에 대해 궁금한 점을 질문하세요..." rows="1"></textarea>'
       +'<button class="af-qa-btn" onclick="AiFRS.askFollowUp()">전송</button></div>';
   }
-  // ── P8: 온보딩 체크리스트 ──
-  function _obStep(n){
-    for(var i=1;i<=2;i++){
-      var el=document.getElementById('af-ob-s'+i),num=el&&el.querySelector('.af-ob-num');
-      if(!el) continue;
-      if(i<n){ el.className='af-ob-step'; if(num) num.className='af-ob-num done'; }
-      else    { el.className='af-ob-step af-ob-active'; if(num) num.className='af-ob-num active'; }
-    }
-  }
-  window._obStep=_obStep;
-  function _initOnboarding(){
-    var panel=document.getElementById('af-ob-panel'); if(!panel) return;
-    var hasKey=!!(AiFRS.getApiKey&&AiFRS.getApiKey());
-    if(hasKey){ panel.style.display='none'; return; }
-    panel.style.display='block';
-    panel.innerHTML='<div class="af-ob-ttl">시작하기 — 3단계</div>'
-      +'<div id="af-ob-s1" class="af-ob-step af-ob-active"><div class="af-ob-num active">1</div><div class="af-ob-text"><b>Google AI Studio에서 무료 API 키 발급</b></div>'
-        +'<a href="https://ai.google.dev/aistudio" target="_blank" rel="noopener" class="aifrs-btn aifrs-btn-sm" onclick="window._obStep(2)" style="font-size:10px;padding:4px 10px;text-decoration:none;flex-shrink:0">바로가기</a></div>'
-      +'<div id="af-ob-s2" class="af-ob-step af-ob-muted"><div class="af-ob-num">2</div><div class="af-ob-text"><b>발급받은 키를 상단 설정에 등록</b> — 붙여넣기, 1분 완료</div>'
-        +'<button class="aifrs-btn aifrs-btn-sm" onclick="var t=document.getElementById(\'aifrs-settings-toggle\');if(t)t.click();" style="font-size:10px;padding:4px 10px;flex-shrink:0">설정 열기</button></div>'
-      +'<div class="af-ob-step af-ob-muted"><div class="af-ob-num">3</div><div class="af-ob-text">회계 문서 업로드 → AI 분석 시작</div><div class="af-ob-badge">대기 중</div></div>';
-  }
   // ── 즐겨찾기 ───────────────────────────────────────────────────────────────
   var _BM_KEY='aifrs-bookmarks';
   function _bmGet(){ try{ return JSON.parse(localStorage.getItem(_BM_KEY)||'[]'); }catch(e){ return []; } }
@@ -7509,7 +7475,6 @@ button.aifrs-btn[onclick*="runFullReview"],
       +     '<p class="af-hero-sub">K-IFRS AI 회계기준 자동 분석</p>'
       +     '<p class="af-hero-desc">계약서·문서를 올리면 AI가 관련 K-IFRS 기준서를 자동으로 찾아드립니다.</p>'
       +     '<p class="af-hero-api-tip">처음이시라면 상단 <b>설정</b>에서 <b>무료 Gemini API 키</b>를 등록하세요 (1분)</p>'
-      +     '<div id="af-ob-panel" class="af-ob-panel" style="display:none"></div>'
       +   '</div>'
       +   '<div class="aifrs-filelist" id="aifrs-filelist"></div>'
       +   '<div id="aifrs-ai" class="aifrs-analysis" style="display:none"></div>'
@@ -7667,7 +7632,7 @@ button.aifrs-btn[onclick*="runFullReview"],
     if(apiSave) apiSave.addEventListener('click', function(){
       _applyApiInputs();
       if(apiStat){ apiStat.className='af-set-stat ok'; apiStat.textContent = AiFRS.getApiKey()?'Key saved':'Key cleared'; }
-      _initOnboarding(); _initQaWrap();
+      _initQaWrap();
       _tutKeyCheck();   // 첫 여정 튜토리얼: 저장 즉시 연결 핑으로 열쇠 검증
     });
     if(apiTest) apiTest.addEventListener('click', function(){ _applyApiInputs(); AiFRS.testApiUI(); _tutKeyCheck(); });   // Test도 키 저장 수행 → 튜토리얼 key-saved 이벤트 발생
@@ -7691,7 +7656,6 @@ button.aifrs-btn[onclick*="runFullReview"],
 
     AiFRS._rendered = true;
     renderFileList();
-    _initOnboarding();
     _bmUpdateBadge();   // 즐겨찾기 뱃지 초기화
     _tutResume();       // 첫 여정 튜토리얼 — 진행 중이었다면 상태 기준으로 재개
   };
