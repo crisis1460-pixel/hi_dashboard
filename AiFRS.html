@@ -5644,7 +5644,9 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
     var t0=Date.now(), tid='aifrs-qa-timer';
     // 통일 로딩 카드(제목·부제·진행바·초 흐름·중단) — 정밀분석·AI감사와 같은 형태
     answer.className='af-qa-answer visible'; answer.style.color='';
-    answer.innerHTML=_aiLoad('compass',0,'후속 질문 — 답변 작성','분석 결과와 기준서를 바탕으로 답변을 정리하는 중입니다',tid,'0.0초',_cancelBtn("window.AiFRS.cancelFollowUp()",'답변 중단'));
+    // 이전 답변 카드는 접어서 아래에 이력으로 보존(즐겨찾기 저장·공유 파일에 함께 담김)
+    var prev=Array.prototype.map.call(answer.querySelectorAll('details.af-qa-ans'),function(d){ d.removeAttribute('open'); return d.outerHTML; }).join('');
+    answer.innerHTML=_aiLoad('compass',0,'후속 질문 — 답변 작성','분석 결과와 기준서를 바탕으로 답변을 정리하는 중입니다',tid,'0.0초',_cancelBtn("window.AiFRS.cancelFollowUp()",'답변 중단'))+prev;
     var timer=setInterval(function(){ var el=document.getElementById(tid); if(el) el.textContent=((Date.now()-t0)/1000).toFixed(1)+'초'; },100);
     input.disabled=true; if(btn) btn.disabled=true;
     function done(){ clearInterval(timer); input.disabled=false; if(btn) btn.disabled=false; if(AiFRS._qaCtl===ctl) AiFRS._qaCtl=null; }
@@ -5655,12 +5657,12 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
       t=_stripQaPreamble(t);
       // 답변 카드: <details>라 리모컨 [숨김]/[펼침] 대상에 자동 포함 + 상단 작은 토글로 수동 숨기기
       answer.innerHTML='<details class="af-qa-ans" open><summary><span class="af-qa-ans-q">Q. '+esc(q)+'</span><span class="af-qa-ans-meta">'+secs+'초 · '+esc(AiFRS.getModel())+'</span><span class="af-qa-ans-tg" data-open="답변 숨기기" data-closed="답변 보기"></span></summary>'
-        +'<div class="af-qa-md">'+_mdLite(t)+'</div></details>';
+        +'<div class="af-qa-md">'+_mdLite(t)+'</div></details>'+prev;
       input.value='';
     }).catch(function(e){
       done();
       var aborted=/abort/i.test(String((e&&e.name)||'')+String((e&&e.message)||''));
-      answer.innerHTML='<div class="aifrs-api-stat err">— '+esc(aborted?'답변을 중단했습니다.':String((e&&e.message)||e))+'</div>';
+      answer.innerHTML='<div class="aifrs-api-stat err">— '+esc(aborted?'답변을 중단했습니다.':String((e&&e.message)||e))+'</div>'+prev;
     });
   };
   AiFRS.cancelFollowUp=function(){ if(AiFRS._qaCtl){ try{ AiFRS._qaCtl.abort(); }catch(e){} } };
@@ -5767,9 +5769,11 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
     var _stdNo=_bmBtn?_bmBtn.getAttribute('data-bm-std'):'';
     var _std=_stdNo?AiFRS.findStandard(_stdNo):null;
     var stdName=_std?('K-IFRS 제'+_std.no+'호 '+(_std.name||'')):(document.querySelector('.af-conc-std')||{textContent:''}).textContent.trim();
+    // 후속 질문 답변 이력(숨김 여부 무관, 전부) — 별도 필드로도 보관해 공유 파일에서 바로 확인 가능
+    var qaCards=Array.prototype.map.call(document.querySelectorAll('#af-qa-answer details.af-qa-ans'),function(d){ return d.outerHTML; });
     var item={ id:bmKey,
       date:new Date().toLocaleString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}),
-      fileName:fname, stdName:stdName, html:html, preciseHtml:preciseHtml };
+      fileName:fname, stdName:stdName, html:html, preciseHtml:preciseHtml, qaHtml:qaCards.join(''), qaCount:qaCards.length };
     if(idx>-1){ list[idx]=item; }   // 이미 저장됨 → 현재 상태로 업데이트
     else { list.unshift(item); }     // 신규 저장
     _bmSave(list);
@@ -5836,9 +5840,16 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
     main._shown=true;
     main.innerHTML='<div class="af-bm-viewer-label">저장: '+esc(item.date)+' &nbsp;·&nbsp; '+esc(item.fileName)
       +(item.preciseHtml?'<span style="margin-left:8px;font-size:10px;color:var(--teal)">정밀분석·AI감사 포함</span>':'')
+      +(item.qaCount?'<span style="margin-left:8px;font-size:10px;color:var(--blue-sky)">후속 질문 '+item.qaCount+'건 포함</span>':'')
       +'</div>'
       +'<div class="aifrs-analysis" style="display:block">'+item.html+'</div>'
       +(item.preciseHtml||'');
+    // 뷰어에서는 질문 입력은 숨기고, 저장된 답변 이력은 접혀 있었더라도 모두 펼쳐서 표시
+    main.querySelectorAll('.af-qa-row,.af-qa-nokey').forEach(function(x){ x.parentNode.removeChild(x); });
+    var qaBox=main.querySelector('#af-qa-answer');
+    if(qaBox && !qaBox.querySelector('details.af-qa-ans') && item.qaHtml){ qaBox.className='af-qa-answer visible'; qaBox.innerHTML=item.qaHtml; }
+    main.querySelectorAll('details.af-qa-ans').forEach(function(d){ d.open=true; });
+    var qaWrap=main.querySelector('.af-qa-wrap'); if(qaWrap && !qaWrap.querySelector('details.af-qa-ans')) qaWrap.style.display='none';
     document.querySelectorAll('.af-bm-item').forEach(function(el,i){ el.classList.toggle('selected',i===idx); });
   };
   AiFRS._bmDel=function(id){
@@ -5920,6 +5931,13 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
   // ───────────────────────────────────────────────────────────────────────────
   function buildHistHtml(){
     var items = [
+      { date:'2026-09-07', title:'후속 질문 이력 보존 + 즐겨찾기·공유 파일에 포함',
+        bullets:[
+          '후속 질문을 여러 번 해도 이전 답변이 접힌 채 아래에 남음',
+          '즐겨찾기 저장·공유 파일에 답변 이력 전부 포함, 뷰어에서 펼쳐서 표시',
+          '답변 도입부의 소개 문장 제거 — 결론부터 시작'
+        ]
+      },
       { date:'2026-09-07', title:'튜토리얼 마무리 정비 — 스크롤·뒤로가기·강조 표시',
         bullets:[
           '화면 밖에 있는 안내 대상은 자동으로 화면 중앙에 오도록 스크롤',
