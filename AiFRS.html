@@ -6734,8 +6734,9 @@ body.aifrs-bm-view #aifrs-tour-btn { animation:none!important; box-shadow:none!i
     AiFRS._tourIdx=i;
     var s=steps[i], r=el.getBoundingClientRect();
     var hl=document.getElementById('aifrs-tour-hl'), tip=document.getElementById('aifrs-tour-tip');
-    hl.style.left=(r.left-22)+'px'; hl.style.top=(r.top-26)+'px';
-    hl.style.width=(r.width+44)+'px'; hl.style.height=(r.height+38)+'px';
+    var _plTop=Math.max(0,r.top-26);
+    hl.style.left=(r.left-22)+'px'; hl.style.top=_plTop+'px';
+    hl.style.width=(r.width+44)+'px'; hl.style.height=(r.bottom+12-_plTop)+'px';
     // 콘텐츠 먼저 설정 → 실제 폭 측정 → 위치 계산 (텍스트 자동 줄내림 방지)
     tip.querySelector('b').textContent=s.title;
     // '- ' 개조식 줄은 hanging indent(줄내림 시 시작열 유지), 그 외 줄은 소제목 처리
@@ -7116,7 +7117,8 @@ body.aifrs-bm-view #aifrs-tour-btn { animation:none!important; box-shadow:none!i
         var vw=window.innerWidth, vh=window.innerHeight, W=tip.offsetWidth||420;
         if(el){
           var r=el.getBoundingClientRect();
-          hl.style.left=(r.left-16)+'px'; hl.style.top=(r.top-18)+'px'; hl.style.width=(r.width+32)+'px'; hl.style.height=(r.height+30)+'px';
+          var _hlTop=Math.max(0,r.top-18);
+          hl.style.left=(r.left-16)+'px'; hl.style.top=_hlTop+'px'; hl.style.width=(r.width+32)+'px'; hl.style.height=(r.bottom+12-_hlTop)+'px';
           tip.style.left=Math.min(Math.max(r.left+r.width/2-W/2,14),vw-W-14)+'px';
           if(s.tipPos==='top'){ tip.style.bottom='auto'; tip.style.top='12px'; tip.style.left=Math.max(14,(vw-W)/2)+'px'; }
           else if((r.top+r.height/2)>vh/2){ tip.style.top='auto'; tip.style.bottom=(vh-r.top+16)+'px'; } else { tip.style.bottom='auto'; tip.style.top=(r.bottom+16)+'px'; }
