@@ -801,6 +801,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
 .af-qa-thread-row .af-qa-input{flex:1;min-width:0}
 .af-qa-ans:not(:first-of-type) .af-qa-tools, body.aifrs-bm-view .af-qa-tools{display:none}
 .af-qa-md b{color:var(--txt)} .af-qa-md code{font-family:inherit;background:rgba(41,151,255,.12);border-radius:3px;padding:0 4px}
+.af-md-tblwrap{overflow-x:auto;margin:8px 0} .af-md-tblwrap .aifrs-jn{margin:0;min-width:520px} .af-md-tblwrap .aifrs-jn td{word-break:keep-all}
 .af-md-h{font-size:12px;font-weight:700;color:#2dd4bf;margin:10px 0 4px;padding-bottom:3px;border-bottom:1px dotted var(--border)}
 .af-md-h:first-child{margin-top:0}
 .af-md-p{margin:0 0 8px} .af-md-p:last-child{margin-bottom:0}
@@ -5643,7 +5644,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
     easy:   {label:'더 쉽게 설명해 주세요',       q:'방금 답변을 회계 지식이 없는 사람도 이해할 수 있게, 비유와 일상 표현으로 더 쉽게 다시 설명해 주세요. 전문용어는 나올 때마다 한 줄로 풀어 주세요.'},
     example:{label:'예시로 보여 주세요',          q:'방금 답변 내용을 우리 회사 거래에 맞춘 구체적인 숫자 예시 하나로 처음부터 끝까지 보여 주세요.'},
     summary:{label:'한 줄로 요약해 주세요',        q:'방금 답변을 결론 한 문장과 실무에서 할 일 한 문장, 총 두 문장으로만 요약해 주세요.'},
-    journal:{label:'분개로 보여 주세요',           q:'방금 답변 내용을 회계처리(분개)로 보여 주세요. 시점별로 차변·대변·계정·금액을 표 형태 목록으로 적어 주세요.'},
+    journal:{label:'분개로 보여 주세요',           q:'방금 답변 내용을 회계처리(분개)로 보여 주세요. 시점(단계)마다 ### 소제목을 달고, 그 아래에 반드시 다음 열 순서의 마크다운 표 하나만 적어 주세요: | 적요 | 차변 계정 | 차변 금액 | 대변 계정 | 대변 금액 | 인식 근거 |. 금액은 숫자와 원 단위만(예: 1,000,000원), 표 밖 설명은 표 아래 한두 문장으로만.'},
     para:   {label:'관련 조문을 알려 주세요',      q:'방금 답변의 근거가 되는 K-IFRS 기준서 번호와 문단(§)을 나열하고, 각 문단이 무슨 내용인지 한 줄씩 설명해 주세요.'}
   };
   AiFRS.qaQuick=function(mode){ var m=QA_QUICK[mode]; if(!m) return; AiFRS.askFollowUp(m.q,{label:m.label}); };
@@ -5735,8 +5736,25 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
     }
     function flushP(){ if(para.length){ out.push('<p class="af-md-p">'+inline(para.join(' '))+'</p>'); para=[]; } }
     function flushL(){ if(list){ out.push('<div class="af-md-list">'+list.map(function(it){ return '<div class="af-md-li"><i>'+esc(it.m)+'</i><span>'+inline(it.t)+'</span></div>'; }).join('')+'</div>'); list=null; } }
+    // 마크다운 표(| a | b |) → 회계처리안과 같은 표 양식(.aifrs-jn). 구분선 행(|---|)은 건너뛰고, 숫자·금액 열은 오른쪽 정렬
+    var tbl=null;
+    function _cells(s){ return s.replace(/^\|/,'').replace(/\|\s*$/,'').split('|').map(function(c){ return c.trim(); }); }
+    function flushT(){
+      if(!tbl) return;
+      var head=tbl.head, rows=tbl.rows, h='<div class="af-md-tblwrap"><table class="aifrs-jn">';
+      if(head) h+='<thead><tr>'+head.map(function(c){ return '<th>'+inline(c)+'</th>'; }).join('')+'</tr></thead>';
+      h+='<tbody>'+rows.map(function(r){ return '<tr>'+r.map(function(c){ var num=/^[\d,.\-()\s]+원?$/.test(c)&&/\d/.test(c); return '<td'+(num?' class="num"':'')+'>'+(c===''?'':inline(c))+'</td>'; }).join('')+'</tr>'; }).join('')+'</tbody></table></div>';
+      out.push(h); tbl=null;
+    }
     lines.forEach(function(ln){
       var t=ln.trim();
+      if(/^\|.*\|\s*$/.test(t)){
+        flushP(); flushL();
+        if(/^\|\s*:?-{2,}/.test(t)){ if(tbl && !tbl.head && tbl.rows.length===1){ tbl.head=tbl.rows.shift(); } return; }   // 구분선: 직전 행을 헤더로 승격
+        if(!tbl) tbl={head:null,rows:[]};
+        tbl.rows.push(_cells(t)); return;
+      }
+      if(tbl) flushT();
       if(!t){ flushP(); flushL(); return; }
       var h=t.match(/^#{1,6}\s+(.*)$/); if(h){ flushP(); flushL(); out.push('<div class="af-md-h">'+inline(h[1].replace(/\*\*/g,''))+'</div>'); return; }
       if(/^(-{3,}|\*{3,}|_{3,})$/.test(t)){ flushP(); flushL(); out.push('<hr class="af-md-hr">'); return; }
@@ -5745,7 +5763,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
       if(list && /^\s{2,}/.test(ln)){ list[list.length-1].t+=' '+t; return; }   // 들여쓴 후속 줄은 직전 항목에 이어붙임(첫 행 글자 시작열 유지)
       flushL(); para.push(t);
     });
-    flushP(); flushL();
+    flushP(); flushL(); flushT();
     return out.join('');
   }
   // 키 미등록 상태로 렌더된 Q&A 안내문을 키 등록 직후 입력창으로 교체(재분석 없이)
