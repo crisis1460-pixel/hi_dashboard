@@ -769,7 +769,11 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
 .af-qchip:active{background:rgba(41,151,255,.28)}
 /* P6: 후속 Q&A */
 .af-qa-wrap{border-top:1px solid var(--border2);margin-top:12px;padding-top:10px}
-.af-qa-hd{font-size:11px;font-weight:700;color:var(--txt3);margin-bottom:7px;letter-spacing:.04em}
+.af-qa-hd{font-size:11px;font-weight:700;color:var(--txt3);margin-bottom:7px;letter-spacing:.04em;display:flex;align-items:center;justify-content:space-between;gap:8px}
+/* 답변 일괄 숨기기/펼치기 — 답변이 1건 이상일 때만 표시 */
+.af-qa-all{display:none;font-size:10px;font-weight:500;letter-spacing:0;padding:2px 9px;border-radius:10px;border:1px solid var(--border);color:var(--txt3);background:var(--bg2);cursor:pointer;font-family:inherit;line-height:1.5}
+.af-qa-all:hover{color:var(--txt2);border-color:var(--border2)}
+.af-qa-wrap.has-ans .af-qa-all{display:inline-block}
 .af-qa-row{display:flex;gap:6px;align-items:stretch}
 .af-qa-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--txt);font-size:12px;font-family:inherit;padding:7px 10px;resize:none;min-height:36px;line-height:1.5;outline:none;word-break:keep-all}
 .af-qa-input:focus{border-color:rgba(41,151,255,.5)}
@@ -786,6 +790,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
 .af-qa-ans[open]>summary{border-bottom-color:var(--border)}
 .af-qa-ans-q{flex:1;min-width:0;color:var(--txt2);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .af-qa-ans-meta{flex-shrink:0}
+.af-qa-ans-meta{display:none}   /* 후속 질문에는 소요 시간·모델 표기 불필요(이전 저장본 포함) */
 .af-qa-ans-tg{flex-shrink:0;font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--border);color:var(--txt3);background:var(--bg2)}
 .af-qa-ans-tg::before{content:attr(data-closed)} .af-qa-ans[open] .af-qa-ans-tg::before{content:attr(data-open)}
 .af-qa-md{padding:10px 14px 12px;font-size:12px;color:var(--txt2);line-height:1.75;word-break:keep-all}
@@ -3394,7 +3399,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
       }
       // P6: 후속 Q&A (S9: 결론 바로 아래, 다른 후보보다 먼저)
       var _qaHasKey=!!(AiFRS.getApiKey&&AiFRS.getApiKey());
-      h+='<div class="af-qa-wrap"><div class="af-qa-hd">후속 질문</div>';
+      h+='<div class="af-qa-wrap"><div class="af-qa-hd"><span>후속 질문</span><button class="af-qa-all" onclick="window.AiFRS.qaToggleAll(this)">답변 모두 숨기기</button></div>';
       if(!_qaHasKey){
         h+='<div class="af-qa-nokey">Gemini API 키를 등록하면 이 분석 결과에 대해 추가 질문을 할 수 있습니다.</div>';
       }else{
@@ -5648,6 +5653,14 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
     para:   {label:'관련 조문을 알려 주세요',      q:'방금 답변의 근거가 되는 K-IFRS 기준서 번호와 문단(§)을 나열하고, 각 문단이 무슨 내용인지 한 줄씩 설명해 주세요.'}
   };
   AiFRS.qaQuick=function(mode){ var m=QA_QUICK[mode]; if(!m) return; AiFRS.askFollowUp(m.q,{label:m.label}); };
+  // 답변 일괄 숨기기/펼치기 — 하나라도 펼쳐져 있으면 모두 접고, 모두 접혀 있으면 모두 펼침
+  AiFRS.qaToggleAll=function(btn){
+    var wrap=btn.closest('.af-qa-wrap'); if(!wrap) return;
+    var cards=wrap.querySelectorAll('details.af-qa-ans'); if(!cards.length) return;
+    var anyOpen=Array.prototype.some.call(cards,function(d){ return d.open; });
+    cards.forEach(function(d){ d.open=!anyOpen; });
+    btn.textContent=anyOpen?'답변 모두 보기':'답변 모두 숨기기';
+  };
   AiFRS.qaThread=function(btn){ var row=btn.parentNode.querySelector('.af-qa-thread-row'); if(!row) return; row.hidden=!row.hidden; if(!row.hidden){ var ta=row.querySelector('textarea'); if(ta){ ta.focus(); ta.onkeydown=function(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); AiFRS.qaThreadSend(ta); } }; } } };
   AiFRS.qaThreadSend=function(el){ var row=el.closest('.af-qa-thread-row'); var ta=row&&row.querySelector('textarea'); var v=ta?(ta.value||'').trim():''; if(!v) return; AiFRS.askFollowUp(v); };
   AiFRS.askFollowUp=function(qArg, opts){
@@ -5702,9 +5715,10 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
         +'<div class="af-qa-thread"><button class="af-qa-qb af-qa-more" onclick="window.AiFRS.qaThread(this)">직접 이어서 질문</button>'
         +'<div class="af-qa-thread-row" hidden><textarea class="af-qa-input" rows="1" placeholder="이 답변에 이어서 궁금한 점을 적어 주세요…"></textarea><button class="af-qa-btn" onclick="window.AiFRS.qaThreadSend(this)">전송</button></div></div>'
         +'</div>';
-      answer.innerHTML='<details class="af-qa-ans" open><summary><span class="af-qa-ans-q">Q. '+esc(label)+'</span><span class="af-qa-ans-meta">'+secs+'초 · '+esc(AiFRS.getModel())+'</span><span class="af-qa-ans-tg" data-open="답변 숨기기" data-closed="답변 보기"></span></summary>'
+      answer.innerHTML='<details class="af-qa-ans" open><summary><span class="af-qa-ans-q">Q. '+esc(label)+'</span><span class="af-qa-ans-tg" data-open="답변 숨기기" data-closed="답변 보기"></span></summary>'
         +'<div class="af-qa-md">'+_mdLite(t)+'</div>'+tools+'</details>'+prev;
       if(input) input.value='';
+      var wrapEl=answer.closest('.af-qa-wrap'); if(wrapEl){ wrapEl.classList.add('has-ans'); var ab=wrapEl.querySelector('.af-qa-all'); if(ab) ab.textContent='답변 모두 숨기기'; }
       var card=answer.querySelector('details.af-qa-ans'); if(card){ try{ card.scrollIntoView({block:'nearest',behavior:'smooth'}); }catch(e){} }
     }).catch(function(e){
       done();
@@ -5746,15 +5760,52 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
       h+='<tbody>'+rows.map(function(r){ return '<tr>'+r.map(function(c){ var num=/^[\d,.\-()\s]+원?$/.test(c)&&/\d/.test(c); return '<td'+(num?' class="num"':'')+'>'+(c===''?'':inline(c))+'</td>'; }).join('')+'</tr>'; }).join('')+'</tbody></table></div>';
       out.push(h); tbl=null;
     }
+    // (1) 줄바꿈이 사라져 한 줄에 붙은 표("| 구분 | 금액 | | :--- | :--- | | 비용 | 1,000원 |") → 구분선 셀 위치로 열 수를 알아내 행으로 재분할
+    var SEP=/^:?-{2,}:?$/;
+    var fixed=[];
+    lines.forEach(function(ln){
+      var t=ln.trim();
+      if(/^\|.*\|\s*$/.test(t) && !/^\|\s*:?-{2,}/.test(t) && /\|\s*:?-{2,}:?\s*\|/.test(t)){
+        var cells=_cells(t), si=-1;
+        for(var ci=0;ci<cells.length;ci++){ if(SEP.test(cells[ci])){ si=ci; break; } }
+        if(si>0){
+          var n=si, body=cells.slice(si); while(body.length&&SEP.test(body[0])) body.shift();
+          fixed.push('| '+cells.slice(0,n).join(' | ')+' |'); fixed.push('|'+new Array(n+1).join(' --- |'));
+          for(var ri=0;ri<body.length;ri+=n){ var chunk=body.slice(ri,ri+n); while(chunk.length<n) chunk.push(''); fixed.push('| '+chunk.join(' | ')+' |'); }
+          return;
+        }
+      }
+      fixed.push(ln);
+    });
+    lines=fixed;
+    // (2) 문장형 분개("(차변) 선급비용 12,000,000원 / (대변) 현금 12,000,000원", "차변: 광고비 100원, 대변: 미지급금 100원")도 같은 표 양식으로
+    var JN=/^\(?\s*차\s*변\s*\)?\s*[:：]?\s*(.+?)\s*[\/,·]\s*\(?\s*대\s*변\s*\)?\s*[:：]?\s*(.+?)\s*$/;
+    var jn=null;
+    function _acct(s){ var m=String(s).replace(/\*\*/g,'').match(/^(.*?)\s*([\d][\d,]*(?:\.\d+)?\s*원?)\s*$/); return m?[m[1].replace(/[:：]\s*$/,'').trim(), m[2].replace(/\s+/g,'')]:[String(s).replace(/\*\*/g,'').trim(),'']; }
+    function flushJ(){
+      if(!jn) return;
+      out.push('<div class="af-md-tblwrap"><table class="aifrs-jn"><thead><tr><th>적요</th><th>차변 계정</th><th class="num">차변 금액</th><th>대변 계정</th><th class="num">대변 금액</th></tr></thead><tbody>'
+        +jn.map(function(r){ var d=_acct(r.d), c=_acct(r.c); return '<tr><td>'+(r.memo?inline(r.memo):'')+'</td><td>'+inline(d[0])+'</td><td class="num">'+esc(d[1])+'</td><td>'+inline(c[0])+'</td><td class="num">'+esc(c[1])+'</td></tr>'; }).join('')
+        +'</tbody></table></div>');
+      jn=null;
+    }
     lines.forEach(function(ln){
       var t=ln.trim();
       if(/^\|.*\|\s*$/.test(t)){
-        flushP(); flushL();
+        flushP(); flushL(); flushJ();
         if(/^\|\s*:?-{2,}/.test(t)){ if(tbl && !tbl.head && tbl.rows.length===1){ tbl.head=tbl.rows.shift(); } return; }   // 구분선: 직전 행을 헤더로 승격
         if(!tbl) tbl={head:null,rows:[]};
         tbl.rows.push(_cells(t)); return;
       }
       if(tbl) flushT();
+      // 문장형 분개 행(목록 기호·번호가 앞에 있어도 인식) — 직전 비어있지 않은 문단 마지막 줄을 적요로 사용
+      var jm=t.replace(/^(\d{1,2}[.)]|[-*•·])\s+/,'').match(JN);
+      if(jm && /\d/.test(t)){
+        flushL();
+        var memo=''; if(para.length){ var lastP=para[para.length-1]; if(lastP.length<=40 && /[:：]\s*$/.test(lastP)){ memo=lastP.replace(/[:：]\s*$/,'').replace(/\*\*/g,''); para.pop(); } }
+        flushP(); if(!jn) jn=[]; jn.push({memo:memo, d:jm[1], c:jm[2]}); return;
+      }
+      if(jn) flushJ();
       if(!t){ flushP(); flushL(); return; }
       var h=t.match(/^#{1,6}\s+(.*)$/); if(h){ flushP(); flushL(); out.push('<div class="af-md-h">'+inline(h[1].replace(/\*\*/g,''))+'</div>'); return; }
       if(/^(-{3,}|\*{3,}|_{3,})$/.test(t)){ flushP(); flushL(); out.push('<hr class="af-md-hr">'); return; }
@@ -5763,7 +5814,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
       if(list && /^\s{2,}/.test(ln)){ list[list.length-1].t+=' '+t; return; }   // 들여쓴 후속 줄은 직전 항목에 이어붙임(첫 행 글자 시작열 유지)
       flushL(); para.push(t);
     });
-    flushP(); flushL(); flushT();
+    flushP(); flushL(); flushT(); flushJ();
     return out.join('');
   }
   // 키 미등록 상태로 렌더된 Q&A 안내문을 키 등록 직후 입력창으로 교체(재분석 없이)
