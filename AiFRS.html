@@ -1606,8 +1606,11 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
   // 통계
   AiFRS.dbStats = function(){
     var p=0; AiFRS.DB.standards.forEach(function(s){ p+=(s.paragraphs?s.paragraphs.length:0); });
-    var surface=0; AiFRS.TERMS.forEach(function(e){ surface += 1 + (e.aliases?e.aliases.length:0); });
-    return { standards:AiFRS.DB.standards.length, articles:p, terms:AiFRS.TERMS.length, surface:surface };
+    // 용어는 기준서별 s.terms 기준(용어사전 탭과 동일) — 최상위 TERMS는 옛 스키마라 비어 있음
+    var terms=0, surface=0;
+    AiFRS.DB.standards.forEach(function(s){ (s.terms||[]).forEach(function(t){ if(!t.easy) return; terms++; surface += 1 + (t.aliases?t.aliases.length:0); }); });
+    if(!terms){ terms=AiFRS.TERMS.length; AiFRS.TERMS.forEach(function(e){ surface += 1 + (e.aliases?e.aliases.length:0); }); }
+    return { standards:AiFRS.DB.standards.length, articles:p, terms:terms, surface:surface };
   };
 
   // ══════════════════════════════════════════════════════════════
@@ -6418,7 +6421,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
   }
   function buildDbHtml(){
     var st=AiFRS.dbStats();
-    var h='<div class="aifrs-db-stat">기준서·문서 <b>'+st.standards+'종</b> · 문단 지문 <b>'+st.articles+'개</b> · 회계용어 <b>'+st.terms+'개</b>(동의어 포함 <b>'+st.surface+'개</b>)</div>';
+    var h='<div class="aifrs-db-stat">기준서·문서 <b>'+st.standards+'종</b> · 문단 지문 <b>'+st.articles+'개</b> · 회계용어 <b>'+st.terms+'개</b></div>';
     h+='<div class="aifrs-db-search"><input id="aifrs-db-q" type="text" placeholder="기준서번호·명칭·문단·키워드·원문 검색 (예: 1038, 무형자산, 자본화)" oninput="window.AiFRS.dbSearch(this.value)"><span class="aifrs-db-qcnt" id="aifrs-db-qcnt"></span></div>';
     var TY={standard:'기준서', interpretation:'해석서', framework:'개념체계·실무서'};
     var termCount=(AiFRS.DB.standards||[]).reduce(function(n,s){return n+((s.terms||[]).filter(function(t){return t.easy;}).length);},0);
