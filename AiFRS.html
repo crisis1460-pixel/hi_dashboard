@@ -806,7 +806,8 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
 .af-qa-thread-row .af-qa-input{flex:1;min-width:0}
 .af-qa-ans:not(:first-of-type) .af-qa-tools, body.aifrs-bm-view .af-qa-tools{display:none}
 .af-qa-md b{color:var(--txt)} .af-qa-md code{font-family:inherit;background:rgba(41,151,255,.12);border-radius:3px;padding:0 4px}
-.af-md-tblwrap{overflow-x:auto;margin:8px 0} .af-md-tblwrap .aifrs-jn{margin:0;min-width:520px} .af-md-tblwrap .aifrs-jn td{word-break:keep-all}
+.af-md-tblwrap{overflow-x:auto;margin:8px 0} .af-md-tblwrap .aifrs-jn{margin:0;min-width:520px} .af-md-tblwrap .aifrs-jn td{word-break:keep-all;overflow-wrap:anywhere}
+.af-md-tblwrap .aifrs-jn.af-jn-fixed{table-layout:fixed;width:100%}   /* 분개형 표: 열 비율 고정 → 답변 안 모든 표 격자 일치 */
 .af-md-h{font-size:12px;font-weight:700;color:#2dd4bf;margin:10px 0 4px;padding-bottom:3px;border-bottom:1px dotted var(--border)}
 .af-md-h:first-child{margin-top:0}
 .af-md-p{margin:0 0 8px} .af-md-p:last-child{margin-bottom:0}
@@ -5757,7 +5758,12 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
     function _cells(s){ return s.replace(/^\|/,'').replace(/\|\s*$/,'').split('|').map(function(c){ return c.trim(); }); }
     function flushT(){
       if(!tbl) return;
-      var head=tbl.head, rows=tbl.rows, h='<div class="af-md-tblwrap"><table class="aifrs-jn">';
+      var head=tbl.head, rows=tbl.rows;
+      // 분개형 표(차변·대변 열이 있는 5~6열)는 고정 비율 열로 — 같은 답변 안 여러 표의 열 폭이 텍스트 길이와 무관하게 동일하게 정렬
+      var isJn=!!head && head.length>=5 && head.length<=6 && head.some(function(c){ return /차변/.test(c); }) && head.some(function(c){ return /대변/.test(c); });
+      var widths=isJn?(head.length===6?[24,17,13,17,13,16]:[28,18,18,18,18]):null;
+      var h='<div class="af-md-tblwrap"><table class="aifrs-jn'+(isJn?' af-jn-fixed':'')+'">';
+      if(widths) h+='<colgroup>'+widths.map(function(w){ return '<col style="width:'+w+'%">'; }).join('')+'</colgroup>';
       if(head) h+='<thead><tr>'+head.map(function(c){ return '<th>'+inline(c)+'</th>'; }).join('')+'</tr></thead>';
       // 셀 안 <br>(계정 여러 개를 한 셀에 넣은 경우) → 계정마다 별도 행으로 펼치고, 공통 셀(적요·근거 등)은 rowspan으로 합침
       function td(c, span){ var num=/^[\d,.\-()\s]+원?$/.test(c)&&/\d/.test(c); return '<td'+(num?' class="num"':'')+(span>1?' rowspan="'+span+'"':'')+'>'+(c===''?'':inline(c))+'</td>'; }
@@ -5977,6 +5983,8 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
     var qaBox=main.querySelector('#af-qa-answer');
     if(qaBox && !qaBox.querySelector('details.af-qa-ans') && item.qaHtml){ qaBox.className='af-qa-answer visible'; qaBox.innerHTML=item.qaHtml; }
     main.querySelectorAll('details.af-qa-ans').forEach(function(d){ d.open=true; });
+    // 이전 버전에서 저장된 답변에 남은 "<br>" 글자 → 실제 줄바꿈
+    main.querySelectorAll('.af-qa-md').forEach(function(md){ if(/&lt;br\s*\/?&gt;/i.test(md.innerHTML)) md.innerHTML=md.innerHTML.replace(/&lt;br\s*\/?&gt;/gi,'<br>'); });
     var qaWrap=main.querySelector('.af-qa-wrap'); if(qaWrap && !qaWrap.querySelector('details.af-qa-ans')) qaWrap.style.display='none';
     document.querySelectorAll('.af-bm-item').forEach(function(el,i){ el.classList.toggle('selected',i===idx); });
   };
