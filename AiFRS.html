@@ -411,7 +411,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
   margin:10px 0; padding:12px 16px;
 }
 .aifrs-file-head { display:flex; align-items:center; gap:12px; }
-.aifrs-file-ico { font-size:22px; flex-shrink:0; }
+.aifrs-file-ico { flex-shrink:0; line-height:0; display:flex; align-items:center; }
 .aifrs-file-meta { flex:1; min-width:0; }
 .aifrs-file-name { font-size:14px; font-weight:600; color:var(--txt); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .aifrs-file-stat { font-size:12px; color:var(--txt3); margin-top:2px; }
@@ -5148,7 +5148,22 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
   function fmtSize(b){ if(b<1024) return b+' B'; if(b<1048576) return (b/1024).toFixed(1)+' KB'; return (b/1048576).toFixed(1)+' MB'; }
   function _afState(){ var e=document.getElementById('af-sig-wm'); return !!(e && e.textContent && e.textContent.trim()); }   // 화면 상태 점검용 내부 헬퍼
   function esc(s){ return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
-  function iconFor(kind,e){ if(kind==='archive') return '[ZIP]'; if(kind==='image') return '[IMG]'; if(e==='pdf') return '[PDF]'; if(e==='docx') return '[DOC]'; if(e==='pptx') return '[PPT]'; if(e==='csv') return '[CSV]'; return '[DOC]'; }
+  function iconFor(kind,e){
+    var MAP={'pdf':['PDF','#e53e3e'],'doc':['DOC','#3182ce'],'docx':['DOC','#3182ce'],
+             'hwp':['HWP','#2b6cb0'],'hwpx':['HWP','#2b6cb0'],
+             'ppt':['PPT','#dd6b20'],'pptx':['PPT','#dd6b20'],
+             'xls':['XLS','#38a169'],'xlsx':['XLS','#38a169'],'csv':['CSV','#38a169'],
+             'txt':['TXT','#718096']};
+    var c=kind==='archive'?['ZIP','#d69e2e']:kind==='image'?['IMG','#805ad5']:(MAP[e]||[((e||'').toUpperCase().slice(0,3)||'DOC'),'#3182ce']);
+    var f=c[1],l=c[0];
+    return '<svg width="42" height="52" viewBox="0 0 42 52" xmlns="http://www.w3.org/2000/svg">'
+      +'<path d="M0,4 Q0,0 4,0 H27 L42,14 V48 Q42,52 38,52 H4 Q0,52 0,48 Z" fill="'+f+'"/>'
+      +'<path d="M27,0 L42,14 H29 Q27,14 27,12 Z" fill="rgba(0,0,0,.22)"/>'
+      +'<line x1="8" y1="30" x2="34" y2="30" stroke="rgba(255,255,255,.22)" stroke-width="1"/>'
+      +'<line x1="8" y1="38" x2="34" y2="38" stroke="rgba(255,255,255,.14)" stroke-width="1"/>'
+      +'<text x="21" y="23" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-size="10.5" font-weight="700" font-family="system-ui,-apple-system,sans-serif" letter-spacing="0.8">'+l+'</text>'
+      +'</svg>';
+  }
 
   // ══ 라이브러리 지연 로드 (탭/형식 사용 시점에만 CDN 로드) ══
   var _libCache = {};
