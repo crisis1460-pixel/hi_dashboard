@@ -6073,13 +6073,15 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
       +(item.preciseHtml||'');
     // 뷰어에서는 질문 입력은 숨기고, 저장된 답변 이력은 접혀 있었더라도 모두 펼쳐서 표시
     main.querySelectorAll('.af-qa-row,.af-qa-nokey').forEach(function(x){ x.parentNode.removeChild(x); });
+    // 후속 질문 섹션을 맨 아래로 이동 (기존처럼 — item.html 안 위치보다 뒤로)
+    var qaWrap=main.querySelector('.af-qa-wrap'); if(qaWrap) main.appendChild(qaWrap);
     var qaBox=main.querySelector('#af-qa-answer');
-    if(qaBox && item.qaHtml){ qaBox.className='af-qa-answer visible'; qaBox.innerHTML=item.qaHtml; }
+    if(qaBox && item.qaHtml){ qaBox.className='af-qa-answer visible'; qaBox.innerHTML=item.qaHtml; if(qaWrap) qaWrap.classList.add('has-ans'); }
     main.querySelectorAll('details.af-qa-ans').forEach(function(d){ d.open=true; });
     // 이전 버전에서 저장된 답변에 남은 "<br>" 글자 → 실제 줄바꿈
     main.querySelectorAll('.af-qa-md').forEach(function(md){ if(/&lt;br\s*\/?&gt;/i.test(md.innerHTML)) md.innerHTML=md.innerHTML.replace(/&lt;br\s*\/?&gt;/gi,'<br>'); });
     if(AiFRS._jnFitCols) AiFRS._jnFitCols(main);
-    var qaWrap=main.querySelector('.af-qa-wrap'); if(qaWrap && !qaWrap.querySelector('details.af-qa-ans')) qaWrap.style.display='none';
+    if(qaWrap && !qaWrap.querySelector('details.af-qa-ans')) qaWrap.style.display='none';
     document.querySelectorAll('.af-bm-item').forEach(function(el,i){ el.classList.toggle('selected',i===idx); });
   };
   AiFRS._bmDel=function(id){
@@ -6140,7 +6142,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
     document.body.classList.add('aifrs-bm-view');
     document.title='즐겨찾기 — AiFRS';
     root.innerHTML=''
-      +'<div class="af-topbar" style="display:block!important"><div class="af-topbar-inner">'
+      +'<div class="af-topbar" style="display:block!important"><div class="af-topbar-inner" style="max-width:1600px">'
       +'<div class="af-brand"><span class="af-brand-mark">AiFRS</span><span class="af-brand-tag">즐겨찾기 뷰어</span></div>'
       +'</div></div>'
       +'<div class="af-main" style="padding-top:16px">'
@@ -6161,6 +6163,12 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
   // ───────────────────────────────────────────────────────────────────────────
   function buildHistHtml(){
     var items = [
+      { date:'2026-09-07', title:'뷰어 Q&A 맨 아래 배치 + topbar 좌측 정렬',
+        bullets:[
+          '즐겨찾기 뷰어에서 후속 질문 섹션을 본문(쉬운설명 포함) 아래로 이동 — item.html 저장 순서와 무관하게 맨 마지막에 고정',
+          '즐겨찾기 뷰어 상단바 AiFRS 브랜드 라벨을 콘텐츠 폭(1600px)에 맞춰 왼쪽 정렬'
+        ]
+      },
       { date:'2026-09-07', title:'즐겨찾기 Q&A 자동 갱신 + 뷰어 폭 확대',
         bullets:[
           '☆ 저장 후 후속 질문을 해도 답변이 즐겨찾기에 자동 반영 — 저장 시점 이후 Q&A도 기록에 포함',
