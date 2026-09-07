@@ -790,6 +790,10 @@ body.aifrs-bm-view .af-qa-wrap{margin-top:32px;padding-top:20px;border-top-width
 .af-qa-ans{background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:0}
 .af-qa-ans+.af-qa-ans{margin-top:8px}
 body.aifrs-bm-view .af-qa-ans+.af-qa-ans{margin-top:18px}
+/* 꼬리 질문(이어서 질문) — 들여쓰기 하위 카드 */
+.af-qa-child{margin-left:20px;box-shadow:-3px 0 0 rgba(41,151,255,.4);border-radius:0 9px 9px 0}
+.af-qa-child .af-qa-ans-q::before{content:'↳ ';color:rgba(41,151,255,.7);font-weight:400}
+body.aifrs-bm-view .af-qa-child{margin-left:28px}
 .af-qa-ans>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:11px;color:var(--txt3);border-bottom:1px solid transparent}
 .af-qa-ans>summary::-webkit-details-marker{display:none}
 .af-qa-ans[open]>summary{border-bottom-color:var(--border)}
@@ -5677,7 +5681,7 @@ body.aifrs-bm-view .af-qa-ans+.af-qa-ans{margin-top:18px}
     journal:{label:'분개로 보여 주세요',           q:'방금 답변 내용을 회계처리(분개)로 보여 주세요. 시점(단계)마다 ### 소제목을 달고, 그 아래에 반드시 다음 열 순서의 마크다운 표 하나만 적어 주세요: | 적요 | 차변 계정 | 차변 금액 | 대변 계정 | 대변 금액 | 인식 근거 |. 금액은 숫자와 원 단위만(예: 1,000,000원), 표 밖 설명은 표 아래 한두 문장으로만.'},
     para:   {label:'관련 조문을 알려 주세요',      q:'방금 답변의 근거가 되는 K-IFRS 기준서 번호와 문단(§)을 나열하고, 각 문단이 무슨 내용인지 한 줄씩 설명해 주세요.'}
   };
-  AiFRS.qaQuick=function(mode){ var m=QA_QUICK[mode]; if(!m) return; AiFRS.askFollowUp(m.q,{label:m.label}); };
+  AiFRS.qaQuick=function(mode,el){ var m=QA_QUICK[mode]; if(!m) return; var p=el&&el.closest('details.af-qa-ans'); if(p) p.setAttribute('data-qa-anchor','1'); AiFRS.askFollowUp(m.q,{label:m.label,isChild:!!p}); };
   // 답변 일괄 숨기기/펼치기 — 하나라도 펼쳐져 있으면 모두 접고, 모두 접혀 있으면 모두 펼침
   AiFRS.qaToggleAll=function(btn){
     var wrap=btn.closest('.af-qa-wrap'); if(!wrap) return;
@@ -5687,7 +5691,8 @@ body.aifrs-bm-view .af-qa-ans+.af-qa-ans{margin-top:18px}
     btn.textContent=anyOpen?'답변 모두 보기':'답변 모두 숨기기';
   };
   AiFRS.qaThread=function(btn){ var row=btn.parentNode.querySelector('.af-qa-thread-row'); if(!row) return; row.hidden=!row.hidden; if(!row.hidden){ var ta=row.querySelector('textarea'); if(ta){ ta.focus(); ta.onkeydown=function(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); AiFRS.qaThreadSend(ta); } }; } } };
-  AiFRS.qaThreadSend=function(el){ var row=el.closest('.af-qa-thread-row'); var ta=row&&row.querySelector('textarea'); var v=ta?(ta.value||'').trim():''; if(!v) return; AiFRS.askFollowUp(v); };
+  AiFRS.qaThreadSend=function(el){ var row=el.closest('.af-qa-thread-row'); var ta=row&&row.querySelector('textarea'); var v=ta?(ta.value||'').trim():''; if(!v) return; var p=el.closest('details.af-qa-ans'); if(p) p.setAttribute('data-qa-anchor','1'); AiFRS.askFollowUp(v,{isChild:!!p}); };
+  AiFRS.askChild=function(q,el){ var p=el&&el.closest('details.af-qa-ans'); if(p) p.setAttribute('data-qa-anchor','1'); AiFRS.askFollowUp(q,{isChild:!!p}); };
   AiFRS.askFollowUp=function(qArg, opts){
     opts=opts||{};
     var input=document.getElementById('af-qa-input');
@@ -5731,17 +5736,23 @@ body.aifrs-bm-view .af-qa-ans+.af-qa-ans{margin-top:18px}
       // 답변 카드: <details>라 리모컨 [숨김]/[펼침] 대상에 자동 포함 + 상단 작은 토글로 수동 숨기기
       var tools='<div class="af-qa-tools">'
         +'<div class="af-qa-quick"><span class="af-qa-quick-hd">답이 어렵다면</span>'
-        +'<button class="af-qa-qb" onclick="window.AiFRS.qaQuick(\'easy\')">더 쉽게</button>'
-        +'<button class="af-qa-qb" onclick="window.AiFRS.qaQuick(\'example\')">예시로</button>'
-        +'<button class="af-qa-qb" onclick="window.AiFRS.qaQuick(\'summary\')">한 줄 요약</button>'
-        +'<button class="af-qa-qb" onclick="window.AiFRS.qaQuick(\'journal\')">분개로</button>'
-        +'<button class="af-qa-qb" onclick="window.AiFRS.qaQuick(\'para\')">관련 조문</button></div>'
-        +(tails.length?'<div class="af-qa-next"><span class="af-qa-quick-hd">이어서 물어보기</span><div class="af-qchip-row">'+tails.map(function(c){ return '<span class="af-qchip" data-q="'+esc(c)+'" onclick="window.AiFRS.askFollowUp(this.dataset.q)">'+esc(c)+'</span>'; }).join('')+'</div></div>':'')
+        +'<button class="af-qa-qb" onclick="window.AiFRS.qaQuick(\'easy\',this)">더 쉽게</button>'
+        +'<button class="af-qa-qb" onclick="window.AiFRS.qaQuick(\'example\',this)">예시로</button>'
+        +'<button class="af-qa-qb" onclick="window.AiFRS.qaQuick(\'summary\',this)">한 줄 요약</button>'
+        +'<button class="af-qa-qb" onclick="window.AiFRS.qaQuick(\'journal\',this)">분개로</button>'
+        +'<button class="af-qa-qb" onclick="window.AiFRS.qaQuick(\'para\',this)">관련 조문</button></div>'
+        +(tails.length?'<div class="af-qa-next"><span class="af-qa-quick-hd">이어서 물어보기</span><div class="af-qchip-row">'+tails.map(function(c){ return '<span class="af-qchip" data-q="'+esc(c)+'" onclick="window.AiFRS.askChild(this.dataset.q,this)">'+esc(c)+'</span>'; }).join('')+'</div></div>':'')
         +'<div class="af-qa-thread"><button class="af-qa-qb af-qa-more" onclick="window.AiFRS.qaThread(this)">직접 이어서 질문</button>'
         +'<div class="af-qa-thread-row" hidden><textarea class="af-qa-input" rows="1" placeholder="이 답변에 이어서 궁금한 점을 적어 주세요…"></textarea><button class="af-qa-btn" onclick="window.AiFRS.qaThreadSend(this)">전송</button></div></div>'
         +'</div>';
-      answer.innerHTML='<details class="af-qa-ans" open><summary><span class="af-qa-ans-q">Q. '+esc(label)+'</span><span class="af-qa-ans-tg" data-open="답변 숨기기" data-closed="답변 보기"></span></summary>'
-        +'<div class="af-qa-md">'+_mdLite(t)+'</div>'+tools+'</details>'+prev;
+      var _nc='<details class="af-qa-ans'+(opts.isChild?' af-qa-child':'')+'" open><summary><span class="af-qa-ans-q">Q. '+esc(label)+'</span><span class="af-qa-ans-tg" data-open="답변 숨기기" data-closed="답변 보기"></span></summary>'
+        +'<div class="af-qa-md">'+_mdLite(t)+'</div>'+tools+'</details>';
+      if(opts.isChild){
+        var _td=document.createElement('div'); _td.innerHTML=prev;
+        var _an=_td.querySelector('[data-qa-anchor]');
+        if(_an){ _an.removeAttribute('data-qa-anchor'); var _cd=document.createElement('div'); _cd.innerHTML=_nc; _an.parentNode.insertBefore(_cd.firstChild,_an.nextSibling); answer.innerHTML=_td.innerHTML; }
+        else { answer.innerHTML=_nc+prev; }
+      } else { answer.innerHTML=_nc+prev; }
       if(input) input.value='';
       var wrapEl=answer.closest('.af-qa-wrap'); if(wrapEl){ wrapEl.classList.add('has-ans'); var ab=wrapEl.querySelector('.af-qa-all'); if(ab) ab.textContent='답변 모두 숨기기'; }
       _jnFitCols(answer);   // 분개형 표 열 폭 확정(내용 기준·짝 열 동일)
