@@ -351,6 +351,8 @@ button.aifrs-btn[onclick*="runFullReview"],
 .aifrs-tour-tip .tnext:hover { background:#0a7aeb; }
 .aifrs-tour-tip .tskip { background:transparent; color:var(--txt3); border:1px solid var(--border2); }
 .aifrs-tour-tip .tskip:hover { color:var(--txt2); }
+.aifrs-tut-cname{width:100%;margin:10px 0 4px;padding:8px 11px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--txt);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box}
+.aifrs-tut-cname:focus{border-color:var(--blue-sky);box-shadow:0 0 0 2px rgba(41,151,255,.18)}
 
 /* ── Bottom Input Bar ── */
 .af-bottom {
@@ -5666,6 +5668,16 @@ button.aifrs-btn[onclick*="runFullReview"],
     noKey.outerHTML='<div class="af-qa-row"><textarea id="af-qa-input" class="af-qa-input" placeholder="이 거래에 대해 궁금한 점을 질문하세요..." rows="1"></textarea>'
       +'<button class="af-qa-btn" onclick="AiFRS.askFollowUp()">전송</button></div>';
   }
+  // ── 당사명 인라인 저장 (step 1-3 팝업 입력란) ──
+  window._tutSaveEntity=function(){
+    var ci=document.getElementById('aifrs-tut-cname'), v=ci?ci.value.trim():'';
+    if(v){
+      AiFRS.setEntity(v);
+      var el=document.getElementById('aifrs-entity'); if(el) el.value=v;
+      var st=document.getElementById('aifrs-entity-stat'); if(st){ st.className='af-set-stat ok'; st.textContent='Entity: '+v; }
+    }
+    AiFRS.tutNext();
+  };
   // ── 즐겨찾기 ───────────────────────────────────────────────────────────────
   var _BM_KEY='aifrs-bookmarks';
   function _bmGet(){ try{ return JSON.parse(localStorage.getItem(_BM_KEY)||'[]'); }catch(e){ return []; } }
@@ -6969,7 +6981,7 @@ button.aifrs-btn[onclick*="runFullReview"],
   AiFRS.TUT_STEPS=[
     {id:'1-1',ch:1,kind:'info',ico:'🔑',pre:_tourOpenSettings,title:'AI를 부르려면 열쇠가 필요해요',msg:'AiFRS는 구글의 AI(Gemini)에게 문서를 읽어달라고 부탁해요.\n그 부탁을 하려면 \'열쇠\'(API 키)가 필요한데, 무료고 1분이면 만들어요.',tip:'열쇠는 이 브라우저에만 저장돼요. 다른 PC에선 한 번 더!',btn:'열쇠 만들러 가기 →'},
     {id:'1-2',ch:1,kind:'act',sel:'#aifrs-api-key',expand:'.af-set-group',pre:_tourOpenSettings,title:'3동작이면 끝!',msg:'① [Get Key]를 눌러 구글 페이지에서 키 만들기\n② 복사해서 여기에 붙여넣기\n③ [Save] 또는 [Test]',w:'저장하면 열쇠가 맞는지 확인하고 자동으로 넘어가요',wait:'key-saved',done:_tutHasKey},
-    {id:'1-3',ch:1,kind:'info',ico:'🏢',pre:_tourOpenSettings,title:'당사명을 등록하면 더 정확해요',msg:'설정 창의 \'당사명\' 칸에 우리 회사 이름을 넣으면\nAI가 "우리 회사 ↔ 상대방"을 정확히 구분해요.',tip:'지금 입력하거나 나중에 설정에서 언제든 수정 가능해요!',btn:'입력했어요 →',alt:{t:'나중에 할게요',fn:'window.AiFRS.tutNext()'}},
+    {id:'1-3',ch:1,kind:'info',ico:'🏢',pre:_tourOpenSettings,title:'당사명을 등록하면 더 정확해요',msg:'우리 회사 이름을 입력하면\nAI가 "우리 회사 ↔ 상대방"을 정확히 구분해요.',tip:'나중에 설정에서 언제든 수정 가능해요!',inputPlaceholder:'예) 헥토이노베이션',btn:'입력했어요 →',btnFn:'window._tutSaveEntity()',alt:{t:'나중에 할게요',fn:'window.AiFRS.tutNext()'}},
     {id:'2-1',ch:2,kind:'info',ico:'📄',pre:_tourCloseSettings,title:'이제 문서를 하나 올려볼까요?',msg:'계약서·품의서·정산서처럼 \'돈이 오가는 이야기\'가 적힌 문서면 뭐든 좋아요.\nPDF·엑셀·워드·이미지, 스캔본도 돼요(OCR).',tip:'여러 개 올리면 한 건의 거래로 묶어서 봐요. 서로 다른 거래는 따로!',btn:'올려볼게요 →',alt:{t:'연습용 계약서로 해볼래요',fn:'window.AiFRS.tutSample()'}},
     {id:'2-2',ch:2,kind:'act',sel:'#aifrs-drop',title:'여기에 끌어다 놓거나, 클릭!',msg:'📎 버튼으로 골라도 돼요',w:'문서를 다 읽으면 자동으로 넘어가요',wait:'files-ready',done:_tutFilesReady},
     {id:'3-1',ch:3,kind:'act',sel:'#aifrs-ai-btn',title:'문서가 들어왔어요 — 자, 첫 버튼!',msg:'[AI 분석]을 눌러보세요.\nAI가 문서를 읽고 "이 거래엔 어떤 규칙집이 맞나"를 찾아요.',wait:'ai-start',done:function(){ return !!(AiFRS._aiBusy||AiFRS._lastAi); }},
@@ -7051,12 +7063,21 @@ button.aifrs-btn[onclick*="runFullReview"],
     var ov=document.createElement('div'); ov.className='aifrs-tour-ov tut'; ov.id='aifrs-tut-ov';
     var body=(s.ico?'<span class="tico">'+s.ico+'</span>':'')
       +'<b>'+esc(s.title)+'</b><span class="tmsg">'+_tutFmt(s.msg)+(s.tip?'<div class="tgap"></div><div class="tli ttip"><i>💡</i><span>'+esc(s.tip)+'</span></div>':'')+'</span>'
+      +(s.inputPlaceholder?'<input id="aifrs-tut-cname" class="aifrs-tut-cname" type="text" placeholder="'+esc(s.inputPlaceholder)+'" autocomplete="off">':'')
       +'<div class="tfoot"><span class="tcnt tprog">'+_tutCnt(s)+'</span><div class="tbtns">'
       +(s.alt?'<button class="tskip" onclick="'+s.alt.fn+'">'+esc(s.alt.t)+'</button>':'')
-      +'<button class="tnext" onclick="window.AiFRS.tutNext()">'+esc(s.btn||'다음 →')+'</button></div></div>';
+      +'<button class="tnext" onclick="'+(s.btnFn||'window.AiFRS.tutNext()')+'">'+esc(s.btn||'다음 →')+'</button></div></div>';
     ov.innerHTML='<div class="aifrs-tour-hl" id="aifrs-tut-hl"'+(el?'':' style="display:none"')+'></div><div class="aifrs-tour-tip" id="aifrs-tut-tip">'+body+'</div>';
     ov.addEventListener('click',function(e){ if(e.target===ov) AiFRS.tutNext(); });   // 배경 클릭도 다음(막히지 않게)
     document.body.appendChild(ov);
+    if(s.inputPlaceholder){
+      var ci=document.getElementById('aifrs-tut-cname');
+      if(ci){
+        var existing=AiFRS.getEntity&&AiFRS.getEntity(); if(existing&&existing!==AiFRS.ENTITY_DEFAULT) ci.value=existing;
+        ci.addEventListener('keydown',function(e){ if(e.key==='Enter') window._tutSaveEntity(); });
+        setTimeout(function(){ ci.focus(); },120);
+      }
+    }
     var tip=document.getElementById('aifrs-tut-tip'), hl=document.getElementById('aifrs-tut-hl');
     function place(){
       var vw=window.innerWidth, vh=window.innerHeight, W=tip.offsetWidth||380;
