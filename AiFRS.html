@@ -732,7 +732,7 @@ button.aifrs-btn[onclick*="runFullReview"],
 .af-ob-num{width:20px;height:20px;border-radius:50%;background:var(--bg3);border:2px solid rgba(41,151,255,.5);color:var(--txt3);font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .af-ob-num.done{background:#34c759;border-color:#34c759;color:#fff}
 .af-ob-num.active{border-color:var(--blue-sky);color:var(--blue-sky)}
-.af-ob-text{font-size:12px;color:var(--txt2);flex:1;word-break:keep-all}
+.af-ob-text{font-size:12px;color:var(--txt2);flex:1;word-break:keep-all;text-align:left}
 .af-ob-badge{font-size:10px;color:var(--txt3);flex-shrink:0}
 .af-ob-active{border:1px solid rgba(41,151,255,.3)!important;background:rgba(0,102,204,.1)!important}
 .af-ob-muted{opacity:.5}
@@ -5685,7 +5685,7 @@ button.aifrs-btn[onclick*="runFullReview"],
     if(hasKey){ panel.style.display='none'; return; }
     panel.style.display='block';
     panel.innerHTML='<div class="af-ob-ttl">시작하기 — 3단계</div>'
-      +'<div class="af-ob-step af-ob-muted"><div class="af-ob-num">1</div><div class="af-ob-text"><b>Google AI Studio에서 무료 API 키 발급</b> — ai.google.dev/aistudio</div></div>'
+      +'<div class="af-ob-step af-ob-muted"><div class="af-ob-num">1</div><div class="af-ob-text"><a href="https://ai.google.dev/aistudio" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;text-underline-offset:2px"><b>Google AI Studio에서 무료 API 키 발급</b></a></div></div>'
       +'<div class="af-ob-step af-ob-active"><div class="af-ob-num active">2</div><div class="af-ob-text"><b>발급받은 키를 상단 설정에 등록</b> — 붙여넣기, 1분 완료</div>'
         +'<button class="aifrs-btn aifrs-btn-sm" onclick="var t=document.getElementById(\'aifrs-settings-toggle\');if(t)t.click();" style="font-size:10px;padding:4px 10px">설정 열기</button></div>'
       +'<div class="af-ob-step af-ob-muted"><div class="af-ob-num">3</div><div class="af-ob-text">회계 문서 업로드 → AI 분석 시작</div><div class="af-ob-badge">대기 중</div></div>';
