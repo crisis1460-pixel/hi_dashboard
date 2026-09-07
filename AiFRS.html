@@ -5746,6 +5746,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
     function inline(s){
       s=String(s).replace(/K-IFRS\s*[’'´`]\s*/g,'K-IFRS ');   // 모델이 간혹 붙이는 잡기호("K-IFRS´ 제1038호") 제거
       s=_markTerms(s);   // 답변 안 회계용어에도 용어사전 마킹(마우스 올리면 쉬운 설명) — esc 포함
+      s=s.replace(/&lt;br\s*\/?&gt;/gi,'<br>');   // 어떤 경로로든 남은 <br> 글자는 실제 줄바꿈으로(표 셀은 위에서 행 분리 후 잔여분만 해당)
       s=s.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/(^|[^*])\*(?!\*)([^*\n]+)\*(?!\*)/g,'$1<i>$2</i>').replace(/`([^`]+)`/g,'<code>$1</code>');
       return s;
     }
