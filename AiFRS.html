@@ -308,8 +308,9 @@ body.aifrs-bm-view #aifrs-tour-btn { animation:none!important; box-shadow:none!i
 .aifrs-tut-coach.center::after{display:none}
 .aifrs-tut-shake{animation:tutshake .4s}
 @keyframes tutshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
-/* 코치 링 — 얇은 1px 테두리를 대상에서 12px 띄워 그림(타이트하게 감싸지 않음), 글로우는 기존 오비트 유지 */
-.af-tut-ring{animation:af-step-glow 1.6s ease-in-out infinite!important;border-radius:10px;outline:1px solid rgba(212,175,55,.75)!important;outline-offset:12px!important}
+.af-tut-ring{animation:af-step-glow 1.6s ease-in-out infinite!important;border-radius:10px}
+/* 넓은 영역(설정 그룹 등)만 — 스텝에 ringLoose:true 지정 시 테두리를 12px 띄워 그림 */
+.af-tut-ring.af-tut-ring-loose{outline:1px solid rgba(212,175,55,.75)!important;outline-offset:12px!important}
 .tut-glow{animation:tut-blink 1.6s ease-in-out infinite!important}
 @keyframes tut-blink{0%,100%{box-shadow:0 0 0 2px rgba(212,175,55,.95),0 0 18px rgba(212,175,55,.7),0 0 6px rgba(212,175,55,.4)}50%{box-shadow:0 0 0 2px rgba(212,175,55,.08),0 0 4px rgba(212,175,55,.05),0 0 0 rgba(212,175,55,0)}}
 .aifrs-tut-hud{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:10100;display:inline-flex;align-items:center;gap:7px;background:rgba(20,26,38,.94);border:1px solid rgba(212,175,55,.4);border-radius:999px;padding:4px 12px 4px 9px;font-size:11.5px;color:var(--txt2);cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4);transition:transform .2s;user-select:none}
@@ -6994,7 +6995,7 @@ body.aifrs-bm-view #aifrs-tour-btn { animation:none!important; box-shadow:none!i
   function _tutEasyAny(){ return !!document.querySelector('.af-easy') || (AiFRS._easyCache&&Object.keys(AiFRS._easyCache).length>0); }
   AiFRS.TUT_STEPS=[
     {id:'1-1',ch:1,kind:'info',ico:'🔑',pre:_tourOpenSettings,title:'AI를 부르려면 열쇠가 필요해요',msg:'AiFRS는 구글의 AI(Gemini)에게 문서를 읽어달라고 부탁해요.\n그 부탁을 하려면 \'열쇠\'(API 키)가 필요한데, 무료고 1분이면 만들어요.',tip:'열쇠는 이 브라우저에만 저장돼요. 다른 PC에선 한 번 더!',btn:'열쇠 만들러 가기 →'},
-    {id:'1-2',ch:1,kind:'act',sel:'#aifrs-api-key',expand:'.af-set-group',pre:_tourOpenSettings,title:'3동작이면 끝!',msg:'① [Get Key]를 눌러 구글 페이지에서 키 만들기\n② 복사해서 여기에 붙여넣기\n③ [Save] 또는 [Test]',w:'저장하면 열쇠가 맞는지 확인하고 자동으로 넘어가요',wait:'key-saved',done:_tutHasKey},
+    {id:'1-2',ch:1,kind:'act',sel:'#aifrs-api-key',expand:'.af-set-group',ringLoose:true,pre:_tourOpenSettings,title:'3동작이면 끝!',msg:'① [Get Key]를 눌러 구글 페이지에서 키 만들기\n② 복사해서 여기에 붙여넣기\n③ [Save] 또는 [Test]',w:'저장하면 열쇠가 맞는지 확인하고 자동으로 넘어가요',wait:'key-saved',done:_tutHasKey},
     {id:'1-3',ch:1,kind:'info',ico:'🏢',pre:_tourOpenSettings,title:'당사명을 등록하면 더 정확해요',msg:'우리 회사 이름을 입력하면\nAI가 "우리 회사 ↔ 상대방"을 정확히 구분해요.',tip:'(주)·주식회사·(유) 등 접두어는 빼주세요 — AI가 문서 속 상호명과 접두어 없이 매칭하거든요. 나중에 설정에서 언제든 수정 가능해요!',inputPlaceholder:'예) 헥토이노베이션',btn:'입력했어요 →',btnFn:'window._tutSaveEntity()',alt:{t:'나중에 할게요',fn:'window.AiFRS.tutNext()'}},
     {id:'2-1',ch:2,kind:'info',ico:'📄',pre:_tourCloseSettings,title:'이제 문서를 하나 올려볼까요?',msg:'계약서·품의서·정산서처럼 \'돈이 오가는 이야기\'가 적힌 문서면 뭐든 좋아요.\nPDF·엑셀·워드·이미지, 스캔본도 돼요(OCR).',tip:'여러 개 올리면 한 건의 거래로 묶어서 봐요. 서로 다른 거래는 따로!',btn:'올려볼게요 →',alt:{t:'연습용 계약서로 해볼래요',fn:'window.AiFRS.tutSample()'}},
     {id:'2-2',ch:2,kind:'act',sel:'#aifrs-drop',title:'여기에 끌어다 놓거나, 클릭!',msg:'📎 버튼으로 골라도 돼요',w:'문서를 다 읽으면 자동으로 넘어가요',wait:'files-ready',done:_tutFilesReady},
@@ -7021,7 +7022,7 @@ body.aifrs-bm-view #aifrs-tour-btn { animation:none!important; box-shadow:none!i
   function _tutIdxOf(id){ for(var i=0;i<AiFRS.TUT_STEPS.length;i++) if(AiFRS.TUT_STEPS[i].id===id) return i; return -1; }
   function _tutClear(){
     ['aifrs-tut-ov','aifrs-tut-coach','aifrs-tut-toast'].forEach(function(id){ var o=document.getElementById(id); if(o&&o.parentNode) o.parentNode.removeChild(o); });
-    document.querySelectorAll('.af-tut-ring').forEach(function(x){ x.classList.remove('af-tut-ring'); });
+    document.querySelectorAll('.af-tut-ring').forEach(function(x){ x.classList.remove('af-tut-ring','af-tut-ring-loose'); });
     document.querySelectorAll('.tut-glow').forEach(function(x){ x.classList.remove('tut-glow'); });
     var fw=document.getElementById('aifrs-tut-fw'); if(fw&&fw.parentNode) fw.parentNode.removeChild(fw);
     AiFRS._tutEl=null;
@@ -7150,7 +7151,7 @@ body.aifrs-bm-view #aifrs-tour-btn { animation:none!important; box-shadow:none!i
     }, _infoDelay);
   }
   function _tutCoach(s, el){
-    if(el){ el.classList.add('af-tut-ring'); _tutScrollTo(el); }
+    if(el){ el.classList.add('af-tut-ring'); if(s.ringLoose) el.classList.add('af-tut-ring-loose'); _tutScrollTo(el); }
     var note=AiFRS._tutNote||''; AiFRS._tutNote='';
     setTimeout(function(){
       if(AiFRS.TUT_STEPS[AiFRS._tutIdx]!==s) return;
