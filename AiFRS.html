@@ -304,7 +304,8 @@ button.aifrs-btn[onclick*="runFullReview"],
 .aifrs-tut-shake{animation:tutshake .4s}
 @keyframes tutshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 .af-tut-ring{animation:af-step-glow 1.6s ease-in-out infinite!important;border-radius:10px}
-.tut-glow{box-shadow:0 0 0 2px rgba(212,175,55,.9),0 0 16px rgba(212,175,55,.5)!important;transition:box-shadow .25s}
+.tut-glow{animation:tut-blink .7s ease-in-out infinite!important}
+@keyframes tut-blink{0%,100%{box-shadow:0 0 0 2px rgba(212,175,55,.95),0 0 18px rgba(212,175,55,.7),0 0 6px rgba(212,175,55,.4)}50%{box-shadow:0 0 0 2px rgba(212,175,55,.08),0 0 4px rgba(212,175,55,.05),0 0 0 rgba(212,175,55,0)}}
 .aifrs-tut-hud{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:10100;display:inline-flex;align-items:center;gap:7px;background:rgba(20,26,38,.94);border:1px solid rgba(212,175,55,.4);border-radius:999px;padding:4px 12px 4px 9px;font-size:11.5px;color:var(--txt2);cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4);transition:transform .2s;user-select:none}
 .aifrs-tut-hud:hover{transform:translateX(-50%) scale(1.04)}
 .aifrs-tut-hud i{font-style:normal;font-size:13px}
