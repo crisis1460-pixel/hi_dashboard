@@ -778,7 +778,9 @@ body.aifrs-bm-view .af-qa-wrap{margin-top:32px;padding-top:20px;border-top-width
 .af-qa-all:hover{color:var(--txt2);border-color:var(--border2)}
 .af-qa-wrap.has-ans .af-qa-all{display:inline-block}
 .af-qa-row{display:flex;gap:6px;align-items:stretch;margin-bottom:24px}
-.af-qa-hist-label{display:none;font-size:11px;font-weight:700;color:var(--txt3);letter-spacing:.05em;margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border2)}
+.af-qa-bundle{border-radius:12px;transition:border-color .2s}
+.af-qa-wrap.has-ans .af-qa-bundle{border:1px solid var(--border);padding:14px 16px}
+.af-qa-hist-label{display:none;font-size:11px;font-weight:700;color:var(--txt3);letter-spacing:.05em;margin-bottom:12px}
 .af-qa-wrap.has-ans .af-qa-hist-label{display:block}
 .af-qa-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--txt);font-size:12px;font-family:inherit;padding:7px 10px;resize:none;min-height:36px;line-height:1.5;outline:none;word-break:keep-all}
 .af-qa-input:focus{border-color:rgba(41,151,255,.5)}
@@ -3422,7 +3424,7 @@ body.aifrs-bm-view .af-qa-child{margin-left:28px}
         h+='<div class="af-qa-row"><textarea id="af-qa-input" class="af-qa-input" placeholder="이 거래에 대해 궁금한 점을 질문하세요..." rows="1"></textarea>'
           +'<button class="af-qa-btn" onclick="AiFRS.askFollowUp()">전송</button></div>';
       }
-      h+='<div class="af-qa-hist-label">질문 내역</div><div id="af-qa-answer" class="af-qa-answer"></div></div>';
+      h+='<div class="af-qa-bundle"><div class="af-qa-hist-label">질문 내역</div><div id="af-qa-answer" class="af-qa-answer"></div></div></div>';
       // 다른 후보 접힘 (S9: 맨 마지막)
       if(cands.length>1){
         h+='<details class="af-cand-fold"><summary>다른 후보 '+(cands.length-1)+'종 — 펼쳐 보기(AI 전체 검토 가능)</summary>'
