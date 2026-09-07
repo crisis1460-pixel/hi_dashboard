@@ -7080,8 +7080,11 @@ button.aifrs-btn[onclick*="runFullReview"],
   }
   function _tutInfo(s, el){
     _tutScrollTo(el);
+    var _infoDelay=300;
+    if(el){ var _r=el.getBoundingClientRect(); if(_r.bottom<0||_r.top>window.innerHeight) _infoDelay=750; }
     setTimeout(function(){
-      if(AiFRS.TUT_STEPS[AiFRS._tutIdx]!==s) return;   // 스크롤 중 스텝이 바뀌면 취소
+      if(AiFRS.TUT_STEPS[AiFRS._tutIdx]!==s) return;
+
       var ov=document.createElement('div'); ov.className='aifrs-tour-ov tut'; ov.id='aifrs-tut-ov';
       var body=(s.ico?'<span class="tico">'+s.ico+'</span>':'')
         +'<b>'+esc(s.title)+'</b><span class="tmsg">'+_tutFmt(s.msg)+(s.tip?'<div class="tgap"></div><div class="tli ttip"><i>💡</i><span>'+esc(s.tip)+'</span></div>':'')+'</span>'
@@ -7113,7 +7116,7 @@ button.aifrs-btn[onclick*="runFullReview"],
         } else { tip.style.left=Math.max(14,(vw-W)/2)+'px'; tip.style.top='34%'; tip.style.bottom='auto'; ov.style.background='rgba(0,0,0,.62)'; }
       }
       place(); requestAnimationFrame(function(){ requestAnimationFrame(place); });
-    }, 300);
+    }, _infoDelay);
   }
   function _tutCoach(s, el){
     if(el){ el.classList.add('af-tut-ring'); _tutScrollTo(el); }
@@ -7645,14 +7648,20 @@ button.aifrs-btn[onclick*="runFullReview"],
         if(parts.length>1){
           return parts.filter(Boolean).map(function(p,i){
             var t=p.trim();
-            return '<div style="margin-top:'+(i?'10':'0')+'px">' + _e(t) + '</div>';
+            var m=t.match(/^(\(\d+\))\s*([\s\S]*)$/);
+            if(m){
+              return '<div style="display:flex;gap:5px;margin-top:'+(i?'14':'0')+'px;align-items:baseline">'
+                +'<span style="flex-shrink:0;min-width:26px;font-weight:700;color:var(--txt)">'+_e(m[1])+'</span>'
+                +'<span>'+_e(m[2])+'</span></div>';
+            }
+            return '<div style="margin-top:'+(i?'14':'0')+'px">'+_e(t)+'</div>';
           }).join('');
         }
         // 단일 문단: 한국어 문장 종결 경계에서 줄바꿈(가독성 개선)
         var sents=raw.replace(/([다됩함임합습]\.)\s+(?=[가-힣A-Z\(①-⑨])/g,'$1\n').split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
         if(sents.length>1){
           return sents.map(function(s,i){
-            return '<div style="margin-top:'+(i?'6':'0')+'px">'+_e(s)+'</div>';
+            return '<div style="margin-top:'+(i?'7':'0')+'px">'+_e(s)+'</div>';
           }).join('');
         }
         return _e(raw);
