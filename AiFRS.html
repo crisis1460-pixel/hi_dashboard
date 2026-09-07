@@ -6108,6 +6108,14 @@ body.aifrs-bm-view .af-qa-child{margin-left:28px}
     main.querySelectorAll('.af-qa-row,.af-qa-nokey').forEach(function(x){ x.parentNode.removeChild(x); });
     // 후속 질문 섹션을 맨 아래로 이동 (기존처럼 — item.html 안 위치보다 뒤로)
     var qaWrap=main.querySelector('.af-qa-wrap'); if(qaWrap) main.appendChild(qaWrap);
+    // 구형 북마크 호환: af-qa-bundle 래퍼 + '질문 내역' 라벨 보장
+    if(qaWrap && !qaWrap.querySelector('.af-qa-bundle')){
+      var _bnd=document.createElement('div'); _bnd.className='af-qa-bundle';
+      var _hl=qaWrap.querySelector('.af-qa-hist-label');
+      var _qa=qaWrap.querySelector('#af-qa-answer,.af-qa-answer');
+      if(!_hl){ _hl=document.createElement('div'); _hl.className='af-qa-hist-label'; _hl.textContent='질문 내역'; }
+      if(_qa){ _qa.parentNode.insertBefore(_bnd,_qa); _bnd.appendChild(_hl); _bnd.appendChild(_qa); }
+    }
     var qaBox=main.querySelector('#af-qa-answer');
     if(qaBox && item.qaHtml){ qaBox.className='af-qa-answer visible'; qaBox.innerHTML=item.qaHtml; if(qaWrap) qaWrap.classList.add('has-ans'); }
     main.querySelectorAll('details.af-qa-ans').forEach(function(d){ d.open=true; });
