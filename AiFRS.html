@@ -279,8 +279,9 @@ button.aifrs-btn[onclick*="runFullReview"],
 .aifrs-tour-ov.tut .tmsg,.aifrs-tut-coach{word-break:keep-all;overflow-wrap:break-word}
 .aifrs-tour-ov.tut .tp{font-weight:400;color:var(--txt2);margin:0;line-height:1.7}
 .aifrs-tour-ov.tut .tp+.tp,.aifrs-tut-coach .tp+.tp{margin-top:5px}
-.aifrs-tour-ov.tut .tli{margin:3px 0;line-height:1.65}
-.aifrs-tour-ov.tut .tli>i{min-width:15px;color:var(--txt3)}
+.aifrs-tour-ov.tut .tli{display:flex;gap:6px;margin:3px 0;line-height:1.65}
+.aifrs-tour-ov.tut .tli>i{flex-shrink:0;font-style:normal;min-width:15px;color:var(--txt3)}
+.aifrs-tour-ov.tut .tli>span{flex:1;min-width:0}
 .aifrs-tour-ov.tut .tlbl>i,.aifrs-tut-coach .tlbl>i{min-width:40px;color:var(--txt);font-weight:700}
 .aifrs-tour-ov.tut .tgap,.aifrs-tut-coach .tgap{height:6px}
 .aifrs-tour-ov.tut .ttip,.aifrs-tut-coach .ttip{color:#fbbf24}
@@ -5885,6 +5886,15 @@ button.aifrs-btn[onclick*="runFullReview"],
   // ───────────────────────────────────────────────────────────────────────────
   function buildHistHtml(){
     var items = [
+      { date:'2026-09-07', title:'튜토리얼 버그픽스 5종 — 렌더·진행률·흐름 안정화',
+        bullets:[
+          'CSS: `.tli` 리스트 항목(①②③·-) info 팝업에서 `display:flex` 미적용 → hanging indent 깨짐. `.aifrs-tour-ov.tut .tli`에 flex·gap·font-style·span flex:1 규칙 추가',
+          'JS `_tutProg()`: wait/end 스텝은 `all.indexOf(s)=-1` → k=all.length(17) → "17/17" 오표기. 직전 visible 스텝 기준으로 fallback 처리',
+          'JS `_tutCoach`: `<span class="tw tprog">`에서 `.aifrs-tut-coach .tw`(specificity 0-2-0)가 `.tprog`(0-1-0) override → display:block, flex gap 소실. `.tw` 제거 → `<span class="tprog">`으로 교체',
+          'JS `_tutEmit(reading|error)`, `_tutKeyCheck(로딩·오류·빈칸)`, `_tutShake`: innerHTML 교체 시 진행률 바 유실 → 각 상태 말미에 `_tutProg(cur)` 복원',
+          'JS `tutSample()`: `state.files.push()` 전 `splice(0)` 추가(파일 중복 방지) + setTimeout 400ms fallback으로 `_was` 트릭 실패 엣지케이스 대비(2-1·2-2 → 3-1 강제 진입)'
+        ]
+      },
       { date:'2026-09-07', title:'첫 여정 튜토리얼 신설 — 최초 1회 게임형 온보딩(6챕터 17스텝)',
         bullets:[
           '웰컴 팝업 동의 → 사용 가이드 8단계([건너뛰기]·[이전] 숨김) → 열쇠(API 키)·첫 문서·AI 분석·정밀분석·AI 감사·쉬운 설명·☆ 저장 순으로 실제 행동이 진행 조건인 튜토리얼 자동 시작. [이미 알아요]면 영구 비활성',
@@ -6998,7 +7008,12 @@ button.aifrs-btn[onclick*="runFullReview"],
   // 진행률 — 대기·엔딩을 뺀 전체 스텝 기준, 얇은 골드 바 + "12 / 32" (모든 팝업·말풍선 공통)
   function _tutProg(s){
     var all=AiFRS.TUT_STEPS.filter(function(x){ return x.kind!=='wait' && x.kind!=='end'; });
-    var k=all.indexOf(s)+1; if(k<1) k=all.length;
+    var k=all.indexOf(s)+1;
+    if(k<1){   // wait/end 스텝은 all에 없음 → 직전 visible 스텝 기준으로 표시
+      var idx=AiFRS.TUT_STEPS.indexOf(s);
+      for(var j=idx-1;j>=0;j--){ var p=AiFRS.TUT_STEPS[j]; if(p.kind!=='wait'&&p.kind!=='end'){ k=all.indexOf(p)+1; break; } }
+      if(k<1) k=1;
+    }
     return '<span class="tpb"><s style="width:'+Math.round(k/all.length*100)+'%"></s></span><em>'+k+' / '+all.length+'</em>';
   }
   function _tutCnt(s){ return '<span class="tch">'+esc(TUT_CH[s.ch]||'')+'</span>'+_tutProg(s); }
@@ -7060,7 +7075,7 @@ button.aifrs-btn[onclick*="runFullReview"],
     c.innerHTML=(note?'<span class="tt" style="margin:0 0 6px">⚠ '+esc(note)+'</span>':'')
       +'<b><i>'+(s.kind==='wait'?'⏳':'👉')+'</i> '+esc(s.title)+'</b>'+_tutFmt(s.msg)
       +(s.tip?'<div class="tli ttip"><i>💡</i><span>'+esc(s.tip)+'</span></div>':'')+(s.w?'<span class="tw">'+esc(s.w)+'</span>':'')
-      +'<span class="tw tprog">'+_tutProg(s)+'</span>';
+      +'<span class="tprog">'+_tutProg(s)+'</span>';
     document.body.appendChild(c);
     AiFRS._tutEl=el; _tutCoachPlace();
   }
@@ -7108,18 +7123,18 @@ button.aifrs-btn[onclick*="runFullReview"],
     if(!_tutOn()) return;
     var steps=AiFRS.TUT_STEPS, i=AiFRS._tutIdx, cur=steps[i]; if(!cur) return;
     var c=document.getElementById('aifrs-tut-coach');
-    if(ev==='reading'){ if(cur.id==='2-2' && c) c.innerHTML='<b><i>📖</i> 읽는 중… 잠깐만요</b>다 읽으면 자동으로 넘어가요'; return; }
-    if(ev==='error'){ if((cur.kind==='wait'||cur.kind==='act') && c) c.innerHTML='<b><i>☕</i> 잠깐 쉬어요</b>AI가 잠깐 바빠요. 30초쯤 뒤 [다시 시도]를 눌러요<span class="tw">튜토리얼은 여기서 기다릴게요</span>'; return; }
+    if(ev==='reading'){ if(cur.id==='2-2' && c) c.innerHTML='<b><i>📖</i> 읽는 중… 잠깐만요</b>다 읽으면 자동으로 넘어가요<span class="tprog">'+_tutProg(cur)+'</span>'; return; }
+    if(ev==='error'){ if((cur.kind==='wait'||cur.kind==='act') && c) c.innerHTML='<b><i>☕</i> 잠깐 쉬어요</b>AI가 잠깐 바빠요. 30초쯤 뒤 [다시 시도]를 눌러요<span class="tw">튜토리얼은 여기서 기다릴게요</span><span class="tprog">'+_tutProg(cur)+'</span>'; return; }
     if(ev==='ai-nocand'){ AiFRS._tutNote='회계 문서가 아닌가 봐요 — 다른 문서로 다시 해봐요!'; AiFRS.tutGo('2-2'); return; }
     for(var j=i;j<steps.length;j++){ if(steps[j].wait){ if(steps[j].wait===ev){ AiFRS._tutIdx=j+1; _tutClear(); setTimeout(_tutShow, 420); } return; } }   // 렌더·레이아웃 정착 뒤 표시(하이라이트 위치 오차 방지)
   }
-  function _tutShake(msg){ var c=document.getElementById('aifrs-tut-coach'); if(!c) return; c.classList.remove('aifrs-tut-shake'); void c.offsetWidth; c.classList.add('aifrs-tut-shake'); if(msg) c.innerHTML='<b><i>😅</i> '+esc(msg)+'</b>키를 붙여넣고 [Save]를 눌러요'; }
+  function _tutShake(msg){ var c=document.getElementById('aifrs-tut-coach'); if(!c) return; c.classList.remove('aifrs-tut-shake'); void c.offsetWidth; c.classList.add('aifrs-tut-shake'); if(msg){ var cur=AiFRS.TUT_STEPS[AiFRS._tutIdx]; c.innerHTML='<b><i>😅</i> '+esc(msg)+'</b>키를 붙여넣고 [Save]를 눌러요<span class="tprog">'+(cur?_tutProg(cur):'')+'</span>'; } }
   // 열쇠 검증 — Save 직후 연결 핑 1회(재시도 없음). 진짜 키면 다음, 아니면 그 자리에서 안내
   function _tutKeyCheck(){
     if(!_tutOn()) return;
     var cur=AiFRS.TUT_STEPS[AiFRS._tutIdx]; if(!cur||cur.wait!=='key-saved') return;
     if(!AiFRS.getApiKey()){ _tutShake('앗, 빈칸이에요'); return; }
-    var c=document.getElementById('aifrs-tut-coach'); if(c) c.innerHTML='<b><i>🔌</i> 열쇠가 맞는지 확인 중…</b>잠깐만요';
+    var c=document.getElementById('aifrs-tut-coach'); if(c) c.innerHTML='<b><i>🔌</i> 열쇠가 맞는지 확인 중…</b>잠깐만요<span class="tprog">'+_tutProg(cur)+'</span>';
     AiFRS.callGemini('연결 테스트입니다. 다른 말 없이 정확히 OK 라고만 출력하세요.',{temperature:0,retry:0})
       .then(function(){ _tutToast('🔑','열쇠 획득!'); _tutEmit('key-saved'); })
       .catch(function(e){
@@ -7127,7 +7142,7 @@ button.aifrs-btn[onclick*="runFullReview"],
         var c2=document.getElementById('aifrs-tut-coach'); if(!c2) return;
         c2.innerHTML='<b><i>🚫</i> '+(quota?'열쇠는 맞는데 오늘 한도가 다 찼어요':'열쇠가 안 맞아요')+'</b>'
           +(quota?'내일 다시 오거나, 새 프로젝트로 발급한 키로 바꿔 [Save]':'키를 다시 복사해서 붙여넣고 [Save]를 눌러요')
-          +'<span class="tw">튜토리얼은 여기서 기다릴게요</span>';
+          +'<span class="tw">튜토리얼은 여기서 기다릴게요</span><span class="tprog">'+_tutProg(cur)+'</span>';
       });
   }
   // 실제 진행 상태로 챕터 판별(새로고침·되감기 재개용)
@@ -7189,8 +7204,14 @@ button.aifrs-btn[onclick*="runFullReview"],
     var rb=document.getElementById('aifrs-restore-bar'); if(rb&&rb.parentNode) rb.parentNode.removeChild(rb);
     AiFRS._lastAi=null; AiFRS._lastPrecise={}; AiFRS._lastAudit={}; AiFRS._lastJournal=null; AiFRS._mixOkSig=null;
     ['aifrs-ai','aifrs-precise','aifrs-journal'].forEach(function(id){ var el=document.getElementById(id); if(el){ el.innerHTML=''; el.style.display='none'; } });
+    AiFRS.state.files.splice(0);   // 기존 파일 비우고 샘플 단독 삽입(중복 방지)
     AiFRS.state.files.push({ id:'f'+(++AiFRS._seq), name:'연습용_SaaS구독계약서.txt', ext:'txt', kind:'doc', size:TUT_SAMPLE_DOC.length, status:'done', text:TUT_SAMPLE_DOC, error:'', dataUrl:'', file:null, from:'연습용' });
     renderFileList();
+    setTimeout(function(){   // renderFileList의 _was 트릭이 실패하는 엣지케이스 대비 — 이미 3-1+ 이면 무시
+      if(!_tutOn()) return;
+      var cur=AiFRS.TUT_STEPS[AiFRS._tutIdx];
+      if(cur && (cur.id==='2-1'||cur.id==='2-2')) AiFRS.tutGo('3-1');
+    }, 400);
   };
   // 검색 결과 헤더 클릭 → 검색 해제 후 전체 목록에서 해당 기준서 펼쳐서 이동
   AiFRS.dbJump = function(i){
