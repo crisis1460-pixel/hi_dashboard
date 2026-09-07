@@ -5872,7 +5872,7 @@ body.aifrs-bm-view .af-qa-child{margin-left:28px}
             +'<td>'+inline(d[0])+'</td><td class="num">'+esc(d[1])+'</td>'
             +'<td>'+inline(c[0])+'</td><td class="num">'+esc(c[1])+'</td></tr>';
         }
-        out.push('<div class="af-md-tblwrap"><table class="aifrs-jn"><thead><tr><th>적요</th><th>차변 계정</th><th class="num">차변 금액</th><th>대변 계정</th><th class="num">대변 금액</th></tr></thead><tbody>'+trs+'</tbody></table></div>');
+        out.push('<div class="af-md-tblwrap"><table class="aifrs-jn af-jn-fixed"><colgroup><col><col><col><col><col></colgroup><thead><tr><th>적요</th><th>차변 계정</th><th class="num">차변 금액</th><th>대변 계정</th><th class="num">대변 금액</th></tr></thead><tbody>'+trs+'</tbody></table></div>');
         list=null; return;
       }
       pendingMemo='';
@@ -5929,7 +5929,7 @@ body.aifrs-bm-view .af-qa-child{margin-left:28px}
     function _acct(s){ var m=String(s).replace(/\*\*/g,'').match(/^(.*?)\s*([\d][\d,]*(?:\.\d+)?\s*원?)\s*$/); return m?[m[1].replace(/[:：]\s*$/,'').trim(), m[2].replace(/\s+/g,'')]:[String(s).replace(/\*\*/g,'').trim(),'']; }
     function flushJ(){
       if(!jn) return;
-      out.push('<div class="af-md-tblwrap"><table class="aifrs-jn"><thead><tr><th>적요</th><th>차변 계정</th><th class="num">차변 금액</th><th>대변 계정</th><th class="num">대변 금액</th></tr></thead><tbody>'
+      out.push('<div class="af-md-tblwrap"><table class="aifrs-jn af-jn-fixed"><colgroup><col><col><col><col><col></colgroup><thead><tr><th>적요</th><th>차변 계정</th><th class="num">차변 금액</th><th>대변 계정</th><th class="num">대변 금액</th></tr></thead><tbody>'
         +jn.map(function(r){ var d=_acct(r.d), c=_acct(r.c); return '<tr><td>'+(r.memo?inline(r.memo):'')+'</td><td>'+inline(d[0])+'</td><td class="num">'+esc(d[1])+'</td><td>'+inline(c[0])+'</td><td class="num">'+esc(c[1])+'</td></tr>'; }).join('')
         +'</tbody></table></div>');
       jn=null;
