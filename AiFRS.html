@@ -692,11 +692,11 @@ a:hover { text-decoration: underline; }
 /* P6: 후속 Q&A */
 .af-qa-wrap{border-top:1px solid var(--border2);margin-top:12px;padding-top:10px}
 .af-qa-hd{font-size:11px;font-weight:700;color:var(--txt3);margin-bottom:7px;letter-spacing:.04em}
-.af-qa-row{display:flex;gap:6px;align-items:flex-end}
-.af-qa-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--txt);font-size:12px;font-family:inherit;padding:7px 10px;resize:none;min-height:52px;line-height:1.5;outline:none;word-break:keep-all}
+.af-qa-row{display:flex;gap:6px;align-items:stretch}
+.af-qa-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--txt);font-size:12px;font-family:inherit;padding:7px 10px;resize:none;min-height:36px;line-height:1.5;outline:none;word-break:keep-all}
 .af-qa-input:focus{border-color:rgba(41,151,255,.5)}
 .af-qa-input:disabled{opacity:.4;cursor:not-allowed}
-.af-qa-btn{flex-shrink:0;font-size:12px;font-weight:700;color:#fff;background:linear-gradient(180deg,#4bacff 0%,#2997ff 55%,#0f74e0 100%);border:1px solid #063a6b;border-radius:8px;padding:7px 13px;cursor:pointer;white-space:nowrap}
+.af-qa-btn{flex-shrink:0;font-size:12px;font-weight:700;color:#fff;background:linear-gradient(180deg,#4bacff 0%,#2997ff 55%,#0f74e0 100%);border:1px solid #063a6b;border-radius:8px;padding:7px 13px;cursor:pointer;white-space:nowrap;align-self:stretch}
 .af-qa-btn:disabled{opacity:.35;cursor:not-allowed}
 .af-qa-nokey{font-size:11px;color:var(--txt3);padding:5px 0;word-break:keep-all}
 .af-qa-answer{margin-top:9px;display:none}
@@ -3296,7 +3296,7 @@ a:hover { text-decoration: underline; }
       if(!_qaHasKey){
         h+='<div class="af-qa-nokey">Gemini API 키를 등록하면 이 분석 결과에 대해 추가 질문을 할 수 있습니다.</div>';
       }else{
-        h+='<div class="af-qa-row"><textarea id="af-qa-input" class="af-qa-input" placeholder="이 거래에 대해 궁금한 점을 질문하세요..." rows="2"></textarea>'
+        h+='<div class="af-qa-row"><textarea id="af-qa-input" class="af-qa-input" placeholder="이 거래에 대해 궁금한 점을 질문하세요..." rows="1"></textarea>'
           +'<button class="af-qa-btn" onclick="AiFRS.askFollowUp()">전송</button></div>';
       }
       h+='<div id="af-qa-answer" class="af-qa-answer"></div></div>';
@@ -5594,7 +5594,7 @@ a:hover { text-decoration: underline; }
   function _initQaWrap(){
     var noKey=document.querySelector('.af-qa-wrap .af-qa-nokey'); if(!noKey) return;
     if(!(AiFRS.getApiKey&&AiFRS.getApiKey())) return;
-    noKey.outerHTML='<div class="af-qa-row"><textarea id="af-qa-input" class="af-qa-input" placeholder="이 거래에 대해 궁금한 점을 질문하세요..." rows="2"></textarea>'
+    noKey.outerHTML='<div class="af-qa-row"><textarea id="af-qa-input" class="af-qa-input" placeholder="이 거래에 대해 궁금한 점을 질문하세요..." rows="1"></textarea>'
       +'<button class="af-qa-btn" onclick="AiFRS.askFollowUp()">전송</button></div>';
   }
   // ── P8: 온보딩 체크리스트 ──
