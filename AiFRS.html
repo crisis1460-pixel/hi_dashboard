@@ -1457,7 +1457,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
 .af-bm-star::before { content:''; display:inline-block; width:18px; height:18px; vertical-align:-4px; background-color:currentColor; -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='black' stroke-width='2' stroke-linejoin='round' d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z'/%3E%3C/svg%3E") center/contain no-repeat; mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='black' stroke-width='2' stroke-linejoin='round' d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z'/%3E%3C/svg%3E") center/contain no-repeat; }
 .af-bm-star.active::before { -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z'/%3E%3C/svg%3E") center/contain no-repeat; mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z'/%3E%3C/svg%3E") center/contain no-repeat; }
 /* 즐겨찾기 뷰어 */
-.af-bm-viewer-wrap { display:grid; grid-template-columns:300px 1fr; gap:16px; min-height:60vh; }
+.af-bm-viewer-wrap { display:grid; grid-template-columns:280px 1fr; gap:16px; min-height:60vh; }
 .af-bm-sidebar { border:1px solid var(--border); border-radius:10px; overflow:hidden; display:flex; flex-direction:column; }
 .af-bm-sidebar-head { padding:10px 14px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .af-bm-sidebar-head h3 { margin:0; font-size:13px; font-weight:700; color:var(--txt); }
@@ -1470,7 +1470,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
 .af-bm-item-std { font-size:11px; color:var(--txt3); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .af-bm-item-del { background:none; border:none; color:var(--txt3); cursor:pointer; font-size:13px; padding:0 2px; flex-shrink:0; }
 .af-bm-item-del:hover { color:#f87171; }
-.af-bm-main { border:1px solid var(--border); border-radius:10px; overflow-y:auto; padding:0 16px 16px; max-height:80vh; }
+.af-bm-main { border:1px solid var(--border); border-radius:10px; overflow-y:auto; padding:0 20px 20px; max-height:calc(100vh - 160px); }
 .af-bm-empty { text-align:center; padding:40px; color:var(--txt3); font-size:13px; }
 .af-bm-io-bar { display:flex; gap:8px; margin:14px 0; flex-wrap:wrap; align-items:center; }
 .af-bm-viewer-label { font-size:11px; color:var(--txt3); padding:10px 0 6px; border-bottom:1px solid var(--border); margin-bottom:12px; }
@@ -5728,6 +5728,20 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
       var wrapEl=answer.closest('.af-qa-wrap'); if(wrapEl){ wrapEl.classList.add('has-ans'); var ab=wrapEl.querySelector('.af-qa-all'); if(ab) ab.textContent='답변 모두 숨기기'; }
       _jnFitCols(answer);   // 분개형 표 열 폭 확정(내용 기준·짝 열 동일)
       var card=answer.querySelector('details.af-qa-ans'); if(card){ try{ card.scrollIntoView({block:'nearest',behavior:'smooth'}); }catch(e){} }
+      // 즐겨찾기에 저장된 항목이면 Q&A 자동 갱신(☆ 저장 후 질문해도 기록에 포함)
+      (function(){
+        var _bl=_bmGet(); var _bu=false;
+        document.querySelectorAll('.af-bm-star.active[data-bm]').forEach(function(btn){
+          var bk=btn.getAttribute('data-bm'); if(!bk) return;
+          _bl.forEach(function(x){
+            if(x.id===bk){
+              var uc=Array.prototype.map.call(answer.querySelectorAll('details.af-qa-ans'),function(d){ return d.outerHTML; });
+              x.qaHtml=uc.join(''); x.qaCount=uc.length; _bu=true;
+            }
+          });
+        });
+        if(_bu) _bmSave(_bl);
+      })();
     }).catch(function(e){
       done();
       var aborted=/abort/i.test(String((e&&e.name)||'')+String((e&&e.message)||''));
@@ -5803,7 +5817,35 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
       return s;
     }
     function flushP(){ if(para.length){ out.push('<p class="af-md-p">'+inline(para.join(' '))+'</p>'); para=[]; } }
-    function flushL(){ if(list){ out.push('<div class="af-md-list">'+list.map(function(it){ return '<div class="af-md-li"><i>'+esc(it.m)+'</i><span>'+inline(it.t)+'</span></div>'; }).join('')+'</div>'); list=null; } }
+    var pendingMemo='';   // 분개 목록 직전 단락 마지막 줄(적요 후보) — 목록 시작 시 추출, flushL에서 소비
+    var JNPFX=/^\(?\s*[차대]\s*변\s*\)?\s*[:：]?\s*/;
+    function flushL(){
+      if(!list) return;
+      // 목록 전체가 (차변)/(대변) 항목이면 분개 표로 자동 변환
+      var allJn=list.length>=2 && list.every(function(it){ return JNPFX.test(it.t); });
+      if(allJn){
+        var memo=pendingMemo; pendingMemo='';
+        var dr=[], cr=[];
+        list.forEach(function(it){
+          var side=/^\(?\s*차\s*변/.test(it.t)?'dr':'cr';
+          var body=it.t.replace(JNPFX,'').replace(/(\d[\d,]*\s*원?\s*)\s*\([^)]*\)\s*$/,'$1').trim();
+          var p=_acct(body); var acct=p[0], amt=p[1];
+          if(side==='dr') dr.push([acct,amt]); else cr.push([acct,amt]);
+        });
+        var n=Math.max(dr.length,cr.length,1), trs='';
+        for(var i=0;i<n;i++){
+          var d=dr[i]||['',''], c=cr[i]||['',''];
+          trs+='<tr>'+(i===0?'<td'+(n>1?' rowspan="'+n+'"':'')+'>'+(memo?inline(memo):'')+'</td>':'')
+            +'<td>'+inline(d[0])+'</td><td class="num">'+esc(d[1])+'</td>'
+            +'<td>'+inline(c[0])+'</td><td class="num">'+esc(c[1])+'</td></tr>';
+        }
+        out.push('<div class="af-md-tblwrap"><table class="aifrs-jn"><thead><tr><th>적요</th><th>차변 계정</th><th class="num">차변 금액</th><th>대변 계정</th><th class="num">대변 금액</th></tr></thead><tbody>'+trs+'</tbody></table></div>');
+        list=null; return;
+      }
+      pendingMemo='';
+      out.push('<div class="af-md-list">'+list.map(function(it){ return '<div class="af-md-li"><i>'+esc(it.m)+'</i><span>'+inline(it.t)+'</span></div>'; }).join('')+'</div>');
+      list=null;
+    }
     // 마크다운 표(| a | b |) → 회계처리안과 같은 표 양식(.aifrs-jn). 구분선 행(|---|)은 건너뛰고, 숫자·금액 열은 오른쪽 정렬
     var tbl=null;
     function _cells(s){ return s.replace(/^\|/,'').replace(/\|\s*$/,'').split('|').map(function(c){ return c.trim(); }); }
@@ -5968,7 +6010,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
   };
   AiFRS.openBookmarkViewer=function(){
     var url=location.href.replace(/[?#].*/,'')+'?aifrs-bm=view';
-    window.open(url,'aifrs-bm-viewer','width=1100,height=800,menubar=no,toolbar=no,location=no,scrollbars=yes,resizable=yes');
+    window.open(url,'aifrs-bm-viewer','width=1440,height=900,menubar=no,toolbar=no,location=no,scrollbars=yes,resizable=yes');
   };
   AiFRS.exportBookmarks=function(){
     var list=_bmGet();
@@ -6032,7 +6074,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
     // 뷰어에서는 질문 입력은 숨기고, 저장된 답변 이력은 접혀 있었더라도 모두 펼쳐서 표시
     main.querySelectorAll('.af-qa-row,.af-qa-nokey').forEach(function(x){ x.parentNode.removeChild(x); });
     var qaBox=main.querySelector('#af-qa-answer');
-    if(qaBox && !qaBox.querySelector('details.af-qa-ans') && item.qaHtml){ qaBox.className='af-qa-answer visible'; qaBox.innerHTML=item.qaHtml; }
+    if(qaBox && item.qaHtml){ qaBox.className='af-qa-answer visible'; qaBox.innerHTML=item.qaHtml; }
     main.querySelectorAll('details.af-qa-ans').forEach(function(d){ d.open=true; });
     // 이전 버전에서 저장된 답변에 남은 "<br>" 글자 → 실제 줄바꿈
     main.querySelectorAll('.af-qa-md').forEach(function(md){ if(/&lt;br\s*\/?&gt;/i.test(md.innerHTML)) md.innerHTML=md.innerHTML.replace(/&lt;br\s*\/?&gt;/gi,'<br>'); });
@@ -6102,7 +6144,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
       +'<div class="af-brand"><span class="af-brand-mark">AiFRS</span><span class="af-brand-tag">즐겨찾기 뷰어</span></div>'
       +'</div></div>'
       +'<div class="af-main" style="padding-top:16px">'
-      +'<div style="max-width:1160px;margin:0 auto">'
+      +'<div style="max-width:1600px;margin:0 auto">'
       +'<div class="af-bm-io-bar">'
       +'<button class="aifrs-btn aifrs-btn-sm" onclick="window.AiFRS.exportBookmarks()">&#8595; 공유 파일 내보내기</button>'
       +'<button class="aifrs-btn aifrs-btn-sm" onclick="document.getElementById(\'af-bm-import\').click()">&#8593; 공유 파일 가져오기</button>'   // label 대신 같은 button — 두 버튼 크기·입체감 동일
@@ -6119,6 +6161,24 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
   // ───────────────────────────────────────────────────────────────────────────
   function buildHistHtml(){
     var items = [
+      { date:'2026-09-07', title:'즐겨찾기 Q&A 자동 갱신 + 뷰어 폭 확대',
+        bullets:[
+          '☆ 저장 후 후속 질문을 해도 답변이 즐겨찾기에 자동 반영 — 저장 시점 이후 Q&A도 기록에 포함',
+          '즐겨찾기 뷰어 창 폭 1100→1440px, 콘텐츠 최대폭 1160→1600px, 패널 최대 높이 80vh→화면에 맞춤'
+        ]
+      },
+      { date:'2026-09-07', title:'후속 질문 분개 bullet 자동 표 변환',
+        bullets:[
+          '(차변)·(대변)이 각 줄로 나열된 답변도 회계처리안과 같은 분개 표로 자동 변환',
+          '다수 차변·다수 대변(복합 분개) 지원, 직전 단락의 거래 제목을 적요 셀에 자동 삽입'
+        ]
+      },
+      { date:'2026-09-07', title:'색상 시스템 4색 통일 + 폰트 정규화',
+        bullets:[
+          'green(#34d399)→teal(#2dd4bf), violet(#a78bfa)→blue-sky(#2997ff) 교체 — 의미 동일 색 단일화',
+          '배경 레이어 L* 간격 확대(--bg2/3/4), .5px 단위 폰트 제거(15종→9종 스케일), 최소 11px 보장'
+        ]
+      },
       { date:'2026-09-07', title:'후속 질문 분개 표 정돈',
         bullets:[
           '답변 속 분개는 어떤 질문이든 회계처리안과 같은 표로 — 열 폭은 내용에 맞추되 차변·대변 짝 열은 동일, 표는 내용만큼만 넓게',
