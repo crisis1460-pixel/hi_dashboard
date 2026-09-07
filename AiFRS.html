@@ -789,6 +789,17 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
 .af-qa-ans-tg{flex-shrink:0;font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--border);color:var(--txt3);background:var(--bg2)}
 .af-qa-ans-tg::before{content:attr(data-closed)} .af-qa-ans[open] .af-qa-ans-tg::before{content:attr(data-open)}
 .af-qa-md{padding:10px 14px 12px;font-size:12px;color:var(--txt2);line-height:1.75;word-break:keep-all}
+/* 답변 카드 하단 도구 — 이해 보조 버튼 · 꼬리 질문 칩 · 이어서 질문 입력 (최신 카드에만 표시, 뷰어에서는 숨김) */
+.af-qa-tools{padding:8px 14px 12px;border-top:1px dashed var(--border);display:flex;flex-direction:column;gap:8px}
+.af-qa-quick{display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+.af-qa-quick-hd{font-size:10px;font-weight:700;color:var(--txt3);letter-spacing:.05em;margin-right:4px;white-space:nowrap}
+.af-qa-qb{font-size:11px;color:var(--txt2);background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:3px 10px;cursor:pointer;font-family:inherit;line-height:1.5;transition:color .15s,border-color .15s,background .15s;word-break:keep-all}
+.af-qa-qb:hover{color:var(--blue-sky);border-color:rgba(41,151,255,.4);background:rgba(41,151,255,.1)}
+.af-qa-next{display:flex;flex-wrap:wrap;align-items:flex-start;gap:5px}
+.af-qa-next .af-qchip-row{flex:1;min-width:0}
+.af-qa-thread-row{display:flex;gap:6px;margin-top:6px;align-items:flex-start}
+.af-qa-thread-row .af-qa-input{flex:1;min-width:0}
+.af-qa-ans:not(:first-of-type) .af-qa-tools, body.aifrs-bm-view .af-qa-tools{display:none}
 .af-qa-md b{color:var(--txt)} .af-qa-md code{font-family:inherit;background:rgba(41,151,255,.12);border-radius:3px;padding:0 4px}
 .af-md-h{font-size:12px;font-weight:700;color:#2dd4bf;margin:10px 0 4px;padding-bottom:3px;border-bottom:1px dotted var(--border)}
 .af-md-h:first-child{margin-top:0}
@@ -5480,7 +5491,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
     AiFRS.state.files = AiFRS.state.files.filter(function(r){return r.id!==id;});
     // 파일 구성이 바뀌면 AI 분석·정밀분석·감사 결과는 더 이상 유효하지 않으므로 초기화(재호출 비용 있어 자동 재실행 안 함)
     // 오프라인 키워드 매칭(Keywords)은 renderFileList → _autoRefreshOffline에서 조용히 자동 갱신됨
-    AiFRS._lastAi=null; AiFRS._lastPrecise={}; AiFRS._lastAudit={}; AiFRS._lastJournal=null; AiFRS._mixOkSig=null;
+    AiFRS._lastAi=null; AiFRS._lastPrecise={}; AiFRS._qaHist=[]; AiFRS._lastAudit={}; AiFRS._lastJournal=null; AiFRS._mixOkSig=null;
     ['aifrs-ai','aifrs-precise','aifrs-journal'].forEach(function(id){ var el=document.getElementById(id); if(el){ el.innerHTML=''; el.style.display='none'; } });
     if(!AiFRS.state.files.length){
       var hero=document.getElementById('af-hero');
@@ -5493,7 +5504,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
     if(!n) return;
     if(!window.confirm('업로드된 파일 '+n+'건을 모두 삭제할까요?')) return;
     AiFRS.state.files = [];
-    AiFRS._lastAi=null; AiFRS._lastPrecise={}; AiFRS._lastAudit={}; AiFRS._lastJournal=null;
+    AiFRS._lastAi=null; AiFRS._lastPrecise={}; AiFRS._qaHist=[]; AiFRS._lastAudit={}; AiFRS._lastJournal=null;
     _snapClear();
     ['aifrs-ai','aifrs-precise','aifrs-journal','aifrs-analysis'].forEach(function(id){ var el=document.getElementById(id); if(el){ el.innerHTML=''; el.style.display='none'; } });
     renderFileList();
@@ -5626,9 +5637,23 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
     document.body.appendChild(ov);
   };
   // ── P6: 후속 Q&A 전송 ──
-  AiFRS.askFollowUp=function(){
-    var input=document.getElementById('af-qa-input'); if(!input) return;
-    var q=(input.value||'').trim(); if(!q) return;
+  // 후속 질문 — 대화 기억(최근 4턴·6,000자 상한) + 답변 카드마다 이해 보조 버튼·꼬리 질문 칩·이어서 질문 입력
+  AiFRS._qaHist=[];
+  var QA_QUICK={
+    easy:   {label:'더 쉽게 설명해 주세요',       q:'방금 답변을 회계 지식이 없는 사람도 이해할 수 있게, 비유와 일상 표현으로 더 쉽게 다시 설명해 주세요. 전문용어는 나올 때마다 한 줄로 풀어 주세요.'},
+    example:{label:'예시로 보여 주세요',          q:'방금 답변 내용을 우리 회사 거래에 맞춘 구체적인 숫자 예시 하나로 처음부터 끝까지 보여 주세요.'},
+    summary:{label:'한 줄로 요약해 주세요',        q:'방금 답변을 결론 한 문장과 실무에서 할 일 한 문장, 총 두 문장으로만 요약해 주세요.'},
+    journal:{label:'분개로 보여 주세요',           q:'방금 답변 내용을 회계처리(분개)로 보여 주세요. 시점별로 차변·대변·계정·금액을 표 형태 목록으로 적어 주세요.'},
+    para:   {label:'관련 조문을 알려 주세요',      q:'방금 답변의 근거가 되는 K-IFRS 기준서 번호와 문단(§)을 나열하고, 각 문단이 무슨 내용인지 한 줄씩 설명해 주세요.'}
+  };
+  AiFRS.qaQuick=function(mode){ var m=QA_QUICK[mode]; if(!m) return; AiFRS.askFollowUp(m.q,{label:m.label}); };
+  AiFRS.qaThread=function(btn){ var row=btn.parentNode.querySelector('.af-qa-thread-row'); if(!row) return; row.hidden=!row.hidden; if(!row.hidden){ var ta=row.querySelector('textarea'); if(ta){ ta.focus(); ta.onkeydown=function(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); AiFRS.qaThreadSend(ta); } }; } } };
+  AiFRS.qaThreadSend=function(el){ var row=el.closest('.af-qa-thread-row'); var ta=row&&row.querySelector('textarea'); var v=ta?(ta.value||'').trim():''; if(!v) return; AiFRS.askFollowUp(v); };
+  AiFRS.askFollowUp=function(qArg, opts){
+    opts=opts||{};
+    var input=document.getElementById('af-qa-input');
+    var q=(qArg!=null?String(qArg):(input?input.value:'')||'').trim(); if(!q) return;
+    var label=opts.label||q;   // 카드 제목에 보일 질문(이해 보조 버튼은 짧은 라벨)
     var answer=document.getElementById('af-qa-answer'); if(!answer) return;
     var btn=document.querySelector('.af-qa-btn');
     var ai=AiFRS._lastAi||{}; var gs=ai['거래구조']||{}; var cands=ai.candidates||[];
@@ -5638,6 +5663,11 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
       +'\n후보 기준서:\n'+cands.slice(0,5).map(function(c){ return '- '+c['기준서번호']+'호 '+(c['기준서명']||'')+' (관련성 '+c['관련성']+'%) — '+String(c['사유']||'').slice(0,200); }).join('\n');
     var sys='당신은 K-IFRS(한국채택국제회계기준) 전문가입니다. 아래는 AI가 분석한 이 거래의 결과입니다.\n'+ctx+'\n\n초보 회계담당자가 이해할 수 있도록 쉽고 구체적으로 답변하세요. 답변은 입니다체로 작성하세요. 마크다운(### 소제목, **강조**, 번호 목록)을 사용해 구조적으로 작성하세요.'
       +'\n\n[도입부 규칙] 자기소개·역할 언급·독자 수준 언급·"설명해 드리겠습니다" 같은 예고 문장은 쓰지 마세요. 첫 문장은 질문에 대한 결론(핵심 답)으로 바로 시작하고, 그 다음에 근거와 실무 처리를 이어가세요.';
+    // 대화 기억 — 최근 4턴을 첨부(총 6,000자 상한, 오래된 답변부터 잘라냄). "방금 답변", "그 경우" 같은 꼬리 질문이 앞 내용을 전제로 답하게 됨
+    var hist=AiFRS._qaHist||[], turns=hist.slice(-4), budget=6000, memo=[];
+    for(var hi=turns.length-1;hi>=0&&budget>0;hi--){ var ha=String(turns[hi].a||''); if(ha.length>budget) ha=ha.slice(0,Math.max(300,budget))+' …(이하 생략)'; memo.unshift('Q: '+turns[hi].q+'\nA: '+ha); budget-=ha.length; }
+    if(memo.length) sys+='\n\n[이전 대화] 아래는 이 거래에 대해 방금까지 주고받은 질문과 답변입니다. 이어지는 질문("방금 답변", "그 경우" 등)은 이 내용을 전제로 답하세요.\n'+memo.join('\n\n');
+    sys+='\n\n[마지막 줄 규칙] 답변 맨 끝에 한 줄을 추가해, 사용자가 이어서 물어볼 만한 짧은 질문 3개를 다음 형식으로 적으세요(각 30자 이내, "~입니까?/~합니까?" 격식체, 이미 답한 내용은 제외):\n[[꼬리질문]] 질문1 | 질문2 | 질문3';
     var _rg=AiFRS.rateGuard(); if(!_rg.ok){ showRateWaitPopup(_rg.waitSec); return; }
     if(AiFRS._qaCtl){ try{ AiFRS._qaCtl.abort(); }catch(e){} }
     var ctl=(typeof AbortController!=='undefined')?new AbortController():null; AiFRS._qaCtl=ctl;
@@ -5648,17 +5678,33 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
     var prev=Array.prototype.map.call(answer.querySelectorAll('details.af-qa-ans'),function(d){ d.removeAttribute('open'); return d.outerHTML; }).join('');
     answer.innerHTML=_aiLoad('compass',0,'후속 질문 — 답변 작성','분석 결과와 기준서를 바탕으로 답변을 정리하는 중입니다',tid,'0.0초',_cancelBtn("window.AiFRS.cancelFollowUp()",'답변 중단'))+prev;
     var timer=setInterval(function(){ var el=document.getElementById(tid); if(el) el.textContent=((Date.now()-t0)/1000).toFixed(1)+'초'; },100);
-    input.disabled=true; if(btn) btn.disabled=true;
-    function done(){ clearInterval(timer); input.disabled=false; if(btn) btn.disabled=false; if(AiFRS._qaCtl===ctl) AiFRS._qaCtl=null; }
+    if(input) input.disabled=true; if(btn) btn.disabled=true;
+    function done(){ clearInterval(timer); if(input) input.disabled=false; if(btn) btn.disabled=false; if(AiFRS._qaCtl===ctl) AiFRS._qaCtl=null; }
     AiFRS.callGemini(q,{system:sys,temperature:0.4,retry:1,signal:ctl?ctl.signal:undefined,
       onRetry:function(k,mx,mdl,e){ var el=answer.querySelector('.af-task-sub'); if(el) el.textContent='재시도 '+k+'/'+mx+' — '+_retryReason(e); }
     }).then(function(t){
       done(); var secs=((Date.now()-t0)/1000).toFixed(1);
+      // 꼬리 질문 3개 분리([[꼬리질문]] a | b | c) → 칩
+      var tails=[], tm=String(t||'').match(/\[\[꼬리질문\]\]\s*([^\n]*)/);
+      if(tm){ tails=tm[1].split('|').map(function(x){ return x.replace(/^[\s\-•\d.)]+/,'').trim(); }).filter(Boolean).slice(0,3); t=String(t).replace(/\n?\s*\[\[꼬리질문\]\][^\n]*/,'').trim(); }
       t=_stripQaPreamble(t);
+      AiFRS._qaHist=(AiFRS._qaHist||[]).concat([{q:label,a:t}]).slice(-8);
       // 답변 카드: <details>라 리모컨 [숨김]/[펼침] 대상에 자동 포함 + 상단 작은 토글로 수동 숨기기
-      answer.innerHTML='<details class="af-qa-ans" open><summary><span class="af-qa-ans-q">Q. '+esc(q)+'</span><span class="af-qa-ans-meta">'+secs+'초 · '+esc(AiFRS.getModel())+'</span><span class="af-qa-ans-tg" data-open="답변 숨기기" data-closed="답변 보기"></span></summary>'
-        +'<div class="af-qa-md">'+_mdLite(t)+'</div></details>'+prev;
-      input.value='';
+      var tools='<div class="af-qa-tools">'
+        +'<div class="af-qa-quick"><span class="af-qa-quick-hd">답이 어렵다면</span>'
+        +'<button class="af-qa-qb" onclick="window.AiFRS.qaQuick(\'easy\')">더 쉽게</button>'
+        +'<button class="af-qa-qb" onclick="window.AiFRS.qaQuick(\'example\')">예시로</button>'
+        +'<button class="af-qa-qb" onclick="window.AiFRS.qaQuick(\'summary\')">한 줄 요약</button>'
+        +'<button class="af-qa-qb" onclick="window.AiFRS.qaQuick(\'journal\')">분개로</button>'
+        +'<button class="af-qa-qb" onclick="window.AiFRS.qaQuick(\'para\')">관련 조문</button></div>'
+        +(tails.length?'<div class="af-qa-next"><span class="af-qa-quick-hd">이어서 물어보기</span><div class="af-qchip-row">'+tails.map(function(c){ return '<span class="af-qchip" data-q="'+esc(c)+'" onclick="window.AiFRS.askFollowUp(this.dataset.q)">'+esc(c)+'</span>'; }).join('')+'</div></div>':'')
+        +'<div class="af-qa-thread"><button class="af-qa-qb af-qa-more" onclick="window.AiFRS.qaThread(this)">직접 이어서 질문</button>'
+        +'<div class="af-qa-thread-row" hidden><textarea class="af-qa-input" rows="1" placeholder="이 답변에 이어서 궁금한 점을 적어 주세요…"></textarea><button class="af-qa-btn" onclick="window.AiFRS.qaThreadSend(this)">전송</button></div></div>'
+        +'</div>';
+      answer.innerHTML='<details class="af-qa-ans" open><summary><span class="af-qa-ans-q">Q. '+esc(label)+'</span><span class="af-qa-ans-meta">'+secs+'초 · '+esc(AiFRS.getModel())+'</span><span class="af-qa-ans-tg" data-open="답변 숨기기" data-closed="답변 보기"></span></summary>'
+        +'<div class="af-qa-md">'+_mdLite(t)+'</div>'+tools+'</details>'+prev;
+      if(input) input.value='';
+      var card=answer.querySelector('details.af-qa-ans'); if(card){ try{ card.scrollIntoView({block:'nearest',behavior:'smooth'}); }catch(e){} }
     }).catch(function(e){
       done();
       var aborted=/abort/i.test(String((e&&e.name)||'')+String((e&&e.message)||''));
@@ -5683,7 +5729,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
   function _mdLite(src){
     var lines=String(src||'').replace(/\r/g,'').split('\n'), out=[], para=[], list=null;
     function inline(s){
-      s=esc(s);
+      s=_markTerms(s);   // 답변 안 회계용어에도 용어사전 마킹(마우스 올리면 쉬운 설명) — esc 포함
       s=s.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/(^|[^*])\*(?!\*)([^*\n]+)\*(?!\*)/g,'$1<i>$2</i>').replace(/`([^`]+)`/g,'<code>$1</code>');
       return s;
     }
@@ -5931,11 +5977,11 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
   // ───────────────────────────────────────────────────────────────────────────
   function buildHistHtml(){
     var items = [
-      { date:'2026-09-07', title:'후속 질문 이력 보존 + 즐겨찾기·공유 파일에 포함',
+      { date:'2026-09-07', title:'후속 질문 대화형 개편 — 이해 보조 버튼·꼬리 질문·대화 기억',
         bullets:[
-          '후속 질문을 여러 번 해도 이전 답변이 접힌 채 아래에 남음',
-          '즐겨찾기 저장·공유 파일에 답변 이력 전부 포함, 뷰어에서 펼쳐서 표시',
-          '답변 도입부의 소개 문장 제거 — 결론부터 시작'
+          '답변 카드 아래 [더 쉽게·예시로·한 줄 요약·분개로·관련 조문] 버튼과 AI가 제안한 꼬리 질문 3개, [직접 이어서 질문] 입력',
+          '최근 4턴을 기억해 "그 경우는?" 같은 이어지는 질문에 맥락 있게 답변, 답변 속 회계용어에 쉬운 설명 마킹',
+          '이전 답변은 접힌 채 보존되고 즐겨찾기·공유 파일에 전부 포함, 도입부 소개 문장 제거'
         ]
       },
       { date:'2026-09-07', title:'튜토리얼 마무리 정비 — 스크롤·뒤로가기·강조 표시',
@@ -7223,7 +7269,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
     _tutClear();
     var hero=document.getElementById('af-hero'); if(hero) hero.classList.add('hidden');
     var rb=document.getElementById('aifrs-restore-bar'); if(rb&&rb.parentNode) rb.parentNode.removeChild(rb);
-    AiFRS._lastAi=null; AiFRS._lastPrecise={}; AiFRS._lastAudit={}; AiFRS._lastJournal=null; AiFRS._mixOkSig=null; AiFRS._easyCache={};   // 쉬운설명 캐시도 초기화(이전 문서 캐시로 5-4·6-0 스텝이 건너뛰어지는 문제)
+    AiFRS._lastAi=null; AiFRS._lastPrecise={}; AiFRS._qaHist=[]; AiFRS._lastAudit={}; AiFRS._lastJournal=null; AiFRS._mixOkSig=null; AiFRS._easyCache={};   // 쉬운설명 캐시도 초기화(이전 문서 캐시로 5-4·6-0 스텝이 건너뛰어지는 문제)
     ['aifrs-ai','aifrs-precise','aifrs-journal'].forEach(function(id){ var el=document.getElementById(id); if(el){ el.innerHTML=''; el.style.display='none'; } });
     AiFRS.state.files.splice(0);   // 기존 파일 비우고 샘플 단독 삽입(중복 방지)
     AiFRS.state.files.push({ id:'f'+(++AiFRS._seq), name:'연습용_SaaS구독계약서.txt', ext:'txt', kind:'doc', size:TUT_SAMPLE_DOC.length, status:'done', text:TUT_SAMPLE_DOC, error:'', dataUrl:'', file:null, from:'연습용' });
@@ -7698,7 +7744,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
     var rb=document.getElementById('aifrs-restore-bar'); if(rb&&rb.parentNode) rb.parentNode.removeChild(rb);   // 새 작업 시작 — 복원 배너 정리(스냅샷은 유지)
     // 파일 구성이 바뀌면 AI 분석·정밀분석·감사 결과는 더 이상 유효하지 않으므로 초기화(재호출 비용 있어 자동 재실행 안 함)
     // 오프라인 키워드 매칭(Keywords)은 추출 완료 시 renderFileList → _autoRefreshOffline에서 조용히 자동 갱신됨
-    AiFRS._lastAi=null; AiFRS._lastPrecise={}; AiFRS._lastAudit={}; AiFRS._lastJournal=null; AiFRS._mixOkSig=null;
+    AiFRS._lastAi=null; AiFRS._lastPrecise={}; AiFRS._qaHist=[]; AiFRS._lastAudit={}; AiFRS._lastJournal=null; AiFRS._mixOkSig=null;
     ['aifrs-ai','aifrs-precise','aifrs-journal'].forEach(function(id){ var el=document.getElementById(id); if(el){ el.innerHTML=''; el.style.display='none'; } });
     return _origAddFiles.call(AiFRS, fl);
   };
@@ -7712,7 +7758,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
   AiFRS.goHome = function(){
     AiFRS.state.files = [];
     AiFRS._multiFileWarned=false;
-    AiFRS._lastAi=null; AiFRS._lastPrecise={}; AiFRS._lastAudit={}; AiFRS._lastJournal=null; AiFRS._mixOkSig=null; AiFRS._easyCache={};
+    AiFRS._lastAi=null; AiFRS._lastPrecise={}; AiFRS._qaHist=[]; AiFRS._lastAudit={}; AiFRS._lastJournal=null; AiFRS._mixOkSig=null; AiFRS._easyCache={};
     try{ localStorage.removeItem('aifrs-snapshot'); }catch(e){}
     var rb=document.getElementById('aifrs-restore-bar'); if(rb&&rb.parentNode) rb.parentNode.removeChild(rb);
     ['aifrs-ai','aifrs-precise','aifrs-journal'].forEach(function(id){ var el=document.getElementById(id); if(el){ el.innerHTML=''; el.style.display='none'; } });
