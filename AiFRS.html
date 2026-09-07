@@ -7013,6 +7013,7 @@ button.aifrs-btn[onclick*="runFullReview"],
     ['aifrs-tut-ov','aifrs-tut-coach','aifrs-tut-toast'].forEach(function(id){ var o=document.getElementById(id); if(o&&o.parentNode) o.parentNode.removeChild(o); });
     document.querySelectorAll('.af-tut-ring').forEach(function(x){ x.classList.remove('af-tut-ring'); });
     document.querySelectorAll('.tut-glow').forEach(function(x){ x.classList.remove('tut-glow'); });
+    var fw=document.getElementById('aifrs-tut-fw'); if(fw&&fw.parentNode) fw.parentNode.removeChild(fw);
     AiFRS._tutEl=null;
   }
   function _tutVisible(el){ return !!el && el.getClientRects().length>0 && (el.offsetParent!==null || getComputedStyle(el).position==='fixed'); }
@@ -7023,7 +7024,7 @@ button.aifrs-btn[onclick*="runFullReview"],
     if(el&&!_tutVisible(el)){ _openAncestorDetails(el); if(!_tutVisible(el)) el=null; }
     return el;
   }
-  function _tutScrollTo(el){ if(!el) return; var m=_mainScroll(), p=m.style.scrollBehavior; m.style.scrollBehavior='auto'; try{ el.scrollIntoView({block:'center'}); }catch(e){} m.style.scrollBehavior=p; }
+  function _tutScrollTo(el){ if(!el) return; try{ el.scrollIntoView({block:'center',behavior:'smooth'}); }catch(e){} }
   // 진행률 — 대기·엔딩을 뺀 전체 스텝 기준, 얇은 골드 바 + "12 / 32" (모든 팝업·말풍선 공통)
   function _tutProg(s){
     var all=AiFRS.TUT_STEPS.filter(function(x){ return x.kind!=='wait' && x.kind!=='end'; });
@@ -7078,49 +7079,55 @@ button.aifrs-btn[onclick*="runFullReview"],
   }
   function _tutInfo(s, el){
     _tutScrollTo(el);
-    var ov=document.createElement('div'); ov.className='aifrs-tour-ov tut'; ov.id='aifrs-tut-ov';
-    var body=(s.ico?'<span class="tico">'+s.ico+'</span>':'')
-      +'<b>'+esc(s.title)+'</b><span class="tmsg">'+_tutFmt(s.msg)+(s.tip?'<div class="tgap"></div><div class="tli ttip"><i>💡</i><span>'+esc(s.tip)+'</span></div>':'')+'</span>'
-      +(s.inputPlaceholder?'<input id="aifrs-tut-cname" class="aifrs-tut-cname" type="text" placeholder="'+esc(s.inputPlaceholder)+'" autocomplete="off">':'')
-      +'<div class="tfoot"><span class="tcnt tprog">'+_tutCnt(s)+'</span><div class="tbtns">'
-      +(AiFRS._tutIdx>0?'<button class="tprev" onclick="window.AiFRS.tutPrev()">← 뒤로</button>':'')
-      +(s.alt?'<button class="tskip" onclick="'+s.alt.fn+'">'+esc(s.alt.t)+'</button>':'')
-      +'<button class="tnext" onclick="'+(s.btnFn||'window.AiFRS.tutNext()')+'">'+esc(s.btn||'다음 →')+'</button></div></div>';
-    ov.innerHTML='<div class="aifrs-tour-hl" id="aifrs-tut-hl"'+(el?'':' style="display:none"')+'></div><div class="aifrs-tour-tip" id="aifrs-tut-tip">'+body+'</div>';
-    ov.addEventListener('click',function(e){ if(e.target===ov) AiFRS.tutNext(); });   // 배경 클릭도 다음(막히지 않게)
-    document.body.appendChild(ov);
-    if(s.inputPlaceholder){
-      var ci=document.getElementById('aifrs-tut-cname');
-      if(ci){
-        var existing=AiFRS.getEntity&&AiFRS.getEntity(); if(existing&&existing!==AiFRS.ENTITY_DEFAULT) ci.value=existing;
-        ci.addEventListener('keydown',function(e){ if(e.key==='Enter') window._tutSaveEntity(); });
-        setTimeout(function(){ ci.focus(); },120);
+    setTimeout(function(){
+      if(AiFRS.TUT_STEPS[AiFRS._tutIdx]!==s) return;   // 스크롤 중 스텝이 바뀌면 취소
+      var ov=document.createElement('div'); ov.className='aifrs-tour-ov tut'; ov.id='aifrs-tut-ov';
+      var body=(s.ico?'<span class="tico">'+s.ico+'</span>':'')
+        +'<b>'+esc(s.title)+'</b><span class="tmsg">'+_tutFmt(s.msg)+(s.tip?'<div class="tgap"></div><div class="tli ttip"><i>💡</i><span>'+esc(s.tip)+'</span></div>':'')+'</span>'
+        +(s.inputPlaceholder?'<input id="aifrs-tut-cname" class="aifrs-tut-cname" type="text" placeholder="'+esc(s.inputPlaceholder)+'" autocomplete="off">':'')
+        +'<div class="tfoot"><span class="tcnt tprog">'+_tutCnt(s)+'</span><div class="tbtns">'
+        +(AiFRS._tutIdx>0?'<button class="tprev" onclick="window.AiFRS.tutPrev()">← 뒤로</button>':'')
+        +(s.alt?'<button class="tskip" onclick="'+s.alt.fn+'">'+esc(s.alt.t)+'</button>':'')
+        +'<button class="tnext" onclick="'+(s.btnFn||'window.AiFRS.tutNext()')+'">'+esc(s.btn||'다음 →')+'</button></div></div>';
+      ov.innerHTML='<div class="aifrs-tour-hl" id="aifrs-tut-hl"'+(el?'':' style="display:none"')+'></div><div class="aifrs-tour-tip" id="aifrs-tut-tip">'+body+'</div>';
+      ov.addEventListener('click',function(e){ if(e.target===ov) AiFRS.tutNext(); });
+      document.body.appendChild(ov);
+      if(s.inputPlaceholder){
+        var ci=document.getElementById('aifrs-tut-cname');
+        if(ci){
+          var existing=AiFRS.getEntity&&AiFRS.getEntity(); if(existing&&existing!==AiFRS.ENTITY_DEFAULT) ci.value=existing;
+          ci.addEventListener('keydown',function(e){ if(e.key==='Enter') window._tutSaveEntity(); });
+          setTimeout(function(){ ci.focus(); },80);
+        }
       }
-    }
-    var tip=document.getElementById('aifrs-tut-tip'), hl=document.getElementById('aifrs-tut-hl');
-    function place(){
-      var vw=window.innerWidth, vh=window.innerHeight, W=tip.offsetWidth||380;
-      if(el){
-        var r=el.getBoundingClientRect();
-        hl.style.left=(r.left-16)+'px'; hl.style.top=(r.top-18)+'px'; hl.style.width=(r.width+32)+'px'; hl.style.height=(r.height+30)+'px';
-        tip.style.left=Math.min(Math.max(r.left+r.width/2-W/2,14),vw-W-14)+'px';
-        if(s.tipPos==='top'){ tip.style.bottom='auto'; tip.style.top='12px'; tip.style.left=Math.max(14,(vw-W)/2)+'px'; }
-        else if((r.top+r.height/2)>vh/2){ tip.style.top='auto'; tip.style.bottom=(vh-r.top+16)+'px'; } else { tip.style.bottom='auto'; tip.style.top=(r.bottom+16)+'px'; }
-      } else { tip.style.left=Math.max(14,(vw-W)/2)+'px'; tip.style.top='34%'; tip.style.bottom='auto'; ov.style.background='rgba(0,0,0,.62)'; }
-    }
-    place(); requestAnimationFrame(function(){ requestAnimationFrame(place); });   // 레이아웃 정착 뒤 한 번 더(패널 펼침·목록 이동 직후 오차 보정)
+      var tip=document.getElementById('aifrs-tut-tip'), hl=document.getElementById('aifrs-tut-hl');
+      function place(){
+        var vw=window.innerWidth, vh=window.innerHeight, W=tip.offsetWidth||420;
+        if(el){
+          var r=el.getBoundingClientRect();
+          hl.style.left=(r.left-16)+'px'; hl.style.top=(r.top-18)+'px'; hl.style.width=(r.width+32)+'px'; hl.style.height=(r.height+30)+'px';
+          tip.style.left=Math.min(Math.max(r.left+r.width/2-W/2,14),vw-W-14)+'px';
+          if(s.tipPos==='top'){ tip.style.bottom='auto'; tip.style.top='12px'; tip.style.left=Math.max(14,(vw-W)/2)+'px'; }
+          else if((r.top+r.height/2)>vh/2){ tip.style.top='auto'; tip.style.bottom=(vh-r.top+16)+'px'; } else { tip.style.bottom='auto'; tip.style.top=(r.bottom+16)+'px'; }
+        } else { tip.style.left=Math.max(14,(vw-W)/2)+'px'; tip.style.top='34%'; tip.style.bottom='auto'; ov.style.background='rgba(0,0,0,.62)'; }
+      }
+      place(); requestAnimationFrame(function(){ requestAnimationFrame(place); });
+    }, 300);
   }
   function _tutCoach(s, el){
     if(el){ el.classList.add('af-tut-ring'); _tutScrollTo(el); }
-    var c=document.createElement('div'); c.className='aifrs-tut-coach'; c.id='aifrs-tut-coach';
     var note=AiFRS._tutNote||''; AiFRS._tutNote='';
-    c.innerHTML=(note?'<span class="tt" style="margin:0 0 6px">⚠ '+esc(note)+'</span>':'')
-      +'<b><i>'+(s.kind==='wait'?'⏳':'👉')+'</i> '+esc(s.title)+'</b>'+_tutFmt(s.msg)
-      +(s.tip?'<div class="tli ttip"><i>💡</i><span>'+esc(s.tip)+'</span></div>':'')+(s.w?'<span class="tw">'+esc(s.w)+'</span>':'')
-      +'<div class="tc-foot">'+(AiFRS._tutIdx>0?'<button class="tc-prev" onclick="window.AiFRS.tutPrev()">← 뒤로</button>':'<span></span>')+'<span class="tprog">'+_tutProg(s)+'</span></div>';
-    document.body.appendChild(c);
-    if(s.glow) s.glow.forEach(function(id){ var g=document.getElementById(id); if(g) g.classList.add('tut-glow'); });
-    AiFRS._tutEl=el; _tutCoachPlace();
+    setTimeout(function(){
+      if(AiFRS.TUT_STEPS[AiFRS._tutIdx]!==s) return;
+      var c=document.createElement('div'); c.className='aifrs-tut-coach'; c.id='aifrs-tut-coach';
+      c.innerHTML=(note?'<span class="tt" style="margin:0 0 6px">⚠ '+esc(note)+'</span>':'')
+        +'<b><i>'+(s.kind==='wait'?'⏳':'👉')+'</i> '+esc(s.title)+'</b>'+_tutFmt(s.msg)
+        +(s.tip?'<div class="tli ttip"><i>💡</i><span>'+esc(s.tip)+'</span></div>':'')+(s.w?'<span class="tw">'+esc(s.w)+'</span>':'')
+        +'<div class="tc-foot">'+(AiFRS._tutIdx>0?'<button class="tc-prev" onclick="window.AiFRS.tutPrev()">← 뒤로</button>':'<span></span>')+'<span class="tprog">'+_tutProg(s)+'</span></div>';
+      document.body.appendChild(c);
+      if(s.glow) s.glow.forEach(function(id){ var g=document.getElementById(id); if(g) g.classList.add('tut-glow'); });
+      AiFRS._tutEl=el; _tutCoachPlace();
+    }, 300);
   }
   function _tutCoachPlace(){
     var c=document.getElementById('aifrs-tut-coach'); if(!c) return;
@@ -7150,14 +7157,50 @@ button.aifrs-btn[onclick*="runFullReview"],
     h.innerHTML='<i>'+lbl.slice(0,2)+'</i>'+ch+' / 6 · '+esc(lbl.slice(3))+'<span class="bar">'+bar+'</span>';
     if(AiFRS._tutHudCh!==ch){ AiFRS._tutHudCh=ch; h.style.transform='scale(1.14)'; setTimeout(function(){ h.style.transform=''; },260); }
   }
+  function _tutFireworks(){
+    var cv=document.createElement('canvas'); cv.id='aifrs-tut-fw';
+    cv.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:11000';
+    document.body.appendChild(cv);
+    cv.width=window.innerWidth; cv.height=window.innerHeight;
+    var ctx=cv.getContext('2d');
+    var COLS=['#d4af37','#ff6b6b','#4ecdc4','#45b7d1','#ffeaa7','#fd79a8','#6c5ce7','#00b894','#fff','#f9ca24'];
+    var pts=[];
+    function burst(x,y,n){
+      n=n||80;
+      for(var i=0;i<n;i++){
+        var a=Math.random()*Math.PI*2, sp=Math.random()*7+2;
+        pts.push({x:x,y:y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-4,col:COLS[Math.floor(Math.random()*COLS.length)],life:1,dec:0.013+Math.random()*0.007,sz:Math.random()*5+2,rot:Math.random()*Math.PI*2,rs:(Math.random()-.5)*.35});
+      }
+    }
+    var vw=cv.width,vh=cv.height;
+    burst(vw*.5,vh*.65,90);
+    setTimeout(function(){burst(vw*.25,vh*.55,70);},280);
+    setTimeout(function(){burst(vw*.75,vh*.55,70);},460);
+    setTimeout(function(){burst(vw*.5,vh*.45,80);},640);
+    setTimeout(function(){burst(vw*.35,vh*.5,60);},900);
+    setTimeout(function(){burst(vw*.65,vh*.5,60);},1100);
+    var t0=Date.now();
+    (function tick(){
+      if(Date.now()-t0>4500){ var fc=document.getElementById('aifrs-tut-fw'); if(fc&&fc.parentNode) fc.parentNode.removeChild(fc); return; }
+      ctx.clearRect(0,0,vw,vh);
+      for(var i=pts.length-1;i>=0;i--){
+        var p=pts[i]; p.x+=p.vx; p.y+=p.vy; p.vy+=0.18; p.vx*=0.98; p.life-=p.dec; p.rot+=p.rs;
+        if(p.life<=0){ pts.splice(i,1); continue; }
+        ctx.save(); ctx.globalAlpha=Math.max(0,p.life); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+        ctx.fillStyle=p.col; ctx.fillRect(-p.sz/2,-p.sz/4,p.sz,p.sz/2); ctx.restore();
+      }
+      requestAnimationFrame(tick);
+    })();
+  }
   function _tutEnd(){
     var ov=document.createElement('div'); ov.className='aifrs-welcome-ov'; ov.id='aifrs-tut-ov';
     ov.innerHTML='<div class="aifrs-welcome-card aifrs-tut-end"><span class="aifrs-welcome-ico">🎉</span><div class="aifrs-welcome-title">첫 분석 완료!</div>'
       +'<div class="aifrs-welcome-msg" style="margin-bottom:8px">오늘 배운 것</div>'
       +'<div class="badges"><span>🔑 열쇠</span><span>📄 문서</span><span>🔍 AI분석</span><span>🧪 정밀분석</span><span>⚖️ AI감사</span><span>💡 쉬운설명</span><span>☆ 저장</span></div>'
-      +'<div class="aifrs-welcome-msg" style="text-align:center;color:var(--txt3);font-size:12px;margin-top:2px">(이 안내는 다시 나오지 않아요!)</div>'
+      +'<div class="aifrs-welcome-msg" style="text-align:center;color:var(--txt3);font-size:12px;margin-top:2px">(이 안내는 다시 나오지 않아요)</div>'
       +'<div class="aifrs-welcome-btns"><button class="aifrs-welcome-ok" onclick="window.AiFRS.tutFinish()">안녕, 다음에 또 봐요 👋</button></div></div>';
     document.body.appendChild(ov);
+    _tutFireworks();
   }
   function _tutFinish(){ _tutClear(); var h=document.getElementById('aifrs-tut-hud'); if(h&&h.parentNode) h.parentNode.removeChild(h); _tutSet('done'); }
   AiFRS.tutFinish=_tutFinish;
