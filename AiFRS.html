@@ -5744,6 +5744,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
   function _mdLite(src){
     var lines=String(src||'').replace(/\r/g,'').split('\n'), out=[], para=[], list=null;
     function inline(s){
+      s=String(s).replace(/K-IFRS\s*[’'´`]\s*/g,'K-IFRS ');   // 모델이 간혹 붙이는 잡기호("K-IFRS´ 제1038호") 제거
       s=_markTerms(s);   // 답변 안 회계용어에도 용어사전 마킹(마우스 올리면 쉬운 설명) — esc 포함
       s=s.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/(^|[^*])\*(?!\*)([^*\n]+)\*(?!\*)/g,'$1<i>$2</i>').replace(/`([^`]+)`/g,'<code>$1</code>');
       return s;
@@ -5757,7 +5758,18 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
       if(!tbl) return;
       var head=tbl.head, rows=tbl.rows, h='<div class="af-md-tblwrap"><table class="aifrs-jn">';
       if(head) h+='<thead><tr>'+head.map(function(c){ return '<th>'+inline(c)+'</th>'; }).join('')+'</tr></thead>';
-      h+='<tbody>'+rows.map(function(r){ return '<tr>'+r.map(function(c){ var num=/^[\d,.\-()\s]+원?$/.test(c)&&/\d/.test(c); return '<td'+(num?' class="num"':'')+'>'+(c===''?'':inline(c))+'</td>'; }).join('')+'</tr>'; }).join('')+'</tbody></table></div>';
+      // 셀 안 <br>(계정 여러 개를 한 셀에 넣은 경우) → 계정마다 별도 행으로 펼치고, 공통 셀(적요·근거 등)은 rowspan으로 합침
+      function td(c, span){ var num=/^[\d,.\-()\s]+원?$/.test(c)&&/\d/.test(c); return '<td'+(num?' class="num"':'')+(span>1?' rowspan="'+span+'"':'')+'>'+(c===''?'':inline(c))+'</td>'; }
+      h+='<tbody>'+rows.map(function(r){
+        var parts=r.map(function(c){ return String(c).split(/\s*<br\s*\/?>\s*/i).map(function(x){ return x.trim(); }); });
+        var n=Math.max.apply(null, parts.map(function(p){ return p.length; }));
+        if(n<=1) return '<tr>'+r.map(function(c){ return td(c,1); }).join('')+'</tr>';
+        var trs='';
+        for(var k=0;k<n;k++){
+          trs+='<tr>'+parts.map(function(p){ if(p.length===n) return td(p[k],1); return k===0?td(p.join(' '),n):''; }).join('')+'</tr>';
+        }
+        return trs;
+      }).join('')+'</tbody></table></div>';
       out.push(h); tbl=null;
     }
     // (1) 줄바꿈이 사라져 한 줄에 붙은 표("| 구분 | 금액 | | :--- | :--- | | 비용 | 1,000원 |") → 구분선 셀 위치로 열 수를 알아내 행으로 재분할
