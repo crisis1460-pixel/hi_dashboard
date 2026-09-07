@@ -5908,7 +5908,8 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
           '화면 밖 대상: 팝업 배치 시 즉시 스크롤로 중앙 정렬(.af-main smooth 일시 해제, 페이지 끝 대상은 하단 여백 임시 추가 후 종료 시 원복)',
           '뒤로 버튼: info 팝업 숨김 CSS 제거 + 코치 말풍선 pointer-events 복구, 되돌아갈 때 완료 스텝·대상 없는 선택 스텝만 건너뜀',
           '하이라이트 링: 뷰포트 상단 클램프, API키 스텝만 바깥 테두리 1개(12px 띄움), 그 외 기존 글로우 유지. 숨김/펼침 깜박임 1.6s, 컨페티 8s',
-          '§조문 툴팁: (1)(2)·(a)·(가) 항목 행 분리·번호열 고정·하위 들여쓰기, 즐겨찾기 뷰어·서브뷰어에도 마운트. 용어 칩은 용어 수만큼만 폭',
+          '§조문 툴팁: "주제 — " 제목 행 분리, (1)(2)·⑴⑵(괄호숫자 문자)·①②·(a)·(가) 항목 행 분리·번호열 고정·하위 들여쓰기, 번호 없으면 문장 단위 줄바꿈. 즐겨찾기 뷰어·서브뷰어에도 마운트. 용어 칩은 용어 수만큼만 폭',
+          '닫힌 details 그룹 안 대상(전 항목 충족 시 접힌 항목)은 Chrome이 rect를 반환해 "보임"으로 오판 → 항상 조상 details 펼친 뒤 스크롤. 하단 여백은 padding 대신 스크롤 내용 끝 스페이서(flex 스크롤러 높이 왜곡 방지)',
           '검토 반영(JS): 튜토리얼 이벤트를 가드 통과 후 발화(ai/precise/audit/easy-start), 뷰어 안 ☆ 클릭 무효화, armed 고착 시 자동 시작, 쉬운설명 캐시 초기화, 타이머 중복 가드, scroll-margin 잔존 제거, §4.1.2 다단 번호 링크',
           '검토 반영(CSS·문구): 뷰어 글로우 차단에 .af-tut-ring/.tut-glow 포함 + 즐겨찾기 캡처 전 강조 클래스 제거, prefers-reduced-motion 보강, 웰컴/코치/토스트 z-index를 리모컨 위로, 진행률 11px 통일, 느낌표 15곳 제거, OCR·코드·할루시네이션 등 용어 순화'
         ]
@@ -7053,13 +7054,14 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
     var list=s.sels||(s.sel?[s.sel]:[]), el=null;
     for(var i=0;i<list.length&&!el;i++){ try{ el=document.querySelector(list[i]); }catch(e){ el=null; } }
     if(el&&s.expand){ var ex=el.closest(s.expand); if(ex) el=ex; }
-    if(el&&!_tutVisible(el)){ _openAncestorDetails(el); if(!_tutVisible(el)) el=null; }
+    if(el){ _openAncestorDetails(el); if(!_tutVisible(el)) el=null; }   // 닫힌 details 안 요소는 rect가 잡혀도 스크롤이 무시되므로 항상 펼침
     return el;
   }
   function _tutScrollTo(el){ if(!el) return; try{ el.scrollIntoView({block:'center',behavior:'smooth'}); }catch(e){} }
   // 팝업 배치 직전 최종 보정 — 대상이 뷰포트(상단 60px·하단 고정바 110px 제외) 밖이면 즉시 스크롤로 강제 정렬
   function _tutEnsureVisible(el){
     if(!el||!el.getClientRects().length) return false;
+    _openAncestorDetails(el);   // 닫힌 details 안이면 scrollIntoView가 무시됨 — 먼저 펼침
     var r=el.getBoundingClientRect(), vh=window.innerHeight, TOP=60, BOT=vh-110;
     var fits=r.height<=(BOT-TOP), mid=vh/2;
     // 작은 대상은 화면 중앙 대역(중심이 vh의 30~60%)에 있어야 통과, 큰 대상은 상단 정렬 여부로 판정
@@ -7071,19 +7073,21 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
     while(p){ var cs=getComputedStyle(p); if(/auto|scroll/.test(cs.overflowY)||p===document.documentElement){ scs.push([p,p.style.scrollBehavior]); p.style.scrollBehavior='auto'; } p=p.parentElement; }
     function go(){ try{ el.style.scrollMarginTop=TOP+'px'; el.style.scrollMarginBottom='110px'; el.scrollIntoView({block:fits?'center':'start',behavior:'instant'}); }catch(e){ try{ el.scrollIntoView({block:fits?'center':'start'}); }catch(e2){} } el.style.scrollMarginTop=''; el.style.scrollMarginBottom=''; }   // 인라인 scroll-margin은 즉시 되돌림(이후 앱 자체 scrollIntoView에 영향 없게)
     go();
-    // 페이지 맨 끝 내용이면 더 내려갈 여지가 없어 하단 고정바에 가려짐 → 스크롤 컨테이너에 임시 하단 여백을 주고 다시 이동(튜토리얼 종료 시 원복)
+    // 페이지 맨 끝 내용이면 더 내려갈 여지가 없어 하단 고정바에 가려짐 → 스크롤 내용 끝에 임시 스페이서를 넣고 다시 이동(튜토리얼 종료 시 제거)
+    // (컨테이너 padding으로 주면 flex 스크롤러의 clientHeight 자체가 커져 center 계산이 어긋남)
     var r2=el.getBoundingClientRect(), sc=scs.length?scs[0][0]:null;
     var over=fits?((r2.top+r2.height/2)-mid):(r2.top-TOP);   // 중앙(또는 상단)까지 못 올라온 부족분
     if(sc && sc!==document.documentElement && over>20){
-      var need=Math.ceil(over)+40;
-      if(!AiFRS._tutPad){ AiFRS._tutPad={el:sc,orig:sc.style.paddingBottom}; }
-      sc.style.paddingBottom=(parseFloat(getComputedStyle(sc).paddingBottom)||0)+need+'px';
+      var sp=document.getElementById('aifrs-tut-spacer');
+      if(!sp){ sp=document.createElement('div'); sp.id='aifrs-tut-spacer'; sp.style.cssText='height:0;flex-shrink:0;pointer-events:none'; }
+      sc.appendChild(sp);   // 항상 마지막 자식으로
+      sp.style.height=Math.min(vh, (parseFloat(sp.style.height)||0)+Math.ceil(over)+40)+'px';
       go();
     }
     scs.forEach(function(x){ x[0].style.scrollBehavior=x[1]; });
     return Math.abs(el.getBoundingClientRect().top-before)>1;   // 고정 헤더 등 스크롤로 안 움직이는 대상은 false(재배치 루프 방지)
   }
-  function _tutPadRestore(){ var p=AiFRS._tutPad; if(!p) return; try{ p.el.style.paddingBottom=p.orig; }catch(e){} AiFRS._tutPad=null; }
+  function _tutPadRestore(){ var sp=document.getElementById('aifrs-tut-spacer'); if(sp&&sp.parentNode) sp.parentNode.removeChild(sp); }
   // 진행률 — 대기·엔딩을 뺀 전체 스텝 기준, 얇은 골드 바 + "12 / 32" (모든 팝업·말풍선 공통)
   function _tutProg(s){
     var all=AiFRS.TUT_STEPS.filter(function(x){ return x.kind!=='wait' && x.kind!=='end'; });
@@ -7718,30 +7722,33 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
       _p.setAttribute('style','position:fixed;z-index:9999;display:none;width:380px;max-width:min(92vw,380px);background:var(--bg2);border:1px solid var(--border2);border-radius:9px;padding:11px 14px;box-shadow:0 8px 28px rgba(0,0,0,.6);font-size:12px;line-height:1.75;color:var(--txt2);word-break:keep-all;overflow-wrap:break-word;pointer-events:none');
       document.body.appendChild(_p);
       function _e(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+      // 미리보기 타이포그래피(전 조문 공통): [제목 — ] 굵게 한 줄 → 본문. 번호 항목은 행 분리 + 번호 고정열 + hanging indent, 번호 없으면 문장 단위 줄바꿈
+      //   번호 표기: (1)(2) · ⑴⑵(괄호숫자 한 글자, K-IFRS 국문 관행) · ①② · (a)(b) · (가)(나). 앞에 공백/문두가 있을 때만 인정(단어에 붙은 "(주)" 오탐 방지)
+      var NUM_RE=/(^|\s)((?:\((?:\d{1,2}|[a-z]|[가나다라마바사아자차카타파하])\))|[⑴-⒇]|[①-⑳])/g;
+      var NUM_HEAD=/^((?:\((?:\d{1,2}|[a-z]|[가나다라마바사아자차카타파하])\))|[⑴-⒇]|[①-⑳])\s*([\s\S]*)$/;
+      function _sentRows(text, gap){
+        var sents=text.replace(/([다됩함임합습요]\.)\s+(?=[가-힣A-Z\(①-⑳⑴-⒇])/g,'$1\n').split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
+        return sents.map(function(s,i){ return '<div style="margin-top:'+(i?gap:'0')+'px">'+_e(s)+'</div>'; }).join('');
+      }
       function _fmt(raw){
         if(!raw) return '';
-        // 번호 항목 (1)(2)… / (a)(b)… / (가)(나)… 앞에서 줄을 끊어 각각 한 행 — 번호는 고정폭 열, 본문은 hanging indent. 하위 (a)·(가)는 한 단 들여씀
-        var parts=raw.replace(/(^|\s)(\((?:\d{1,2}|[a-z]|[가나다라마바사아자차카타파하])\))/g,'$1\n$2').split('\n').map(function(s){ return s.trim(); }).filter(Boolean);   // 앞에 공백/문두가 있을 때만 번호로 인정(단어 뒤 붙은 "(사)" 등 오탐 방지)
-        if(parts.length>1){
-          return parts.map(function(t,i){
-            var m=t.match(/^(\((?:\d{1,2}|[a-z]|[가나다라마바사아자차카타파하])\))\s*([\s\S]*)$/);
-            if(m){
-              var sub=!/^\(\d/.test(m[1]);
-              return '<div style="display:flex;gap:5px;margin-top:'+(i?(sub?'6':'12'):'0')+'px;margin-left:'+(sub?'26':'0')+'px;align-items:baseline">'
-                +'<span style="flex-shrink:0;min-width:26px;font-weight:700;color:var(--txt)">'+_e(m[1])+'</span>'
-                +'<span style="flex:1">'+_e(m[2])+'</span></div>';
-            }
-            return '<div style="margin-top:'+(i?'12':'0')+'px">'+_e(t)+'</div>';
+        raw=String(raw).replace(/\s+/g,' ').trim();
+        var html='', body=raw;
+        var tm=raw.match(/^([^—]{2,48}?)\s+—\s+([\s\S]+)$/);   // "주제 — 본문" → 제목 행 분리
+        if(tm){ html+='<div style="font-weight:700;color:var(--txt);margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border)">'+_e(tm[1])+'</div>'; body=tm[2]; }
+        var parts=body.replace(NUM_RE,'$1\n$2').split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
+        var hasNum=parts.some(function(t){ return NUM_HEAD.test(t); });
+        if(hasNum){
+          return html+parts.map(function(t,i){
+            var m=t.match(NUM_HEAD);
+            if(!m) return '<div style="margin-top:'+(i?'10':'0')+'px">'+_sentRows(t,6)+'</div>';
+            var sub=/^\((?:[a-z]|[가-힣])\)$/.test(m[1]);   // (a)·(가)는 하위 항목 → 한 단 들여씀
+            return '<div style="display:flex;gap:6px;margin-top:'+(i?(sub?'5':'10'):'0')+'px;margin-left:'+(sub?'28':'0')+'px;align-items:baseline">'
+              +'<span style="flex-shrink:0;min-width:24px;font-weight:700;color:var(--txt);font-variant-numeric:tabular-nums">'+_e(m[1])+'</span>'
+              +'<span style="flex:1;min-width:0">'+_e(m[2])+'</span></div>';
           }).join('');
         }
-        // 단일 문단: 한국어 문장 종결 경계에서 줄바꿈(가독성 개선)
-        var sents=raw.replace(/([다됩함임합습]\.)\s+(?=[가-힣A-Z\(①-⑨])/g,'$1\n').split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
-        if(sents.length>1){
-          return sents.map(function(s,i){
-            return '<div style="margin-top:'+(i?'7':'0')+'px">'+_e(s)+'</div>';
-          }).join('');
-        }
-        return _e(raw);
+        return html+_sentRows(body,7);
       }
       function _show(el){
         _p.innerHTML=_fmt(el.getAttribute('data-tip')||'');
