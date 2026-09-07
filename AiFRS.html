@@ -576,28 +576,30 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
 .af-remote-led-zone:hover { background:rgba(255,255,255,.05); }
 .af-remote-led { width:6px; height:6px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #9be7ff, #1b6fa8 70%); box-shadow:0 0 5px rgba(70,180,255,.8); transition:box-shadow .15s; }
 /* 숨은 재미: LED를 20번 누르면 리모컨이 잠깐 무지개색으로 들썩임(기능과 무관, 순수 장식) */
+@property --rbA { syntax:'<percentage>'; inherits:true; initial-value:100%; }   /* 무지개 밝기(색 혼합 비율) — 페이드아웃용, transition 가능 */
+.af-remote { transition:--rbA 1.2s linear; }
 .af-remote.rainbow { animation:af-remoteBorder 1.2s linear infinite; }   /* 흔들림(이동) 없이 테두리만 무지개로 순환 */
 @keyframes af-remoteBorder {
-  0%{box-shadow:0 22px 44px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -10px 22px rgba(0,0,0,.55),inset 6px 0 14px rgba(0,0,0,.25),inset -6px 0 14px rgba(0,0,0,.35), 0 0 0 2px #ff5252}
-  16%{box-shadow:0 22px 44px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -10px 22px rgba(0,0,0,.55),inset 6px 0 14px rgba(0,0,0,.25),inset -6px 0 14px rgba(0,0,0,.35), 0 0 0 2px #ffb752}
-  33%{box-shadow:0 22px 44px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -10px 22px rgba(0,0,0,.55),inset 6px 0 14px rgba(0,0,0,.25),inset -6px 0 14px rgba(0,0,0,.35), 0 0 0 2px #fff166}
-  50%{box-shadow:0 22px 44px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -10px 22px rgba(0,0,0,.55),inset 6px 0 14px rgba(0,0,0,.25),inset -6px 0 14px rgba(0,0,0,.35), 0 0 0 2px #66e07a}
-  66%{box-shadow:0 22px 44px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -10px 22px rgba(0,0,0,.55),inset 6px 0 14px rgba(0,0,0,.25),inset -6px 0 14px rgba(0,0,0,.35), 0 0 0 2px #52c7ff}
-  83%{box-shadow:0 22px 44px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -10px 22px rgba(0,0,0,.55),inset 6px 0 14px rgba(0,0,0,.25),inset -6px 0 14px rgba(0,0,0,.35), 0 0 0 2px #a67bff}
-  100%{box-shadow:0 22px 44px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -10px 22px rgba(0,0,0,.55),inset 6px 0 14px rgba(0,0,0,.25),inset -6px 0 14px rgba(0,0,0,.35), 0 0 0 2px #ff5252}
+  0%{box-shadow:0 22px 44px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -10px 22px rgba(0,0,0,.55),inset 6px 0 14px rgba(0,0,0,.25),inset -6px 0 14px rgba(0,0,0,.35), 0 0 0 2px color-mix(in srgb, #ff5252 var(--rbA,100%), transparent)}
+  16%{box-shadow:0 22px 44px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -10px 22px rgba(0,0,0,.55),inset 6px 0 14px rgba(0,0,0,.25),inset -6px 0 14px rgba(0,0,0,.35), 0 0 0 2px color-mix(in srgb, #ffb752 var(--rbA,100%), transparent)}
+  33%{box-shadow:0 22px 44px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -10px 22px rgba(0,0,0,.55),inset 6px 0 14px rgba(0,0,0,.25),inset -6px 0 14px rgba(0,0,0,.35), 0 0 0 2px color-mix(in srgb, #fff166 var(--rbA,100%), transparent)}
+  50%{box-shadow:0 22px 44px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -10px 22px rgba(0,0,0,.55),inset 6px 0 14px rgba(0,0,0,.25),inset -6px 0 14px rgba(0,0,0,.35), 0 0 0 2px color-mix(in srgb, #66e07a var(--rbA,100%), transparent)}
+  66%{box-shadow:0 22px 44px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -10px 22px rgba(0,0,0,.55),inset 6px 0 14px rgba(0,0,0,.25),inset -6px 0 14px rgba(0,0,0,.35), 0 0 0 2px color-mix(in srgb, #52c7ff var(--rbA,100%), transparent)}
+  83%{box-shadow:0 22px 44px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -10px 22px rgba(0,0,0,.55),inset 6px 0 14px rgba(0,0,0,.25),inset -6px 0 14px rgba(0,0,0,.35), 0 0 0 2px color-mix(in srgb, #a67bff var(--rbA,100%), transparent)}
+  100%{box-shadow:0 22px 44px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.14),inset 0 -10px 22px rgba(0,0,0,.55),inset 6px 0 14px rgba(0,0,0,.25),inset -6px 0 14px rgba(0,0,0,.35), 0 0 0 2px color-mix(in srgb, #ff5252 var(--rbA,100%), transparent)}
 }
 .af-remote.rainbow .af-remote-item { animation:af-remoteRainbow 1.2s linear infinite; }
 .af-remote.rainbow .af-remote-item:nth-child(2){animation-delay:.15s}
 .af-remote.rainbow .af-remote-item:nth-child(3){animation-delay:.3s}
 .af-remote.rainbow .af-remote-item:nth-child(4){animation-delay:.45s}
 @keyframes af-remoteRainbow {
-  0%{box-shadow:0 2px 0 #050505,0 3px 4px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -3px 5px rgba(0,0,0,.5), 0 0 10px 2px #ff5252}
-  16%{box-shadow:0 2px 0 #050505,0 3px 4px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -3px 5px rgba(0,0,0,.5), 0 0 10px 2px #ffb752}
-  33%{box-shadow:0 2px 0 #050505,0 3px 4px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -3px 5px rgba(0,0,0,.5), 0 0 10px 2px #fff166}
-  50%{box-shadow:0 2px 0 #050505,0 3px 4px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -3px 5px rgba(0,0,0,.5), 0 0 10px 2px #66e07a}
-  66%{box-shadow:0 2px 0 #050505,0 3px 4px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -3px 5px rgba(0,0,0,.5), 0 0 10px 2px #52c7ff}
-  83%{box-shadow:0 2px 0 #050505,0 3px 4px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -3px 5px rgba(0,0,0,.5), 0 0 10px 2px #a67bff}
-  100%{box-shadow:0 2px 0 #050505,0 3px 4px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -3px 5px rgba(0,0,0,.5), 0 0 10px 2px #ff5252}
+  0%{box-shadow:0 2px 0 #050505,0 3px 4px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -3px 5px rgba(0,0,0,.5), 0 0 10px 2px color-mix(in srgb, #ff5252 var(--rbA,100%), transparent)}
+  16%{box-shadow:0 2px 0 #050505,0 3px 4px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -3px 5px rgba(0,0,0,.5), 0 0 10px 2px color-mix(in srgb, #ffb752 var(--rbA,100%), transparent)}
+  33%{box-shadow:0 2px 0 #050505,0 3px 4px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -3px 5px rgba(0,0,0,.5), 0 0 10px 2px color-mix(in srgb, #fff166 var(--rbA,100%), transparent)}
+  50%{box-shadow:0 2px 0 #050505,0 3px 4px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -3px 5px rgba(0,0,0,.5), 0 0 10px 2px color-mix(in srgb, #66e07a var(--rbA,100%), transparent)}
+  66%{box-shadow:0 2px 0 #050505,0 3px 4px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -3px 5px rgba(0,0,0,.5), 0 0 10px 2px color-mix(in srgb, #52c7ff var(--rbA,100%), transparent)}
+  83%{box-shadow:0 2px 0 #050505,0 3px 4px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -3px 5px rgba(0,0,0,.5), 0 0 10px 2px color-mix(in srgb, #a67bff var(--rbA,100%), transparent)}
+  100%{box-shadow:0 2px 0 #050505,0 3px 4px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -3px 5px rgba(0,0,0,.5), 0 0 10px 2px color-mix(in srgb, #ff5252 var(--rbA,100%), transparent)}
 }
 /* 펼침 이펙트(후광 글로우) — 클릭 위임으로 모든 버튼·아이콘박스 공통 적용 */
 .af-press-fx { animation:af-pressGlow .45s ease-out; }
@@ -6117,6 +6119,13 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
   // ───────────────────────────────────────────────────────────────────────────
   function buildHistHtml(){
     var items = [
+      { date:'2026-09-07', title:'후속 질문 분개 표 정돈 + 리모컨 무지개 연출',
+        bullets:[
+          '답변 속 분개는 어떤 질문이든 회계처리안과 같은 표로 — 열 폭은 내용에 맞추되 차변·대변 짝 열은 동일, 표는 내용만큼만 넓게',
+          '표 안 줄바꿈 기호는 계정별 행으로 분리, 답변 카드 소요시간 표기 제거, [답변 모두 숨기기] 버튼',
+          '리모컨 LED 20회 연타 무지개 5초 유지 후 서서히 꺼짐 + 화면 컨페티 7초'
+        ]
+      },
       { date:'2026-09-07', title:'후속 질문 대화형 개편 — 이해 보조 버튼·꼬리 질문·대화 기억',
         bullets:[
           '답변 카드 아래 [더 쉽게·예시로·한 줄 요약·분개로·관련 조문] 버튼과 AI가 제안한 꼬리 질문 3개, [직접 이어서 질문] 입력',
@@ -6904,8 +6913,15 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
       led.style.boxShadow='0 0 8px 2px '+col.c2;
       streak++;
       if(streak>=20){
+        // 무지개 5초 유지 → 1.2초 페이드아웃(--rbA 100%→0%, 키프레임 색상이 color-mix로 이 값을 참조) → 클래스 제거
+        if(AiFRS._rbTimer){ clearTimeout(AiFRS._rbTimer); AiFRS._rbTimer=null; }
+        if(AiFRS._rbRaf){ cancelAnimationFrame(AiFRS._rbRaf); AiFRS._rbRaf=null; }
+        rc.style.setProperty('--rbA','100%');
         rc.classList.remove('rainbow'); void rc.offsetWidth; rc.classList.add('rainbow');
-        setTimeout(function(){ rc.classList.remove('rainbow'); }, 1300);
+        AiFRS._rbTimer=setTimeout(function(){
+          rc.style.setProperty('--rbA','0%');   // @property 등록된 변수라 CSS transition(1.2s)으로 부드럽게 감쇠
+          AiFRS._rbTimer=setTimeout(function(){ rc.classList.remove('rainbow'); rc.style.removeProperty('--rbA'); AiFRS._rbTimer=null; }, 1300);
+        }, 5000);
         if(AiFRS._confetti) AiFRS._confetti(7000);   // 무지개와 동시에 화면 전체 컨페티 7초(첫 여정 엔딩과 같은 효과)
         streak=0;
       }
