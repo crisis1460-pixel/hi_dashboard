@@ -321,7 +321,7 @@ body.aifrs-bm-view #aifrs-tour-btn { animation:none!important; box-shadow:none!i
 .aifrs-tut-toast{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);z-index:10300;background:var(--bg2);border:1px solid rgba(212,175,55,.45);border-radius:16px;padding:18px 28px;text-align:center;box-shadow:0 0 0 1px rgba(212,175,55,.12),0 14px 44px rgba(0,0,0,.6);animation:wcard-in .3s both ease;pointer-events:none}
 .aifrs-tut-toast i{font-style:normal;font-size:30px;display:block;margin-bottom:4px}
 .aifrs-tut-toast b{font-size:14px;color:var(--txt)}
-.aifrs-tour-ov.tut .tskipbtn,.aifrs-tour-ov.tut .tprev,.aifrs-tour-ov.tut .tinfo{display:none!important}
+.aifrs-tour-ov.tut .tskipbtn,.aifrs-tour-ov.tut .tinfo{display:none!important}
 #aifrs-tut-ov .aifrs-tour-tip{transition:none;animation:wcard-in .28s both ease}   /* 이전 위치에서 미끄러지는 대신 제자리에서 떠오름 */
 .aifrs-tour-ov.tut .tico{font-size:26px;text-align:center;margin-bottom:6px;display:block}
 .aifrs-welcome-card.aifrs-tut-end{max-width:370px}
@@ -7035,6 +7035,17 @@ body.aifrs-bm-view #aifrs-tour-btn { animation:none!important; box-shadow:none!i
     return el;
   }
   function _tutScrollTo(el){ if(!el) return; try{ el.scrollIntoView({block:'center',behavior:'smooth'}); }catch(e){} }
+  // 팝업 배치 직전 최종 보정 — 대상이 뷰포트(상단 60px·하단 고정바 110px 제외) 밖이면 즉시 스크롤로 강제 정렬
+  function _tutEnsureVisible(el){
+    if(!el||!el.getClientRects().length) return false;
+    var r=el.getBoundingClientRect(), vh=window.innerHeight, TOP=60, BOT=vh-110;
+    var fits=r.height<=(BOT-TOP);
+    var ok=fits?(r.top>=TOP&&r.bottom<=BOT):(r.top>=TOP-4&&r.top<=TOP+40);
+    if(ok) return false;
+    var before=r.top;
+    try{ el.style.scrollMarginTop=TOP+'px'; el.style.scrollMarginBottom='110px'; el.scrollIntoView({block:fits?'center':'start',behavior:'auto'}); }catch(e){ return false; }
+    return Math.abs(el.getBoundingClientRect().top-before)>1;   // 고정 헤더 등 스크롤로 안 움직이는 대상은 false(재배치 루프 방지)
+  }
   // 진행률 — 대기·엔딩을 뺀 전체 스텝 기준, 얇은 골드 바 + "12 / 32" (모든 팝업·말풍선 공통)
   function _tutProg(s){
     var all=AiFRS.TUT_STEPS.filter(function(x){ return x.kind!=='wait' && x.kind!=='end'; });
@@ -7062,10 +7073,19 @@ body.aifrs-bm-view #aifrs-tour-btn { animation:none!important; box-shadow:none!i
   AiFRS.tutNext=function(){ if(!_tutOn()) return; AiFRS._tutIdx++; _tutShow(); };
   AiFRS.tutPrev=function(){
     if(!_tutOn()||AiFRS._tutIdx<=0) return;
-    AiFRS._tutIdx--;
-    while(AiFRS._tutIdx>0&&AiFRS.TUT_STEPS[AiFRS._tutIdx]&&AiFRS.TUT_STEPS[AiFRS._tutIdx].opt) AiFRS._tutIdx--;
+    // 직전 스텝으로 — 이미 완료된 행동/대기 스텝, 대상이 없는 선택 스텝은 건너뜀
+    var i=AiFRS._tutIdx-1, s=null;
+    while(i>=0){
+      var c=AiFRS.TUT_STEPS[i];
+      if(c && c.kind!=='end' && !(c.done&&c.done())){
+        if(c.pre) c.pre();
+        if(!c.opt || _tutFind(c)){ s=c; break; }
+      }
+      i--;
+    }
+    if(!s) return;
+    AiFRS._tutIdx=i;
     _tutClear(); _tutBindPos();
-    var s=AiFRS.TUT_STEPS[AiFRS._tutIdx]; if(!s) return;
     if(s.pre) s.pre();
     _tutSet(s.id); _tutHud(s);
     if(s.kind==='info') _tutInfo(s,_tutFind(s));
@@ -7117,8 +7137,9 @@ body.aifrs-bm-view #aifrs-tour-btn { animation:none!important; box-shadow:none!i
       function place(){
         var vw=window.innerWidth, vh=window.innerHeight, W=tip.offsetWidth||420;
         if(el){
+          if(!place._fixed && _tutEnsureVisible(el)){ place._fixed=true; requestAnimationFrame(place); }
           var r=el.getBoundingClientRect();
-          var _hlTop=Math.max(0,r.top-18);
+          var _hlTop=Math.max(6,r.top-18);
           hl.style.left=(r.left-16)+'px'; hl.style.top=_hlTop+'px'; hl.style.width=(r.width+32)+'px'; hl.style.height=(r.bottom+12-_hlTop)+'px';
           tip.style.left=Math.min(Math.max(r.left+r.width/2-W/2,14),vw-W-14)+'px';
           if(s.tipPos==='top'){ tip.style.bottom='auto'; tip.style.top='12px'; tip.style.left=Math.max(14,(vw-W)/2)+'px'; }
@@ -7140,7 +7161,7 @@ body.aifrs-bm-view #aifrs-tour-btn { animation:none!important; box-shadow:none!i
         +'<div class="tc-foot">'+(AiFRS._tutIdx>0?'<button class="tc-prev" onclick="window.AiFRS.tutPrev()">← 뒤로</button>':'<span></span>')+'<span class="tprog">'+_tutProg(s)+'</span></div>';
       document.body.appendChild(c);
       if(s.glow) s.glow.forEach(function(id){ var g=document.getElementById(id); if(g) g.classList.add('tut-glow'); });
-      AiFRS._tutEl=el; _tutCoachPlace();
+      AiFRS._tutEl=el; _tutEnsureVisible(el); _tutCoachPlace();
       requestAnimationFrame(function(){ requestAnimationFrame(_tutCoachPlace); });
     }, 300);
   }
@@ -7185,7 +7206,7 @@ body.aifrs-bm-view #aifrs-tour-btn { animation:none!important; box-shadow:none!i
     for(var i=0;i<90;i++){
       pieces.push({x:Math.random()*vw,y:-10-Math.random()*vh*0.6,vy:1.6+Math.random()*2.4,vx:(Math.random()-.5)*.9,rot:Math.random()*360,rs:(Math.random()-.5)*4,w:6+Math.random()*5,h:2.5+Math.random()*3,col:COLS[Math.floor(Math.random()*COLS.length)],ph:Math.random()*Math.PI*2});
     }
-    var t0=Date.now(), DUR=3500, FADE=700;
+    var t0=Date.now(), DUR=5000, FADE=800;
     (function tick(){
       var elapsed=Date.now()-t0;
       if(elapsed>DUR){ var fc=document.getElementById('aifrs-tut-fw'); if(fc&&fc.parentNode) fc.parentNode.removeChild(fc); return; }
