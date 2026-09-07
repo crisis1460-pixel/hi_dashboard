@@ -329,7 +329,7 @@ button.aifrs-btn[onclick*="runFullReview"],
 }
 .aifrs-tour-tip {
   position:fixed; background:var(--bg2); border:1px solid var(--border2); border-radius:13px;
-  padding:15px 20px; width:max-content; min-width:360px; max-width:500px; font-size:13px; line-height:1.7; color:var(--txt2);
+  padding:15px 20px; width:max-content; min-width:420px; max-width:560px; font-size:13px; line-height:1.7; color:var(--txt2);
   transition:all .35s ease; box-shadow:0 16px 44px rgba(0,0,0,.55); z-index:10501;
 }
 .aifrs-tour-tip .tli { display:flex; gap:6px; margin:2px 0; }
@@ -351,6 +351,11 @@ button.aifrs-btn[onclick*="runFullReview"],
 .aifrs-tour-tip .tnext:hover { background:#0a7aeb; }
 .aifrs-tour-tip .tskip { background:transparent; color:var(--txt3); border:1px solid var(--border2); }
 .aifrs-tour-tip .tskip:hover { color:var(--txt2); }
+.aifrs-tour-tip .tprev{background:transparent;color:var(--txt3);border:none;padding:6px 4px;font-size:12px;cursor:pointer;font-family:inherit}
+.aifrs-tour-tip .tprev:hover{color:var(--txt2)}
+.aifrs-tut-coach .tc-foot{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+.aifrs-tut-coach .tc-prev{background:none;border:none;color:var(--txt3);font-size:11px;cursor:pointer;padding:0;font-family:inherit}
+.aifrs-tut-coach .tc-prev:hover{color:var(--txt2)}
 .aifrs-tut-cname{width:100%;margin:10px 0 4px;padding:8px 11px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--txt);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box}
 .aifrs-tut-cname:focus{border-color:var(--blue-sky);box-shadow:0 0 0 2px rgba(41,151,255,.18)}
 
@@ -7043,6 +7048,18 @@ button.aifrs-btn[onclick*="runFullReview"],
   }
   AiFRS.tutGo=function(id){ var i=_tutIdxOf(id); if(i<0) return; AiFRS._tutIdx=i; _tutShow(); };
   AiFRS.tutNext=function(){ if(!_tutOn()) return; AiFRS._tutIdx++; _tutShow(); };
+  AiFRS.tutPrev=function(){
+    if(!_tutOn()||AiFRS._tutIdx<=0) return;
+    AiFRS._tutIdx--;
+    while(AiFRS._tutIdx>0&&AiFRS.TUT_STEPS[AiFRS._tutIdx]&&AiFRS.TUT_STEPS[AiFRS._tutIdx].opt) AiFRS._tutIdx--;
+    _tutClear(); _tutBindPos();
+    var s=AiFRS.TUT_STEPS[AiFRS._tutIdx]; if(!s) return;
+    if(s.pre) s.pre();
+    _tutSet(s.id); _tutHud(s);
+    if(s.kind==='info') _tutInfo(s,_tutFind(s));
+    else if(s.kind==='end'){ _tutEnd(); }
+    else _tutCoach(s,_tutFind(s));
+  };
   function _tutShow(){
     _tutClear(); _tutBindPos();
     var s=AiFRS.TUT_STEPS[AiFRS._tutIdx];
@@ -7065,6 +7082,7 @@ button.aifrs-btn[onclick*="runFullReview"],
       +'<b>'+esc(s.title)+'</b><span class="tmsg">'+_tutFmt(s.msg)+(s.tip?'<div class="tgap"></div><div class="tli ttip"><i>💡</i><span>'+esc(s.tip)+'</span></div>':'')+'</span>'
       +(s.inputPlaceholder?'<input id="aifrs-tut-cname" class="aifrs-tut-cname" type="text" placeholder="'+esc(s.inputPlaceholder)+'" autocomplete="off">':'')
       +'<div class="tfoot"><span class="tcnt tprog">'+_tutCnt(s)+'</span><div class="tbtns">'
+      +(AiFRS._tutIdx>0?'<button class="tprev" onclick="window.AiFRS.tutPrev()">← 뒤로</button>':'')
       +(s.alt?'<button class="tskip" onclick="'+s.alt.fn+'">'+esc(s.alt.t)+'</button>':'')
       +'<button class="tnext" onclick="'+(s.btnFn||'window.AiFRS.tutNext()')+'">'+esc(s.btn||'다음 →')+'</button></div></div>';
     ov.innerHTML='<div class="aifrs-tour-hl" id="aifrs-tut-hl"'+(el?'':' style="display:none"')+'></div><div class="aifrs-tour-tip" id="aifrs-tut-tip">'+body+'</div>';
@@ -7098,7 +7116,7 @@ button.aifrs-btn[onclick*="runFullReview"],
     c.innerHTML=(note?'<span class="tt" style="margin:0 0 6px">⚠ '+esc(note)+'</span>':'')
       +'<b><i>'+(s.kind==='wait'?'⏳':'👉')+'</i> '+esc(s.title)+'</b>'+_tutFmt(s.msg)
       +(s.tip?'<div class="tli ttip"><i>💡</i><span>'+esc(s.tip)+'</span></div>':'')+(s.w?'<span class="tw">'+esc(s.w)+'</span>':'')
-      +'<span class="tprog">'+_tutProg(s)+'</span>';
+      +'<div class="tc-foot">'+(AiFRS._tutIdx>0?'<button class="tc-prev" onclick="window.AiFRS.tutPrev()">← 뒤로</button>':'<span></span>')+'<span class="tprog">'+_tutProg(s)+'</span></div>';
     document.body.appendChild(c);
     AiFRS._tutEl=el; _tutCoachPlace();
   }
