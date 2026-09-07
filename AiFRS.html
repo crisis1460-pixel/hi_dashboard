@@ -787,6 +787,8 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
 .af-qa-answer.visible{display:block}
 /* 후속 Q&A 답변 카드 — 기존 결과 카드(정밀분석·AI감사)와 같은 글자 크기·줄간격, 상단 접기 토글 */
 .af-qa-ans{background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:0}
+.af-qa-ans+.af-qa-ans{margin-top:8px}
+body.aifrs-bm-view .af-qa-ans+.af-qa-ans{margin-top:18px}
 .af-qa-ans>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:11px;color:var(--txt3);border-bottom:1px solid transparent}
 .af-qa-ans>summary::-webkit-details-marker{display:none}
 .af-qa-ans[open]>summary{border-bottom-color:var(--border)}
