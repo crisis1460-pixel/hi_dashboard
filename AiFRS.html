@@ -807,7 +807,11 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
 .af-qa-ans:not(:first-of-type) .af-qa-tools, body.aifrs-bm-view .af-qa-tools{display:none}
 .af-qa-md b{color:var(--txt)} .af-qa-md code{font-family:inherit;background:rgba(41,151,255,.12);border-radius:3px;padding:0 4px}
 .af-md-tblwrap{overflow-x:auto;margin:8px 0} .af-md-tblwrap .aifrs-jn{margin:0;min-width:520px} .af-md-tblwrap .aifrs-jn td{word-break:keep-all;overflow-wrap:anywhere}
-.af-md-tblwrap .aifrs-jn.af-jn-fixed{table-layout:fixed;width:100%}   /* 분개형 표: 열 비율 고정 → 답변 안 모든 표 격자 일치 */
+/* 분개형 표: 렌더 후 _jnFitCols가 내용 폭을 재 열 폭을 px로 확정(짝 열 동일·표는 내용만큼만 넓게). 여러 줄 행은 세로 가운데 정렬 */
+.af-md-tblwrap .aifrs-jn.af-jn-fixed{table-layout:fixed;width:auto;min-width:0}
+.af-md-tblwrap .aifrs-jn.af-jn-fixed td{vertical-align:middle}
+.af-md-tblwrap .aifrs-jn.af-jn-fixed td.num{white-space:nowrap}
+.af-md-tblwrap .aifrs-jn.af-jn-measure th,.af-md-tblwrap .aifrs-jn.af-jn-measure td{white-space:nowrap}
 .af-md-h{font-size:12px;font-weight:700;color:#2dd4bf;margin:10px 0 4px;padding-bottom:3px;border-bottom:1px dotted var(--border)}
 .af-md-h:first-child{margin-top:0}
 .af-md-p{margin:0 0 8px} .af-md-p:last-child{margin-bottom:0}
@@ -5720,6 +5724,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
         +'<div class="af-qa-md">'+_mdLite(t)+'</div>'+tools+'</details>'+prev;
       if(input) input.value='';
       var wrapEl=answer.closest('.af-qa-wrap'); if(wrapEl){ wrapEl.classList.add('has-ans'); var ab=wrapEl.querySelector('.af-qa-all'); if(ab) ab.textContent='답변 모두 숨기기'; }
+      _jnFitCols(answer);   // 분개형 표 열 폭 확정(내용 기준·짝 열 동일)
       var card=answer.querySelector('details.af-qa-ans'); if(card){ try{ card.scrollIntoView({block:'nearest',behavior:'smooth'}); }catch(e){} }
     }).catch(function(e){
       done();
@@ -5728,6 +5733,50 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
     });
   };
   AiFRS.cancelFollowUp=function(){ if(AiFRS._qaCtl){ try{ AiFRS._qaCtl.abort(); }catch(e){} } };
+  // 분개형 표 열 폭 자동 배분 — 한 컨테이너 안 모든 표가 같은 값을 공유
+  //   적요: 내용 폭(최대 30%) · 차변계정=대변계정: 둘 중 넓은 내용 폭 · 차변금액=대변금액: 둘 중 넓은 내용 폭 · 인식 근거: 남는 폭(최소 22%)
+  //   합이 넘치면 적요→계정 순으로 줄이고, 금액 열은 항상 한 줄 유지
+  function _jnFitCols(root){
+    root=root||document;
+    var tables=Array.prototype.slice.call(root.querySelectorAll('table.af-jn-fixed'));
+    if(!tables.length) return;
+    var groups={};
+    tables.forEach(function(t){ var n=t.querySelectorAll('thead th').length; (groups[n]=groups[n]||[]).push(t); });
+    Object.keys(groups).forEach(function(nStr){
+      var n=+nStr, list=groups[n], nat=[]; for(var i=0;i<n;i++) nat[i]=0;
+      // 1) 자연 폭 측정: 자동 레이아웃 + 줄바꿈 금지 상태에서 각 열의 최대 셀 폭
+      list.forEach(function(t){
+        t.classList.add('af-jn-measure'); t.style.tableLayout='auto'; t.style.width='auto';
+        t.querySelectorAll('col').forEach(function(c){ c.style.width=''; });
+        var occ=[]; for(var oi=0;oi<n;oi++) occ[oi]=0;   // rowspan으로 위 행이 점유 중인 열 추적(열 번호 어긋남 방지)
+        t.querySelectorAll('tr').forEach(function(tr){
+          var skip={}; for(var k=0;k<n;k++){ if(occ[k]>0){ occ[k]--; skip[k]=true; } }
+          var ci=0; Array.prototype.forEach.call(tr.children,function(cell){
+            while(ci<n && skip[ci]) ci++;
+            if(cell.colSpan>1){ ci+=cell.colSpan; return; }   // 가로 합침은 측정 제외
+            var w=cell.getBoundingClientRect().width; if(w>nat[ci]) nat[ci]=w;
+            if(cell.rowSpan>1) occ[ci]=cell.rowSpan-1;
+            ci++;
+          });
+        });
+        t.classList.remove('af-jn-measure'); t.style.tableLayout=''; t.style.width='';
+      });
+      var W=list[0].parentNode.getBoundingClientRect().width||list[0].getBoundingClientRect().width; if(!W) return;
+      // 2) 배분 — 표는 내용만큼만 넓게(가로 전체를 채우지 않음). 넘치면 근거→적요→계정 순으로 줄여 줄바꿈시키고, 금액 열은 항상 한 줄
+      var PAD=8;   // 고정 레이아웃의 경계선·패딩 반올림으로 1~2px 모자라 줄바꿈되는 것 방지
+      var six=(n===6), memo=Math.min(nat[0]+PAD, W*0.30), acct=Math.max(nat[1],nat[3])+PAD, amt=Math.max(nat[2],nat[4])+PAD;
+      var basis=six?Math.min(nat[5]+PAD, 320):0;
+      var over=memo+acct*2+amt*2+basis-W;
+      if(over>0 && six){ var b2=Math.max(W*0.2, basis-over); over-=(basis-b2); basis=b2; }
+      if(over>0){ var m2=Math.max(W*0.14, memo-over); over-=(memo-m2); memo=m2; }
+      if(over>0){ var a2=Math.max(W*0.12, acct-over/2); acct=a2; }
+      var px=six?[memo,acct,amt,acct,amt,basis]:[memo,acct,amt,acct,amt];
+      var total=Math.min(W, px.reduce(function(s,v){ return s+v; },0));
+      list.forEach(function(t){ t.style.width=Math.round(total)+'px'; var cols=t.querySelectorAll('col'); cols.forEach(function(c,i){ if(px[i]!=null) c.style.width=Math.round(px[i])+'px'; }); });
+    });
+  }
+  AiFRS._jnFitCols=_jnFitCols;
+  (function(){ var tm=null; window.addEventListener('resize',function(){ clearTimeout(tm); tm=setTimeout(function(){ if(document.querySelector('table.af-jn-fixed')) _jnFitCols(document); },200); }); })();
   // 답변 도입부의 자기소개·독자 수준 언급·예고 문장("전문가로서 … 설명해 드리겠습니다") 제거 — 결론부터 시작하도록 (모델이 지시를 어긴 경우 대비)
   function _stripQaPreamble(t){
     var lines=String(t||'').replace(/\r/g,'').split('\n'), i=0, cut=0;
@@ -5985,6 +6034,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
     main.querySelectorAll('details.af-qa-ans').forEach(function(d){ d.open=true; });
     // 이전 버전에서 저장된 답변에 남은 "<br>" 글자 → 실제 줄바꿈
     main.querySelectorAll('.af-qa-md').forEach(function(md){ if(/&lt;br\s*\/?&gt;/i.test(md.innerHTML)) md.innerHTML=md.innerHTML.replace(/&lt;br\s*\/?&gt;/gi,'<br>'); });
+    if(AiFRS._jnFitCols) AiFRS._jnFitCols(main);
     var qaWrap=main.querySelector('.af-qa-wrap'); if(qaWrap && !qaWrap.querySelector('details.af-qa-ans')) qaWrap.style.display='none';
     document.querySelectorAll('.af-bm-item').forEach(function(el,i){ el.classList.toggle('selected',i===idx); });
   };
@@ -6856,6 +6906,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
       if(streak>=20){
         rc.classList.remove('rainbow'); void rc.offsetWidth; rc.classList.add('rainbow');
         setTimeout(function(){ rc.classList.remove('rainbow'); }, 1300);
+        if(AiFRS._confetti) AiFRS._confetti(7000);   // 무지개와 동시에 화면 전체 컨페티 7초(첫 여정 엔딩과 같은 효과)
         streak=0;
       }
     });
@@ -7232,7 +7283,8 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
     h.innerHTML='<i>'+lbl.slice(0,2)+'</i>'+ch+' / 6 · '+esc(lbl.slice(3))+'<span class="bar">'+bar+'</span>';
     if(AiFRS._tutHudCh!==ch){ AiFRS._tutHudCh=ch; h.style.transform='scale(1.14)'; setTimeout(function(){ h.style.transform=''; },260); }
   }
-  function _tutFireworks(){
+  function _tutFireworks(durMs){
+    var old=document.getElementById('aifrs-tut-fw'); if(old&&old.parentNode) old.parentNode.removeChild(old);   // 중복 실행 시 이전 캔버스 제거
     var cv=document.createElement('canvas'); cv.id='aifrs-tut-fw';
     cv.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:11000';
     document.body.appendChild(cv);
@@ -7244,7 +7296,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
     for(var i=0;i<90;i++){
       pieces.push({x:Math.random()*vw,y:-10-Math.random()*vh*0.6,vy:1.6+Math.random()*2.4,vx:(Math.random()-.5)*.9,rot:Math.random()*360,rs:(Math.random()-.5)*4,w:6+Math.random()*5,h:2.5+Math.random()*3,col:COLS[Math.floor(Math.random()*COLS.length)],ph:Math.random()*Math.PI*2});
     }
-    var t0=Date.now(), DUR=8000, FADE=900;
+    var t0=Date.now(), DUR=durMs||8000, FADE=900;
     (function tick(){
       var elapsed=Date.now()-t0;
       if(elapsed>DUR){ var fc=document.getElementById('aifrs-tut-fw'); if(fc&&fc.parentNode) fc.parentNode.removeChild(fc); return; }
@@ -7261,6 +7313,7 @@ body.aifrs-bm-view .tut-glow { animation:none!important; box-shadow:none!importa
       requestAnimationFrame(tick);
     })();
   }
+  AiFRS._confetti=_tutFireworks;   // 리모컨 무지개 이스터에그 등 외부에서도 사용(지속시간 ms 인자)
   function _tutEnd(){
     var ov=document.createElement('div'); ov.className='aifrs-welcome-ov'; ov.id='aifrs-tut-ov';
     ov.innerHTML='<div class="aifrs-welcome-card aifrs-tut-end"><span class="aifrs-welcome-ico">🎉</span><div class="aifrs-welcome-title">첫 분석 완료</div>'
