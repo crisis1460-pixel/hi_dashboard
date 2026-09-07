@@ -6998,7 +6998,7 @@ button.aifrs-btn[onclick*="runFullReview"],
     {id:'4-1',ch:4,kind:'info',sel:_tutPreciseSel+' .aifrs-an-head',title:'정밀분석 — 규칙집 펼쳐 대조',msg:'AI가 고른 조문(§)이 진짜 기준서에 있는지, 키워드가 맞는지 \'코드\'로 확인해요.\n내용이 맞는지는 다음 단계!',opt:true},
     {id:'4-2',ch:4,kind:'info',sel:'.aifrs-pr-detail .aifrs-pr-item summary',title:'항목 한 줄 읽는 법',msg:'왼쪽부터 상태(통과/미검증/확인불가) · §조문 칩 · 요약 · 우선순위 배지.\n펼치면 코드검증 도트(문단 실존·키워드)가 보여요 — 초록이 많을수록 신뢰도가 높아요.',tip:'§ 칩에 마우스를 올리면 요약, 클릭하면 원문이 새 창으로!',opt:true},
     {id:'4-3',ch:4,kind:'act',sel:'[id^="aifrs-audit-run-"]',title:'이제 진짜 정답!',msg:'위 \'다음 확인\'의 문제 건수는 근거가 약한 항목 수예요.\n[최종 검증(AI감사) 실행]을 눌러 문서 문장을 근거로 "충족했나?"를 판정해요.',wait:'audit-start',done:function(){ return _tutAuditAny()||Object.keys(AiFRS._auditBusy||{}).length>0; }},
-    {id:'5-0',ch:5,kind:'wait',sel:_tutAuditSel,title:'3단 감사 중…',msg:'근거 추출 → 판정 → 교차검증. 1~2분 ☕',tip:'그동안 리모컨 [숨김]·[펼침]을 눌러봐도 돼요',wait:'audit-done',done:_tutAuditAny},
+    {id:'5-0',ch:5,kind:'wait',sel:_tutAuditSel,title:'3단 감사 중…',msg:'근거 추출 → 판정 → 교차검증. 1~2분 ☕',tip:'그동안 리모컨 [숨김]·[펼침]을 눌러봐도 돼요',wait:'audit-done',done:_tutAuditAny,glow:['af-rmt-collapse','af-rmt-expand']},
     {id:'5-1',ch:5,kind:'info',sel:_tutAuditSel+' .af-hero-card',title:'판정 나왔어요 — 한눈에 성적표',msg:'헤더 색과 분포 바가 성적이에요.\n- 청록 충족 · 노랑 확인 필요 · 회색 자료 부족 · 빨강 보완 필요\n- 문제 항목은 아래에서 자동으로 펼쳐져요',tip:'판단 게이트가 보이면 이 기준서의 핵심 체크만 번호 순서로 모아둔 거예요',opt:true},
     {id:'5-2',ch:5,kind:'info',sels:[_tutAuditSel+' .aifrs-pr-item[open]',_tutAuditSel+' .aifrs-pr-item'],title:'항목 해부 — 판정·근거·의견·해결',msg:'① 판정 마크 — 충족·확인필요·보완필요\n② 검증 도트 3개 — 코드·교차·인용\n③ 인용 문장 — 문서에서 실제 찾은 문장만\n④ AI감사의견\n⑤ 보완·확인 — 문제 항목에만 표시돼요',tip:'AI가 지어낸 인용은 자동으로 걸러져요(할루시네이션 차단)',opt:true},
     {id:'5-3',ch:5,kind:'info',tipPos:'top',sel:'[id^="aifrs-easybtn-"]',expand:'.af-hero-card',title:'다음 할 일 — 오늘의 퀘스트',msg:'1·2·3 순서대로 확인하면 결론이 나요.\n- 긴급(빨강) · 자료 준비(주황) · 검토 필요(노랑)\n- 맨 아래 \'이 건의 방향\'이 한 줄 결론',tip:'☆ 즐겨찾기 추가를 누르면 여기까지의 결과가 통째로 저장돼요 — 조금만 더 하고 저장할게요',opt:true},
@@ -7012,6 +7012,7 @@ button.aifrs-btn[onclick*="runFullReview"],
   function _tutClear(){
     ['aifrs-tut-ov','aifrs-tut-coach','aifrs-tut-toast'].forEach(function(id){ var o=document.getElementById(id); if(o&&o.parentNode) o.parentNode.removeChild(o); });
     document.querySelectorAll('.af-tut-ring').forEach(function(x){ x.classList.remove('af-tut-ring'); });
+    document.querySelectorAll('.tut-glow').forEach(function(x){ x.classList.remove('tut-glow'); });
     AiFRS._tutEl=null;
   }
   function _tutVisible(el){ return !!el && el.getClientRects().length>0 && (el.offsetParent!==null || getComputedStyle(el).position==='fixed'); }
@@ -7118,6 +7119,7 @@ button.aifrs-btn[onclick*="runFullReview"],
       +(s.tip?'<div class="tli ttip"><i>💡</i><span>'+esc(s.tip)+'</span></div>':'')+(s.w?'<span class="tw">'+esc(s.w)+'</span>':'')
       +'<div class="tc-foot">'+(AiFRS._tutIdx>0?'<button class="tc-prev" onclick="window.AiFRS.tutPrev()">← 뒤로</button>':'<span></span>')+'<span class="tprog">'+_tutProg(s)+'</span></div>';
     document.body.appendChild(c);
+    if(s.glow) s.glow.forEach(function(id){ var g=document.getElementById(id); if(g) g.classList.add('tut-glow'); });
     AiFRS._tutEl=el; _tutCoachPlace();
   }
   function _tutCoachPlace(){
