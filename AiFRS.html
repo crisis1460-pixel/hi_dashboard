@@ -7042,17 +7042,29 @@ body.aifrs-bm-view #aifrs-tour-btn { animation:none!important; box-shadow:none!i
   function _tutEnsureVisible(el){
     if(!el||!el.getClientRects().length) return false;
     var r=el.getBoundingClientRect(), vh=window.innerHeight, TOP=60, BOT=vh-110;
-    var fits=r.height<=(BOT-TOP);
-    var ok=fits?(r.top>=TOP&&r.bottom<=BOT):(r.top>=TOP-4&&r.top<=TOP+40);
+    var fits=r.height<=(BOT-TOP), mid=vh/2;
+    // 작은 대상은 화면 중앙 대역(중심이 vh의 30~60%)에 있어야 통과, 큰 대상은 상단 정렬 여부로 판정
+    var ok=fits?(r.top>=TOP&&r.bottom<=BOT&&(r.top+r.height/2)>=vh*0.3&&(r.top+r.height/2)<=vh*0.6):(r.top>=TOP-4&&r.top<=TOP+40);
     if(ok) return false;
     var before=r.top;
     // .af-main 등 스크롤 컨테이너의 scroll-behavior:smooth를 잠시 꺼서 진짜 즉시 이동(스무스면 위치 판정·재배치가 어긋남)
     var scs=[], p=el.parentElement;
     while(p){ var cs=getComputedStyle(p); if(/auto|scroll/.test(cs.overflowY)||p===document.documentElement){ scs.push([p,p.style.scrollBehavior]); p.style.scrollBehavior='auto'; } p=p.parentElement; }
-    try{ el.style.scrollMarginTop=TOP+'px'; el.style.scrollMarginBottom='110px'; el.scrollIntoView({block:fits?'center':'start',behavior:'instant'}); }catch(e){ try{ el.scrollIntoView({block:fits?'center':'start'}); }catch(e2){} }
+    function go(){ try{ el.style.scrollMarginTop=TOP+'px'; el.style.scrollMarginBottom='110px'; el.scrollIntoView({block:fits?'center':'start',behavior:'instant'}); }catch(e){ try{ el.scrollIntoView({block:fits?'center':'start'}); }catch(e2){} } }
+    go();
+    // 페이지 맨 끝 내용이면 더 내려갈 여지가 없어 하단 고정바에 가려짐 → 스크롤 컨테이너에 임시 하단 여백을 주고 다시 이동(튜토리얼 종료 시 원복)
+    var r2=el.getBoundingClientRect(), sc=scs.length?scs[0][0]:null;
+    var over=fits?((r2.top+r2.height/2)-mid):(r2.top-TOP);   // 중앙(또는 상단)까지 못 올라온 부족분
+    if(sc && sc!==document.documentElement && over>20){
+      var need=Math.ceil(over)+40;
+      if(!AiFRS._tutPad){ AiFRS._tutPad={el:sc,orig:sc.style.paddingBottom}; }
+      sc.style.paddingBottom=(parseFloat(getComputedStyle(sc).paddingBottom)||0)+need+'px';
+      go();
+    }
     scs.forEach(function(x){ x[0].style.scrollBehavior=x[1]; });
     return Math.abs(el.getBoundingClientRect().top-before)>1;   // 고정 헤더 등 스크롤로 안 움직이는 대상은 false(재배치 루프 방지)
   }
+  function _tutPadRestore(){ var p=AiFRS._tutPad; if(!p) return; try{ p.el.style.paddingBottom=p.orig; }catch(e){} AiFRS._tutPad=null; }
   // 진행률 — 대기·엔딩을 뺀 전체 스텝 기준, 얇은 골드 바 + "12 / 32" (모든 팝업·말풍선 공통)
   function _tutProg(s){
     var all=AiFRS.TUT_STEPS.filter(function(x){ return x.kind!=='wait' && x.kind!=='end'; });
@@ -7240,7 +7252,7 @@ body.aifrs-bm-view #aifrs-tour-btn { animation:none!important; box-shadow:none!i
     document.body.appendChild(ov);
     _tutFireworks();
   }
-  function _tutFinish(){ _tutClear(); var h=document.getElementById('aifrs-tut-hud'); if(h&&h.parentNode) h.parentNode.removeChild(h); _tutSet('done'); }
+  function _tutFinish(){ _tutClear(); _tutPadRestore(); var h=document.getElementById('aifrs-tut-hud'); if(h&&h.parentNode) h.parentNode.removeChild(h); _tutSet('done'); }
   AiFRS.tutFinish=_tutFinish;
   // 이벤트 수신 — 현재 스텝부터 앞으로 훑어 첫 대기 스텝의 이벤트와 같으면 그 다음으로(선행 조작·빠른 응답 모두 흡수)
   function _tutEmit(ev){
